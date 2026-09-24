@@ -157,7 +157,9 @@ export function useStore() {
   useEffect(() => {
     const l = () => force((v) => v + 1);
     listeners.add(l);
-    return () => listeners.delete(l);
+    return () => {
+      listeners.delete(l);
+    };
   }, []);
   return { leads: store.leads, session: store.session };
 }
