@@ -230,7 +230,6 @@ function Simulation() {
                     label="Flux mensuel (FCFA)"
                     value={form.fluxMensuel}
                     onChange={set("fluxMensuel")}
-                    inputMode="numeric"
                   />
                   <Choice
                     label="Compte bancaire mouvementé"
