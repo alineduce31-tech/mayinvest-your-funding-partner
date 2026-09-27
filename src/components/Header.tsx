@@ -10,7 +10,7 @@ export function Header() {
     <header className="sticky top-0 z-20 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-[72px] max-w-6xl items-center justify-between px-5">
         <Link to="/" aria-label="Mayinvest, accueil" className="-ml-2">
-          <Logo height={66} />
+          <Logo height={66} tone="dark" />
         </Link>
         <nav className="flex items-center gap-2 text-sm">
           <Link
