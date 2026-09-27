@@ -14,13 +14,184 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bancarisation_suivi: {
+        Row: {
+          date_maj: string
+          id: string
+          lead_id: string
+          statut_bancarisation: string
+        }
+        Insert: {
+          date_maj?: string
+          id?: string
+          lead_id: string
+          statut_bancarisation: string
+        }
+        Update: {
+          date_maj?: string
+          id?: string
+          lead_id?: string
+          statut_bancarisation?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bancarisation_suivi_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      banques: {
+        Row: {
+          created_at: string
+          id: string
+          nom: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nom: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nom?: string
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          activite: string | null
+          agent_id: string | null
+          banque_actuelle: string | null
+          besoin: Json
+          created_at: string
+          eligibilite: Json
+          id: string
+          identite: Json
+          montant_demande: number | null
+          raison_non_eligibilite: string | null
+          score: number
+          situation: Json
+          statut: string
+          type: string
+          updated_at: string
+          ville: string | null
+        }
+        Insert: {
+          activite?: string | null
+          agent_id?: string | null
+          banque_actuelle?: string | null
+          besoin?: Json
+          created_at?: string
+          eligibilite?: Json
+          id?: string
+          identite?: Json
+          montant_demande?: number | null
+          raison_non_eligibilite?: string | null
+          score?: number
+          situation?: Json
+          statut?: string
+          type: string
+          updated_at?: string
+          ville?: string | null
+        }
+        Update: {
+          activite?: string | null
+          agent_id?: string | null
+          banque_actuelle?: string | null
+          besoin?: Json
+          created_at?: string
+          eligibilite?: Json
+          id?: string
+          identite?: Json
+          montant_demande?: number | null
+          raison_non_eligibilite?: string | null
+          score?: number
+          situation?: Json
+          statut?: string
+          type?: string
+          updated_at?: string
+          ville?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_agent_id_fkey"
+            columns: ["agent_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      packs_vendus: {
+        Row: {
+          date_vente: string
+          id: string
+          lead_id: string
+          montant: number | null
+          type_pack: string
+        }
+        Insert: {
+          date_vente?: string
+          id?: string
+          lead_id: string
+          montant?: number | null
+          type_pack: string
+        }
+        Update: {
+          date_vente?: string
+          id?: string
+          lead_id?: string
+          montant?: number | null
+          type_pack?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "packs_vendus_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          accepte_offres_whatsapp: boolean
+          created_at: string
+          id: string
+          nom: string
+          role: string
+          telephone: string | null
+        }
+        Insert: {
+          accepte_offres_whatsapp?: boolean
+          created_at?: string
+          id: string
+          nom?: string
+          role?: string
+          telephone?: string | null
+        }
+        Update: {
+          accepte_offres_whatsapp?: boolean
+          created_at?: string
+          id?: string
+          nom?: string
+          role?: string
+          telephone?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: { Args: never; Returns: boolean }
+      is_staff: { Args: never; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
