@@ -57,9 +57,9 @@
 :root,
 .dark {
   --radius: 0.75rem;
-  --background: oklch(0.1 0.025 265);
+  --background: oklch(0.16 0.04 265);
   --foreground: oklch(0.97 0.008 255);
-  --card: oklch(1 0 0 / 5.5%);
+  --card: oklch(1 0 0 / 8%);
   --card-foreground: oklch(0.97 0.008 255);
   --popover: oklch(0.16 0.035 265 / 96%);
   --popover-foreground: oklch(0.97 0.008 255);
@@ -77,7 +77,7 @@
   --border: oklch(1 0 0 / 9%);
   --input: oklch(1 0 0 / 13%);
   --ring: oklch(0.6 0.2 258);
-  --marine: oklch(0.075 0.025 265);
+  --marine: oklch(0.14 0.04 265);
   --vague: oklch(0.72 0.14 255);
   --signal: oklch(0.6 0.2 258);
   --teal: oklch(0.78 0.14 175);
@@ -162,8 +162,8 @@
 }
 
 @utility card-soft {
-  background: color-mix(in oklab, var(--color-foreground) 5.5%, transparent);
-  border: 1px solid color-mix(in oklab, var(--color-foreground) 9%, transparent);
+  background: color-mix(in oklab, var(--color-foreground) 8%, transparent);
+  border: 1px solid color-mix(in oklab, var(--color-foreground) 10%, transparent);
   border-radius: 14px;
   box-shadow: 0 24px 70px color-mix(in oklab, var(--color-background) 78%, transparent),
     inset 0 1px 0 color-mix(in oklab, var(--color-foreground) 5%, transparent);
