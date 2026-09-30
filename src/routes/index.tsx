@@ -16,11 +16,9 @@ function Index() {
       <style>{`
         * { box-sizing: border-box; }
 
-        /* NAV */
         .nav { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
         @media (max-width: 640px) { .nav { height: 60px; padding: 0 20px; } }
 
-        /* HERO */
         .hero { padding: 90px 60px 80px; display: grid; grid-template-columns: 1fr 480px; gap: 60px; align-items: center; }
         @media (max-width: 900px) { .hero { grid-template-columns: 1fr; padding: 48px 32px 40px; gap: 40px; } }
         @media (max-width: 640px) { .hero { padding: 32px 20px 32px; gap: 32px; } }
@@ -35,46 +33,39 @@ function Index() {
         .hero-btns { display: flex; flex-direction: column; gap: 14px; max-width: 360px; }
         @media (max-width: 640px) { .hero-btns { max-width: 100%; } }
 
-        /* SCORE CARD */
         .score-card { background: #0D1B3E; border-radius: 28px; padding: 36px; color: #fff; transform: perspective(900px) rotateY(-6deg) rotateX(3deg); box-shadow: 0 40px 80px rgba(13,27,62,0.28), 0 8px 24px rgba(13,27,62,0.16); position: relative; overflow: hidden; }
-        @media (max-width: 900px) { .score-card { transform: none; } }
-        @media (max-width: 640px) { .score-card { padding: 24px; border-radius: 20px; } }
+        @media (max-width: 900px) { .score-card { transform: perspective(900px) rotateY(-3deg) rotateX(2deg); } }
+        @media (max-width: 640px) { .score-card { transform: none; padding: 24px; border-radius: 20px; } }
 
         .sc-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
 
-        /* PROOF */
         .proof { padding: 32px 60px; border-top: 1px solid #F0F0F0; border-bottom: 1px solid #F0F0F0; display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
         @media (max-width: 900px) { .proof { padding: 24px 32px; gap: 24px; } }
         @media (max-width: 640px) { .proof { padding: 20px; gap: 16px; display: grid; grid-template-columns: 1fr 1fr; } }
         .proof-divider { width: 1px; height: 40px; background: #EBEBEB; }
         @media (max-width: 640px) { .proof-divider { display: none; } }
 
-        /* STEPS */
         .steps { padding: 80px 60px; }
         @media (max-width: 900px) { .steps { padding: 56px 32px; } }
         @media (max-width: 640px) { .steps { padding: 40px 20px; } }
         .section-title { font-size: 42px; font-weight: 800; letter-spacing: -1.5px; color: #111; margin-bottom: 48px; line-height: 1.1; }
         @media (max-width: 640px) { .section-title { font-size: 28px; letter-spacing: -0.5px; margin-bottom: 28px; } }
 
-        /* DARK BAND */
         .dark-band { background: #111111; margin: 0 60px; border-radius: 28px; padding: 64px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
         @media (max-width: 900px) { .dark-band { margin: 0 32px; grid-template-columns: 1fr; padding: 40px; gap: 40px; } }
         @media (max-width: 640px) { .dark-band { margin: 0 16px; padding: 28px 20px; border-radius: 20px; gap: 28px; } }
         .db-title { font-size: 36px; font-weight: 800; color: #fff; letter-spacing: -1px; line-height: 1.15; margin-bottom: 16px; }
         @media (max-width: 640px) { .db-title { font-size: 26px; } }
 
-        /* CTA */
         .cta-final { padding: 80px 60px; text-align: center; }
         @media (max-width: 640px) { .cta-final { padding: 48px 20px; } }
         .cta-final h2 { font-size: 44px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; }
         @media (max-width: 640px) { .cta-final h2 { font-size: 28px; letter-spacing: -0.5px; } }
         .cta-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
 
-        /* FOOTER */
         .footer { border-top: 1px solid #F0F0F0; padding: 32px 60px; display: flex; justify-content: space-between; align-items: center; }
         @media (max-width: 640px) { .footer { padding: 24px 20px; flex-direction: column; gap: 12px; text-align: center; } }
 
-        /* BUTTONS */
         .btn-main { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
         .btn-second { background: #F5F5F5; color: #111; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
         .nav-btn { background: #111111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 28px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
@@ -85,7 +76,6 @@ function Index() {
         @media (max-width: 640px) { .cta-blue, .cta-dark { width: 100%; justify-content: center; } }
       `}</style>
 
-      {/* NAV */}
       <nav className="nav">
         <LogoSVG height={56} tone="light" />
         <button className="nav-btn">
@@ -94,7 +84,6 @@ function Index() {
         </button>
       </nav>
 
-      {/* HERO */}
       <section className="hero">
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#EEF4FF', color: '#1A6BFF', fontSize: 13, fontWeight: 600, padding: '6px 16px', borderRadius: 100, marginBottom: 28 }}>
@@ -127,7 +116,6 @@ function Index() {
           </div>
         </div>
 
-        {/* SCORE CARD */}
         <div className="score-card">
           <div style={{ position: 'absolute', top: -80, right: -80, width: 280, height: 280, background: 'radial-gradient(circle, rgba(26,107,255,0.25) 0%, transparent 65%)', pointerEvents: 'none' }}></div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
@@ -163,7 +151,6 @@ function Index() {
         </div>
       </section>
 
-      {/* PROOF STRIP */}
       <div className="proof">
         {[
           { icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="6" width="16" height="12" rx="2.5" stroke="#1A6BFF" strokeWidth="1.8"/><path d="M6 6V5a2 2 0 012-2h6a2 2 0 012 2v1" stroke="#1A6BFF" strokeWidth="1.8"/><path d="M7 11h8M7 14h5" stroke="#1A6BFF" strokeWidth="1.8" strokeLinecap="round"/></svg>, num: '+500', label: 'Dossiers traités' },
@@ -181,7 +168,6 @@ function Index() {
         ))}
       </div>
 
-      {/* STEPS */}
       <section className="steps">
         <div style={{ fontSize: 13, fontWeight: 600, color: '#1A6BFF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Comment ça marche</div>
         <div className="section-title">3 étapes, c'est tout.</div>
@@ -202,7 +188,6 @@ function Index() {
         </div>
       </section>
 
-      {/* DARK BAND */}
       <div className="dark-band">
         <div>
           <div style={{ fontSize: 13, fontWeight: 600, color: '#6DAFFF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Ce que les banques vérifient</div>
@@ -231,7 +216,6 @@ function Index() {
         </div>
       </div>
 
-      {/* CTA FINAL */}
       <section className="cta-final">
         <h2>Prêt à savoir où vous en êtes ?</h2>
         <p style={{ fontSize: 16, color: '#888', marginBottom: 40 }}>Gratuit · Sans engagement · Résultat immédiat</p>
@@ -247,7 +231,6 @@ function Index() {
         </div>
       </section>
 
-      {/* FOOTER */}
       <footer className="footer">
         <LogoSVG height={48} tone="light" />
         <div style={{ fontSize: 13, color: '#AAAAAA' }}>© 2026 Mayinvest · Brazzaville, Congo</div>
