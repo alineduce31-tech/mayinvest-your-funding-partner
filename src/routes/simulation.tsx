@@ -84,41 +84,91 @@ function Simulation() {
         * { box-sizing: border-box; }
         .s-nav { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.72); backdrop-filter: saturate(180%) blur(20px); -webkit-backdrop-filter: saturate(180%) blur(20px); border-bottom: 1px solid rgba(0,0,0,0.08); position: sticky; top: 0; z-index: 10; }
         @media (max-width: 640px) { .s-nav { height: 60px; padding: 0 20px; } }
-        .s-back { background: transparent; border: none; color: #6E6E73; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; letter-spacing: -0.01em; }
-        .s-back:hover { color: #1D1D1F; }
-        .s-main { max-width: 720px; margin: 0 auto; padding: 60px 24px 80px; }
+        .s-back { background: transparent; border: none; color: #6E6E73; font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .s-main { max-width: 760px; margin: 0 auto; padding: 60px 24px 80px; }
         @media (max-width: 640px) { .s-main { padding: 32px 20px 60px; } }
         .s-progress { display: flex; gap: 8px; margin-bottom: 12px; }
         .s-dot { height: 4px; flex: 1; border-radius: 100px; background: #E5E5EA; transition: background 0.3s; }
         .s-dot.on { background: #0071E3; }
-        .s-etape { font-size: 12px; font-weight: 600; color: #86868B; letter-spacing: 0.02em; margin-bottom: 24px; }
+        .s-etape { font-size: 12px; font-weight: 600; color: #86868B; letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 24px; }
         .s-h1 { font-size: 40px; font-weight: 700; color: #1D1D1F; letter-spacing: -0.025em; margin-bottom: 10px; line-height: 1.1; }
         @media (max-width: 640px) { .s-h1 { font-size: 28px; } }
-        .s-sub { font-size: 17px; color: #6E6E73; margin-bottom: 40px; line-height: 1.5; letter-spacing: -0.01em; }
+        .s-sub { font-size: 17px; color: #6E6E73; margin-bottom: 40px; line-height: 1.5; }
         @media (max-width: 640px) { .s-sub { font-size: 15px; margin-bottom: 28px; } }
 
-        /* Cartes 3D — style Apple */
-        .s-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; perspective: 1200px; }
-        @media (max-width: 640px) { .s-grid2 { grid-template-columns: 1fr; } }
-        .s-choix { background: #fff; border: none; border-radius: 22px; padding: 32px 28px; cursor: pointer; text-align: left; font-family: inherit; transition: transform 0.35s cubic-bezier(.2,.9,.3,1), box-shadow 0.35s ease, border-color 0.2s; display: flex; flex-direction: column; align-items: flex-start; gap: 20px; transform-style: preserve-3d; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06); position: relative; }
-        .s-choix::after { content: ''; position: absolute; inset: 0; border-radius: 22px; padding: 2px; background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(255,255,255,0)); -webkit-mask: linear-gradient(#000,#000) content-box, linear-gradient(#000,#000); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
-        .s-choix:hover { transform: translateY(-6px) rotateX(4deg); box-shadow: 0 4px 8px rgba(0,0,0,0.05), 0 24px 48px rgba(0,113,227,0.15); }
-        .s-choix.sel { transform: translateY(-4px); box-shadow: 0 2px 4px rgba(0,113,227,0.1), 0 20px 40px rgba(0,113,227,0.22); outline: 2px solid #0071E3; outline-offset: -2px; }
-        .s-choix-icon { width: 60px; height: 60px; border-radius: 18px; background: linear-gradient(135deg, #F0F5FF 0%, #E1EBFF 100%); color: #0071E3; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 -2px 4px rgba(0,113,227,0.08); }
-        .s-choix.sel .s-choix-icon { background: linear-gradient(135deg, #0071E3 0%, #0040DD 100%); color: #fff; box-shadow: 0 6px 14px rgba(0,113,227,0.35), inset 0 -2px 4px rgba(0,0,0,0.15); }
-        .s-choix h3 { font-size: 19px; font-weight: 600; color: #1D1D1F; margin: 0 0 6px; letter-spacing: -0.02em; }
-        .s-choix p { font-size: 14px; color: #6E6E73; margin: 0; line-height: 1.45; letter-spacing: -0.01em; }
+        /* Cartes 3D vraies — visible au repos */
+        .s-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 32px; perspective: 1400px; }
+        @media (max-width: 640px) { .s-grid2 { grid-template-columns: 1fr; gap: 14px; } }
+        .s-choix {
+          background: linear-gradient(180deg, #FFFFFF 0%, #FAFAFC 100%);
+          border: 1px solid rgba(0,0,0,0.06);
+          border-radius: 24px;
+          padding: 36px 28px;
+          cursor: pointer;
+          text-align: left;
+          font-family: inherit;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 24px;
+          transform: perspective(1200px) rotateX(3deg) rotateY(-2deg);
+          transform-style: preserve-3d;
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.9) inset,
+            0 -6px 12px rgba(0,0,0,0.02) inset,
+            0 2px 4px rgba(0,0,0,0.03),
+            0 12px 28px rgba(20,30,60,0.08),
+            0 24px 48px rgba(20,30,60,0.06);
+          transition: transform 0.4s cubic-bezier(.2,.9,.3,1), box-shadow 0.4s ease;
+        }
+        .s-choix + .s-choix { transform: perspective(1200px) rotateX(3deg) rotateY(2deg); }
+        .s-choix:hover {
+          transform: perspective(1200px) rotateX(0deg) rotateY(0deg) translateY(-8px);
+          box-shadow:
+            0 1px 0 rgba(255,255,255,0.9) inset,
+            0 4px 8px rgba(0,113,227,0.06),
+            0 20px 40px rgba(0,113,227,0.15),
+            0 40px 80px rgba(0,113,227,0.1);
+        }
+        .s-choix.sel {
+          transform: perspective(1200px) rotateX(0deg) rotateY(0deg) translateY(-4px);
+          border-color: #0071E3;
+          box-shadow:
+            0 0 0 3px rgba(0,113,227,0.15),
+            0 4px 8px rgba(0,113,227,0.1),
+            0 20px 40px rgba(0,113,227,0.22),
+            0 40px 80px rgba(0,113,227,0.15);
+        }
+        .s-choix-icon {
+          width: 68px;
+          height: 68px;
+          border-radius: 20px;
+          background: linear-gradient(135deg, #EBF3FF 0%, #D4E4FF 100%);
+          color: #0071E3;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 12px rgba(0,113,227,0.12), inset 0 -2px 4px rgba(0,113,227,0.08), inset 0 1px 1px rgba(255,255,255,0.8);
+        }
+        .s-choix.sel .s-choix-icon {
+          background: linear-gradient(135deg, #0089FF 0%, #0055D4 100%);
+          color: #fff;
+          box-shadow: 0 8px 20px rgba(0,113,227,0.45), inset 0 -2px 4px rgba(0,0,0,0.15), inset 0 1px 1px rgba(255,255,255,0.3);
+        }
+        .s-choix h3 { font-size: 20px; font-weight: 600; color: #1D1D1F; margin: 0 0 6px; letter-spacing: -0.02em; }
+        .s-choix p { font-size: 14px; color: #6E6E73; margin: 0; line-height: 1.5; }
 
+        /* Activités */
         .s-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 32px; }
         @media (max-width: 640px) { .s-grid3 { grid-template-columns: 1fr 1fr; } }
-        .s-act { background: #fff; border: none; border-radius: 14px; padding: 15px 16px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; color: #1D1D1F; text-align: left; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 2px 8px rgba(0,0,0,0.04); }
-        .s-act:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,0,0,0.05), 0 6px 16px rgba(0,113,227,0.1); }
-        .s-act.sel { background: #0071E3; color: #fff; box-shadow: 0 4px 12px rgba(0,113,227,0.35); }
+        .s-act { background: #fff; border: 1px solid rgba(0,0,0,0.06); border-radius: 14px; padding: 15px 16px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; color: #1D1D1F; text-align: left; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03); }
+        .s-act:hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,113,227,0.06), 0 8px 20px rgba(0,113,227,0.1); border-color: rgba(0,113,227,0.2); }
+        .s-act.sel { background: linear-gradient(180deg, #0089FF 0%, #0071E3 100%); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(0,113,227,0.4); }
 
         .s-card { background: #fff; border-radius: 20px; padding: 24px; margin-bottom: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 4px 16px rgba(0,0,0,0.04); }
         .s-sec { font-size: 11px; font-weight: 600; color: #86868B; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
         .s-field { margin-bottom: 14px; }
-        .s-field label { display: block; font-size: 13px; font-weight: 500; color: #6E6E73; margin-bottom: 6px; letter-spacing: -0.01em; }
+        .s-field label { display: block; font-size: 13px; font-weight: 500; color: #6E6E73; margin-bottom: 6px; }
         .s-field input, .s-field select { width: 100%; border: 1px solid #D2D2D7; border-radius: 12px; padding: 12px 14px; font-family: inherit; font-size: 15px; color: #1D1D1F; background: #fff; outline: none; transition: all 0.15s; }
         .s-field input:focus, .s-field select:focus { border-color: #0071E3; box-shadow: 0 0 0 4px rgba(0,113,227,0.15); }
         .s-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
@@ -127,18 +177,70 @@ function Simulation() {
         .s-radio button { flex: 1; border: none; border-radius: 8px; padding: 9px; background: transparent; font-family: inherit; font-size: 13px; font-weight: 500; color: #6E6E73; cursor: pointer; transition: all 0.2s; }
         .s-radio button.sel { background: #fff; color: #0071E3; box-shadow: 0 1px 3px rgba(0,0,0,0.08); font-weight: 600; }
 
-        /* Bouton style Apple */
-        .s-btn { width: 100%; background: #0071E3; color: #fff; border: none; border-radius: 14px; padding: 16px 24px; font-family: inherit; font-size: 16px; font-weight: 500; cursor: pointer; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; letter-spacing: -0.01em; transition: all 0.2s cubic-bezier(.2,.9,.3,1); box-shadow: 0 1px 3px rgba(0,113,227,0.25), 0 6px 16px rgba(0,113,227,0.25); position: relative; overflow: hidden; }
-        .s-btn::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 50%; background: linear-gradient(180deg, rgba(255,255,255,0.15), transparent); border-radius: 14px 14px 0 0; pointer-events: none; }
-        .s-btn:hover:not(:disabled) { background: #0077ED; transform: translateY(-1px); box-shadow: 0 2px 4px rgba(0,113,227,0.3), 0 10px 24px rgba(0,113,227,0.32); }
-        .s-btn:active:not(:disabled) { transform: translateY(0) scale(0.985); box-shadow: 0 1px 2px rgba(0,113,227,0.2), 0 4px 10px rgba(0,113,227,0.2); }
-        .s-btn:disabled { background: #E5E5EA; color: #A1A1A6; cursor: not-allowed; box-shadow: none; }
+        /* Bouton Apple — 3D, dégradé, brillance */
+        .s-btn {
+          width: 100%;
+          background: linear-gradient(180deg, #0A84FF 0%, #0071E3 50%, #0055D4 100%);
+          color: #fff;
+          border: none;
+          border-radius: 16px;
+          padding: 18px 24px;
+          font-family: inherit;
+          font-size: 17px;
+          font-weight: 600;
+          cursor: pointer;
+          margin-top: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          letter-spacing: -0.01em;
+          transition: all 0.2s cubic-bezier(.2,.9,.3,1);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.35),
+            inset 0 -1px 0 rgba(0,0,0,0.1),
+            0 1px 3px rgba(0,113,227,0.3),
+            0 8px 20px rgba(0,113,227,0.35),
+            0 16px 32px rgba(0,113,227,0.15);
+          position: relative;
+          overflow: hidden;
+        }
+        .s-btn::before {
+          content: '';
+          position: absolute;
+          top: 0; left: 0; right: 0;
+          height: 55%;
+          background: linear-gradient(180deg, rgba(255,255,255,0.25) 0%, transparent 100%);
+          border-radius: 16px 16px 0 0;
+          pointer-events: none;
+        }
+        .s-btn:hover:not(:disabled) {
+          background: linear-gradient(180deg, #1A94FF 0%, #0077ED 50%, #005BE0 100%);
+          transform: translateY(-2px);
+          box-shadow:
+            inset 0 1px 0 rgba(255,255,255,0.4),
+            inset 0 -1px 0 rgba(0,0,0,0.1),
+            0 2px 4px rgba(0,113,227,0.3),
+            0 12px 28px rgba(0,113,227,0.4),
+            0 20px 40px rgba(0,113,227,0.2);
+        }
+        .s-btn:active:not(:disabled) {
+          transform: translateY(0) scale(0.98);
+          box-shadow: inset 0 2px 4px rgba(0,0,0,0.1), 0 1px 2px rgba(0,113,227,0.2), 0 4px 10px rgba(0,113,227,0.2);
+        }
+        .s-btn:disabled {
+          background: linear-gradient(180deg, #F0F0F2 0%, #E5E5EA 100%);
+          color: #A1A1A6;
+          cursor: not-allowed;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.5), 0 1px 2px rgba(0,0,0,0.04);
+        }
         .s-btn:disabled::before { display: none; }
-        .s-btn-back { width: 100%; background: transparent; color: #0071E3; border: none; padding: 14px; font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 6px; letter-spacing: -0.01em; }
+
+        .s-btn-back { width: 100%; background: transparent; color: #0071E3; border: none; padding: 14px; font-family: inherit; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 6px; }
         .s-btn-back:hover { color: #0077ED; }
 
         .s-success { text-align: center; padding: 20px 0; }
-        .s-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,113,227,0.1); color: #0071E3; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 100px; margin-bottom: 20px; letter-spacing: -0.01em; }
+        .s-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,113,227,0.1); color: #0071E3; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 100px; margin-bottom: 20px; }
       `}</style>
 
       <nav className="s-nav">
@@ -161,9 +263,10 @@ function Simulation() {
           <div className="s-grid2">
             <button className={`s-choix ${type === 'Personne physique' ? 'sel' : ''}`} onClick={() => setType('Personne physique')}>
               <div className="s-choix-icon">
-                <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-                  <circle cx="15" cy="10" r="5" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M4 26c0-6.075 4.925-11 11-11s11 4.925 11 11" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                {/* Icône moderne "personne" (style Heroicons filled) */}
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M12 12a5 5 0 100-10 5 5 0 000 10z"/>
+                  <path d="M2 21a10 10 0 0120 0v.5a.5.5 0 01-.5.5h-19a.5.5 0 01-.5-.5V21z"/>
                 </svg>
               </div>
               <div>
@@ -173,12 +276,9 @@ function Simulation() {
             </button>
             <button className={`s-choix ${type === 'Personne morale' ? 'sel' : ''}`} onClick={() => setType('Personne morale')}>
               <div className="s-choix-icon">
-                <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-                  <rect x="4" y="9" width="22" height="17" rx="1.5" stroke="currentColor" strokeWidth="2"/>
-                  <path d="M9 26v-6h12v6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  <path d="M8 9V5a1 1 0 011-1h12a1 1 0 011 1v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  <rect x="10" y="13" width="2.5" height="2.5" rx="0.5" fill="currentColor"/>
-                  <rect x="17.5" y="13" width="2.5" height="2.5" rx="0.5" fill="currentColor"/>
+                {/* Icône moderne "entreprise" (immeuble stylisé filled) */}
+                <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M3 4a1 1 0 011-1h9a1 1 0 011 1v3h6a1 1 0 011 1v13a1 1 0 01-1 1h-6v-4a1 1 0 00-1-1h-2a1 1 0 00-1 1v4H4a1 1 0 01-1-1V4zm3 4a1 1 0 011-1h1a1 1 0 010 2H7a1 1 0 01-1-1zm4 0a1 1 0 011-1h1a1 1 0 010 2h-1a1 1 0 01-1-1zM7 11a1 1 0 000 2h1a1 1 0 100-2H7zm3 1a1 1 0 011-1h1a1 1 0 010 2h-1a1 1 0 01-1-1zm7-1a1 1 0 100 2h1a1 1 0 100-2h-1zm-1 4a1 1 0 011-1h1a1 1 0 010 2h-1a1 1 0 01-1-1z"/>
                 </svg>
               </div>
               <div>
@@ -189,7 +289,7 @@ function Simulation() {
           </div>
           <button className="s-btn" disabled={!type} onClick={() => setStep(2)}>
             Continuer
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
         </>}
 
@@ -203,7 +303,7 @@ function Simulation() {
           </div>
           <button className="s-btn" disabled={!activite} onClick={() => setStep(3)}>
             Continuer
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
           <button className="s-btn-back" onClick={() => setStep(1)}>Retour</button>
         </>}
@@ -301,7 +401,7 @@ function Simulation() {
 
           <button className="s-btn" disabled={loading || !form.tel || !form.montant || (isPhysique ? !form.prenom : !form.raison_sociale)} onClick={soumettre}>
             {loading ? 'Envoi en cours…' : 'Voir mon score'}
-            {!loading && <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+            {!loading && <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </button>
           <button className="s-btn-back" onClick={() => setStep(2)}>Retour</button>
         </>}
@@ -316,7 +416,7 @@ function Simulation() {
             <div style={{ fontFamily: 'monospace', fontSize: 12, wordBreak: 'break-all', color: '#1D1D1F' }}>{leadId}</div>
           </div>
 
-          <button className="s-btn" style={{ background: '#25D366', boxShadow: '0 1px 3px rgba(37,211,102,0.25), 0 6px 16px rgba(37,211,102,0.25)' }} onClick={() => window.open(`https://wa.me/242060000000?text=Bonjour, j'ai soumis mon dossier. Ref: ${leadId}`, '_blank')}>
+          <button className="s-btn" style={{ background: 'linear-gradient(180deg, #2FE873 0%, #25D366 50%, #1DB954 100%)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.1), 0 1px 3px rgba(37,211,102,0.3), 0 8px 20px rgba(37,211,102,0.35)' }} onClick={() => window.open(`https://wa.me/242060000000?text=Bonjour, j'ai soumis mon dossier. Ref: ${leadId}`, '_blank')}>
             Confirmer sur WhatsApp
           </button>
           <button className="s-btn-back" onClick={() => navigate({ to: '/' })}>Retour à l'accueil</button>
