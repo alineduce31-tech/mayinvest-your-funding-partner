@@ -1,241 +1,290 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
+import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 
-export const Route = createFileRoute('/')({
-  component: Index,
+export const Route = createFileRoute('/simulation')({
+  component: Simulation,
 })
 
-function LogoSVG({ height = 64, tone = 'light' }: { height?: number; tone?: 'light' | 'dark' }) {
-  return <Logo height={height} tone={tone} />
+const ACTIVITES_PHYSIQUE = ['Fonctionnaire', 'Salarié privé', 'Commerçant', 'Artisan', 'Profession libérale', 'Agriculteur', 'Autre']
+const ACTIVITES_MORALE = ['Commerce', 'Tourisme', 'BTP', 'Industrie / Bois', 'Agriculture', 'Transport', 'Santé', 'Tech', 'Autre']
+const BANQUES = ['BGFI Bank', 'UBA', 'LCB Bank', 'MUCODEC', 'Crédit du Congo', 'Ecobank', 'Autre', 'Aucune']
+const VILLES = ['Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Ouesso', 'Autre']
+
+function calcScore(type: string, data: Record<string, string>): number {
+  let score = 0
+  if (type === 'Personne physique') {
+    if (data.anciennete && parseInt(data.anciennete) >= 6) score += 25
+    if (data.salaire_domic === 'Oui') score += 25
+    if (data.revenu && parseInt(data.revenu) >= 200000) score += 20
+    if (data.banque && data.banque !== 'Aucune') score += 15
+    if (data.montant && parseInt(data.montant) <= 10000000) score += 15
+  } else {
+    if (data.rccm === 'Oui') score += 30
+    if (data.compte_mouvemente === 'Oui') score += 25
+    if (data.anciennete_soc && parseInt(data.anciennete_soc) >= 12) score += 20
+    if (data.refus_bancaire === 'Non') score += 15
+    if (data.garanties === 'Oui') score += 10
+  }
+  return Math.min(score, 100)
 }
 
-function Index() {
+function Simulation() {
   const navigate = useNavigate()
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
+  const [type, setType] = useState<'Personne physique' | 'Personne morale' | ''>('')
+  const [activite, setActivite] = useState('')
+  const [form, setForm] = useState<Record<string, string>>({})
+  const [loading, setLoading] = useState(false)
+  const [score, setScore] = useState(0)
+  const [leadId, setLeadId] = useState('')
+
+  function set(k: string, v: string) { setForm(f => ({ ...f, [k]: v })) }
+  const isPhysique = type === 'Personne physique'
+
+  async function soumettre() {
+    setLoading(true)
+    const s = calcScore(type, form)
+    const nonEligible = isPhysique
+      ? (form.anciennete && parseInt(form.anciennete) < 6) || form.salaire_domic === 'Non'
+      : form.rccm === 'Non'
+
+    const payload = {
+      type: isPhysique ? 'personne physique' : 'personne morale',
+      activite, ville: form.ville || '',
+      montant_demande: parseInt(form.montant || '0'),
+      banque_actuelle: form.banque || '',
+      statut: nonEligible ? 'Non Éligible' : 'Nouveau',
+      score: s,
+      identite: { nom: form.nom, prenom: form.prenom, tel: form.tel, email: form.email },
+      situation: isPhysique
+        ? { employeur: form.employeur, anciennete: form.anciennete, revenu: form.revenu }
+        : { raison_sociale: form.raison_sociale, dirigeant: form.dirigeant, rccm: form.rccm, niu: form.niu, anciennete: form.anciennete_soc, ca_annuel: form.ca_annuel },
+      besoin: { montant: form.montant, objet: form.objet, banque: form.banque, flux_mois: form.flux_mois },
+      eligibilite: isPhysique
+        ? { anciennete_ok: form.anciennete && parseInt(form.anciennete) >= 6, salaire_domic: form.salaire_domic }
+        : { compte_mouvemente: form.compte_mouvemente, refus_bancaire: form.refus_bancaire, garanties: form.garanties },
+    }
+
+    const { data, error } = await supabase.from('leads').insert(payload).select('id').single()
+    setLoading(false)
+    if (!error && data) {
+      setLeadId(data.id)
+      setScore(s)
+      setStep(4)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#FFFFFF', color: '#111111', minHeight: '100vh', WebkitFontSmoothing: 'antialiased' }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#FFFFFF', color: '#111', minHeight: '100vh', WebkitFontSmoothing: 'antialiased' }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <style>{`
         * { box-sizing: border-box; }
-
-        .nav { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
-        @media (max-width: 640px) { .nav { height: 60px; padding: 0 20px; } }
-
-        .hero { padding: 90px 60px 80px; display: grid; grid-template-columns: 1fr 480px; gap: 60px; align-items: center; }
-        @media (max-width: 900px) { .hero { grid-template-columns: 1fr; padding: 48px 32px 40px; gap: 40px; } }
-        @media (max-width: 640px) { .hero { padding: 32px 20px 32px; gap: 32px; } }
-
-        .hero h1 { font-size: 58px; font-weight: 800; line-height: 1.1; letter-spacing: -2px; color: #111; margin-bottom: 20px; }
-        @media (max-width: 900px) { .hero h1 { font-size: 44px; } }
-        @media (max-width: 640px) { .hero h1 { font-size: 34px; letter-spacing: -1px; } }
-
-        .hero-sub { font-size: 17px; line-height: 1.65; color: #666; max-width: 420px; margin-bottom: 44px; }
-        @media (max-width: 640px) { .hero-sub { font-size: 15px; margin-bottom: 28px; } }
-
-        .hero-btns { display: flex; flex-direction: column; gap: 14px; max-width: 360px; }
-        @media (max-width: 640px) { .hero-btns { max-width: 100%; } }
-
-        .score-card { background: #0D1B3E; border-radius: 28px; padding: 36px; color: #fff; transform: perspective(900px) rotateY(-6deg) rotateX(3deg); box-shadow: 0 40px 80px rgba(13,27,62,0.28), 0 8px 24px rgba(13,27,62,0.16); position: relative; overflow: hidden; }
-        @media (max-width: 900px) { .score-card { transform: none; } }
-        @media (max-width: 640px) { .score-card { transform: none; padding: 24px; border-radius: 20px; } }
-
-        .sc-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
-
-        .proof { padding: 32px 60px; border-top: 1px solid #F0F0F0; border-bottom: 1px solid #F0F0F0; display: flex; align-items: center; gap: 48px; flex-wrap: wrap; }
-        @media (max-width: 900px) { .proof { padding: 24px 32px; gap: 24px; } }
-        @media (max-width: 640px) { .proof { padding: 20px; gap: 16px; display: grid; grid-template-columns: 1fr 1fr; } }
-        .proof-divider { width: 1px; height: 40px; background: #EBEBEB; }
-        @media (max-width: 640px) { .proof-divider { display: none; } }
-
-        .steps { padding: 80px 60px; }
-        @media (max-width: 900px) { .steps { padding: 56px 32px; } }
-        @media (max-width: 640px) { .steps { padding: 40px 20px; } }
-        .section-title { font-size: 42px; font-weight: 800; letter-spacing: -1.5px; color: #111; margin-bottom: 48px; line-height: 1.1; }
-        @media (max-width: 640px) { .section-title { font-size: 28px; letter-spacing: -0.5px; margin-bottom: 28px; } }
-
-        .dark-band { background: #111111; margin: 0 60px; border-radius: 28px; padding: 64px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
-        @media (max-width: 900px) { .dark-band { margin: 0 32px; grid-template-columns: 1fr; padding: 40px; gap: 40px; } }
-        @media (max-width: 640px) { .dark-band { margin: 0 16px; padding: 28px 20px; border-radius: 20px; gap: 28px; } }
-        .db-title { font-size: 36px; font-weight: 800; color: #fff; letter-spacing: -1px; line-height: 1.15; margin-bottom: 16px; }
-        @media (max-width: 640px) { .db-title { font-size: 26px; } }
-
-        .cta-final { padding: 80px 60px; text-align: center; }
-        @media (max-width: 640px) { .cta-final { padding: 48px 20px; } }
-        .cta-final h2 { font-size: 44px; font-weight: 800; letter-spacing: -1.5px; margin-bottom: 12px; }
-        @media (max-width: 640px) { .cta-final h2 { font-size: 28px; letter-spacing: -0.5px; } }
-        .cta-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
-
-        .footer { border-top: 1px solid #F0F0F0; padding: 32px 60px; display: flex; justify-content: space-between; align-items: center; }
-        @media (max-width: 640px) { .footer { padding: 24px 20px; flex-direction: column; gap: 12px; text-align: center; } }
-
-        .btn-main { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
-        .btn-second { background: #F5F5F5; color: #111; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
-        .nav-btn { background: #111111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 28px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-        @media (max-width: 640px) { .nav-btn { padding: 10px 20px; font-size: 13px; } }
-        .db-btn { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px 28px; border-radius: 100px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
-        .cta-blue { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 32px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-        .cta-dark { background: #111; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 32px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
-        @media (max-width: 640px) { .cta-blue, .cta-dark { width: 100%; justify-content: center; } }
+        .s-nav { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
+        @media (max-width: 640px) { .s-nav { height: 60px; padding: 0 20px; } }
+        .s-back { background: transparent; border: none; color: #666; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+        .s-main { max-width: 720px; margin: 0 auto; padding: 60px 24px 80px; }
+        @media (max-width: 640px) { .s-main { padding: 32px 20px 60px; } }
+        .s-progress { display: flex; gap: 8px; margin-bottom: 12px; }
+        .s-dot { height: 5px; flex: 1; border-radius: 100px; background: #EEE; }
+        .s-dot.on { background: #1A6BFF; }
+        .s-etape { font-size: 12px; font-weight: 600; color: #999; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 24px; }
+        .s-h1 { font-size: 32px; font-weight: 800; color: #111; letter-spacing: -1px; margin-bottom: 12px; line-height: 1.15; }
+        @media (max-width: 640px) { .s-h1 { font-size: 24px; letter-spacing: -0.5px; } }
+        .s-sub { font-size: 15px; color: #666; margin-bottom: 32px; line-height: 1.6; }
+        .s-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        @media (max-width: 640px) { .s-grid2 { grid-template-columns: 1fr; } }
+        .s-choix { background: #fff; border: 2px solid #EEE; border-radius: 20px; padding: 28px 24px; cursor: pointer; text-align: left; font-family: inherit; transition: all 0.15s; }
+        .s-choix:hover, .s-choix.sel { border-color: #1A6BFF; background: #F0F5FF; }
+        .s-choix h3 { font-size: 18px; font-weight: 700; color: #111; margin-bottom: 6px; }
+        .s-choix p { font-size: 13px; color: #666; }
+        .s-grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        @media (max-width: 640px) { .s-grid3 { grid-template-columns: 1fr 1fr; } }
+        .s-act { background: #fff; border: 1.5px solid #EEE; border-radius: 14px; padding: 14px 16px; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 600; color: #444; text-align: left; transition: all 0.15s; }
+        .s-act:hover, .s-act.sel { border-color: #1A6BFF; background: #F0F5FF; color: #1A6BFF; }
+        .s-card { background: #FAFAFA; border: 1px solid #EEE; border-radius: 18px; padding: 24px; margin-bottom: 16px; }
+        .s-sec { font-size: 11px; font-weight: 700; color: #999; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; }
+        .s-field { margin-bottom: 14px; }
+        .s-field label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 6px; }
+        .s-field input, .s-field select { width: 100%; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: #111; background: #fff; outline: none; }
+        .s-field input:focus, .s-field select:focus { border-color: #1A6BFF; }
+        .s-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        @media (max-width: 520px) { .s-row2 { grid-template-columns: 1fr; } }
+        .s-radio { display: flex; gap: 8px; }
+        .s-radio button { flex: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 11px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 600; color: #666; cursor: pointer; transition: all 0.15s; }
+        .s-radio button.sel { border-color: #1A6BFF; background: #F0F5FF; color: #1A6BFF; }
+        .s-btn { width: 100%; background: #1A6BFF; color: #fff; border: none; border-radius: 100px; padding: 18px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 12px; }
+        .s-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .s-btn-back { width: 100%; background: transparent; color: #666; border: 1.5px solid #EEE; border-radius: 100px; padding: 16px; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 10px; }
+        .s-success { text-align: center; padding: 20px 0; }
+        .s-score-big { width: 160px; height: 160px; margin: 0 auto 24px; position: relative; }
+        .s-badge { display: inline-flex; align-items: center; gap: 8px; background: #F0F5FF; color: #1A6BFF; font-size: 13px; font-weight: 700; padding: 6px 16px; border-radius: 100px; margin-bottom: 20px; }
       `}</style>
 
-      <nav className="nav">
-        <LogoSVG height={56} tone="light" />
-        <button className="nav-btn" onClick={() => navigate({ to: '/simulation' })}>
-          Commencer
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      <nav className="s-nav">
+        <Logo height={56} tone="light" />
+        <button className="s-back" onClick={() => navigate({ to: '/' })}>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 4L6 8l4 4" stroke="#666" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Retour à l'accueil
         </button>
       </nav>
 
-      <section className="hero">
-        <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: '#EEF4FF', color: '#1A6BFF', fontSize: 13, fontWeight: 600, padding: '6px 16px', borderRadius: 100, marginBottom: 28 }}>
-            <div style={{ width: 7, height: 7, background: '#1A6BFF', borderRadius: '50%' }}></div>
-            Présélection gratuite · 2 minutes
-          </div>
-          <h1>
-            Votre crédit,<br />évalué <span style={{ color: '#1A6BFF' }}>avant</span><br />la banque.
-          </h1>
-          <p className="hero-sub">Remplissez notre formulaire et recevez immédiatement votre score d'éligibilité. Un conseiller vous rappelle sous 24h.</p>
-          <div className="hero-btns">
-            <button className="btn-main">
-              <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="3.5" fill="white"/><path d="M3 17c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
-                Je suis un particulier
-              </span>
-              <span style={{ opacity: 0.55, display: 'flex', alignItems: 'center' }}>
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </span>
+      <main className="s-main">
+        <div className="s-progress">
+          {[1, 2, 3, 4].map((n) => <div key={n} className={`s-dot ${step >= n ? 'on' : ''}`} />)}
+        </div>
+        <div className="s-etape">Étape {step} sur 4</div>
+
+        {/* ÉTAPE 1 — Type de client */}
+        {step === 1 && <>
+          <h1 className="s-h1">Qui demande le financement ?</h1>
+          <p className="s-sub">Sélectionnez votre profil pour accéder au formulaire adapté.</p>
+          <div className="s-grid2">
+            <button className={`s-choix ${type === 'Personne physique' ? 'sel' : ''}`} onClick={() => setType('Personne physique')}>
+              <h3>👤 Personne physique</h3>
+              <p>Particulier, salarié, commerçant, artisan…</p>
             </button>
-            <button className="btn-second">
-              <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" rx="1.5" stroke="#111" strokeWidth="2"/><path d="M7 18V13h6v5" stroke="#111" strokeWidth="2" strokeLinecap="round"/><path d="M6 7V4a1 1 0 011-1h6a1 1 0 011 1v3" stroke="#111" strokeWidth="2"/><rect x="7.5" y="9.5" width="2" height="2" rx="0.5" fill="#111"/><rect x="10.5" y="9.5" width="2" height="2" rx="0.5" fill="#111"/></svg>
-                Mon entreprise / PME
-              </span>
-              <span style={{ opacity: 0.55, display: 'flex', alignItems: 'center' }}>
-                <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="#333" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </span>
+            <button className={`s-choix ${type === 'Personne morale' ? 'sel' : ''}`} onClick={() => setType('Personne morale')}>
+              <h3>🏢 Personne morale / PME</h3>
+              <p>Entreprise, coopérative, société…</p>
             </button>
           </div>
-        </div>
+          <button className="s-btn" disabled={!type} onClick={() => setStep(2)}>Continuer →</button>
+        </>}
 
-        <div className="score-card">
-          <div style={{ position: 'absolute', top: -80, right: -80, width: 280, height: 280, background: 'radial-gradient(circle, rgba(26,107,255,0.25) 0%, transparent 65%)', pointerEvents: 'none' }}></div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
-            <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>Mayinvest</div>
-            <div style={{ background: 'rgba(26,107,255,0.2)', color: '#6DAFFF', fontSize: 12, fontWeight: 600, padding: '4px 12px', borderRadius: 100, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5l2.5 2.5L8 2.5" stroke="#6DAFFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Pré-qualifié
-            </div>
+        {/* ÉTAPE 2 — Activité */}
+        {step === 2 && <>
+          <h1 className="s-h1">{isPhysique ? 'Votre profession' : 'Votre secteur d\'activité'}</h1>
+          <p className="s-sub">{isPhysique ? 'Sélectionnez votre situation professionnelle.' : "Sélectionnez le secteur de votre entreprise."}</p>
+          <div className="s-grid3">
+            {(isPhysique ? ACTIVITES_PHYSIQUE : ACTIVITES_MORALE).map(a => (
+              <button key={a} className={`s-act ${activite === a ? 'sel' : ''}`} onClick={() => setActivite(a)}>{a}</button>
+            ))}
           </div>
-          <div style={{ marginBottom: 28 }}>
-            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 4 }}>Jean-Pierre M.</div>
-            <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.45)' }}>Fonctionnaire · Brazzaville</div>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 20, marginBottom: 28, background: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: 20 }}>
-            <div style={{ position: 'relative', width: 80, height: 80, flexShrink: 0 }}>
-              <svg viewBox="0 0 80 80" width="80" height="80" style={{ transform: 'rotate(-90deg)' }}>
-                <circle cx="40" cy="40" r="31" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="7"/>
-                <circle cx="40" cy="40" r="31" fill="none" stroke="#1A6BFF" strokeWidth="7" strokeLinecap="round" strokeDasharray="196" strokeDashoffset="20"/>
-              </svg>
-              <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 800 }}>90</div>
-            </div>
-            <div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: '#34D058' }}>Excellent</div>
-              <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>Score /100 · Très éligible</div>
-            </div>
-          </div>
-          <hr style={{ border: 'none', borderTop: '1px solid rgba(255,255,255,0.07)', marginBottom: 20 }} />
-          <div className="sc-stats">
-            <div><div style={{ fontSize: 17, fontWeight: 700 }}>15M</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>Montant XAF</div></div>
-            <div><div style={{ fontSize: 17, fontWeight: 700 }}>7 ans</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>Ancienneté</div></div>
-            <div><div style={{ fontSize: 17, fontWeight: 700 }}>24h</div><div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>Réponse</div></div>
-          </div>
-        </div>
-      </section>
+          <button className="s-btn" disabled={!activite} onClick={() => setStep(3)}>Continuer →</button>
+          <button className="s-btn-back" onClick={() => setStep(1)}>← Retour</button>
+        </>}
 
-      <div className="proof">
-        {[
-          { icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="6" width="16" height="12" rx="2.5" stroke="#1A6BFF" strokeWidth="1.8"/><path d="M6 6V5a2 2 0 012-2h6a2 2 0 012 2v1" stroke="#1A6BFF" strokeWidth="1.8"/><path d="M7 11h8M7 14h5" stroke="#1A6BFF" strokeWidth="1.8" strokeLinecap="round"/></svg>, num: '+500', label: 'Dossiers traités' },
-          { icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#1A6BFF" strokeWidth="1.8"/><path d="M7.5 11l2.5 2.5 4.5-4.5" stroke="#1A6BFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>, num: '87%', label: "Taux d'accord" },
-          { icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><circle cx="11" cy="11" r="8" stroke="#1A6BFF" strokeWidth="1.8"/><path d="M11 7v4l2.5 2.5" stroke="#1A6BFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>, num: '24h', label: 'Délai de réponse' },
-          { icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3L4 6v5c0 4.418 3.134 8.547 7 9.5C14.866 19.547 18 15.418 18 11V6L11 3z" stroke="#1A6BFF" strokeWidth="1.8" strokeLinejoin="round"/><path d="M8 11l2 2 4-4" stroke="#1A6BFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>, num: '100%', label: 'Gratuit & sans engagement' },
-        ].map((item, i) => (
-          <>
-            {i > 0 && <div key={`div-${i}`} className="proof-divider"></div>}
-            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 44, height: 44, background: '#F0F5FF', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{item.icon}</div>
-              <div><div style={{ fontSize: 26, fontWeight: 800, color: '#111' }}>{item.num}</div><div style={{ fontSize: 13, color: '#999', marginTop: 2 }}>{item.label}</div></div>
-            </div>
-          </>
-        ))}
-      </div>
+        {/* ÉTAPE 3 — Formulaire */}
+        {step === 3 && <>
+          <div className="s-badge">📋 {type} · {activite}</div>
+          <h1 className="s-h1">Votre dossier</h1>
+          <p className="s-sub">Cela prend moins de 2 minutes. Remplissez depuis votre téléphone.</p>
 
-      <section className="steps">
-        <div style={{ fontSize: 13, fontWeight: 600, color: '#1A6BFF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Comment ça marche</div>
-        <div className="section-title">3 étapes, c'est tout.</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {[
-            { n: '01', title: 'Choisissez votre profil', desc: "Particulier ou entreprise. Chaque formulaire est adapté à votre situation exacte, pas de questions inutiles." },
-            { n: '02', title: 'Remplissez en 2 minutes', desc: "Nom, profession, revenu et besoin. Pas de documents à cette étape. Depuis votre téléphone." },
-            { n: '03', title: 'Recevez votre score', desc: "Un score sur 100 et un verdict clair. Notre conseiller vous contacte dans les 24 heures." },
-          ].map((step) => (
-            <div key={step.n} style={{ display: 'grid', gridTemplateColumns: '56px 1fr', gap: 24, alignItems: 'start', padding: '28px 0', borderBottom: '1px solid #F4F4F4' }}>
-              <div style={{ width: 44, height: 44, background: '#111', color: '#fff', borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 700, flexShrink: 0 }}>{step.n}</div>
-              <div>
-                <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 6 }}>{step.title}</div>
-                <div style={{ fontSize: 14, color: '#777', lineHeight: 1.6 }}>{step.desc}</div>
+          <div className="s-card">
+            <div className="s-sec">1. Identité</div>
+            {isPhysique ? <>
+              <div className="s-row2">
+                <div className="s-field"><label>Prénom *</label><input placeholder="Jean-Pierre" value={form.prenom||''} onChange={e=>set('prenom',e.target.value)}/></div>
+                <div className="s-field"><label>Nom *</label><input placeholder="Moukouama" value={form.nom||''} onChange={e=>set('nom',e.target.value)}/></div>
               </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <div className="dark-band">
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: '#6DAFFF', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 14 }}>Ce que les banques vérifient</div>
-          <div className="db-title">On analyse avant eux.</div>
-          <div style={{ fontSize: 15, color: 'rgba(255,255,255,0.45)', lineHeight: 1.6, marginBottom: 32 }}>Notre algorithme évalue les mêmes critères que les banques partenaires, pour vous éviter les mauvaises surprises.</div>
-          <button className="db-btn">
-            Démarrer ma présélection
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </button>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {[
-            { icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="8" width="16" height="11" rx="2.5" stroke="#6DAFFF" strokeWidth="1.8"/><path d="M7 8V6a2 2 0 012-2h4a2 2 0 012 2v2" stroke="#6DAFFF" strokeWidth="1.8"/><path d="M3 13h16" stroke="#6DAFFF" strokeWidth="1.8" strokeLinecap="round"/></svg>, name: 'Stabilité professionnelle', detail: 'Ancienneté, employeur, type de contrat' },
-            { icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="6" width="18" height="13" rx="2.5" stroke="#6DAFFF" strokeWidth="1.8"/><path d="M2 10h18" stroke="#6DAFFF" strokeWidth="1.8"/><circle cx="15.5" cy="14.5" r="1.5" fill="#6DAFFF"/><path d="M6 6V5a3 3 0 016 0v1" stroke="#6DAFFF" strokeWidth="1.8"/></svg>, name: 'Capacité de remboursement', detail: "Revenus nets, charges, taux d'endettement" },
-            { icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M2 9l9-6 9 6" stroke="#6DAFFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/><rect x="4" y="9" width="3" height="7" rx="1" fill="#6DAFFF" opacity="0.5"/><rect x="9.5" y="9" width="3" height="7" rx="1" fill="#6DAFFF" opacity="0.5"/><rect x="15" y="9" width="3" height="7" rx="1" fill="#6DAFFF" opacity="0.5"/><path d="M2 18h18" stroke="#6DAFFF" strokeWidth="1.8" strokeLinecap="round"/></svg>, name: 'Domiciliation bancaire', detail: 'Banque actuelle, flux mensuels, ancienneté' },
-            { icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 3L4 6v5c0 4.418 3.134 8.547 7 9.5C14.866 19.547 18 15.418 18 11V6L11 3z" stroke="#6DAFFF" strokeWidth="1.8" strokeLinejoin="round"/><path d="M8 11l2 2 4-4" stroke="#6DAFFF" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>, name: 'Garanties disponibles', detail: 'Bien immobilier, caution, nantissement' },
-          ].map((crit) => (
-            <div key={crit.name} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 16, padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 14 }}>
-              <div style={{ width: 44, height: 44, background: 'rgba(26,107,255,0.15)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{crit.icon}</div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{crit.name}</div>
-                <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginTop: 2 }}>{crit.detail}</div>
+              <div className="s-row2">
+                <div className="s-field"><label>Téléphone *</label><input placeholder="+242 06 000 0000" value={form.tel||''} onChange={e=>set('tel',e.target.value)}/></div>
+                <div className="s-field"><label>Email</label><input placeholder="email@exemple.com" value={form.email||''} onChange={e=>set('email',e.target.value)}/></div>
               </div>
+            </> : <>
+              <div className="s-field"><label>Raison sociale *</label><input placeholder="Nom de l'entreprise" value={form.raison_sociale||''} onChange={e=>set('raison_sociale',e.target.value)}/></div>
+              <div className="s-field"><label>Nom du dirigeant *</label><input placeholder="Prénom Nom" value={form.dirigeant||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
+              <div className="s-row2">
+                <div className="s-field"><label>Téléphone *</label><input placeholder="+242 06 000 0000" value={form.tel||''} onChange={e=>set('tel',e.target.value)}/></div>
+                <div className="s-field"><label>Email</label><input placeholder="email@exemple.com" value={form.email||''} onChange={e=>set('email',e.target.value)}/></div>
+              </div>
+            </>}
+            <div className="s-field"><label>Ville *</label>
+              <select value={form.ville||''} onChange={e=>set('ville',e.target.value)}>
+                <option value="">Sélectionner…</option>
+                {VILLES.map(v=><option key={v}>{v}</option>)}
+              </select>
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
 
-      <section className="cta-final">
-        <h2>Prêt à savoir où vous en êtes ?</h2>
-        <p style={{ fontSize: 16, color: '#888', marginBottom: 40 }}>Gratuit · Sans engagement · Résultat immédiat</p>
-        <div className="cta-row">
-          <button className="cta-blue">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="5.5" r="3" fill="white"/><path d="M2.5 15.5c0-3.59 2.91-6.5 6.5-6.5s6.5 2.91 6.5 6.5" stroke="white" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            Particulier
-          </button>
-          <button className="cta-dark">
-            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2.5" y="6" width="13" height="10" rx="1.5" stroke="white" strokeWidth="1.8"/><path d="M5.5 6V4a1 1 0 011-1h5a1 1 0 011 1v2" stroke="white" strokeWidth="1.8"/><rect x="6.5" y="8.5" width="2" height="2" rx="0.5" fill="white"/><rect x="9.5" y="8.5" width="2" height="2" rx="0.5" fill="white"/></svg>
-            Entreprise / PME
-          </button>
-        </div>
-      </section>
+          <div className="s-card">
+            <div className="s-sec">2. Situation {isPhysique ? 'professionnelle' : 'juridique'}</div>
+            {isPhysique ? <>
+              <div className="s-field"><label>Employeur / Administration</label><input placeholder="Ministère…" value={form.employeur||''} onChange={e=>set('employeur',e.target.value)}/></div>
+              <div className="s-row2">
+                <div className="s-field"><label>Ancienneté (mois)</label><input type="number" placeholder="24" value={form.anciennete||''} onChange={e=>set('anciennete',e.target.value)}/></div>
+                <div className="s-field"><label>Revenu net/mois (XAF)</label><input type="number" placeholder="250000" value={form.revenu||''} onChange={e=>set('revenu',e.target.value)}/></div>
+              </div>
+            </> : <>
+              <div className="s-row2">
+                <div className="s-field"><label>RCCM</label>
+                  <div className="s-radio">
+                    {['Oui','Non'].map(v=><button key={v} type="button" className={form.rccm===v?'sel':''} onClick={()=>set('rccm',v)}>{v}</button>)}
+                  </div>
+                </div>
+                <div className="s-field"><label>NIU</label><input placeholder="NIU" value={form.niu||''} onChange={e=>set('niu',e.target.value)}/></div>
+              </div>
+              <div className="s-row2">
+                <div className="s-field"><label>Ancienneté (mois)</label><input type="number" placeholder="24" value={form.anciennete_soc||''} onChange={e=>set('anciennete_soc',e.target.value)}/></div>
+                <div className="s-field"><label>CA Annuel (XAF)</label><input type="number" placeholder="50000000" value={form.ca_annuel||''} onChange={e=>set('ca_annuel',e.target.value)}/></div>
+              </div>
+            </>}
+          </div>
 
-      <footer className="footer">
-        <LogoSVG height={48} tone="light" />
-        <div style={{ fontSize: 13, color: '#AAAAAA' }}>© 2026 Mayinvest · Brazzaville, Congo</div>
-      </footer>
+          <div className="s-card">
+            <div className="s-sec">3. Votre besoin</div>
+            <div className="s-field"><label>Montant demandé (XAF) *</label><input type="number" placeholder="5000000" value={form.montant||''} onChange={e=>set('montant',e.target.value)}/></div>
+            <div className="s-field"><label>Objet du financement *</label>
+              <select value={form.objet||''} onChange={e=>set('objet',e.target.value)}>
+                <option value="">Sélectionner…</option>
+                {(isPhysique ? ['Consommation','Immobilier','Véhicule','Autre'] : ['Investissement','Fonds de roulement','Marché public','Autre']).map(o=><option key={o}>{o}</option>)}
+              </select>
+            </div>
+            <div className="s-field"><label>Banque actuelle</label>
+              <select value={form.banque||''} onChange={e=>set('banque',e.target.value)}>
+                <option value="">Sélectionner…</option>
+                {BANQUES.map(b=><option key={b}>{b}</option>)}
+              </select>
+            </div>
+            {!isPhysique && <div className="s-field"><label>Flux mensuel moyen (XAF)</label><input type="number" placeholder="2000000" value={form.flux_mois||''} onChange={e=>set('flux_mois',e.target.value)}/></div>}
+          </div>
+
+          <div className="s-card">
+            <div className="s-sec">4. Éligibilité</div>
+            {isPhysique ? <>
+              <div className="s-field"><label>Salaire domicilié dans une banque ?</label>
+                <div className="s-radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.salaire_domic===v?'sel':''} onClick={()=>set('salaire_domic',v)}>{v}</button>)}</div>
+              </div>
+            </> : <>
+              <div className="s-field"><label>Compte bancaire mouvementé ?</label>
+                <div className="s-radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.compte_mouvemente===v?'sel':''} onClick={()=>set('compte_mouvemente',v)}>{v}</button>)}</div>
+              </div>
+              <div className="s-field"><label>Refus bancaire antérieur ?</label>
+                <div className="s-radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.refus_bancaire===v?'sel':''} onClick={()=>set('refus_bancaire',v)}>{v}</button>)}</div>
+              </div>
+              <div className="s-field"><label>Garanties disponibles ?</label>
+                <div className="s-radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.garanties===v?'sel':''} onClick={()=>set('garanties',v)}>{v}</button>)}</div>
+              </div>
+            </>}
+          </div>
+
+          <button className="s-btn" disabled={loading || !form.tel || !form.montant || (isPhysique ? !form.prenom : !form.raison_sociale)} onClick={soumettre}>
+            {loading ? 'Envoi en cours…' : 'Voir mon score →'}
+          </button>
+          <button className="s-btn-back" onClick={() => setStep(2)}>← Retour</button>
+        </>}
+
+        {/* ÉTAPE 4 — Score */}
+        {step === 4 && <div className="s-success">
+          <div className="s-badge">🎉 Dossier reçu !</div>
+          <h1 className="s-h1">Votre score : {score}/100</h1>
+          <p className="s-sub">{score >= 70 ? 'Excellent ! Votre dossier est très éligible. Un conseiller vous contacte sous 24h.' : score >= 50 ? 'Éligible. Notre équipe va renforcer votre dossier avec vous.' : 'Améliorons votre dossier ensemble. Un conseiller vous rappelle sous 24h.'}</p>
+
+          <div className="s-card" style={{ textAlign: 'left' }}>
+            <div className="s-sec">Référence dossier</div>
+            <div style={{ fontFamily: 'monospace', fontSize: 12, wordBreak: 'break-all', color: '#111' }}>{leadId}</div>
+          </div>
+
+          <button className="s-btn" style={{ background: '#25D366' }} onClick={() => window.open(`https://wa.me/242060000000?text=Bonjour, j'ai soumis mon dossier. Ref: ${leadId}`, '_blank')}>
+            📱 Confirmer sur WhatsApp
+          </button>
+          <button className="s-btn-back" onClick={() => navigate({ to: '/' })}>← Retour à l'accueil</button>
+        </div>}
+
+      </main>
     </div>
   )
 }
