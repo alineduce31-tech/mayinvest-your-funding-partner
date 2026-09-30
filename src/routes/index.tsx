@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Logo } from '@/components/Logo'
 
 export const Route = createFileRoute('/')({
@@ -10,6 +10,7 @@ function LogoSVG({ height = 64, tone = 'light' }: { height?: number; tone?: 'lig
 }
 
 function Index() {
+  const navigate = useNavigate()
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#FFFFFF', color: '#111111', minHeight: '100vh', WebkitFontSmoothing: 'antialiased' }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -78,7 +79,7 @@ function Index() {
 
       <nav className="nav">
         <LogoSVG height={56} tone="light" />
-        <button className="nav-btn">
+        <button className="nav-btn" onClick={() => navigate({ to: '/simulation' })}>
           Commencer
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </button>
