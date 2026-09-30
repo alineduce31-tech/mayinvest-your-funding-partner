@@ -34,7 +34,7 @@ function Index() {
         @media (max-width: 640px) { .hero-btns { max-width: 100%; } }
 
         .score-card { background: #0D1B3E; border-radius: 28px; padding: 36px; color: #fff; transform: perspective(900px) rotateY(-6deg) rotateX(3deg); box-shadow: 0 40px 80px rgba(13,27,62,0.28), 0 8px 24px rgba(13,27,62,0.16); position: relative; overflow: hidden; }
-        @media (max-width: 900px) { .score-card { transform: perspective(900px) rotateY(-3deg) rotateX(2deg); } }
+        @media (max-width: 900px) { .score-card { transform: none; } }
         @media (max-width: 640px) { .score-card { transform: none; padding: 24px; border-radius: 20px; } }
 
         .sc-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; }
