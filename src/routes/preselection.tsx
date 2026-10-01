@@ -135,20 +135,30 @@ function Simulation() {
         .chip svg { flex-shrink: 0; }
 
         /* ÉTAPE 3 — cartes form 3D */
-        .form-stack { display: flex; flex-direction: column; gap: 18px; margin-bottom: 24px; }
-        .form-card { background: linear-gradient(145deg, #FFFFFF 0%, #F5F7FB 100%); border: 1px solid rgba(13,27,62,0.08); border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(13,27,62,0.08), 0 8px 16px rgba(13,27,62,0.05), inset 0 1px 0 rgba(255,255,255,0.9); position: relative; }
+        .form-stack { display: flex; flex-direction: column; gap: 22px; margin-bottom: 24px; }
+        .form-card { background: linear-gradient(145deg, #FFFFFF 0%, #F5F7FB 100%); border: 1.5px solid rgba(13,27,62,0.08); border-radius: 24px; padding: 24px 22px; box-shadow: 0 20px 40px rgba(13,27,62,0.08), 0 8px 16px rgba(13,27,62,0.05), inset 0 1px 0 rgba(255,255,255,0.9); position: relative; transition: all 0.3s ease; }
         .form-card.left, .form-card.right { transform: none; }
-        .form-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(26,107,255,0.3), transparent); }
+        .form-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(26,107,255,0.3), transparent); border-radius: 24px 24px 0 0; }
+        .form-card:focus-within {
+          border-color: rgba(26,107,255,0.5);
+          box-shadow:
+            0 0 0 5px rgba(26,107,255,0.12),
+            0 20px 50px rgba(26,107,255,0.18),
+            0 8px 20px rgba(13,27,62,0.08),
+            inset 0 1px 0 rgba(255,255,255,0.9);
+        }
+        .form-card:focus-within::before { background: linear-gradient(90deg, transparent, #1A6BFF, transparent); height: 2px; }
         .card-title { font-size: 11px; font-weight: 700; color: #1A6BFF; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
-        .field { margin-bottom: 12px; }
-        .field label { display: block; font-size: 12px; font-weight: 600; color: #555; margin-bottom: 5px; }
-        .field input, .field select { width: 100%; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 12px 14px; font-family: inherit; font-size: 14px; color: #111; background: #fff; outline: none; transition: all 0.15s; }
-        .field input:focus, .field select:focus { border-color: #1A6BFF; box-shadow: 0 0 0 4px rgba(26,107,255,0.1); }
-        .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        @media (max-width: 440px) { .row2 { grid-template-columns: 1fr; } }
-        .radio { display: flex; gap: 8px; }
-        .radio button { flex: 1; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 12px; background: #fff; font-family: inherit; font-size: 14px; font-weight: 700; color: #666; cursor: pointer; transition: all 0.15s; }
-        .radio button.sel { border-color: #1A6BFF; background: #EEF4FF; color: #1A6BFF; box-shadow: 0 4px 12px rgba(26,107,255,0.2); }
+        .fields { display: flex; flex-direction: column; gap: 10px; }
+        .field { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 14px; padding: 12px 16px; transition: all 0.15s; }
+        .field:focus-within { border-color: #1A6BFF; box-shadow: 0 4px 12px rgba(26,107,255,0.12); }
+        .field label { display: block; font-size: 11px; font-weight: 600; color: #888; margin-bottom: 2px; letter-spacing: 0.02em; }
+        .field input, .field select { width: 100%; border: none; padding: 0; font-family: inherit; font-size: 15px; font-weight: 500; color: #111; background: transparent; outline: none; }
+        .field input::placeholder { color: #BBB; font-weight: 400; }
+        .field.radio-field { padding: 12px 16px 14px; }
+        .radio { display: flex; gap: 8px; margin-top: 6px; }
+        .radio button { flex: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 700; color: #666; cursor: pointer; transition: all 0.15s; }
+        .radio button.sel { border-color: #1A6BFF; background: #EEF4FF; color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.2); }
         .badge { display: inline-flex; align-items: center; gap: 6px; background: #EEF4FF; color: #1A6BFF; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; }
 
         /* Boutons */
@@ -240,86 +250,80 @@ function Simulation() {
           <div className="form-stack">
             <div className="form-card left">
               <div className="card-title">1. Identité</div>
-              {isP ? <>
-                <div className="row2">
+              <div className="fields">
+                {isP ? <>
                   <div className="field"><label>Prénom *</label><input placeholder="Jean-Pierre" value={form.prenom||''} onChange={e=>set('prenom',e.target.value)}/></div>
                   <div className="field"><label>Nom *</label><input placeholder="Moukouama" value={form.nom||''} onChange={e=>set('nom',e.target.value)}/></div>
+                </> : <>
+                  <div className="field"><label>Raison sociale *</label><input placeholder="Nom de l'entreprise" value={form.raison_sociale||''} onChange={e=>set('raison_sociale',e.target.value)}/></div>
+                  <div className="field"><label>Nom du dirigeant *</label><input placeholder="Prénom Nom" value={form.dirigeant||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
+                </>}
+                <div className="field"><label>Téléphone *</label><input placeholder="+242 06 000 0000" value={form.tel||''} onChange={e=>set('tel',e.target.value)}/></div>
+                <div className="field"><label>Email</label><input placeholder="email@exemple.com" value={form.email||''} onChange={e=>set('email',e.target.value)}/></div>
+                <div className="field"><label>Ville *</label>
+                  <select value={form.ville||''} onChange={e=>set('ville',e.target.value)}>
+                    <option value="">Sélectionner…</option>
+                    {VILLES.map(v=><option key={v}>{v}</option>)}
+                  </select>
                 </div>
-                <div className="row2">
-                  <div className="field"><label>Téléphone *</label><input placeholder="+242 06 000 0000" value={form.tel||''} onChange={e=>set('tel',e.target.value)}/></div>
-                  <div className="field"><label>Email</label><input placeholder="email@exemple.com" value={form.email||''} onChange={e=>set('email',e.target.value)}/></div>
-                </div>
-              </> : <>
-                <div className="field"><label>Raison sociale *</label><input placeholder="Nom de l'entreprise" value={form.raison_sociale||''} onChange={e=>set('raison_sociale',e.target.value)}/></div>
-                <div className="field"><label>Nom du dirigeant *</label><input placeholder="Prénom Nom" value={form.dirigeant||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
-                <div className="row2">
-                  <div className="field"><label>Téléphone *</label><input placeholder="+242 06 000 0000" value={form.tel||''} onChange={e=>set('tel',e.target.value)}/></div>
-                  <div className="field"><label>Email</label><input placeholder="email@exemple.com" value={form.email||''} onChange={e=>set('email',e.target.value)}/></div>
-                </div>
-              </>}
-              <div className="field"><label>Ville *</label>
-                <select value={form.ville||''} onChange={e=>set('ville',e.target.value)}>
-                  <option value="">Sélectionner…</option>
-                  {VILLES.map(v=><option key={v}>{v}</option>)}
-                </select>
               </div>
             </div>
 
             <div className="form-card right">
               <div className="card-title">2. Situation {isP ? 'professionnelle' : 'juridique'}</div>
-              {isP ? <>
-                <div className="field"><label>Employeur / Administration</label><input placeholder="Ministère…" value={form.employeur||''} onChange={e=>set('employeur',e.target.value)}/></div>
-                <div className="row2">
+              <div className="fields">
+                {isP ? <>
+                  <div className="field"><label>Employeur / Administration</label><input placeholder="Ministère…" value={form.employeur||''} onChange={e=>set('employeur',e.target.value)}/></div>
                   <div className="field"><label>Ancienneté (mois)</label><input type="number" placeholder="24" value={form.anciennete||''} onChange={e=>set('anciennete',e.target.value)}/></div>
                   <div className="field"><label>Revenu net/mois (XAF)</label><input type="number" placeholder="350000" value={form.revenu||''} onChange={e=>set('revenu',e.target.value)}/></div>
-                </div>
-              </> : <>
-                <div className="row2">
-                  <div className="field"><label>RCCM</label>
+                </> : <>
+                  <div className="field radio-field"><label>RCCM</label>
                     <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.rccm===v?'sel':''} onClick={()=>set('rccm',v)}>{v}</button>)}</div>
                   </div>
                   <div className="field"><label>NIU</label><input placeholder="NIU" value={form.niu||''} onChange={e=>set('niu',e.target.value)}/></div>
-                </div>
-                <div className="row2">
                   <div className="field"><label>Ancienneté (mois)</label><input type="number" placeholder="24" value={form.anciennete_soc||''} onChange={e=>set('anciennete_soc',e.target.value)}/></div>
                   <div className="field"><label>CA Annuel (XAF)</label><input type="number" placeholder="50000000" value={form.ca_annuel||''} onChange={e=>set('ca_annuel',e.target.value)}/></div>
-                </div>
-              </>}
+                </>}
+              </div>
             </div>
 
             <div className="form-card left">
               <div className="card-title">3. Votre besoin</div>
-              <div className="field"><label>Montant demandé (XAF) *</label><input type="number" placeholder="5000000" value={form.montant||''} onChange={e=>set('montant',e.target.value)}/></div>
-              <div className="field"><label>Objet du financement *</label>
-                <select value={form.objet||''} onChange={e=>set('objet',e.target.value)}>
-                  <option value="">Sélectionner…</option>
-                  {(isP ? ['Consommation','Immobilier','Véhicule','Autre'] : ['Investissement','Fonds de roulement','Marché public','Autre']).map(o=><option key={o}>{o}</option>)}
-                </select>
+              <div className="fields">
+                <div className="field"><label>Montant demandé (XAF) *</label><input type="number" placeholder="5000000" value={form.montant||''} onChange={e=>set('montant',e.target.value)}/></div>
+                <div className="field"><label>Objet du financement *</label>
+                  <select value={form.objet||''} onChange={e=>set('objet',e.target.value)}>
+                    <option value="">Sélectionner…</option>
+                    {(isP ? ['Consommation','Immobilier','Véhicule','Autre'] : ['Investissement','Fonds de roulement','Marché public','Autre']).map(o=><option key={o}>{o}</option>)}
+                  </select>
+                </div>
+                <div className="field"><label>Banque actuelle</label>
+                  <select value={form.banque||''} onChange={e=>set('banque',e.target.value)}>
+                    <option value="">Sélectionner…</option>
+                    {BANQUES.map(b=><option key={b}>{b}</option>)}
+                  </select>
+                </div>
+                {!isP && <div className="field"><label>Flux mensuel moyen (XAF)</label><input type="number" placeholder="2000000" value={form.flux_mois||''} onChange={e=>set('flux_mois',e.target.value)}/></div>}
               </div>
-              <div className="field"><label>Banque actuelle</label>
-                <select value={form.banque||''} onChange={e=>set('banque',e.target.value)}>
-                  <option value="">Sélectionner…</option>
-                  {BANQUES.map(b=><option key={b}>{b}</option>)}
-                </select>
-              </div>
-              {!isP && <div className="field"><label>Flux mensuel moyen (XAF)</label><input type="number" placeholder="2000000" value={form.flux_mois||''} onChange={e=>set('flux_mois',e.target.value)}/></div>}
             </div>
 
             <div className="form-card right">
               <div className="card-title">4. Éligibilité</div>
-              {isP ? <div className="field"><label>Salaire domicilié dans une banque ?</label>
-                <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.salaire_domic===v?'sel':''} onClick={()=>set('salaire_domic',v)}>{v}</button>)}</div>
-              </div> : <>
-                <div className="field"><label>Compte bancaire mouvementé ?</label>
-                  <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.compte_mouvemente===v?'sel':''} onClick={()=>set('compte_mouvemente',v)}>{v}</button>)}</div>
-                </div>
-                <div className="field"><label>Refus bancaire antérieur ?</label>
-                  <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.refus_bancaire===v?'sel':''} onClick={()=>set('refus_bancaire',v)}>{v}</button>)}</div>
-                </div>
-                <div className="field"><label>Garanties disponibles ?</label>
-                  <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.garanties===v?'sel':''} onClick={()=>set('garanties',v)}>{v}</button>)}</div>
-                </div>
-              </>}
+              <div className="fields">
+                {isP ? <div className="field radio-field"><label>Salaire domicilié dans une banque ?</label>
+                  <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.salaire_domic===v?'sel':''} onClick={()=>set('salaire_domic',v)}>{v}</button>)}</div>
+                </div> : <>
+                  <div className="field radio-field"><label>Compte bancaire mouvementé ?</label>
+                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.compte_mouvemente===v?'sel':''} onClick={()=>set('compte_mouvemente',v)}>{v}</button>)}</div>
+                  </div>
+                  <div className="field radio-field"><label>Refus bancaire antérieur ?</label>
+                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.refus_bancaire===v?'sel':''} onClick={()=>set('refus_bancaire',v)}>{v}</button>)}</div>
+                  </div>
+                  <div className="field radio-field"><label>Garanties disponibles ?</label>
+                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.garanties===v?'sel':''} onClick={()=>set('garanties',v)}>{v}</button>)}</div>
+                  </div>
+                </>}
+              </div>
             </div>
           </div>
 
