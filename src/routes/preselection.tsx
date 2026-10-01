@@ -96,6 +96,30 @@ function Simulation() {
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <style>{`
         * { box-sizing: border-box; }
+
+        /* Retrait des flèches natives des champs numériques */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type="number"] {
+          -moz-appearance: textfield;
+          appearance: textfield;
+        }
+
+        /* Style propre pour les select (flèche custom discrète) */
+        .field select {
+          -webkit-appearance: none;
+          -moz-appearance: none;
+          appearance: none;
+          background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 2px center;
+          padding-right: 20px !important;
+          cursor: pointer;
+        }
+
         .top { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
         @media (max-width: 640px) { .top { height: 60px; padding: 0 20px; } }
         .back { background: #111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 28px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; text-decoration: none; }
@@ -109,7 +133,6 @@ function Simulation() {
         @media (min-width: 640px) { .h1 { font-size: 38px; } }
         .sub { font-size: 15px; color: #666; line-height: 1.5; margin: 0 0 28px; }
 
-        /* ÉTAPE 1 — cartes 3D */
         .cards-3d { display: flex; flex-direction: column; gap: 28px; margin-bottom: 32px; perspective: 1200px; }
         .card-choix { border: none; cursor: pointer; font-family: inherit; text-align: left; padding: 28px 24px; border-radius: 22px; position: relative; overflow: hidden; transition: transform 0.4s cubic-bezier(.2,.9,.3,1), box-shadow 0.4s ease, outline-color 0.2s; transform-style: preserve-3d; }
         .card-choix.physique { background: linear-gradient(145deg, #0D1B3E 0%, #0A1532 100%); color: #fff; box-shadow: 0 30px 60px rgba(13,27,62,0.3), 0 12px 24px rgba(13,27,62,0.18), inset 0 1px 0 rgba(255,255,255,0.1); transform: perspective(900px) rotateX(4deg) rotateY(-3deg); }
@@ -128,7 +151,6 @@ function Simulation() {
         .physique .card-p { color: rgba(255,255,255,0.6); }
         .morale .card-p { color: #666; }
 
-        /* ÉTAPE 2 — chips */
         .chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 32px; }
         @media (min-width: 480px) { .chips { grid-template-columns: repeat(3, 1fr); } }
         .chip { background: #F5F5F5; border: 1.5px solid transparent; border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 14px; font-weight: 600; color: #111; cursor: pointer; text-align: left; transition: all 0.15s; display: flex; align-items: center; gap: 10px; }
@@ -136,7 +158,6 @@ function Simulation() {
         .chip.sel { background: #1A6BFF; color: #fff; border-color: #1A6BFF; box-shadow: 0 6px 14px rgba(26,107,255,0.3); }
         .chip svg { flex-shrink: 0; }
 
-        /* ÉTAPE 3 — cartes form 3D */
         .form-stack { display: flex; flex-direction: column; gap: 22px; margin-bottom: 24px; }
         .form-card { background: linear-gradient(145deg, #FFFFFF 0%, #F5F7FB 100%); border: 1.5px solid rgba(13,27,62,0.08); border-radius: 24px; padding: 24px 22px; box-shadow: 0 20px 40px rgba(13,27,62,0.08), 0 8px 16px rgba(13,27,62,0.05), inset 0 1px 0 rgba(255,255,255,0.9); position: relative; transition: all 0.3s ease; }
         .form-card.left, .form-card.right { transform: none; }
@@ -163,14 +184,12 @@ function Simulation() {
         .radio button.sel { border-color: #1A6BFF; background: #EEF4FF; color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.2); }
         .badge { display: inline-flex; align-items: center; gap: 6px; background: #EEF4FF; color: #1A6BFF; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; }
 
-        /* Boutons */
         .btn-main { width: 100%; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(26,107,255,0.35); transition: all 0.2s; }
         .btn-main:hover:not(:disabled) { background: #1560E0; transform: translateY(-1px); box-shadow: 0 12px 28px rgba(26,107,255,0.4); }
         .btn-main:disabled { background: #C7D0DB; cursor: not-allowed; box-shadow: none; }
         .btn-back { width: 100%; background: #F5F5F5; color: #111; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px; border-radius: 100px; border: none; cursor: pointer; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-back:hover { background: #EAEAEA; }
 
-        /* ÉTAPE 4 — score */
         .score-final { background: #0D1B3E; border-radius: 24px; padding: 36px 28px; color: #fff; box-shadow: 0 30px 60px rgba(13,27,62,0.3); position: relative; overflow: hidden; text-align: center; margin-top: 20px; }
         .score-final::before { content: ''; position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(26,107,255,0.3) 0%, transparent 65%); pointer-events: none; }
         .score-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(52,208,88,0.15); color: #34D058; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 20px; position: relative; z-index: 1; }
@@ -260,7 +279,7 @@ function Simulation() {
                   <div className="field"><label>Raison sociale *</label><input placeholder="Nom de l'entreprise" value={form['raison_sociale']||''} onChange={e=>set('raison_sociale',e.target.value)}/></div>
                   <div className="field"><label>Nom du dirigeant *</label><input placeholder="Prénom Nom" value={form['dirigeant']||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
                 </>}
-                <div className="field"><label>Téléphone *</label><input placeholder="+242 06 000 0000" value={form['tel']||''} onChange={e=>set('tel',e.target.value)}/></div>
+                <div className="field"><label>Téléphone *</label><input placeholder="06 000 0000" value={form['tel']||''} onChange={e=>set('tel',e.target.value)}/></div>
                 <div className="field"><label>Email</label><input placeholder="email@exemple.com" value={form['email']||''} onChange={e=>set('email',e.target.value)}/></div>
                 <div className="field"><label>Ville *</label>
                   <select value={form['ville']||''} onChange={e=>set('ville',e.target.value)}>
