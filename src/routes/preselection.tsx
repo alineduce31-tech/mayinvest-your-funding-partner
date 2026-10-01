@@ -52,8 +52,10 @@ function calc(type: string, d: Record<string, string>) {
 
 function Simulation() {
   const navigate = useNavigate()
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
-  const [type, setType] = useState<'physique' | 'morale' | ''>('')
+  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
+  const initType: 'physique' | 'morale' | '' = params?.get('type') === 'morale' ? 'morale' : params?.get('type') === 'physique' ? 'physique' : ''
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(initType ? 2 : 1)
+  const [type, setType] = useState<'physique' | 'morale' | ''>(initType)
   const [activite, setActivite] = useState('')
   const [form, setForm] = useState<Record<string, string>>({})
   const [loading, setLoading] = useState(false)
