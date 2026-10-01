@@ -82,10 +82,19 @@ function Index() {
 
       <nav className="nav">
         <LogoSVG height={56} tone="light" />
-        <button className="nav-btn" onClick={goto}>
-          Commencer
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <a href="/mon-espace" style={{ color: '#111', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, textDecoration: 'none', padding: '12px 18px', borderRadius: 100, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="#111" strokeWidth="1.8"/><path d="M4 17a6 6 0 0112 0" stroke="#111" strokeWidth="1.8" strokeLinecap="round"/></svg>
+            Mon espace
+          </a>
+          <a href="/admin" style={{ color: '#666', fontFamily: 'inherit', fontSize: 13, fontWeight: 500, textDecoration: 'none', padding: '12px 14px', borderRadius: 100, whiteSpace: 'nowrap' }}>
+            Espace agent
+          </a>
+          <button className="nav-btn" onClick={goto}>
+            Commencer
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
+        </div>
       </nav>
 
       <section className="hero">
