@@ -1,12 +1,21 @@
 // Logo officiel Mayinvest (vectorisation du fichier original).
 // tone="light" : pour fond clair (vagues bleu moyen, texte marine)
 // tone="dark"  : pour fond marine (vagues bleu pâle, texte blanc)
+//
+// Par défaut le logo est cliquable et renvoie à l'accueil ("/"),
+// comme sur Stripe, Linear, Notion… (convention UX universelle).
+// Pour désactiver (ex: dans l'admin), passer linkTo={null}.
+// Pour pointer ailleurs, passer linkTo="/mon-espace" par exemple.
+
+import { Link } from "@tanstack/react-router";
 
 type LogoProps = {
   width?: number;
   height?: number;
   tone?: "light" | "dark";
   className?: string;
+  /** Destination du clic. "/" par défaut. null pour désactiver le lien. */
+  linkTo?: string | null;
 };
 
 const WAVES = `M705 3085 c-99 -7 -232 -20 -295 -29 -63 -8 -128 -17 -144 -18 -16
@@ -119,7 +128,7 @@ m-838 1 c0 -13 -7 -20 -19 -20 -11 0 -22 -4 -26 -9 -4 -8 68 -237 78 -248 6
 -5 87 220 87 239 0 10 -9 18 -22 20 -13 2 -24 11 -26 21 -3 15 5 17 71 17 40
 0 76 -3 80 -6 11 -11 -5 -34 -23 -34 -19 0 -20 -4 -110 -242 -33 -89 -49 -106
 -89 -93 -19 6 -45 67 -108 252 -21 63 -32 83 -48 85 -11 2 -21 11 -23 21 -3
-15 6 17 87 17 84 0 91 -1 91 -20z m280 -23 c0 -7 -7 -22 -15 -33 -8 -10 -15
+15 6 17 87 17 84 0 91 -1 91 -20z m280 -43 c0 -7 -7 -22 -15 -33 -8 -10 -15
 -29 -15 -41 0 -12 -5 -34 -10 -48 l-10 -26 -29 20 c-15 11 -31 18 -35 14 -3
 -3 -6 1 -6 11 0 9 3 15 8 13 4 -3 8 9 9 26 3 40 60 96 86 85 9 -5 17 -14 17
 -21z m-1079 -7 c16 -9 19 -22 19 -94 0 -94 2 -92 -88 -65 -48 14 -48 14 -17
@@ -219,14 +228,20 @@ M2962 1683 c2 -10 12 -19 23 -21 16 -2 27 -22 48 -85 63 -185 89 -246 108
 
 const RATIO = 320 / 540;
 
-export function Logo({ width, height, tone = "light", className = "" }: LogoProps) {
+export function Logo({
+  width,
+  height,
+  tone = "light",
+  className = "",
+  linkTo = "/",
+}: LogoProps) {
   const w = width ?? (height ? height / RATIO : 110);
   const h = height ?? w * RATIO;
   const waveColor = tone === "dark" ? "#E1EBF7" : "#8FB0DA";
   const waveOpacity = tone === "dark" ? 0.55 : 0.75;
   const textColor = tone === "dark" ? "#FFFFFF" : "#0A1F42";
 
-  return (
+  const svg = (
     <svg
       viewBox="0 0 540 320"
       width={w}
@@ -249,6 +264,29 @@ export function Logo({ width, height, tone = "light", className = "" }: LogoProp
         <path d={WORDMARK} />
       </g>
     </svg>
+  );
+
+  // Si linkTo est null, pas de lien (ex: admin back-office)
+  if (linkTo === null) return svg;
+
+  // Sinon on wrape le logo dans un lien TanStack qui ramène à la destination
+  return (
+    <Link
+      to={linkTo}
+      aria-label="Retour à l'accueil Mayinvest"
+      style={{
+        display: "inline-block",
+        textDecoration: "none",
+        cursor: "pointer",
+        transition: "opacity 0.15s ease, transform 0.15s ease",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.opacity = "0.75" }}
+      onMouseLeave={(e) => { e.currentTarget.style.opacity = "1" }}
+      onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.97)" }}
+      onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)" }}
+    >
+      {svg}
+    </Link>
   );
 }
 
