@@ -7,6 +7,18 @@ export const Route = createFileRoute('/preselection')({
   component: Simulation,
 })
 
+// Formate un numéro congolais à 9 chiffres en "XX XXX XXXX" (ex: 06 123 4567)
+// Les espaces ne sont jamais stockés en base — c'est juste pour l'affichage.
+function formatPhone(digits: string): string {
+  const d = digits.replace(/\D/g, '').slice(0, 9)
+  if (d.length <= 2) return d
+  if (d.length <= 5) return `${d.slice(0, 2)} ${d.slice(2)}`
+  return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`
+}
+function cleanPhone(v: string): string {
+  return v.replace(/\D/g, '').slice(0, 9)
+}
+
 const ICON_P: Record<string, ReactNode> = {
   'Fonctionnaire': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 7h14v10H3V7z" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.6"/></svg>,
   'Salarié privé': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7V5a2 2 0 012-2h2a2 2 0 012 2v2" stroke="currentColor" strokeWidth="1.6"/></svg>,
@@ -73,13 +85,13 @@ function Simulation() {
       ? (parseInt(form['anciennete'] || '0') < 6) || form['salaire_domic'] === 'Non'
       : form['rccm'] === 'Non'
     const payload = {
-      // ✅ FIX: "Personne" avec P majuscule (contrainte CHECK en base)
       type: isP ? 'Personne physique' : 'Personne morale',
       activite, ville: form['ville'] || '',
       montant_demande: parseInt(form['montant'] || '0'),
       banque_actuelle: form['banque'] || '',
       statut: nonEligible ? 'Non Éligible' : 'Nouveau',
       score: s,
+      // tel = uniquement les chiffres (ex: "061234567"), stocké propre
       identite: { nom: form['nom'], prenom: form['prenom'], tel: form['tel'], email: form['email'] },
       situation: isP
         ? { employeur: form['employeur'], anciennete: form['anciennete'], revenu: form['revenu'] }
@@ -106,17 +118,14 @@ function Simulation() {
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <style>{`
         * { box-sizing: border-box; }
-
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
-
         .field select {
           -webkit-appearance: none; -moz-appearance: none; appearance: none;
           background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
           background-repeat: no-repeat; background-position: right 2px center; padding-right: 20px !important; cursor: pointer;
         }
-
         .top { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
         @media (max-width: 640px) { .top { height: 60px; padding: 0 16px; } }
         .back { background: #111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 11px 22px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; text-decoration: none; }
@@ -129,7 +138,6 @@ function Simulation() {
         .h1 { font-size: 30px; font-weight: 800; letter-spacing: -1px; color: #111; line-height: 1.1; margin: 0 0 10px; }
         @media (min-width: 640px) { .h1 { font-size: 38px; } }
         .sub { font-size: 15px; color: #666; line-height: 1.5; margin: 0 0 28px; }
-
         .cards-3d { display: flex; flex-direction: column; gap: 28px; margin-bottom: 32px; perspective: 1200px; }
         .card-choix { border: none; cursor: pointer; font-family: inherit; text-align: left; padding: 28px 24px; border-radius: 22px; position: relative; overflow: hidden; transition: transform 0.4s cubic-bezier(.2,.9,.3,1), box-shadow 0.4s ease, outline-color 0.2s; transform-style: preserve-3d; }
         .card-choix.physique { background: linear-gradient(145deg, #0D1B3E 0%, #0A1532 100%); color: #fff; box-shadow: 0 30px 60px rgba(13,27,62,0.3), 0 12px 24px rgba(13,27,62,0.18), inset 0 1px 0 rgba(255,255,255,0.1); transform: perspective(900px) rotateX(4deg) rotateY(-3deg); }
@@ -147,14 +155,12 @@ function Simulation() {
         .card-p { font-size: 13px; margin: 0; position: relative; z-index: 1; }
         .physique .card-p { color: rgba(255,255,255,0.6); }
         .morale .card-p { color: #666; }
-
         .chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 32px; }
         @media (min-width: 480px) { .chips { grid-template-columns: repeat(3, 1fr); } }
         .chip { background: #F5F5F5; border: 1.5px solid transparent; border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 14px; font-weight: 600; color: #111; cursor: pointer; text-align: left; transition: all 0.15s; display: flex; align-items: center; gap: 10px; }
         .chip:hover { background: #EEF4FF; }
         .chip.sel { background: #1A6BFF; color: #fff; border-color: #1A6BFF; box-shadow: 0 6px 14px rgba(26,107,255,0.3); }
         .chip svg { flex-shrink: 0; }
-
         .form-stack { display: flex; flex-direction: column; gap: 22px; margin-bottom: 24px; }
         .form-card { background: linear-gradient(145deg, #FFFFFF 0%, #F5F7FB 100%); border: 1.5px solid rgba(13,27,62,0.08); border-radius: 24px; padding: 24px 22px; box-shadow: 0 20px 40px rgba(13,27,62,0.08), 0 8px 16px rgba(13,27,62,0.05), inset 0 1px 0 rgba(255,255,255,0.9); position: relative; transition: all 0.3s ease; }
         .form-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(26,107,255,0.3), transparent); border-radius: 24px 24px 0 0; }
@@ -172,15 +178,12 @@ function Simulation() {
         .radio button { flex: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 700; color: #666; cursor: pointer; transition: all 0.15s; }
         .radio button.sel { border-color: #1A6BFF; background: #EEF4FF; color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.2); }
         .badge { display: inline-flex; align-items: center; gap: 6px; background: #EEF4FF; color: #1A6BFF; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; }
-
         .submit-error { background: #FEF2F2; border: 1.5px solid #FCA5A5; color: #B91C1C; font-size: 13px; font-weight: 600; padding: 12px 16px; border-radius: 12px; margin-top: 12px; display: flex; align-items: flex-start; gap: 10px; }
-
         .btn-main { width: 100%; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(26,107,255,0.35); transition: all 0.2s; }
         .btn-main:hover:not(:disabled) { background: #1560E0; transform: translateY(-1px); box-shadow: 0 12px 28px rgba(26,107,255,0.4); }
         .btn-main:disabled { background: #C7D0DB; cursor: not-allowed; box-shadow: none; }
         .btn-back { width: 100%; background: #F5F5F5; color: #111; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px; border-radius: 100px; border: none; cursor: pointer; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-back:hover { background: #EAEAEA; }
-
         .score-final { background: #0D1B3E; border-radius: 24px; padding: 36px 28px; color: #fff; box-shadow: 0 30px 60px rgba(13,27,62,0.3); position: relative; overflow: hidden; text-align: center; margin-top: 20px; }
         .score-final::before { content: ''; position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(26,107,255,0.3) 0%, transparent 65%); pointer-events: none; }
         .score-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(52,208,88,0.15); color: #34D058; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 20px; position: relative; z-index: 1; }
@@ -270,7 +273,15 @@ function Simulation() {
                   <div className="field"><label>Raison sociale *</label><input placeholder="Nom de l'entreprise" value={form['raison_sociale']||''} onChange={e=>set('raison_sociale',e.target.value)}/></div>
                   <div className="field"><label>Nom du dirigeant *</label><input placeholder="Prénom Nom" value={form['dirigeant']||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
                 </>}
-                <div className="field"><label>Téléphone *</label><input placeholder="06 000 0000" value={form['tel']||''} onChange={e=>set('tel',e.target.value)}/></div>
+                {/* ✅ Téléphone avec auto-formatage XX XXX XXXX */}
+                <div className="field"><label>Téléphone *</label><input
+                  type="tel"
+                  inputMode="numeric"
+                  placeholder="06 123 4567"
+                  maxLength={11}
+                  value={formatPhone(form['tel']||'')}
+                  onChange={e=>set('tel', cleanPhone(e.target.value))}
+                /></div>
                 <div className="field"><label>Email</label><input placeholder="email@exemple.com" value={form['email']||''} onChange={e=>set('email',e.target.value)}/></div>
                 <div className="field"><label>Ville *</label>
                   <select value={form['ville']||''} onChange={e=>set('ville',e.target.value)}>
@@ -339,7 +350,7 @@ function Simulation() {
             </div>
           </div>
 
-          <button className="btn-main" disabled={loading || !form['tel'] || !form['montant'] || (isP ? !form['prenom'] : !form['raison_sociale'])} onClick={soumettre}>
+          <button className="btn-main" disabled={loading || (form['tel']||'').length !== 9 || !form['montant'] || (isP ? !form['prenom'] : !form['raison_sociale'])} onClick={soumettre}>
             {loading ? 'Envoi en cours…' : 'Voir mon score'}
             {!loading && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </button>
