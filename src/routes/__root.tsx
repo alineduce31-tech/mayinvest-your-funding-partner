@@ -76,8 +76,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      // Viewport: initial-scale=1 + maximum-scale=1 pour empêcher le zoom auto Safari iOS/iPadOS.
-      // viewport-fit=cover pour les iPhone à encoche (safe area).
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" },
       { title: "Mayinvest PréSelect — Votre crédit évalué avant la banque" },
       { name: "description", content: "Remplissez notre formulaire de présélection en 2 minutes et recevez immédiatement votre score d'éligibilité au crédit. Un conseiller Mayinvest vous rappelle sous 24h. Service gratuit au Congo." },
@@ -123,16 +121,19 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="fr">
       <head>
         <HeadContent />
-        {/* Styles globaux Mayinvest — s'appliquent sur mobile, tablette ET desktop sans distinction */}
+        {/* Styles globaux Mayinvest — s'appliquent sur mobile, tablette ET desktop */}
         <style dangerouslySetInnerHTML={{ __html: `
           /* ============================================
-             RESET GLOBAL (toutes tailles d'écran)
+             RESET GLOBAL
+             IMPORTANT: on utilise overflow-x: clip au lieu de hidden
+             car "hidden" casse position: sticky (crée un conteneur de scroll).
+             "clip" fait pareil visuellement mais préserve le sticky.
              ============================================ */
           html, body {
             margin: 0;
             padding: 0;
             max-width: 100%;
-            overflow-x: hidden;
+            overflow-x: clip;
             -webkit-text-size-adjust: 100%;
           }
           body {
@@ -141,27 +142,25 @@ function RootShell({ children }: { children: ReactNode }) {
           }
 
           /* ============================================
-             ANTI-ZOOM — appliqué sur TOUT (mobile, tablette, iPad, desktop)
+             ANTI-ZOOM (mobile + tablette + desktop)
              16px partout empêche iOS/iPadOS Safari de zoomer à la saisie
              ============================================ */
           input, select, textarea {
             font-size: 16px !important;
           }
 
-          /* ============================================
-             TOUCH-ACTION — pas de double-tap zoom sur boutons/liens
-             ============================================ */
+          /* Pas de double-tap zoom sur boutons/liens */
           button, a {
             touch-action: manipulation;
           }
 
           /* ============================================
-             HEADER STICKY GLOBAL — s'applique sur TOUTES
-             les pages (index, preselection, mon-espace…)
-             et sur TOUTES les tailles d'écran
-             (mobile + tablette + PC)
+             HEADER STICKY GLOBAL
+             Toutes les pages (index, preselection, mon-espace…)
+             Toutes les tailles d'écran (mobile + tablette + desktop)
              ============================================ */
           .nav, .top {
+            position: -webkit-sticky !important;
             position: sticky !important;
             top: 0 !important;
             z-index: 100 !important;
@@ -169,8 +168,11 @@ function RootShell({ children }: { children: ReactNode }) {
             backdrop-filter: saturate(180%) blur(14px);
             -webkit-backdrop-filter: saturate(180%) blur(14px);
             box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 4px 20px rgba(13, 27, 62, 0.04);
-            transition: box-shadow 0.2s ease;
           }
+
+          /* Garantit que le wrapper direct du nav n'est pas en overflow */
+          /* (sécurité au cas où une page aurait un wrapper avec un overflow) */
+          .nav, .top { will-change: transform; }
         ` }} />
       </head>
       <body>
