@@ -12,8 +12,8 @@ function LogoSVG({ height = 64, tone = 'light' }: { height?: number; tone?: 'lig
 function Index() {
   const navigate = useNavigate()
   const goto = () => navigate({ to: '/preselection' })
-  const gotoP = () => { window.location.href = '/preselection?type=physique' }
-  const gotoM = () => { window.location.href = '/preselection?type=morale' }
+  const gotoP = () => navigate({ to: '/preselection', search: { type: 'physique' } as never })
+  const gotoM = () => navigate({ to: '/preselection', search: { type: 'morale' } as never })
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#FFFFFF', color: '#111111', minHeight: '100vh', WebkitFontSmoothing: 'antialiased' }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -83,11 +83,11 @@ function Index() {
       <nav className="nav">
         <LogoSVG height={56} tone="light" />
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <a href="/mon-espace" style={{ color: '#111', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, textDecoration: 'none', padding: '12px 18px', borderRadius: 100, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap' }}>
+          <a href="/mon-espace" onClick={(e) => { e.preventDefault(); navigate({ to: '/mon-espace' }) }} style={{ color: '#111', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, textDecoration: 'none', padding: '12px 18px', borderRadius: 100, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', cursor: 'pointer' }}>
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="#111" strokeWidth="1.8"/><path d="M4 17a6 6 0 0112 0" stroke="#111" strokeWidth="1.8" strokeLinecap="round"/></svg>
             Mon espace
           </a>
-          <a href="/admin" style={{ color: '#666', fontFamily: 'inherit', fontSize: 13, fontWeight: 500, textDecoration: 'none', padding: '12px 14px', borderRadius: 100, whiteSpace: 'nowrap' }}>
+          <a href="/admin" onClick={(e) => { e.preventDefault(); navigate({ to: '/admin' }) }} style={{ color: '#666', fontFamily: 'inherit', fontSize: 13, fontWeight: 500, textDecoration: 'none', padding: '12px 14px', borderRadius: 100, whiteSpace: 'nowrap', cursor: 'pointer' }}>
             Espace agent
           </a>
           <button className="nav-btn" onClick={goto}>
