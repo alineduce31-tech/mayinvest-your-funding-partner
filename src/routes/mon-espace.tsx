@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
@@ -8,7 +8,6 @@ export const Route = createFileRoute('/mon-espace')({ component: MonEspace })
 type Lead = { id: string; score: number; statut: string; activite: string | null; montant_demande: number | null; identite: any; created_at: string }
 
 function MonEspace() {
-  const navigate = useNavigate()
   const [tel, setTel] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -35,8 +34,7 @@ function MonEspace() {
       return
     }
     if (data.length === 1) {
-      const first = data[0]
-      if (first) navigate({ to: '/client/$id', params: { id: first.id } })
+      window.location.href = `/client/${data[0].id}`
       return
     }
     setResults(data as Lead[])
@@ -94,7 +92,7 @@ function MonEspace() {
 
           <div className="field">
             <label>Téléphone</label>
-            <input placeholder="+242 06 000 0000" value={tel} onChange={e => { setTel(e.target.value); setError(''); setResults(null) }} onKeyDown={e => { if (e.key === 'Enter') chercher() }} inputMode="tel"/>
+            <input placeholder="06 000 0000" value={tel} onChange={e => { setTel(e.target.value); setError(''); setResults(null) }} onKeyDown={e => { if (e.key === 'Enter') chercher() }} inputMode="tel"/>
           </div>
 
           <button className="btn" disabled={loading || !tel.trim()} onClick={chercher}>
