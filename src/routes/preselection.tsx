@@ -115,10 +115,9 @@ function Simulation() {
         .chip.sel { background: #1A6BFF; color: #fff; border-color: #1A6BFF; box-shadow: 0 6px 14px rgba(26,107,255,0.3); }
 
         /* ÉTAPE 3 — cartes form 3D */
-        .form-stack { perspective: 1400px; display: flex; flex-direction: column; gap: 20px; margin-bottom: 24px; }
-        .form-card { background: linear-gradient(145deg, #FFFFFF 0%, #F5F7FB 100%); border: 1px solid rgba(13,27,62,0.08); border-radius: 20px; padding: 22px; box-shadow: 0 20px 40px rgba(13,27,62,0.08), 0 8px 16px rgba(13,27,62,0.05), inset 0 1px 0 rgba(255,255,255,0.9); transform-style: preserve-3d; position: relative; }
-        .form-card.left { transform: perspective(1200px) rotateX(3deg) rotateY(-2deg); }
-        .form-card.right { transform: perspective(1200px) rotateX(3deg) rotateY(2deg); }
+        .form-stack { display: flex; flex-direction: column; gap: 18px; margin-bottom: 24px; }
+        .form-card { background: linear-gradient(145deg, #FFFFFF 0%, #F5F7FB 100%); border: 1px solid rgba(13,27,62,0.08); border-radius: 20px; padding: 24px; box-shadow: 0 20px 40px rgba(13,27,62,0.08), 0 8px 16px rgba(13,27,62,0.05), inset 0 1px 0 rgba(255,255,255,0.9); position: relative; }
+        .form-card.left, .form-card.right { transform: none; }
         .form-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(26,107,255,0.3), transparent); }
         .card-title { font-size: 11px; font-weight: 700; color: #1A6BFF; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
         .field { margin-bottom: 12px; }
