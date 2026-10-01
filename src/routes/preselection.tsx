@@ -7,7 +7,7 @@ export const Route = createFileRoute('/preselection')({
   component: Simulation,
 })
 
-const ICON_P: Record<string, JSX.Element> = {
+const ICON_P: Record<string, ReactNode> = {
   'Fonctionnaire': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 7h14v10H3V7z" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.6"/></svg>,
   'Salarié privé': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7V5a2 2 0 012-2h2a2 2 0 012 2v2" stroke="currentColor" strokeWidth="1.6"/></svg>,
   'Commerçant': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 6h14l-1.5 9a1 1 0 01-1 1h-9a1 1 0 01-1-1L3 6z" stroke="currentColor" strokeWidth="1.6"/><path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" strokeWidth="1.6"/></svg>,
@@ -16,7 +16,7 @@ const ICON_P: Record<string, JSX.Element> = {
   'Agriculteur': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 17V9m0 0C7 9 4 7 4 4c3 0 6 2 6 5zm0 0c3 0 6-2 6-5-3 0-6 2-6 5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>,
   'Autre': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="5" cy="10" r="1.5" fill="currentColor"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/><circle cx="15" cy="10" r="1.5" fill="currentColor"/></svg>,
 }
-const ICON_M: Record<string, JSX.Element> = {
+const ICON_M: Record<string, ReactNode> = {
   'Commerce': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 6h14l-1.5 9a1 1 0 01-1 1h-9a1 1 0 01-1-1L3 6z" stroke="currentColor" strokeWidth="1.6"/><path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" strokeWidth="1.6"/></svg>,
   'Tourisme': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2l7 10H3L10 2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M3 15h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
   'BTP': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 17h14M5 17V9l5-3 5 3v8" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><rect x="8" y="12" width="4" height="5" stroke="currentColor" strokeWidth="1.6"/></svg>,
