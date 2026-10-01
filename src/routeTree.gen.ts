@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as SimulationRouteImport } from './routes/simulation'
+import { Route as MonEspaceRouteImport } from './routes/mon-espace'
+import { Route as PreselectionRouteImport } from './routes/preselection'
+import { Route as ClientIdRouteImport } from './routes/client.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,9 +31,19 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SimulationRoute = SimulationRouteImport.update({
-  id: '/simulation',
-  path: '/simulation',
+const MonEspaceRoute = MonEspaceRouteImport.update({
+  id: '/mon-espace',
+  path: '/mon-espace',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PreselectionRoute = PreselectionRouteImport.update({
+  id: '/preselection',
+  path: '/preselection',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientIdRoute = ClientIdRouteImport.update({
+  id: '/client/$id',
+  path: '/client/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -39,34 +51,50 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/simulation': typeof SimulationRoute
+  '/mon-espace': typeof MonEspaceRoute
+  '/preselection': typeof PreselectionRoute
+  '/client/$id': typeof ClientIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/simulation': typeof SimulationRoute
+  '/mon-espace': typeof MonEspaceRoute
+  '/preselection': typeof PreselectionRoute
+  '/client/$id': typeof ClientIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
-  '/simulation': typeof SimulationRoute
+  '/mon-espace': typeof MonEspaceRoute
+  '/preselection': typeof PreselectionRoute
+  '/client/$id': typeof ClientIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/admin' | '/auth' | '/simulation'
+  fullPaths:
+    '/' | '/admin' | '/auth' | '/mon-espace' | '/preselection' | '/client/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/auth' | '/simulation'
-  id: '__root__' | '/' | '/admin' | '/auth' | '/simulation'
+  to: '/' | '/admin' | '/auth' | '/mon-espace' | '/preselection' | '/client/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/mon-espace'
+    | '/preselection'
+    | '/client/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
-  SimulationRoute: typeof SimulationRoute
+  MonEspaceRoute: typeof MonEspaceRoute
+  PreselectionRoute: typeof PreselectionRoute
+  ClientIdRoute: typeof ClientIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -92,11 +120,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/simulation': {
-      id: '/simulation'
-      path: '/simulation'
-      fullPath: '/simulation'
-      preLoaderRoute: typeof SimulationRouteImport
+    '/mon-espace': {
+      id: '/mon-espace'
+      path: '/mon-espace'
+      fullPath: '/mon-espace'
+      preLoaderRoute: typeof MonEspaceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/preselection': {
+      id: '/preselection'
+      path: '/preselection'
+      fullPath: '/preselection'
+      preLoaderRoute: typeof PreselectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/client/$id': {
+      id: '/client/$id'
+      path: '/client/$id'
+      fullPath: '/client/$id'
+      preLoaderRoute: typeof ClientIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -106,7 +148,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
-  SimulationRoute: SimulationRoute,
+  MonEspaceRoute: MonEspaceRoute,
+  PreselectionRoute: PreselectionRoute,
+  ClientIdRoute: ClientIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

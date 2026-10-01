@@ -14,7 +14,7 @@ export function Header() {
         </Link>
         <nav className="flex items-center gap-2 text-sm">
           <Link
-            to="/simulation"
+            to="/preselection"
             className="hidden px-3 py-2 text-muted-foreground transition-colors hover:text-foreground sm:inline-flex"
           >
             Simulation

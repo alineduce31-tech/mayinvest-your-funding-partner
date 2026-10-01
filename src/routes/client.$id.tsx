@@ -38,9 +38,9 @@ function ClientPortal() {
     (async () => {
       const { data: l } = await supabase.from('leads').select('*').eq('id', id).single()
       if (l) setLead(l as Lead)
-      const { data: m } = await supabase.from('messages').select('*').eq('lead_id', id).order('created_at')
+      const { data: m } = await (supabase as any).from('messages').select('*').eq('lead_id', id).order('created_at')
       if (m) setMessages(m as Message[])
-      const { data: d } = await supabase.from('documents').select('*').eq('lead_id', id).order('created_at')
+      const { data: d } = await (supabase as any).from('documents').select('*').eq('lead_id', id).order('created_at')
       if (d) setDocs(d as Doc[])
     })()
     const ch = supabase.channel(`client-${id}`)
@@ -55,7 +55,7 @@ function ClientPortal() {
   async function envoyer() {
     if (!msgInput.trim() || sending) return
     setSending(true)
-    await supabase.from('messages').insert({ lead_id: id, expediteur: 'client', text: msgInput, read: false })
+    await (supabase as any).from('messages').insert({ lead_id: id, expediteur: 'client', text: msgInput, read: false })
     setMsgInput(''); setSending(false)
   }
 
