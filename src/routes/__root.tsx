@@ -76,18 +76,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      // ✅ Viewport: initial-scale=1, maximum-scale=1 pour empêcher le zoom auto iOS Safari sur les inputs.
-      //    viewport-fit=cover pour les iPhone à encoche (safe area).
+      // Viewport: initial-scale=1, maximum-scale=1 pour empêcher le zoom auto iOS Safari sur les inputs.
+      // viewport-fit=cover pour les iPhone à encoche (safe area).
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" },
-      // ✅ Titre et description Mayinvest
       { title: "Mayinvest PréSelect — Votre crédit évalué avant la banque" },
       { name: "description", content: "Remplissez notre formulaire de présélection en 2 minutes et recevez immédiatement votre score d'éligibilité au crédit. Un conseiller Mayinvest vous rappelle sous 24h. Service gratuit au Congo." },
       { name: "author", content: "Mayinvest" },
-      // ✅ Thème Safari mobile (barre d'URL en couleur assortie)
       { name: "theme-color", content: "#0D1B3E" },
       { name: "apple-mobile-web-app-capable", content: "yes" },
       { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
-      // ✅ Open Graph pour partages WhatsApp / Facebook
       { property: "og:title", content: "Mayinvest PréSelect — Votre crédit évalué avant la banque" },
       { property: "og:description", content: "Votre score d'éligibilité au crédit en 2 minutes. Gratuit. Un conseiller vous rappelle sous 24h." },
       { property: "og:type", content: "website" },
@@ -123,19 +120,38 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    // ✅ lang="fr" pour l'accessibilité et le SEO
     <html lang="fr">
       <head>
         <HeadContent />
-        {/* ✅ Reset global anti-débordement horizontal + safe area iPhone */}
+        {/* Styles globaux Mayinvest */}
         <style dangerouslySetInnerHTML={{ __html: `
+          /* Reset anti-débordement + safe area iPhone */
           html, body { margin: 0; padding: 0; max-width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
           body { padding-top: env(safe-area-inset-top, 0); padding-bottom: env(safe-area-inset-bottom, 0); }
-          /* Anti-zoom iOS Safari : tous les inputs doivent faire au moins 16px */
+
+          /* Anti-zoom iOS Safari : tous les inputs doivent faire au moins 16px sur mobile */
           input, select, textarea { font-size: 16px !important; }
           @media (min-width: 641px) { input, select, textarea { font-size: inherit !important; } }
-          /* Empêche le double-tap zoom sur les boutons */
+
+          /* Empêche le double-tap zoom sur les boutons et liens */
           button, a { touch-action: manipulation; }
+
+          /* ============================================
+             HEADER STICKY GLOBAL (toutes les pages)
+             ============================================ */
+          .nav, .top {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 100 !important;
+            background: rgba(255, 255, 255, 0.88) !important;
+            backdrop-filter: saturate(180%) blur(14px);
+            -webkit-backdrop-filter: saturate(180%) blur(14px);
+            transition: box-shadow 0.2s ease, border-color 0.2s ease;
+          }
+          /* Ombre discrète qui apparaît quand on scrolle */
+          .nav:not(.nav-top), .top:not(.top-top) {
+            box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 4px 20px rgba(13,27,62,0.04);
+          }
         ` }} />
       </head>
       <body>
