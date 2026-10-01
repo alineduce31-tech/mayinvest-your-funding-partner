@@ -76,15 +76,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      // ✅ Viewport: initial-scale=1, maximum-scale=1 pour empêcher le zoom auto iOS Safari sur les inputs.
+      //    viewport-fit=cover pour les iPhone à encoche (safe area).
+      { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" },
+      // ✅ Titre et description Mayinvest
+      { title: "Mayinvest PréSelect — Votre crédit évalué avant la banque" },
+      { name: "description", content: "Remplissez notre formulaire de présélection en 2 minutes et recevez immédiatement votre score d'éligibilité au crédit. Un conseiller Mayinvest vous rappelle sous 24h. Service gratuit au Congo." },
+      { name: "author", content: "Mayinvest" },
+      // ✅ Thème Safari mobile (barre d'URL en couleur assortie)
+      { name: "theme-color", content: "#0D1B3E" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      // ✅ Open Graph pour partages WhatsApp / Facebook
+      { property: "og:title", content: "Mayinvest PréSelect — Votre crédit évalué avant la banque" },
+      { property: "og:description", content: "Votre score d'éligibilité au crédit en 2 minutes. Gratuit. Un conseiller vous rappelle sous 24h." },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: "fr_FR" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
@@ -98,7 +106,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap",
       },
       {
         rel: "stylesheet",
@@ -115,9 +123,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    // ✅ lang="fr" pour l'accessibilité et le SEO
+    <html lang="fr">
       <head>
         <HeadContent />
+        {/* ✅ Reset global anti-débordement horizontal + safe area iPhone */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          html, body { margin: 0; padding: 0; max-width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
+          body { padding-top: env(safe-area-inset-top, 0); padding-bottom: env(safe-area-inset-bottom, 0); }
+          /* Anti-zoom iOS Safari : tous les inputs doivent faire au moins 16px */
+          input, select, textarea { font-size: 16px !important; }
+          @media (min-width: 641px) { input, select, textarea { font-size: inherit !important; } }
+          /* Empêche le double-tap zoom sur les boutons */
+          button, a { touch-action: manipulation; }
+        ` }} />
       </head>
       <body>
         {children}
