@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 
@@ -35,17 +35,17 @@ const VILLES = ['Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Ouesso', 'Au
 function calc(type: string, d: Record<string, string>) {
   let s = 0
   if (type === 'physique') {
-    if (parseInt(d.anciennete || '0') >= 6) s += 25
-    if (d.salaire_domic === 'Oui') s += 25
-    if (parseInt(d.revenu || '0') >= 200000) s += 20
-    if (d.banque && d.banque !== 'Aucune') s += 15
-    if (parseInt(d.montant || '0') <= 10000000) s += 15
+    if (parseInt(d['anciennete'] || '0') >= 6) s += 25
+    if (d['salaire_domic'] === 'Oui') s += 25
+    if (parseInt(d['revenu'] || '0') >= 200000) s += 20
+    if (d['banque'] && d['banque'] !== 'Aucune') s += 15
+    if (parseInt(d['montant'] || '0') <= 10000000) s += 15
   } else {
-    if (d.rccm === 'Oui') s += 30
-    if (d.compte_mouvemente === 'Oui') s += 25
-    if (parseInt(d.anciennete_soc || '0') >= 12) s += 20
-    if (d.refus_bancaire === 'Non') s += 15
-    if (d.garanties === 'Oui') s += 10
+    if (d['rccm'] === 'Oui') s += 30
+    if (d['compte_mouvemente'] === 'Oui') s += 25
+    if (parseInt(d['anciennete_soc'] || '0') >= 12) s += 20
+    if (d['refus_bancaire'] === 'Non') s += 15
+    if (d['garanties'] === 'Oui') s += 10
   }
   return Math.min(s, 100)
 }
@@ -68,23 +68,23 @@ function Simulation() {
     setLoading(true)
     const s = calc(type, form)
     const nonEligible = isP
-      ? (parseInt(form.anciennete || '0') < 6) || form.salaire_domic === 'Non'
-      : form.rccm === 'Non'
+      ? (parseInt(form['anciennete'] || '0') < 6) || form['salaire_domic'] === 'Non'
+      : form['rccm'] === 'Non'
     const payload = {
       type: isP ? 'personne physique' : 'personne morale',
-      activite, ville: form.ville || '',
-      montant_demande: parseInt(form.montant || '0'),
-      banque_actuelle: form.banque || '',
+      activite, ville: form['ville'] || '',
+      montant_demande: parseInt(form['montant'] || '0'),
+      banque_actuelle: form['banque'] || '',
       statut: nonEligible ? 'Non Éligible' : 'Nouveau',
       score: s,
-      identite: { nom: form.nom, prenom: form.prenom, tel: form.tel, email: form.email },
+      identite: { nom: form['nom'], prenom: form['prenom'], tel: form['tel'], email: form['email'] },
       situation: isP
-        ? { employeur: form.employeur, anciennete: form.anciennete, revenu: form.revenu }
-        : { raison_sociale: form.raison_sociale, dirigeant: form.dirigeant, rccm: form.rccm, niu: form.niu, anciennete: form.anciennete_soc, ca_annuel: form.ca_annuel },
-      besoin: { montant: form.montant, objet: form.objet, banque: form.banque, flux_mois: form.flux_mois },
+        ? { employeur: form['employeur'], anciennete: form['anciennete'], revenu: form['revenu'] }
+        : { raison_sociale: form['raison_sociale'], dirigeant: form['dirigeant'], rccm: form['rccm'], niu: form['niu'], anciennete: form['anciennete_soc'], ca_annuel: form['ca_annuel'] },
+      besoin: { montant: form['montant'], objet: form['objet'], banque: form['banque'], flux_mois: form['flux_mois'] },
       eligibilite: isP
-        ? { anciennete_ok: parseInt(form.anciennete || '0') >= 6, salaire_domic: form.salaire_domic }
-        : { compte_mouvemente: form.compte_mouvemente, refus_bancaire: form.refus_bancaire, garanties: form.garanties },
+        ? { anciennete_ok: parseInt(form['anciennete'] || '0') >= 6, salaire_domic: form['salaire_domic'] }
+        : { compte_mouvemente: form['compte_mouvemente'], refus_bancaire: form['refus_bancaire'], garanties: form['garanties'] },
     }
     const { data, error } = await supabase.from('leads').insert(payload).select('id').single()
     setLoading(false)
@@ -254,16 +254,16 @@ function Simulation() {
               <div className="card-title">1. Identité</div>
               <div className="fields">
                 {isP ? <>
-                  <div className="field"><label>Prénom *</label><input placeholder="Jean-Pierre" value={form.prenom||''} onChange={e=>set('prenom',e.target.value)}/></div>
-                  <div className="field"><label>Nom *</label><input placeholder="Moukouama" value={form.nom||''} onChange={e=>set('nom',e.target.value)}/></div>
+                  <div className="field"><label>Prénom *</label><input placeholder="Jean-Pierre" value={form['prenom']||''} onChange={e=>set('prenom',e.target.value)}/></div>
+                  <div className="field"><label>Nom *</label><input placeholder="Moukouama" value={form['nom']||''} onChange={e=>set('nom',e.target.value)}/></div>
                 </> : <>
-                  <div className="field"><label>Raison sociale *</label><input placeholder="Nom de l'entreprise" value={form.raison_sociale||''} onChange={e=>set('raison_sociale',e.target.value)}/></div>
-                  <div className="field"><label>Nom du dirigeant *</label><input placeholder="Prénom Nom" value={form.dirigeant||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
+                  <div className="field"><label>Raison sociale *</label><input placeholder="Nom de l'entreprise" value={form['raison_sociale']||''} onChange={e=>set('raison_sociale',e.target.value)}/></div>
+                  <div className="field"><label>Nom du dirigeant *</label><input placeholder="Prénom Nom" value={form['dirigeant']||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
                 </>}
-                <div className="field"><label>Téléphone *</label><input placeholder="+242 06 000 0000" value={form.tel||''} onChange={e=>set('tel',e.target.value)}/></div>
-                <div className="field"><label>Email</label><input placeholder="email@exemple.com" value={form.email||''} onChange={e=>set('email',e.target.value)}/></div>
+                <div className="field"><label>Téléphone *</label><input placeholder="+242 06 000 0000" value={form['tel']||''} onChange={e=>set('tel',e.target.value)}/></div>
+                <div className="field"><label>Email</label><input placeholder="email@exemple.com" value={form['email']||''} onChange={e=>set('email',e.target.value)}/></div>
                 <div className="field"><label>Ville *</label>
-                  <select value={form.ville||''} onChange={e=>set('ville',e.target.value)}>
+                  <select value={form['ville']||''} onChange={e=>set('ville',e.target.value)}>
                     <option value=""></option>
                     {VILLES.map(v=><option key={v}>{v}</option>)}
                   </select>
@@ -275,16 +275,16 @@ function Simulation() {
               <div className="card-title">2. Situation {isP ? 'professionnelle' : 'juridique'}</div>
               <div className="fields">
                 {isP ? <>
-                  <div className="field"><label>Employeur / Administration</label><input placeholder="Ministère…" value={form.employeur||''} onChange={e=>set('employeur',e.target.value)}/></div>
-                  <div className="field"><label>Ancienneté (mois)</label><input type="number" placeholder="24" value={form.anciennete||''} onChange={e=>set('anciennete',e.target.value)}/></div>
-                  <div className="field"><label>Revenu net/mois (XAF)</label><input type="number" placeholder="350000" value={form.revenu||''} onChange={e=>set('revenu',e.target.value)}/></div>
+                  <div className="field"><label>Employeur / Administration</label><input placeholder="Ministère…" value={form['employeur']||''} onChange={e=>set('employeur',e.target.value)}/></div>
+                  <div className="field"><label>Ancienneté (mois)</label><input type="number" placeholder="24" value={form['anciennete']||''} onChange={e=>set('anciennete',e.target.value)}/></div>
+                  <div className="field"><label>Revenu net/mois (XAF)</label><input type="number" placeholder="350000" value={form['revenu']||''} onChange={e=>set('revenu',e.target.value)}/></div>
                 </> : <>
                   <div className="field radio-field"><label>RCCM</label>
-                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.rccm===v?'sel':''} onClick={()=>set('rccm',v)}>{v}</button>)}</div>
+                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['rccm']===v?'sel':''} onClick={()=>set('rccm',v)}>{v}</button>)}</div>
                   </div>
-                  <div className="field"><label>NIU</label><input placeholder="NIU" value={form.niu||''} onChange={e=>set('niu',e.target.value)}/></div>
-                  <div className="field"><label>Ancienneté (mois)</label><input type="number" placeholder="24" value={form.anciennete_soc||''} onChange={e=>set('anciennete_soc',e.target.value)}/></div>
-                  <div className="field"><label>CA Annuel (XAF)</label><input type="number" placeholder="50000000" value={form.ca_annuel||''} onChange={e=>set('ca_annuel',e.target.value)}/></div>
+                  <div className="field"><label>NIU</label><input placeholder="NIU" value={form['niu']||''} onChange={e=>set('niu',e.target.value)}/></div>
+                  <div className="field"><label>Ancienneté (mois)</label><input type="number" placeholder="24" value={form['anciennete_soc']||''} onChange={e=>set('anciennete_soc',e.target.value)}/></div>
+                  <div className="field"><label>CA Annuel (XAF)</label><input type="number" placeholder="50000000" value={form['ca_annuel']||''} onChange={e=>set('ca_annuel',e.target.value)}/></div>
                 </>}
               </div>
             </div>
@@ -292,20 +292,20 @@ function Simulation() {
             <div className="form-card left">
               <div className="card-title">3. Votre besoin</div>
               <div className="fields">
-                <div className="field"><label>Montant demandé (XAF) *</label><input type="number" placeholder="5000000" value={form.montant||''} onChange={e=>set('montant',e.target.value)}/></div>
+                <div className="field"><label>Montant demandé (XAF) *</label><input type="number" placeholder="5000000" value={form['montant']||''} onChange={e=>set('montant',e.target.value)}/></div>
                 <div className="field"><label>Objet du financement *</label>
-                  <select value={form.objet||''} onChange={e=>set('objet',e.target.value)}>
+                  <select value={form['objet']||''} onChange={e=>set('objet',e.target.value)}>
                     <option value=""></option>
                     {(isP ? ['Consommation','Immobilier','Véhicule','Autre'] : ['Investissement','Fonds de roulement','Marché public','Autre']).map(o=><option key={o}>{o}</option>)}
                   </select>
                 </div>
                 <div className="field"><label>Banque actuelle</label>
-                  <select value={form.banque||''} onChange={e=>set('banque',e.target.value)}>
+                  <select value={form['banque']||''} onChange={e=>set('banque',e.target.value)}>
                     <option value=""></option>
                     {BANQUES.map(b=><option key={b}>{b}</option>)}
                   </select>
                 </div>
-                {!isP && <div className="field"><label>Flux mensuel moyen (XAF)</label><input type="number" placeholder="2000000" value={form.flux_mois||''} onChange={e=>set('flux_mois',e.target.value)}/></div>}
+                {!isP && <div className="field"><label>Flux mensuel moyen (XAF)</label><input type="number" placeholder="2000000" value={form['flux_mois']||''} onChange={e=>set('flux_mois',e.target.value)}/></div>}
               </div>
             </div>
 
@@ -313,23 +313,23 @@ function Simulation() {
               <div className="card-title">4. Éligibilité</div>
               <div className="fields">
                 {isP ? <div className="field radio-field"><label>Salaire domicilié dans une banque ?</label>
-                  <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.salaire_domic===v?'sel':''} onClick={()=>set('salaire_domic',v)}>{v}</button>)}</div>
+                  <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['salaire_domic']===v?'sel':''} onClick={()=>set('salaire_domic',v)}>{v}</button>)}</div>
                 </div> : <>
                   <div className="field radio-field"><label>Compte bancaire mouvementé ?</label>
-                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.compte_mouvemente===v?'sel':''} onClick={()=>set('compte_mouvemente',v)}>{v}</button>)}</div>
+                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['compte_mouvemente']===v?'sel':''} onClick={()=>set('compte_mouvemente',v)}>{v}</button>)}</div>
                   </div>
                   <div className="field radio-field"><label>Refus bancaire antérieur ?</label>
-                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.refus_bancaire===v?'sel':''} onClick={()=>set('refus_bancaire',v)}>{v}</button>)}</div>
+                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['refus_bancaire']===v?'sel':''} onClick={()=>set('refus_bancaire',v)}>{v}</button>)}</div>
                   </div>
                   <div className="field radio-field"><label>Garanties disponibles ?</label>
-                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form.garanties===v?'sel':''} onClick={()=>set('garanties',v)}>{v}</button>)}</div>
+                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['garanties']===v?'sel':''} onClick={()=>set('garanties',v)}>{v}</button>)}</div>
                   </div>
                 </>}
               </div>
             </div>
           </div>
 
-          <button className="btn-main" disabled={loading || !form.tel || !form.montant || (isP ? !form.prenom : !form.raison_sociale)} onClick={soumettre}>
+          <button className="btn-main" disabled={loading || !form['tel'] || !form['montant'] || (isP ? !form['prenom'] : !form['raison_sociale'])} onClick={soumettre}>
             {loading ? 'Envoi en cours…' : 'Voir mon score'}
             {!loading && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </button>
