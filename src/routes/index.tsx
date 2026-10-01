@@ -21,7 +21,22 @@ function Index() {
         * { box-sizing: border-box; }
 
         .nav { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
-        @media (max-width: 640px) { .nav { height: 60px; padding: 0 20px; } }
+        @media (max-width: 640px) { .nav { height: 60px; padding: 0 16px; } }
+
+        .nav-actions { display: flex; align-items: center; gap: 10px; }
+        @media (max-width: 640px) { .nav-actions { gap: 6px; } }
+
+        .nav-link { color: #111; font-family: inherit; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 18px; border-radius: 100px; display: flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer; }
+        .nav-link.muted { color: #666; font-size: 13px; font-weight: 500; padding: 12px 14px; }
+        .nav-link .lbl { display: inline; }
+
+        /* MOBILE : icône seule pour "Mon espace", cache "Espace agent" */
+        @media (max-width: 640px) {
+          .nav-link { padding: 8px; font-size: 0; }
+          .nav-link svg { margin: 0; }
+          .nav-link .lbl { display: none; }
+          .nav-link.hide-mobile { display: none; }
+        }
 
         .hero { padding: 90px 60px 80px; display: grid; grid-template-columns: 1fr 480px; gap: 60px; align-items: center; }
         @media (max-width: 900px) { .hero { grid-template-columns: 1fr; padding: 48px 32px 40px; gap: 40px; } }
@@ -72,8 +87,8 @@ function Index() {
 
         .btn-main { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
         .btn-second { background: #F5F5F5; color: #111; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
-        .nav-btn { background: #111111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 28px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-        @media (max-width: 640px) { .nav-btn { padding: 10px 20px; font-size: 13px; } }
+        .nav-btn { background: #111111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        @media (max-width: 640px) { .nav-btn { padding: 9px 16px; font-size: 13px; gap: 6px; } }
         .db-btn { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px 28px; border-radius: 100px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
         .cta-blue { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 32px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .cta-dark { background: #111; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 32px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
@@ -82,13 +97,13 @@ function Index() {
 
       <nav className="nav">
         <LogoSVG height={56} tone="light" />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <a href="/mon-espace" onClick={(e) => { e.preventDefault(); navigate({ to: '/mon-espace' }) }} style={{ color: '#111', fontFamily: 'inherit', fontSize: 14, fontWeight: 600, textDecoration: 'none', padding: '12px 18px', borderRadius: 100, display: 'flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', cursor: 'pointer' }}>
-            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="#111" strokeWidth="1.8"/><path d="M4 17a6 6 0 0112 0" stroke="#111" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            Mon espace
+        <div className="nav-actions">
+          <a href="/mon-espace" onClick={(e) => { e.preventDefault(); navigate({ to: '/mon-espace' }) }} className="nav-link" aria-label="Mon espace">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="#111" strokeWidth="1.8"/><path d="M4 17a6 6 0 0112 0" stroke="#111" strokeWidth="1.8" strokeLinecap="round"/></svg>
+            <span className="lbl">Mon espace</span>
           </a>
-          <a href="/admin" onClick={(e) => { e.preventDefault(); navigate({ to: '/admin' }) }} style={{ color: '#666', fontFamily: 'inherit', fontSize: 13, fontWeight: 500, textDecoration: 'none', padding: '12px 14px', borderRadius: 100, whiteSpace: 'nowrap', cursor: 'pointer' }}>
-            Espace agent
+          <a href="/admin" onClick={(e) => { e.preventDefault(); navigate({ to: '/admin' }) }} className="nav-link muted hide-mobile">
+            <span className="lbl">Espace agent</span>
           </a>
           <button className="nav-btn" onClick={goto}>
             Commencer
