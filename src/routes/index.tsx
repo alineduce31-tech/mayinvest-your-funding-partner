@@ -26,15 +26,13 @@ function Index() {
         .nav-actions { display: flex; align-items: center; gap: 10px; }
         @media (max-width: 640px) { .nav-actions { gap: 6px; } }
 
-        .nav-link { color: #111; font-family: inherit; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 18px; border-radius: 100px; display: flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer; }
-        .nav-link.muted { color: #666; font-size: 13px; font-weight: 500; padding: 12px 14px; }
-        .nav-link .lbl { display: inline; }
+        .nav-link { color: #111; font-family: inherit; font-size: 14px; font-weight: 600; text-decoration: none; padding: 10px 16px; border-radius: 100px; display: flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer; }
+        .nav-link.muted { color: #666; font-size: 13px; font-weight: 500; padding: 10px 12px; }
+        .nav-link:hover { background: #F5F5F5; }
 
-        /* MOBILE : icône seule pour "Mon espace", cache "Espace agent" */
         @media (max-width: 640px) {
-          .nav-link { padding: 8px; font-size: 0; }
-          .nav-link svg { margin: 0; }
-          .nav-link .lbl { display: none; }
+          .nav-link { padding: 7px 12px; font-size: 13px; gap: 5px; }
+          .nav-link svg { width: 15px; height: 15px; }
           .nav-link.hide-mobile { display: none; }
         }
 
@@ -87,8 +85,8 @@ function Index() {
 
         .btn-main { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
         .btn-second { background: #F5F5F5; color: #111; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
-        .nav-btn { background: #111111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
-        @media (max-width: 640px) { .nav-btn { padding: 9px 16px; font-size: 13px; gap: 6px; } }
+        .nav-btn { background: #111111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 11px 22px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        @media (max-width: 640px) { .nav-btn { padding: 8px 14px; font-size: 12px; gap: 5px; } .nav-btn svg { width: 12px; height: 12px; } }
         .db-btn { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px 28px; border-radius: 100px; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
         .cta-blue { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 32px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .cta-dark { background: #111; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 32px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
@@ -98,12 +96,12 @@ function Index() {
       <nav className="nav">
         <LogoSVG height={56} tone="light" />
         <div className="nav-actions">
-          <a href="/mon-espace" onClick={(e) => { e.preventDefault(); navigate({ to: '/mon-espace' }) }} className="nav-link" aria-label="Mon espace">
-            <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="7" r="3" stroke="#111" strokeWidth="1.8"/><path d="M4 17a6 6 0 0112 0" stroke="#111" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            <span className="lbl">Mon espace</span>
+          <a href="/mon-espace" onClick={(e) => { e.preventDefault(); navigate({ to: '/mon-espace' }) }} className="nav-link">
+            <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+            Mon dossier
           </a>
           <a href="/admin" onClick={(e) => { e.preventDefault(); navigate({ to: '/admin' }) }} className="nav-link muted hide-mobile">
-            <span className="lbl">Espace agent</span>
+            Espace agent
           </a>
           <button className="nav-btn" onClick={goto}>
             Commencer
