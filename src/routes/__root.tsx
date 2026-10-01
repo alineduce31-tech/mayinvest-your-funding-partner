@@ -76,7 +76,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      // Viewport: initial-scale=1, maximum-scale=1 pour empêcher le zoom auto iOS Safari sur les inputs.
+      // Viewport: initial-scale=1 + maximum-scale=1 pour empêcher le zoom auto Safari iOS/iPadOS.
       // viewport-fit=cover pour les iPhone à encoche (safe area).
       { name: "viewport", content: "width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" },
       { title: "Mayinvest PréSelect — Votre crédit évalué avant la banque" },
@@ -123,21 +123,43 @@ function RootShell({ children }: { children: ReactNode }) {
     <html lang="fr">
       <head>
         <HeadContent />
-        {/* Styles globaux Mayinvest */}
+        {/* Styles globaux Mayinvest — s'appliquent sur mobile, tablette ET desktop sans distinction */}
         <style dangerouslySetInnerHTML={{ __html: `
-          /* Reset anti-débordement + safe area iPhone */
-          html, body { margin: 0; padding: 0; max-width: 100%; overflow-x: hidden; -webkit-text-size-adjust: 100%; }
-          body { padding-top: env(safe-area-inset-top, 0); padding-bottom: env(safe-area-inset-bottom, 0); }
-
-          /* Anti-zoom iOS Safari : tous les inputs doivent faire au moins 16px sur mobile */
-          input, select, textarea { font-size: 16px !important; }
-          @media (min-width: 641px) { input, select, textarea { font-size: inherit !important; } }
-
-          /* Empêche le double-tap zoom sur les boutons et liens */
-          button, a { touch-action: manipulation; }
+          /* ============================================
+             RESET GLOBAL (toutes tailles d'écran)
+             ============================================ */
+          html, body {
+            margin: 0;
+            padding: 0;
+            max-width: 100%;
+            overflow-x: hidden;
+            -webkit-text-size-adjust: 100%;
+          }
+          body {
+            padding-top: env(safe-area-inset-top, 0);
+            padding-bottom: env(safe-area-inset-bottom, 0);
+          }
 
           /* ============================================
-             HEADER STICKY GLOBAL (toutes les pages)
+             ANTI-ZOOM — appliqué sur TOUT (mobile, tablette, iPad, desktop)
+             16px partout empêche iOS/iPadOS Safari de zoomer à la saisie
+             ============================================ */
+          input, select, textarea {
+            font-size: 16px !important;
+          }
+
+          /* ============================================
+             TOUCH-ACTION — pas de double-tap zoom sur boutons/liens
+             ============================================ */
+          button, a {
+            touch-action: manipulation;
+          }
+
+          /* ============================================
+             HEADER STICKY GLOBAL — s'applique sur TOUTES
+             les pages (index, preselection, mon-espace…)
+             et sur TOUTES les tailles d'écran
+             (mobile + tablette + PC)
              ============================================ */
           .nav, .top {
             position: sticky !important;
@@ -146,11 +168,8 @@ function RootShell({ children }: { children: ReactNode }) {
             background: rgba(255, 255, 255, 0.88) !important;
             backdrop-filter: saturate(180%) blur(14px);
             -webkit-backdrop-filter: saturate(180%) blur(14px);
-            transition: box-shadow 0.2s ease, border-color 0.2s ease;
-          }
-          /* Ombre discrète qui apparaît quand on scrolle */
-          .nav:not(.nav-top), .top:not(.top-top) {
-            box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 4px 20px rgba(13,27,62,0.04);
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.04), 0 4px 20px rgba(13, 27, 62, 0.04);
+            transition: box-shadow 0.2s ease;
           }
         ` }} />
       </head>
