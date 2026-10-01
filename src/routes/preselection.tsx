@@ -7,8 +7,28 @@ export const Route = createFileRoute('/preselection')({
   component: Simulation,
 })
 
-const ACTIVITES_PHYSIQUE = ['Fonctionnaire', 'Salarié privé', 'Commerçant', 'Artisan', 'Profession libérale', 'Agriculteur', 'Autre']
-const ACTIVITES_MORALE = ['Commerce', 'Tourisme', 'BTP', 'Industrie / Bois', 'Agriculture', 'Transport', 'Santé', 'Tech', 'Autre']
+const ICON_P: Record<string, JSX.Element> = {
+  'Fonctionnaire': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 7h14v10H3V7z" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.6"/></svg>,
+  'Salarié privé': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7V5a2 2 0 012-2h2a2 2 0 012 2v2" stroke="currentColor" strokeWidth="1.6"/></svg>,
+  'Commerçant': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 6h14l-1.5 9a1 1 0 01-1 1h-9a1 1 0 01-1-1L3 6z" stroke="currentColor" strokeWidth="1.6"/><path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" strokeWidth="1.6"/></svg>,
+  'Artisan': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M12 3l5 5-9 9H3v-5l9-9z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M10 5l5 5" stroke="currentColor" strokeWidth="1.6"/></svg>,
+  'Profession libérale': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
+  'Agriculteur': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 17V9m0 0C7 9 4 7 4 4c3 0 6 2 6 5zm0 0c3 0 6-2 6-5-3 0-6 2-6 5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>,
+  'Autre': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="5" cy="10" r="1.5" fill="currentColor"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/><circle cx="15" cy="10" r="1.5" fill="currentColor"/></svg>,
+}
+const ICON_M: Record<string, JSX.Element> = {
+  'Commerce': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 6h14l-1.5 9a1 1 0 01-1 1h-9a1 1 0 01-1-1L3 6z" stroke="currentColor" strokeWidth="1.6"/><path d="M7 9V6a3 3 0 016 0v3" stroke="currentColor" strokeWidth="1.6"/></svg>,
+  'Tourisme': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2l7 10H3L10 2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M3 15h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
+  'BTP': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 17h14M5 17V9l5-3 5 3v8" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><rect x="8" y="12" width="4" height="5" stroke="currentColor" strokeWidth="1.6"/></svg>,
+  'Industrie / Bois': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 17V8l4 2V8l4 2V8l4 2v7H3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>,
+  'Agriculture': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 17V9m0 0C7 9 4 7 4 4c3 0 6 2 6 5zm0 0c3 0 6-2 6-5-3 0-6 2-6 5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>,
+  'Transport': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2" y="7" width="10" height="7" stroke="currentColor" strokeWidth="1.6"/><path d="M12 9h4l2 3v2h-6V9z" stroke="currentColor" strokeWidth="1.6"/><circle cx="6" cy="15" r="1.5" stroke="currentColor" strokeWidth="1.6"/><circle cx="14" cy="15" r="1.5" stroke="currentColor" strokeWidth="1.6"/></svg>,
+  'Santé': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M8 3h4v5h5v4h-5v5H8v-5H3V8h5V3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>,
+  'Tech': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="5" y="5" width="10" height="10" rx="1" stroke="currentColor" strokeWidth="1.6"/><path d="M8 2v3M12 2v3M8 15v3M12 15v3M2 8h3M2 12h3M15 8h3M15 12h3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
+  'Autre': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="5" cy="10" r="1.5" fill="currentColor"/><circle cx="10" cy="10" r="1.5" fill="currentColor"/><circle cx="15" cy="10" r="1.5" fill="currentColor"/></svg>,
+}
+const ACTIVITES_PHYSIQUE = Object.keys(ICON_P)
+const ACTIVITES_MORALE = Object.keys(ICON_M)
 const BANQUES = ['BGFI Bank', 'UBA', 'LCB Bank', 'MUCODEC', 'Crédit du Congo', 'Ecobank', 'Autre', 'Aucune']
 const VILLES = ['Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Ouesso', 'Autre']
 
@@ -109,9 +129,10 @@ function Simulation() {
         /* ÉTAPE 2 — chips */
         .chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 32px; }
         @media (min-width: 480px) { .chips { grid-template-columns: repeat(3, 1fr); } }
-        .chip { background: #F5F5F5; border: 1.5px solid transparent; border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 14px; font-weight: 600; color: #111; cursor: pointer; text-align: left; transition: all 0.15s; }
+        .chip { background: #F5F5F5; border: 1.5px solid transparent; border-radius: 14px; padding: 14px 16px; font-family: inherit; font-size: 14px; font-weight: 600; color: #111; cursor: pointer; text-align: left; transition: all 0.15s; display: flex; align-items: center; gap: 10px; }
         .chip:hover { background: #EEF4FF; }
         .chip.sel { background: #1A6BFF; color: #fff; border-color: #1A6BFF; box-shadow: 0 6px 14px rgba(26,107,255,0.3); }
+        .chip svg { flex-shrink: 0; }
 
         /* ÉTAPE 3 — cartes form 3D */
         .form-stack { display: flex; flex-direction: column; gap: 18px; margin-bottom: 24px; }
@@ -134,7 +155,7 @@ function Simulation() {
         .btn-main { width: 100%; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(26,107,255,0.35); transition: all 0.2s; }
         .btn-main:hover:not(:disabled) { background: #1560E0; transform: translateY(-1px); box-shadow: 0 12px 28px rgba(26,107,255,0.4); }
         .btn-main:disabled { background: #C7D0DB; cursor: not-allowed; box-shadow: none; }
-        .btn-back { width: 100%; background: #F5F5F5; color: #111; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px; border-radius: 100px; border: none; cursor: pointer; margin-top: 12px; }
+        .btn-back { width: 100%; background: #F5F5F5; color: #111; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px; border-radius: 100px; border: none; cursor: pointer; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .btn-back:hover { background: #EAEAEA; }
 
         /* ÉTAPE 4 — score */
@@ -198,14 +219,17 @@ function Simulation() {
           <p className="sub">{isP ? 'Sélectionnez votre situation professionnelle.' : "Sélectionnez le secteur de votre entreprise."}</p>
           <div className="chips">
             {(isP ? ACTIVITES_PHYSIQUE : ACTIVITES_MORALE).map(a =>
-              <button key={a} className={`chip ${activite === a ? 'sel' : ''}`} onClick={() => setActivite(a)}>{a}</button>
+              <button key={a} className={`chip ${activite === a ? 'sel' : ''}`} onClick={() => setActivite(a)}>
+                {(isP ? ICON_P : ICON_M)[a]}
+                <span>{a}</span>
+              </button>
             )}
           </div>
           <button className="btn-main" disabled={!activite} onClick={() => setStep(3)}>
             Continuer
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </button>
-          <button className="btn-back" onClick={() => setStep(1)}>← Retour</button>
+          <button className="btn-back" onClick={() => setStep(1)}><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4L3 7l3 3" stroke="#111" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>Retour</button>
         </>}
 
         {step === 3 && <>
@@ -303,7 +327,7 @@ function Simulation() {
             {loading ? 'Envoi en cours…' : 'Voir mon score'}
             {!loading && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </button>
-          <button className="btn-back" onClick={() => setStep(2)}>← Retour</button>
+          <button className="btn-back" onClick={() => setStep(2)}><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4L3 7l3 3" stroke="#111" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>Retour</button>
         </>}
 
         {step === 4 && <div className="score-final">
