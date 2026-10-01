@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
@@ -8,6 +8,7 @@ export const Route = createFileRoute('/mon-espace')({ component: MonEspace })
 type Lead = { id: string; score: number; statut: string; activite: string | null; montant_demande: number | null; identite: any; created_at: string }
 
 function MonEspace() {
+  const navigate = useNavigate()
   const [tel, setTel] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -34,7 +35,7 @@ function MonEspace() {
       return
     }
     if (data.length === 1) {
-      window.location.href = `/client/${data[0].id}`
+      navigate({ to: '/client/$id', params: { id: data[0].id } })
       return
     }
     setResults(data as Lead[])
@@ -46,8 +47,9 @@ function MonEspace() {
       <style>{`
         * { box-sizing: border-box; }
         .nav { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
-        @media (max-width: 640px) { .nav { height: 60px; padding: 0 20px; } }
-        .nav-btn { background: #111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 28px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        @media (max-width: 640px) { .nav { height: 60px; padding: 0 16px; } }
+        .nav-btn { background: #111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 11px 22px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        @media (max-width: 640px) { .nav-btn { padding: 8px 14px; font-size: 12px; gap: 5px; } .nav-btn svg { width: 12px; height: 12px; } }
         .wrap { max-width: 440px; margin: 0 auto; padding: 60px 24px 80px; }
         @media (max-width: 640px) { .wrap { padding: 40px 20px 60px; } }
         .card { background: linear-gradient(145deg, #0D1B3E 0%, #0A1532 100%); border-radius: 28px; padding: 36px 32px; color: #fff; box-shadow: 0 40px 80px rgba(13,27,62,0.28); position: relative; overflow: hidden; transform: perspective(900px) rotateX(2deg); }
@@ -76,7 +78,7 @@ function MonEspace() {
 
       <nav className="nav">
         <Logo height={56} tone="light" />
-        <button className="nav-btn" onClick={() => { window.location.href = '/' }}>
+        <button className="nav-btn" onClick={() => navigate({ to: '/' })}>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4L3 7l3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
           Retour à l'accueil
         </button>
@@ -85,10 +87,10 @@ function MonEspace() {
       <div className="wrap">
         <div className="card">
           <div className="icon-wrap">
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#fff" strokeWidth="2"/><path d="M4 21a8 8 0 0116 0" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="5" y="3" width="14" height="18" rx="2" stroke="#fff" strokeWidth="2"/><path d="M9 8h6M9 12h6M9 16h4" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
           </div>
-          <h1>Mon espace client</h1>
-          <p className="sub">Retrouvez votre dossier et échangez avec votre conseiller. Entrez le numéro de téléphone utilisé lors de votre demande.</p>
+          <h1>Mon dossier</h1>
+          <p className="sub">Retrouvez l'état de votre dossier et échangez avec votre conseiller. Entrez le numéro de téléphone utilisé lors de votre demande.</p>
 
           <div className="field">
             <label>Téléphone</label>
@@ -96,7 +98,7 @@ function MonEspace() {
           </div>
 
           <button className="btn" disabled={loading || !tel.trim()} onClick={chercher}>
-            {loading ? 'Recherche...' : 'Accéder à mon dossier'}
+            {loading ? 'Recherche...' : 'Voir mon dossier'}
             {!loading && <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </button>
 
@@ -108,7 +110,7 @@ function MonEspace() {
               {results.map(r => {
                 const scoreColor = r.score >= 70 ? '#34D058' : r.score >= 50 ? '#FFB020' : '#FF6B6B'
                 return (
-                  <div key={r.id} className="result-item" onClick={() => { window.location.href = `/client/${r.id}` }}>
+                  <div key={r.id} className="result-item" onClick={() => navigate({ to: '/client/$id', params: { id: r.id } })}>
                     <div className="r-score" style={{ background: `${scoreColor}26`, color: scoreColor, border: `2px solid ${scoreColor}` }}>{r.score}</div>
                     <div className="r-main">
                       <div className="r-name">{nomOf(r)}</div>
@@ -123,7 +125,7 @@ function MonEspace() {
         </div>
 
         <div className="alt">
-          Pas encore de dossier ? <a href="/preselection">Démarrer ma présélection</a>
+          Pas encore de dossier ? <a href="/preselection" onClick={(e) => { e.preventDefault(); navigate({ to: '/preselection' }) }}>Démarrer ma présélection</a>
         </div>
       </div>
     </div>
