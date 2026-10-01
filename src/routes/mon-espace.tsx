@@ -7,14 +7,21 @@ export const Route = createFileRoute('/mon-espace')({ component: MonEspace })
 
 type Lead = { id: string; score: number; statut: string; activite: string | null; montant_demande: number | null; identite: any; created_at: string }
 
+// Auto-formatage téléphone congolais : "061234567" → "06 123 4567"
+function formatPhone(digits: string): string {
+  const d = digits.replace(/\D/g, '').slice(0, 9)
+  if (d.length <= 2) return d
+  if (d.length <= 5) return `${d.slice(0, 2)} ${d.slice(2)}`
+  return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`
+}
+function cleanPhone(v: string): string {
+  return v.replace(/\D/g, '').slice(0, 9)
+}
+
 const ICONS = [
-  // Dossier classique
   <svg key="folder" width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>,
-  // Dossier validé (check)
   <svg key="check" width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/><path d="M9 13l2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-  // Dossier + loupe
   <svg key="search" width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M4 5h5l2 2h7a2 2 0 012 2v3" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/><path d="M4 5v12a2 2 0 002 2h5" stroke="#fff" strokeWidth="2"/><circle cx="16" cy="16" r="3" stroke="#fff" strokeWidth="2"/><path d="M18.5 18.5L21 21" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>,
-  // Cadenas
   <svg key="lock" width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#fff" strokeWidth="2"/><circle cx="12" cy="16" r="1.5" fill="#fff"/></svg>,
 ]
 
@@ -36,11 +43,10 @@ function MonEspace() {
   }
 
   async function chercher() {
-    const t = tel.trim()
-    if (!t) { setError('Entrez votre numéro de téléphone'); return }
+    if (!tel) { setError('Entrez votre numéro de téléphone'); return }
     setError(''); setLoading(true); setResults(null)
-    const digits = t.replace(/\D/g, '')
-    const last9 = digits.slice(-9)
+    // tel contient déjà uniquement des chiffres propres
+    const last9 = tel.slice(-9)
     const { data, error: err } = await supabase.from('leads')
       .select('id, score, statut, activite, montant_demande, identite, created_at')
       .ilike('identite->>tel', `%${last9}%`)
@@ -71,24 +77,11 @@ function MonEspace() {
         @media (max-width: 640px) { .wrap { padding: 40px 20px 60px; } }
         .card { background: linear-gradient(145deg, #0D1B3E 0%, #0A1532 100%); border-radius: 28px; padding: 36px 32px; color: #fff; box-shadow: 0 40px 80px rgba(13,27,62,0.28); position: relative; overflow: hidden; transform: perspective(900px) rotateX(2deg); }
         .card::before { content: ''; position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(26,107,255,0.3) 0%, transparent 65%); pointer-events: none; }
-
-        /* Icône animée */
         .icon-wrap { width: 56px; height: 56px; background: #1A6BFF; border-radius: 16px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative; z-index: 1; box-shadow: 0 8px 20px rgba(26,107,255,0.4); overflow: hidden; }
         .icon-stage { position: relative; width: 26px; height: 26px; }
-        .icon-stage > svg {
-          position: absolute; inset: 0;
-          opacity: 0;
-          transform: scale(0.6) rotate(-12deg);
-          transition: opacity 0.5s ease, transform 0.5s cubic-bezier(.2,.9,.3,1.2);
-        }
-        .icon-stage > svg.active {
-          opacity: 1;
-          transform: scale(1) rotate(0);
-        }
         .icon-dots { display: flex; gap: 4px; margin-bottom: 20px; position: relative; z-index: 1; }
         .icon-dots .d { width: 5px; height: 5px; border-radius: 100px; background: rgba(255,255,255,0.15); transition: all 0.3s ease; }
         .icon-dots .d.on { background: #1A6BFF; width: 16px; }
-
         h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; margin: 0 0 10px; position: relative; z-index: 1; }
         .sub { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.5; margin: 0 0 24px; position: relative; z-index: 1; }
         .field { background: rgba(255,255,255,0.08); border-radius: 14px; padding: 12px 16px; margin-bottom: 14px; position: relative; z-index: 1; border: 1.5px solid transparent; transition: all 0.15s; }
@@ -108,10 +101,6 @@ function MonEspace() {
         .r-main { flex: 1; }
         .r-name { font-size: 14px; font-weight: 700; color: #fff; }
         .r-sub { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 2px; }
-
-        @media (prefers-reduced-motion: reduce) {
-          .icon-stage > svg { transition: none; }
-        }
       `}</style>
 
       <nav className="nav">
@@ -127,13 +116,12 @@ function MonEspace() {
           <div className="icon-wrap">
             <div className="icon-stage">
               {ICONS.map((Ic, i) => (
-                <div key={i} className={i === iconIdx ? 'active' : ''} style={{ position: 'absolute', inset: 0, opacity: i === iconIdx ? 1 : 0, transform: i === iconIdx ? 'scale(1) rotate(0)' : 'scale(0.6) rotate(-12deg)', transition: 'opacity 0.5s ease, transform 0.5s cubic-bezier(.2,.9,.3,1.2)' }}>
+                <div key={i} style={{ position: 'absolute', inset: 0, opacity: i === iconIdx ? 1 : 0, transform: i === iconIdx ? 'scale(1) rotate(0)' : 'scale(0.6) rotate(-12deg)', transition: 'opacity 0.5s ease, transform 0.5s cubic-bezier(.2,.9,.3,1.2)' }}>
                   {Ic}
                 </div>
               ))}
             </div>
           </div>
-
           <div className="icon-dots" aria-hidden="true">
             {ICONS.map((_, i) => <div key={i} className={`d ${i === iconIdx ? 'on' : ''}`} />)}
           </div>
@@ -143,10 +131,19 @@ function MonEspace() {
 
           <div className="field">
             <label>Téléphone</label>
-            <input placeholder="06 000 0000" value={tel} onChange={e => { setTel(e.target.value); setError(''); setResults(null) }} onKeyDown={e => { if (e.key === 'Enter') chercher() }} inputMode="tel"/>
+            {/* ✅ Auto-formatage XX XXX XXXX pendant la saisie */}
+            <input
+              type="tel"
+              inputMode="numeric"
+              placeholder="06 123 4567"
+              maxLength={11}
+              value={formatPhone(tel)}
+              onChange={e => { setTel(cleanPhone(e.target.value)); setError(''); setResults(null) }}
+              onKeyDown={e => { if (e.key === 'Enter') chercher() }}
+            />
           </div>
 
-          <button className="btn" disabled={loading || !tel.trim()} onClick={chercher}>
+          <button className="btn" disabled={loading || tel.length < 9} onClick={chercher}>
             {loading ? 'Recherche...' : 'Voir mon dossier'}
             {!loading && <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </button>
