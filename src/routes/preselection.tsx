@@ -61,17 +61,20 @@ function Simulation() {
   const [loading, setLoading] = useState(false)
   const [score, setScore] = useState(0)
   const [leadId, setLeadId] = useState('')
+  const [submitError, setSubmitError] = useState('')
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
   const isP = type === 'physique'
 
   async function soumettre() {
     setLoading(true)
+    setSubmitError('')
     const s = calc(type, form)
     const nonEligible = isP
       ? (parseInt(form['anciennete'] || '0') < 6) || form['salaire_domic'] === 'Non'
       : form['rccm'] === 'Non'
     const payload = {
-      type: isP ? 'personne physique' : 'personne morale',
+      // ✅ FIX: "Personne" avec P majuscule (contrainte CHECK en base)
+      type: isP ? 'Personne physique' : 'Personne morale',
       activite, ville: form['ville'] || '',
       montant_demande: parseInt(form['montant'] || '0'),
       banque_actuelle: form['banque'] || '',
@@ -88,7 +91,14 @@ function Simulation() {
     }
     const { data, error } = await supabase.from('leads').insert(payload).select('id').single()
     setLoading(false)
-    if (!error && data) { setLeadId(data.id); setScore(s); setStep(4); window.scrollTo({ top: 0, behavior: 'smooth' }) }
+    if (error) {
+      console.error('[Mayinvest] Erreur insert lead:', error)
+      setSubmitError("Impossible d'enregistrer votre dossier : " + error.message)
+      return
+    }
+    if (data) {
+      setLeadId(data.id); setScore(s); setStep(4); window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
   }
 
   return (
@@ -97,33 +107,20 @@ function Simulation() {
       <style>{`
         * { box-sizing: border-box; }
 
-        /* Retrait des flèches natives des champs numériques */
         input[type="number"]::-webkit-outer-spin-button,
-        input[type="number"]::-webkit-inner-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-        input[type="number"] {
-          -moz-appearance: textfield;
-          appearance: textfield;
-        }
+        input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 
-        /* Style propre pour les select (flèche custom discrète) */
         .field select {
-          -webkit-appearance: none;
-          -moz-appearance: none;
-          appearance: none;
+          -webkit-appearance: none; -moz-appearance: none; appearance: none;
           background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: right 2px center;
-          padding-right: 20px !important;
-          cursor: pointer;
+          background-repeat: no-repeat; background-position: right 2px center; padding-right: 20px !important; cursor: pointer;
         }
 
         .top { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
-        @media (max-width: 640px) { .top { height: 60px; padding: 0 20px; } }
-        .back { background: #111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 28px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; text-decoration: none; }
-        @media (max-width: 640px) { .back { padding: 10px 20px; font-size: 13px; } }
+        @media (max-width: 640px) { .top { height: 60px; padding: 0 16px; } }
+        .back { background: #111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 11px 22px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; text-decoration: none; }
+        @media (max-width: 640px) { .back { padding: 8px 14px; font-size: 12px; gap: 5px; } .back svg { width: 12px; height: 12px; } }
         .wrap { max-width: 560px; margin: 0 auto; padding: 32px 24px 60px; }
         .progress { display: flex; gap: 6px; margin-bottom: 10px; }
         .dot { height: 5px; flex: 1; border-radius: 100px; background: #F0F0F0; transition: background 0.3s; }
@@ -160,16 +157,8 @@ function Simulation() {
 
         .form-stack { display: flex; flex-direction: column; gap: 22px; margin-bottom: 24px; }
         .form-card { background: linear-gradient(145deg, #FFFFFF 0%, #F5F7FB 100%); border: 1.5px solid rgba(13,27,62,0.08); border-radius: 24px; padding: 24px 22px; box-shadow: 0 20px 40px rgba(13,27,62,0.08), 0 8px 16px rgba(13,27,62,0.05), inset 0 1px 0 rgba(255,255,255,0.9); position: relative; transition: all 0.3s ease; }
-        .form-card.left, .form-card.right { transform: none; }
         .form-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(26,107,255,0.3), transparent); border-radius: 24px 24px 0 0; }
-        .form-card:focus-within {
-          border-color: rgba(26,107,255,0.5);
-          box-shadow:
-            0 0 0 5px rgba(26,107,255,0.12),
-            0 20px 50px rgba(26,107,255,0.18),
-            0 8px 20px rgba(13,27,62,0.08),
-            inset 0 1px 0 rgba(255,255,255,0.9);
-        }
+        .form-card:focus-within { border-color: rgba(26,107,255,0.5); box-shadow: 0 0 0 5px rgba(26,107,255,0.12), 0 20px 50px rgba(26,107,255,0.18), 0 8px 20px rgba(13,27,62,0.08), inset 0 1px 0 rgba(255,255,255,0.9); }
         .form-card:focus-within::before { background: linear-gradient(90deg, transparent, #1A6BFF, transparent); height: 2px; }
         .card-title { font-size: 11px; font-weight: 700; color: #1A6BFF; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; }
         .fields { display: flex; flex-direction: column; gap: 10px; }
@@ -183,6 +172,8 @@ function Simulation() {
         .radio button { flex: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 700; color: #666; cursor: pointer; transition: all 0.15s; }
         .radio button.sel { border-color: #1A6BFF; background: #EEF4FF; color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.2); }
         .badge { display: inline-flex; align-items: center; gap: 6px; background: #EEF4FF; color: #1A6BFF; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; }
+
+        .submit-error { background: #FEF2F2; border: 1.5px solid #FCA5A5; color: #B91C1C; font-size: 13px; font-weight: 600; padding: 12px 16px; border-radius: 12px; margin-top: 12px; display: flex; align-items: flex-start; gap: 10px; }
 
         .btn-main { width: 100%; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(26,107,255,0.35); transition: all 0.2s; }
         .btn-main:hover:not(:disabled) { background: #1560E0; transform: translateY(-1px); box-shadow: 0 12px 28px rgba(26,107,255,0.4); }
@@ -269,7 +260,7 @@ function Simulation() {
           <p className="sub">Cela prend moins de 2 minutes.</p>
 
           <div className="form-stack">
-            <div className="form-card left">
+            <div className="form-card">
               <div className="card-title">1. Identité</div>
               <div className="fields">
                 {isP ? <>
@@ -290,7 +281,7 @@ function Simulation() {
               </div>
             </div>
 
-            <div className="form-card right">
+            <div className="form-card">
               <div className="card-title">2. Situation {isP ? 'professionnelle' : 'juridique'}</div>
               <div className="fields">
                 {isP ? <>
@@ -308,7 +299,7 @@ function Simulation() {
               </div>
             </div>
 
-            <div className="form-card left">
+            <div className="form-card">
               <div className="card-title">3. Votre besoin</div>
               <div className="fields">
                 <div className="field"><label>Montant demandé (XAF) *</label><input type="number" placeholder="5000000" value={form['montant']||''} onChange={e=>set('montant',e.target.value)}/></div>
@@ -328,7 +319,7 @@ function Simulation() {
               </div>
             </div>
 
-            <div className="form-card right">
+            <div className="form-card">
               <div className="card-title">4. Éligibilité</div>
               <div className="fields">
                 {isP ? <div className="field radio-field"><label>Salaire domicilié dans une banque ?</label>
@@ -352,6 +343,12 @@ function Simulation() {
             {loading ? 'Envoi en cours…' : 'Voir mon score'}
             {!loading && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </button>
+
+          {submitError && <div className="submit-error">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" style={{ flexShrink: 0, marginTop: 1 }}><circle cx="9" cy="9" r="7" stroke="#B91C1C" strokeWidth="1.6"/><path d="M9 5v4M9 12v.5" stroke="#B91C1C" strokeWidth="1.6" strokeLinecap="round"/></svg>
+            <div>{submitError}</div>
+          </div>}
+
           <button className="btn-back" onClick={() => setStep(2)}><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4L3 7l3 3" stroke="#111" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>Retour</button>
         </>}
 
@@ -377,7 +374,7 @@ function Simulation() {
           <div className="ref">Réf. {leadId}</div>
           <button className="btn-wa" style={{ background: '#1A6BFF', marginBottom: 10 }} onClick={() => navigate({ to: '/client/$id', params: { id: leadId } })}>
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" stroke="#fff" strokeWidth="1.8"/></svg>
-            Accéder à mon espace client
+            Accéder à mon dossier
           </button>
           <button className="btn-wa" onClick={() => window.open(`https://wa.me/242060000000?text=Bonjour, j'ai soumis mon dossier. Ref: ${leadId}`,'_blank')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
