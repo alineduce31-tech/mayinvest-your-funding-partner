@@ -11,7 +11,7 @@ function LogoSVG({ height = 64, tone = 'light' }: { height?: number; tone?: 'lig
 
 function Index() {
   const navigate = useNavigate()
-  const goto = () => navigate({ to: '/simulation' })
+  const goto = () => navigate({ to: '/preselection' })
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#FFFFFF', color: '#111111', minHeight: '100vh', WebkitFontSmoothing: 'antialiased' }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
