@@ -262,7 +262,7 @@ function Simulation() {
                 <div className="field"><label>Email</label><input placeholder="email@exemple.com" value={form.email||''} onChange={e=>set('email',e.target.value)}/></div>
                 <div className="field"><label>Ville *</label>
                   <select value={form.ville||''} onChange={e=>set('ville',e.target.value)}>
-                    <option value="">Sélectionner…</option>
+                    <option value=""></option>
                     {VILLES.map(v=><option key={v}>{v}</option>)}
                   </select>
                 </div>
@@ -293,13 +293,13 @@ function Simulation() {
                 <div className="field"><label>Montant demandé (XAF) *</label><input type="number" placeholder="5000000" value={form.montant||''} onChange={e=>set('montant',e.target.value)}/></div>
                 <div className="field"><label>Objet du financement *</label>
                   <select value={form.objet||''} onChange={e=>set('objet',e.target.value)}>
-                    <option value="">Sélectionner…</option>
+                    <option value=""></option>
                     {(isP ? ['Consommation','Immobilier','Véhicule','Autre'] : ['Investissement','Fonds de roulement','Marché public','Autre']).map(o=><option key={o}>{o}</option>)}
                   </select>
                 </div>
                 <div className="field"><label>Banque actuelle</label>
                   <select value={form.banque||''} onChange={e=>set('banque',e.target.value)}>
-                    <option value="">Sélectionner…</option>
+                    <option value=""></option>
                     {BANQUES.map(b=><option key={b}>{b}</option>)}
                   </select>
                 </div>
