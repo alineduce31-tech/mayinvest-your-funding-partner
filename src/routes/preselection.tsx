@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { Logo } from '@/components/Logo'
 
 export const Route = createFileRoute('/preselection')({
   component: Simulation,
@@ -73,12 +74,10 @@ function Simulation() {
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <style>{`
         * { box-sizing: border-box; }
-        .top { padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
-        .logo-wrap { display: flex; align-items: center; gap: 10px; }
-        .logo { width: 36px; height: 36px; background: #1A6BFF; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 18px; }
-        .brand { font-weight: 700; font-size: 16px; color: #0D1B3E; }
-        .back { background: transparent; border: none; font-size: 13px; color: #666; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 4px; }
-        .back:hover { color: #111; }
+        .top { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
+        @media (max-width: 640px) { .top { height: 60px; padding: 0 20px; } }
+        .back { background: #111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 28px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        @media (max-width: 640px) { .back { padding: 10px 20px; font-size: 13px; } }
         .wrap { max-width: 560px; margin: 0 auto; padding: 32px 24px 60px; }
         .progress { display: flex; gap: 6px; margin-bottom: 10px; }
         .dot { height: 5px; flex: 1; border-radius: 100px; background: #F0F0F0; transition: background 0.3s; }
@@ -152,11 +151,11 @@ function Simulation() {
       `}</style>
 
       <div className="top">
-        <div className="logo-wrap">
-          <div className="logo">M</div>
-          <div className="brand">Mayinvest</div>
-        </div>
-        <button className="back" onClick={() => { window.location.href = '/' }}>← Accueil</button>
+        <Logo height={56} tone="light" />
+        <button className="back" onClick={() => { window.location.href = '/' }}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4L3 7l3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Retour à l'accueil
+        </button>
       </div>
 
       <div className="wrap">
@@ -173,7 +172,7 @@ function Simulation() {
               <div className="glow a" />
               <div className="shine" />
               <div className="card-icon on">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 100-10 5 5 0 000 10z"/><path d="M2 21a10 10 0 0120 0v.5a.5.5 0 01-.5.5h-19a.5.5 0 01-.5-.5V21z"/></svg>
+                <svg width="26" height="26" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="3.5" fill="white"/><path d="M3 17c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
               </div>
               <h3 className="card-h3">Personne physique</h3>
               <p className="card-p">Particulier, salarié, commerçant, artisan…</p>
@@ -181,7 +180,7 @@ function Simulation() {
             <button className={`card-choix morale ${type === 'morale' ? 'sel' : ''}`} onClick={() => setType('morale')}>
               <div className="glow b" />
               <div className="card-icon off">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path fillRule="evenodd" clipRule="evenodd" d="M3 4a1 1 0 011-1h9a1 1 0 011 1v3h6a1 1 0 011 1v13a1 1 0 01-1 1h-6v-4a1 1 0 00-1-1h-2a1 1 0 00-1 1v4H4a1 1 0 01-1-1V4zm3 4a1 1 0 011-1h1a1 1 0 010 2H7a1 1 0 01-1-1zm4 0a1 1 0 011-1h1a1 1 0 010 2h-1a1 1 0 01-1-1zM7 11a1 1 0 000 2h1a1 1 0 100-2H7zm3 1a1 1 0 011-1h1a1 1 0 010 2h-1a1 1 0 01-1-1zm7-1a1 1 0 100 2h1a1 1 0 100-2h-1zm-1 4a1 1 0 011-1h1a1 1 0 010 2h-1a1 1 0 01-1-1z"/></svg>
+                <svg width="26" height="26" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="11" rx="1.5" stroke="#111" strokeWidth="2"/><path d="M7 18V13h6v5" stroke="#111" strokeWidth="2" strokeLinecap="round"/><path d="M6 7V4a1 1 0 011-1h6a1 1 0 011 1v3" stroke="#111" strokeWidth="2"/><rect x="7.5" y="9.5" width="2" height="2" rx="0.5" fill="#111"/><rect x="10.5" y="9.5" width="2" height="2" rx="0.5" fill="#111"/></svg>
               </div>
               <h3 className="card-h3" style={{ color: '#111' }}>Personne morale / PME</h3>
               <p className="card-p">Entreprise, coopérative, société…</p>
