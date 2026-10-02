@@ -7,8 +7,6 @@ export const Route = createFileRoute('/preselection')({
   component: Simulation,
 })
 
-// Formate un numéro congolais à 9 chiffres en "XX XXX XXXX" (ex: 06 123 4567)
-// Les espaces ne sont jamais stockés en base — c'est juste pour l'affichage.
 function formatPhone(digits: string): string {
   const d = digits.replace(/\D/g, '').slice(0, 9)
   if (d.length <= 2) return d
@@ -85,21 +83,25 @@ function Simulation() {
       ? (parseInt(form['anciennete'] || '0') < 6) || form['salaire_domic'] === 'Non'
       : form['rccm'] === 'Non'
     const payload = {
-      type: isP ? 'Personne physique' : 'Personne morale',
-      activite, ville: form['ville'] || '',
+      // ✅ FIX 1: type en MINUSCULE (contrainte CHECK de la base: 'physique' ou 'morale')
+      type: isP ? 'physique' : 'morale',
+      activite,
+      ville: form['ville'] || '',
       montant_demande: parseInt(form['montant'] || '0'),
       banque_actuelle: form['banque'] || '',
-      statut: nonEligible ? 'Non Éligible' : 'Nouveau',
+      // ✅ FIX 2: statut TOUJOURS 'Nouveau' à l'insert (contrainte RLS)
+      // L'info d'éligibilité est préservée dans le JSON eligibilite ci-dessous
+      // et le statut sera mis à jour en 'Non Éligible' par un conseiller si besoin
+      statut: 'Nouveau',
       score: s,
-      // tel = uniquement les chiffres (ex: "061234567"), stocké propre
       identite: { nom: form['nom'], prenom: form['prenom'], tel: form['tel'], email: form['email'] },
       situation: isP
         ? { employeur: form['employeur'], anciennete: form['anciennete'], revenu: form['revenu'] }
         : { raison_sociale: form['raison_sociale'], dirigeant: form['dirigeant'], rccm: form['rccm'], niu: form['niu'], anciennete: form['anciennete_soc'], ca_annuel: form['ca_annuel'] },
       besoin: { montant: form['montant'], objet: form['objet'], banque: form['banque'], flux_mois: form['flux_mois'] },
       eligibilite: isP
-        ? { anciennete_ok: parseInt(form['anciennete'] || '0') >= 6, salaire_domic: form['salaire_domic'] }
-        : { compte_mouvemente: form['compte_mouvemente'], refus_bancaire: form['refus_bancaire'], garanties: form['garanties'] },
+        ? { anciennete_ok: parseInt(form['anciennete'] || '0') >= 6, salaire_domic: form['salaire_domic'], non_eligible: nonEligible }
+        : { compte_mouvemente: form['compte_mouvemente'], refus_bancaire: form['refus_bancaire'], garanties: form['garanties'], non_eligible: nonEligible },
     }
     const { data, error } = await supabase.from('leads').insert(payload).select('id').single()
     setLoading(false)
@@ -273,7 +275,6 @@ function Simulation() {
                   <div className="field"><label>Raison sociale *</label><input placeholder="Nom de l'entreprise" value={form['raison_sociale']||''} onChange={e=>set('raison_sociale',e.target.value)}/></div>
                   <div className="field"><label>Nom du dirigeant *</label><input placeholder="Prénom Nom" value={form['dirigeant']||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
                 </>}
-                {/* ✅ Téléphone avec auto-formatage XX XXX XXXX */}
                 <div className="field"><label>Téléphone *</label><input
                   type="tel"
                   inputMode="numeric"
