@@ -5,9 +5,8 @@ import { Logo } from '@/components/Logo'
 
 export const Route = createFileRoute('/mon-espace')({ component: MonEspace })
 
-type Lead = { id: string; score: number; statut: string; activite: string | null; montant_demande: number | null; identite: any; created_at: string }
+type Lead = { id: string; score: number; statut: string; activite: string | null; montant_demande: number | null; identite: any; created_at: string; access_code: string }
 
-// Auto-formatage téléphone congolais : "061234567" → "06 123 4567"
 function formatPhone(digits: string): string {
   const d = digits.replace(/\D/g, '').slice(0, 9)
   if (d.length <= 2) return d
@@ -16,6 +15,10 @@ function formatPhone(digits: string): string {
 }
 function cleanPhone(v: string): string {
   return v.replace(/\D/g, '').slice(0, 9)
+}
+function cleanCode(v: string): string {
+  // Normalise : majuscules, enlève tout sauf lettres/chiffres/tirets, limite à 11 chars (MYI-XXXXXXX)
+  return v.toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 11)
 }
 
 const ICONS = [
@@ -28,6 +31,7 @@ const ICONS = [
 function MonEspace() {
   const navigate = useNavigate()
   const [tel, setTel] = useState('')
+  const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [results, setResults] = useState<Lead[] | null>(null)
@@ -38,27 +42,42 @@ function MonEspace() {
     return () => clearInterval(t)
   }, [])
 
+  // Si téléphone déjà utilisé sur ce device, pré-remplir le code depuis localStorage
+  useEffect(() => {
+    if (tel.length === 9) {
+      try {
+        const savedCode = localStorage.getItem(`mayinvest_phone_${tel}`)
+        if (savedCode && !code) setCode(savedCode)
+      } catch (e) { /* localStorage bloqué */ }
+    }
+  }, [tel])
+
   function nomOf(l: Lead) {
     return l.identite?.raison_sociale || `${l.identite?.prenom || ''} ${l.identite?.nom || ''}`.trim() || 'Dossier'
   }
 
   async function chercher() {
     if (!tel) { setError('Entrez votre numéro de téléphone'); return }
+    if (!code) { setError("Entrez votre code d'accès"); return }
     setError(''); setLoading(true); setResults(null)
-    // tel contient déjà uniquement des chiffres propres
     const last9 = tel.slice(-9)
-    const { data, error: err } = await supabase.from('leads')
-      .select('id, score, statut, activite, montant_demande, identite, created_at')
-      .ilike('identite->>tel', `%${last9}%`)
-      .order('created_at', { ascending: false })
+    // Utilise la fonction RPC sécurisée (bypasse RLS côté serveur, filtre strict par phone + code)
+    const { data, error: err } = await supabase.rpc('find_leads_by_phone_code', {
+      p_phone: last9,
+      p_code: code,
+    })
     setLoading(false)
-    if (err) { setError("Erreur de recherche. Réessayez."); return }
+    if (err) { setError("Erreur de recherche. Réessayez."); console.error(err); return }
     if (!data || data.length === 0) {
-      setError("Aucun dossier trouvé avec ce numéro. Vérifiez ou soumettez une nouvelle demande.")
+      setError("Aucun dossier trouvé. Vérifiez le téléphone et le code d'accès.")
       return
     }
+    // Mémoriser le code pour ce téléphone (prochaine fois pré-rempli)
+    try { localStorage.setItem(`mayinvest_phone_${tel}`, code) } catch (e) {}
     if (data.length === 1) {
-      navigate({ to: '/client/$id', params: { id: data[0]!.id } })
+      // Stocker aussi par ID pour que /client/:id puisse accéder sans redemander
+      try { localStorage.setItem(`mayinvest_code_${data[0].id}`, code) } catch (e) {}
+      navigate({ to: '/client/$id', params: { id: data[0].id } })
       return
     }
     setResults(data as Lead[])
@@ -89,11 +108,14 @@ function MonEspace() {
         .field label { display: block; font-size: 11px; font-weight: 600; color: rgba(255,255,255,0.5); margin-bottom: 4px; letter-spacing: 0.02em; }
         .field input { width: 100%; border: none; padding: 0; font-family: inherit; font-size: 16px; font-weight: 600; color: #fff; background: transparent; outline: none; }
         .field input::placeholder { color: rgba(255,255,255,0.3); font-weight: 400; }
+        .field input.code { font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; letter-spacing: 0.08em; }
         .btn { width: 100%; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 20px rgba(26,107,255,0.4); position: relative; z-index: 1; margin-top: 6px; }
         .btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .err { color: #FF6B6B; font-size: 13px; margin-top: 10px; text-align: center; position: relative; z-index: 1; }
         .alt { text-align: center; font-size: 13px; color: #6B7280; margin-top: 24px; }
         .alt a { color: #1A6BFF; font-weight: 700; text-decoration: none; }
+        .forgot { text-align: center; font-size: 12px; color: rgba(255,255,255,0.5); margin-top: 14px; position: relative; z-index: 1; }
+        .forgot a { color: #6DAFFF; cursor: pointer; }
         .results { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
         .result-item { background: rgba(255,255,255,0.08); border-radius: 14px; padding: 14px 16px; cursor: pointer; display: flex; align-items: center; gap: 12px; border: 1.5px solid transparent; transition: all 0.15s; position: relative; z-index: 1; }
         .result-item:hover { border-color: #1A6BFF; background: rgba(255,255,255,0.12); }
@@ -127,11 +149,10 @@ function MonEspace() {
           </div>
 
           <h1>Mon dossier</h1>
-          <p className="sub">Retrouvez l'état de votre dossier et échangez avec votre conseiller. Entrez le numéro de téléphone utilisé lors de votre demande.</p>
+          <p className="sub">Entrez votre téléphone et le code d'accès reçu lors de votre présélection.</p>
 
           <div className="field">
             <label>Téléphone</label>
-            {/* ✅ Auto-formatage XX XXX XXXX pendant la saisie */}
             <input
               type="tel"
               inputMode="numeric"
@@ -139,16 +160,31 @@ function MonEspace() {
               maxLength={11}
               value={formatPhone(tel)}
               onChange={e => { setTel(cleanPhone(e.target.value)); setError(''); setResults(null) }}
+            />
+          </div>
+
+          <div className="field">
+            <label>Code d'accès</label>
+            <input
+              className="code"
+              placeholder="MYI-XXXXXXX"
+              maxLength={11}
+              value={code}
+              onChange={e => { setCode(cleanCode(e.target.value)); setError(''); setResults(null) }}
               onKeyDown={e => { if (e.key === 'Enter') chercher() }}
             />
           </div>
 
-          <button className="btn" disabled={loading || tel.length < 9} onClick={chercher}>
+          <button className="btn" disabled={loading || tel.length < 9 || code.length < 7} onClick={chercher}>
             {loading ? 'Recherche...' : 'Voir mon dossier'}
             {!loading && <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </button>
 
           {error && <div className="err">{error}</div>}
+
+          <div className="forgot">
+            Code perdu ? <a onClick={() => window.open('https://wa.me/242060000000?text=Bonjour, j%27ai perdu mon code d%27accès Mayinvest', '_blank')}>Contactez-nous sur WhatsApp</a>
+          </div>
 
           {results && results.length > 1 && <>
             <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 20, marginBottom: 4, position: 'relative', zIndex: 1 }}>Plusieurs dossiers trouvés — choisissez :</div>
@@ -156,7 +192,10 @@ function MonEspace() {
               {results.map(r => {
                 const scoreColor = r.score >= 70 ? '#34D058' : r.score >= 50 ? '#FFB020' : '#FF6B6B'
                 return (
-                  <div key={r.id} className="result-item" onClick={() => navigate({ to: '/client/$id', params: { id: r.id } })}>
+                  <div key={r.id} className="result-item" onClick={() => {
+                    try { localStorage.setItem(`mayinvest_code_${r.id}`, code) } catch (e) {}
+                    navigate({ to: '/client/$id', params: { id: r.id } })
+                  }}>
                     <div className="r-score" style={{ background: `${scoreColor}26`, color: scoreColor, border: `2px solid ${scoreColor}` }}>{r.score}</div>
                     <div className="r-main">
                       <div className="r-name">{nomOf(r)}</div>
