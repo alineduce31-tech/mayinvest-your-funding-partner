@@ -219,7 +219,9 @@ function Simulation() {
         .score-final { background: #0D1B3E; border-radius: 24px; padding: 36px 28px; color: #fff; box-shadow: 0 30px 60px rgba(13,27,62,0.3); position: relative; overflow: hidden; text-align: center; margin-top: 20px; }
         .score-final::before { content: ''; position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(26,107,255,0.3) 0%, transparent 65%); pointer-events: none; }
         .score-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(52,208,88,0.15); color: #34D058; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 20px; position: relative; z-index: 1; }
-        .ring { position: relative; width: 140px; height: 140px; margin: 0 auto 20px; z-index: 1; }
+        .ring { position: relative; width: 140px; height: 140px; margin: 0 auto 20px; z-index: 1; background: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; }
+        .ring svg { display: block; background: transparent !important; border: none !important; outline: none !important; }
+        .ring svg:focus { outline: none !important; }
         .verdict { font-size: 22px; font-weight: 800; margin-bottom: 6px; position: relative; z-index: 1; }
         .score-sub { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.5; margin: 0 0 24px; position: relative; z-index: 1; }
         .ref { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 12px 16px; font-family: monospace; font-size: 11px; margin-bottom: 20px; color: rgba(255,255,255,0.7); position: relative; z-index: 1; word-break: break-all; }
