@@ -103,16 +103,16 @@ function Simulation() {
         ? { anciennete_ok: parseInt(form['anciennete'] || '0') >= 6, salaire_domic: form['salaire_domic'], non_eligible: nonEligible }
         : { compte_mouvemente: form['compte_mouvemente'], refus_bancaire: form['refus_bancaire'], garanties: form['garanties'], non_eligible: nonEligible },
     }
-    const { data, error } = await supabase.from('leads').insert(payload).select('id').single()
+    // L'id est généré ici : un visiteur peut déposer un dossier mais pas le relire (sécurité)
+    const id = crypto.randomUUID()
+    const { error } = await supabase.from('leads').insert({ ...payload, id })
     setLoading(false)
     if (error) {
       console.error('[Mayinvest] Erreur insert lead:', error)
       setSubmitError("Impossible d'enregistrer votre dossier : " + error.message)
       return
     }
-    if (data) {
-      setLeadId(data.id); setScore(s); setStep(4); window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+    setLeadId(id); setScore(s); setStep(4); window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
