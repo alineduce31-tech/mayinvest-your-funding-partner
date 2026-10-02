@@ -17,6 +17,16 @@ function cleanPhone(v: string): string {
   return v.replace(/\D/g, '').slice(0, 9)
 }
 
+// Génère un code d'accès unique au format MYI-XXXXXXX (7 caractères sans ambiguïté)
+function generateAccessCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // pas de 0, O, 1, I, l pour éviter confusion
+  let code = 'MYI-'
+  for (let i = 0; i < 7; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)]
+  }
+  return code
+}
+
 const ICON_P: Record<string, ReactNode> = {
   'Fonctionnaire': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 7h14v10H3V7z" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.6"/></svg>,
   'Salarié privé': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7V5a2 2 0 012-2h2a2 2 0 012 2v2" stroke="currentColor" strokeWidth="1.6"/></svg>,
@@ -71,6 +81,8 @@ function Simulation() {
   const [loading, setLoading] = useState(false)
   const [score, setScore] = useState(0)
   const [leadId, setLeadId] = useState('')
+  const [accessCode, setAccessCode] = useState('')
+  const [codeCopied, setCodeCopied] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
   const isP = type === 'physique'
@@ -82,18 +94,17 @@ function Simulation() {
     const nonEligible = isP
       ? (parseInt(form['anciennete'] || '0') < 6) || form['salaire_domic'] === 'Non'
       : form['rccm'] === 'Non'
+    // Générer le code d'accès AVANT l'insert (côté client, UX immédiate)
+    const code = generateAccessCode()
     const payload = {
-      // ✅ FIX 1: type en MINUSCULE (contrainte CHECK de la base: 'physique' ou 'morale')
       type: isP ? 'physique' : 'morale',
       activite,
       ville: form['ville'] || '',
       montant_demande: parseInt(form['montant'] || '0'),
       banque_actuelle: form['banque'] || '',
-      // ✅ FIX 2: statut TOUJOURS 'Nouveau' à l'insert (contrainte RLS)
-      // L'info d'éligibilité est préservée dans le JSON eligibilite ci-dessous
-      // et le statut sera mis à jour en 'Non Éligible' par un conseiller si besoin
       statut: 'Nouveau',
       score: s,
+      access_code: code,
       identite: { nom: form['nom'], prenom: form['prenom'], tel: form['tel'], email: form['email'] },
       situation: isP
         ? { employeur: form['employeur'], anciennete: form['anciennete'], revenu: form['revenu'] }
@@ -103,16 +114,33 @@ function Simulation() {
         ? { anciennete_ok: parseInt(form['anciennete'] || '0') >= 6, salaire_domic: form['salaire_domic'], non_eligible: nonEligible }
         : { compte_mouvemente: form['compte_mouvemente'], refus_bancaire: form['refus_bancaire'], garanties: form['garanties'], non_eligible: nonEligible },
     }
-    // L'id est généré ici : un visiteur peut déposer un dossier mais pas le relire (sécurité)
-    const id = crypto.randomUUID()
-    const { error } = await supabase.from('leads').insert({ ...payload, id })
+    const { data, error } = await supabase.from('leads').insert(payload).select('id').single()
     setLoading(false)
     if (error) {
       console.error('[Mayinvest] Erreur insert lead:', error)
       setSubmitError("Impossible d'enregistrer votre dossier : " + error.message)
       return
     }
-    setLeadId(id); setScore(s); setStep(4); window.scrollTo({ top: 0, behavior: 'smooth' })
+    if (data) {
+      // Stocker le code dans localStorage pour accès automatique plus tard
+      try {
+        localStorage.setItem(`mayinvest_code_${data.id}`, code)
+        localStorage.setItem(`mayinvest_phone_${form['tel']}`, code)
+      } catch (e) { /* localStorage peut être bloqué, pas grave */ }
+      setLeadId(data.id)
+      setAccessCode(code)
+      setScore(s)
+      setStep(4)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+  }
+
+  async function copyCode() {
+    try {
+      await navigator.clipboard.writeText(accessCode)
+      setCodeCopied(true)
+      setTimeout(() => setCodeCopied(false), 2000)
+    } catch (e) { /* non supporté */ }
   }
 
   return (
@@ -193,6 +221,17 @@ function Simulation() {
         .verdict { font-size: 22px; font-weight: 800; margin-bottom: 6px; position: relative; z-index: 1; }
         .score-sub { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.5; margin: 0 0 24px; position: relative; z-index: 1; }
         .ref { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 12px 16px; font-family: monospace; font-size: 11px; margin-bottom: 20px; color: rgba(255,255,255,0.7); position: relative; z-index: 1; word-break: break-all; }
+
+        /* Code d'accès : box très visible et importante */
+        .code-box { background: linear-gradient(145deg, #1A6BFF, #0D4FD1); border-radius: 18px; padding: 20px; margin-bottom: 20px; position: relative; z-index: 1; box-shadow: 0 12px 28px rgba(26,107,255,0.4); border: 2px solid rgba(255,255,255,0.15); }
+        .code-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .code-value { font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; font-size: 28px; font-weight: 800; color: #fff; letter-spacing: 0.08em; margin-bottom: 12px; }
+        @media (max-width: 480px) { .code-value { font-size: 22px; } }
+        .code-copy { background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.25); color: #fff; font-family: inherit; font-size: 12px; font-weight: 700; padding: 8px 20px; border-radius: 100px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
+        .code-copy:hover { background: rgba(255,255,255,0.25); }
+        .code-copy.copied { background: #34D058; border-color: #34D058; }
+        .code-warn { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 10px; line-height: 1.4; }
+
         .btn-wa { width: 100%; background: #25D366; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; position: relative; z-index: 1; }
         .btn-home { width: 100%; background: transparent; color: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 100px; cursor: pointer; position: relative; z-index: 1; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
         .btn-home:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
@@ -383,14 +422,34 @@ function Simulation() {
             {score >= 70 ? 'Excellent' : score >= 50 ? 'Éligible' : 'À renforcer'}
           </div>
           <p className="score-sub">{score >= 70 ? 'Votre dossier est très éligible. Un conseiller Mayinvest vous contacte sous 24h.' : score >= 50 ? 'Éligible. Notre équipe va renforcer votre dossier avec vous.' : 'Améliorons votre dossier ensemble. Un conseiller vous rappelle sous 24h.'}</p>
+
+          {/* 🔐 CODE D'ACCÈS — très visible */}
+          <div className="code-box">
+            <div className="code-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#fff" strokeWidth="2"/></svg>
+              Votre code d'accès
+            </div>
+            <div className="code-value">{accessCode}</div>
+            <button className={`code-copy ${codeCopied ? 'copied' : ''}`} onClick={copyCode}>
+              {codeCopied ? <>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l2.5 2.5L10 3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Copié !
+              </> : <>
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><rect x="3" y="3" width="8" height="9" rx="1" stroke="#fff" strokeWidth="1.5"/><path d="M5 3V2a1 1 0 011-1h5a1 1 0 011 1v8a1 1 0 01-1 1h-1" stroke="#fff" strokeWidth="1.5"/></svg>
+                Copier le code
+              </>}
+            </button>
+            <div className="code-warn">⚠️ Notez ce code. Il vous servira à retrouver votre dossier plus tard.</div>
+          </div>
+
           <div className="ref">Réf. {leadId}</div>
           <button className="btn-wa" style={{ background: '#1A6BFF', marginBottom: 10 }} onClick={() => navigate({ to: '/client/$id', params: { id: leadId } })}>
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" stroke="#fff" strokeWidth="1.8"/></svg>
             Accéder à mon dossier
           </button>
-          <button className="btn-wa" onClick={() => window.open(`https://wa.me/242060000000?text=Bonjour, j'ai soumis mon dossier. Ref: ${leadId}`,'_blank')}>
+          <button className="btn-wa" onClick={() => window.open(`https://wa.me/242060000000?text=Bonjour Mayinvest, j'ai soumis mon dossier. Code: ${accessCode}`,'_blank')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
-            Confirmer sur WhatsApp
+            Envoyer sur WhatsApp
           </button>
           <a className="btn-home" href="/" onClick={(e) => { e.preventDefault(); navigate({ to: '/' }) }}>← Retour à l'accueil</a>
         </div>}
