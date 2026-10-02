@@ -94,9 +94,11 @@ function Simulation() {
     const nonEligible = isP
       ? (parseInt(form['anciennete'] || '0') < 6) || form['salaire_domic'] === 'Non'
       : form['rccm'] === 'Non'
-    // Générer le code d'accès AVANT l'insert (côté client, UX immédiate)
+    // Générer l'ID ET le code d'accès AVANT l'insert (évite le .select() après qui est bloqué par RLS)
     const code = generateAccessCode()
+    const generatedId = crypto.randomUUID()
     const payload = {
+      id: generatedId,
       type: isP ? 'physique' : 'morale',
       activite,
       ville: form['ville'] || '',
@@ -114,25 +116,25 @@ function Simulation() {
         ? { anciennete_ok: parseInt(form['anciennete'] || '0') >= 6, salaire_domic: form['salaire_domic'], non_eligible: nonEligible }
         : { compte_mouvemente: form['compte_mouvemente'], refus_bancaire: form['refus_bancaire'], garanties: form['garanties'], non_eligible: nonEligible },
     }
-    const { data, error } = await supabase.from('leads').insert(payload).select('id').single()
+    // ⚠️ PAS DE .select() après insert ! La policy RLS autorise INSERT mais pas SELECT pour anon.
+    // On utilise directement l'ID généré côté client.
+    const { error } = await supabase.from('leads').insert(payload)
     setLoading(false)
     if (error) {
       console.error('[Mayinvest] Erreur insert lead:', error)
       setSubmitError("Impossible d'enregistrer votre dossier : " + error.message)
       return
     }
-    if (data) {
-      // Stocker le code dans localStorage pour accès automatique plus tard
-      try {
-        localStorage.setItem(`mayinvest_code_${data.id}`, code)
-        localStorage.setItem(`mayinvest_phone_${form['tel']}`, code)
-      } catch (e) { /* localStorage peut être bloqué, pas grave */ }
-      setLeadId(data.id)
-      setAccessCode(code)
-      setScore(s)
-      setStep(4)
-      window.scrollTo({ top: 0, behavior: 'smooth' })
-    }
+    // Stocker le code dans localStorage pour accès automatique plus tard
+    try {
+      localStorage.setItem(`mayinvest_code_${generatedId}`, code)
+      localStorage.setItem(`mayinvest_phone_${form['tel']}`, code)
+    } catch (e) { /* localStorage peut être bloqué, pas grave */ }
+    setLeadId(generatedId)
+    setAccessCode(code)
+    setScore(s)
+    setStep(4)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   async function copyCode() {
