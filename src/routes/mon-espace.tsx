@@ -58,7 +58,7 @@ function MonEspace() {
       return
     }
     if (data.length === 1) {
-      navigate({ to: '/client/$id', params: { id: data[0].id } })
+      navigate({ to: '/client/$id', params: { id: data[0]!.id } })
       return
     }
     setResults(data as Lead[])
