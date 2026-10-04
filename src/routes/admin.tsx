@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 
-export const Route = createFileRoute('/admin')({ component: Admin })
+export const Route = createFileRoute('/admin')({ component: AdminGate })
 
 type Lead = {
   id: string; type: string | null; activite: string | null; ville: string | null;
@@ -35,11 +35,102 @@ function Icon({ name, size = 16 }: { name: string; size?: number }) {
     download: <><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
     search: <><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
     arrow: <><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></>,
+    logout: <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></>,
+    bell: <><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></>,
+    lock: <><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></>,
+    calendar: <><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
   }
   return <svg {...common}>{paths[name]}</svg>
 }
 
-function Admin() {
+const STATUSES = ['Nouveau', 'Contacté', 'RDV', 'Dossier Déposé', 'Éligible', 'Financé', 'Non Éligible', 'Perdu']
+
+// ═══════════════════════════════════════════════════════════════
+// GATE AUTH — affiche login si non connecté, sinon Admin
+// ═══════════════════════════════════════════════════════════════
+function AdminGate() {
+  const [session, setSession] = useState<any>(null)
+  const [authLoading, setAuthLoading] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session)
+      setAuthLoading(false)
+    })
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
+    return () => sub.subscription.unsubscribe()
+  }, [])
+
+  if (authLoading) {
+    return (
+      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#F4F5F7', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', fontSize: 14 }}>
+        Chargement…
+      </div>
+    )
+  }
+
+  if (!session) return <LoginScreen />
+  return <Admin session={session} />
+}
+
+// ═══════════════════════════════════════════════════════════════
+// LOGIN SCREEN
+// ═══════════════════════════════════════════════════════════════
+function LoginScreen() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  async function login() {
+    if (!email || !password) { setError('Entrez votre email et mot de passe'); return }
+    setLoading(true); setError('')
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setLoading(false)
+    if (error) setError("Email ou mot de passe incorrect")
+    // Si succès, le AuthStateChange gère le re-render automatiquement
+  }
+
+  return (
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#F4F5F7', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+      <div style={{ background: 'linear-gradient(145deg, #0D1B3E 0%, #0A1532 100%)', borderRadius: 28, padding: 40, maxWidth: 420, width: '100%', color: '#fff', boxShadow: '0 40px 80px rgba(13,27,62,0.3)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', top: -80, right: -80, width: 260, height: 260, background: 'radial-gradient(circle, rgba(26,107,255,0.3), transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ width: 56, height: 56, background: '#1A6BFF', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, position: 'relative', zIndex: 1, boxShadow: '0 8px 20px rgba(26,107,255,0.4)' }}>
+          <Icon name="lock" size={26}/>
+        </div>
+        <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 10px', position: 'relative', zIndex: 1 }}>Admin Mayinvest</h1>
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', margin: '0 0 24px', position: 'relative', zIndex: 1 }}>Connectez-vous pour accéder au back-office.</p>
+
+        <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: '12px 16px', marginBottom: 14, position: 'relative', zIndex: 1 }}>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Email</label>
+          <input type="email" autoComplete="username" placeholder="admin@mayinvest.cg" value={email} onChange={e => { setEmail(e.target.value); setError('') }} style={{ width: '100%', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 16, fontWeight: 600, color: '#fff', background: 'transparent', outline: 'none' }}/>
+        </div>
+        <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: '12px 16px', marginBottom: 14, position: 'relative', zIndex: 1 }}>
+          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Mot de passe</label>
+          <input type="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={e => { setPassword(e.target.value); setError('') }} onKeyDown={e => { if (e.key === 'Enter') login() }} style={{ width: '100%', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 16, fontWeight: 600, color: '#fff', background: 'transparent', outline: 'none' }}/>
+        </div>
+
+        <button disabled={loading} onClick={login} style={{ width: '100%', background: '#1A6BFF', color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 700, padding: 16, borderRadius: 100, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 8px 20px rgba(26,107,255,0.4)', position: 'relative', zIndex: 1, marginTop: 6 }}>
+          {loading ? 'Connexion…' : 'Se connecter'}
+          {!loading && <Icon name="arrow" size={14}/>}
+        </button>
+
+        {error && <div style={{ color: '#FF6B6B', fontSize: 13, marginTop: 12, textAlign: 'center', position: 'relative', zIndex: 1 }}>{error}</div>}
+
+        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 20, textAlign: 'center', position: 'relative', zIndex: 1, lineHeight: 1.5 }}>
+          Compte créé par un administrateur depuis le dashboard Supabase.<br/>
+          Besoin d'aide ? Contactez votre équipe technique.
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════
+// ADMIN DASHBOARD
+// ═══════════════════════════════════════════════════════════════
+function Admin({ session }: { session: any }) {
   const [page, setPage] = useState<Page>('general')
   const [leads, setLeads] = useState<Lead[]>([])
   const [loading, setLoading] = useState(true)
@@ -47,6 +138,39 @@ function Admin() {
   const [filterType, setFilterType] = useState('')
   const [search, setSearch] = useState('')
   const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
+  const [toast, setToast] = useState<{ msg: string; time: number } | null>(null)
+
+  // Son de notification via Web Audio API (bip court et agréable)
+  function playBeep() {
+    try {
+      const AC = (window as any).AudioContext || (window as any).webkitAudioContext
+      if (!AC) return
+      const ctx = new AC()
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+      osc.type = 'sine'
+      osc.frequency.setValueAtTime(880, ctx.currentTime) // La4
+      osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.1) // Mi5
+      gain.gain.setValueAtTime(0.18, ctx.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4)
+      osc.start()
+      osc.stop(ctx.currentTime + 0.4)
+    } catch (e) {}
+  }
+
+  function showToast(msg: string) {
+    setToast({ msg, time: Date.now() })
+    setTimeout(() => setToast(t => (t && t.time === Date.now()) ? null : t), 5000)
+  }
+
+  // Permission notifications navigateur
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {})
+    }
+  }, [])
 
   useEffect(() => {
     (async () => {
@@ -55,23 +179,60 @@ function Admin() {
       setLoading(false)
     })()
     const ch = supabase.channel('admin-leads')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, async () => {
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads' }, async (payload) => {
+        const newLead = payload.new as Lead
+        const nom = newLead.identite?.raison_sociale || `${newLead.identite?.prenom || ''} ${newLead.identite?.nom || ''}`.trim() || 'Nouveau prospect'
+        // Toast
+        showToast(`🎉 Nouveau lead : ${nom} · Score ${newLead.score}/100`)
+        // Son
+        playBeep()
+        // Notification navigateur (si onglet pas focalisé)
+        if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
+          try {
+            new Notification('Nouveau lead Mayinvest', {
+              body: `${nom} · Score ${newLead.score}/100 · ${newLead.activite || ''}`,
+              icon: '/favicon.ico',
+              tag: `lead-${newLead.id}`,
+            })
+          } catch (e) {}
+        }
+        // Refresh liste
         const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
         if (data) setLeads(data as Lead[])
-      }).subscribe()
+      })
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'leads' }, async () => {
+        const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
+        if (data) setLeads(data as Lead[])
+      })
+      .subscribe()
     return () => { supabase.removeChannel(ch) }
   }, [])
 
+  async function logout() {
+    await supabase.auth.signOut()
+  }
+
+  // ═══ STATS ═══
   const stats = useMemo(() => {
     const total = leads.length
     const eligibles = leads.filter(l => l.statut !== 'Non Éligible' && l.score >= 70).length
     const nonEligibles = leads.filter(l => l.statut === 'Non Éligible').length
-    const deposes = leads.filter(l => l.statut === 'Dossier Déposé').length
+    const contactes = leads.filter(l => l.statut === 'Contacté' || l.statut === 'RDV' || l.statut === 'Dossier Déposé' || l.statut === 'Financé').length
+    const rdv = leads.filter(l => l.statut === 'RDV' || l.statut === 'Dossier Déposé' || l.statut === 'Financé').length
+    const deposes = leads.filter(l => l.statut === 'Dossier Déposé' || l.statut === 'Financé').length
     const finances = leads.filter(l => l.statut === 'Financé').length
-    const now = new Date(); const j7 = new Date(now.getTime() - 7*864e5)
-    const nouveauxJ7 = leads.filter(l => new Date(l.created_at) >= j7).length
+
+    // KPI temporels J / J-7 / J-30
+    const now = new Date()
+    const start_j = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const start_j7 = new Date(now.getTime() - 7*864e5)
+    const start_j30 = new Date(now.getTime() - 30*864e5)
+    const leadsJ = leads.filter(l => new Date(l.created_at) >= start_j).length
+    const leadsJ7 = leads.filter(l => new Date(l.created_at) >= start_j7).length
+    const leadsJ30 = leads.filter(l => new Date(l.created_at) >= start_j30).length
+
     const taux = total ? Math.round((finances / total) * 100) : 0
-    return { total, eligibles, nonEligibles, deposes, finances, nouveauxJ7, taux }
+    return { total, eligibles, nonEligibles, contactes, rdv, deposes, finances, leadsJ, leadsJ7, leadsJ30, taux }
   }, [leads])
 
   const filteredLeads = useMemo(() => {
@@ -106,12 +267,11 @@ function Admin() {
     a.download = `mayinvest-leads-${new Date().toISOString().slice(0,10)}.csv`; a.click()
   }
 
-  const STATUSES = ['Nouveau', 'Contacté', 'Éligible', 'Dossier Déposé', 'Financé', 'Non Éligible', 'Perdu']
-
   function nomOf(l: Lead) { return l.identite?.raison_sociale || `${l.identite?.prenom || ''} ${l.identite?.nom || ''}`.trim() || '—' }
   function pillColor(statut: string) {
     if (statut === 'Nouveau') return { bg: '#EEF4FF', c: '#1A6BFF' }
     if (statut === 'Contacté') return { bg: '#E0F7FA', c: '#0891B2' }
+    if (statut === 'RDV') return { bg: '#FEF3C7', c: '#A16207' }
     if (statut === 'Éligible' || statut === 'Financé') return { bg: '#DCFCE7', c: '#16A34A' }
     if (statut === 'Dossier Déposé') return { bg: '#FEF9C3', c: '#854D0E' }
     if (statut === 'Non Éligible') return { bg: '#FFF0E6', c: '#EA580C' }
@@ -120,7 +280,7 @@ function Admin() {
   }
   function scoreColor(s: number) { return s >= 70 ? '#16A34A' : s >= 50 ? '#CA8A04' : '#DC2626' }
 
-  // ─── Segments
+  // Segments
   const parSecteur = useMemo(() => {
     const map = new Map<string, { total: number; eligibles: number }>()
     leads.forEach(l => {
@@ -154,6 +314,23 @@ function Admin() {
       .sort((a, b) => b.pct - a.pct).slice(0, 8)
   }, [leads])
 
+  // Funnel conversion
+  const funnel = useMemo(() => {
+    const total = stats.total
+    const steps = [
+      { label: 'Leads totaux', value: total, color: '#1A6BFF' },
+      { label: 'Contactés', value: stats.contactes, color: '#0891B2' },
+      { label: 'RDV conseiller', value: stats.rdv, color: '#A16207' },
+      { label: 'Dossiers déposés', value: stats.deposes, color: '#854D0E' },
+      { label: 'Financés', value: stats.finances, color: '#16A34A' },
+    ]
+    return steps.map((s, i) => ({
+      ...s,
+      pct: total ? Math.round((s.value / total) * 100) : 0,
+      conversionFromPrev: i > 0 && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : 100,
+    }))
+  }, [stats])
+
   const titles: Record<Page, string> = {
     general: 'Vue Générale', 'non-eligibles': "Non Éligibles — Mine d'or", bancarisation: 'Impact Bancarisation',
     segments: 'Performance par Segment', crm: 'CRM Leads', rapports: 'Rapports Automatiques'
@@ -177,8 +354,10 @@ function Admin() {
         .sb-badge.o { background: #EA580C; }
         .sb-footer { padding: 16px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
         .sb-avatar { width: 32px; height: 32px; background: #1A6BFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
-        .sb-user { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85); }
+        .sb-user { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85); max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
         .sb-role { font-size: 10px; color: rgba(255,255,255,0.35); }
+        .sb-logout { background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 6px; margin-left: auto; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
+        .sb-logout:hover { background: rgba(255,255,255,0.08); color: #fff; }
 
         .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
         .topbar { height: 60px; background: #FFF; border-bottom: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 50; }
@@ -190,6 +369,14 @@ function Admin() {
         .btn-ghost { background: #F9FAFB; color: #111; border: 1px solid #E5E7EB; }
         .content { padding: 24px 28px; flex: 1; }
 
+        /* Hero KPIs — J/J-7/J-30 (les 3 KPI stratégiques) */
+        .hero-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+        .hero-kpi { background: linear-gradient(145deg, #0D1B3E 0%, #0A1532 100%); color: #fff; border-radius: 16px; padding: 20px 22px; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(13,27,62,0.14); }
+        .hero-kpi::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; background: radial-gradient(circle, rgba(26,107,255,0.3), transparent 65%); pointer-events: none; }
+        .hero-kpi .lbl { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; position: relative; z-index: 1; }
+        .hero-kpi .val { font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 4px; position: relative; z-index: 1; }
+        .hero-kpi .sub { font-size: 12px; color: rgba(255,255,255,0.5); position: relative; z-index: 1; }
+
         .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 24px; }
         .kpi-card { background: #FFF; border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px; box-shadow: 0 1px 3px rgba(13,27,62,0.04); }
         .kpi-label { font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
@@ -200,6 +387,14 @@ function Admin() {
         .chart-card { background: #FFF; border: 1px solid #E5E7EB; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(13,27,62,0.04); }
         .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: #111; }
         .chart-sub { font-size: 12px; color: #6B7280; margin-bottom: 16px; }
+
+        /* FUNNEL */
+        .funnel { display: flex; flex-direction: column; gap: 8px; }
+        .funnel-row { display: flex; align-items: center; gap: 12px; }
+        .funnel-bar { flex: 1; background: #F9FAFB; border-radius: 10px; height: 44px; overflow: hidden; position: relative; display: flex; align-items: center; }
+        .funnel-fill { height: 100%; border-radius: 10px; display: flex; align-items: center; padding: 0 14px; color: #fff; font-weight: 700; font-size: 13px; min-width: fit-content; transition: width 0.5s ease; }
+        .funnel-pct { font-size: 12px; font-weight: 700; color: #111; width: 90px; text-align: right; }
+        .funnel-arrow { color: #9CA3AF; font-size: 11px; padding: 2px 0 2px 12px; }
 
         .table-card { background: #FFF; border: 1px solid #E5E7EB; border-radius: 14px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(13,27,62,0.04); }
         .table-head { padding: 16px 20px; border-bottom: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
@@ -224,6 +419,11 @@ function Admin() {
 
         .seg-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
 
+        /* Toast notif */
+        .toast { position: fixed; top: 80px; right: 28px; background: linear-gradient(145deg, #0D1B3E, #0A1532); color: #fff; padding: 14px 20px; border-radius: 14px; box-shadow: 0 12px 32px rgba(13,27,62,0.4); z-index: 300; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideIn 0.3s ease-out; max-width: 400px; }
+        .toast-ic { width: 32px; height: 32px; background: #1A6BFF; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
         /* Modal */
         .modal-ov { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .modal { background: #FFF; border-radius: 20px; width: 600px; max-width: 100%; max-height: 90vh; overflow-y: auto; }
@@ -241,7 +441,7 @@ function Admin() {
         .devis-btn { background: #7C3AED; color: #fff; border: none; border-radius: 12px; padding: 12px 18px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
         .client-link { background: #1A6BFF; color: #fff; border: none; border-radius: 12px; padding: 12px 18px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-bottom: 8px; text-decoration: none; }
 
-        @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } .charts-row { grid-template-columns: 1fr; } .seg-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } .charts-row { grid-template-columns: 1fr; } .seg-grid { grid-template-columns: 1fr; } .hero-kpis { grid-template-columns: 1fr; } }
         @media (max-width: 900px) { .sidebar { transform: translateX(-100%); } .main { margin-left: 0; } }
       `}</style>
 
@@ -265,11 +465,12 @@ function Admin() {
           <button className={`sb-item ${page === 'rapports' ? 'on' : ''}`} onClick={() => setPage('rapports')}><Icon name="file"/>Rapports Auto</button>
         </nav>
         <div className="sb-footer">
-          <div className="sb-avatar">A</div>
-          <div>
-            <div className="sb-user">Admin Mayinvest</div>
-            <div className="sb-role">Directeur Commercial</div>
+          <div className="sb-avatar">{(session.user.email || 'A')[0].toUpperCase()}</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="sb-user" title={session.user.email}>{session.user.email}</div>
+            <div className="sb-role">Admin</div>
           </div>
+          <button className="sb-logout" onClick={logout} title="Déconnexion"><Icon name="logout" size={16}/></button>
         </div>
       </aside>
 
@@ -286,8 +487,50 @@ function Admin() {
         <div className="content">
 
           {page === 'general' && <>
+            {/* ★ Les 3 KPI STRATÉGIQUES (hero) : J / J-7 / J-30 */}
+            <div className="hero-kpis">
+              <div className="hero-kpi">
+                <div className="lbl">Aujourd'hui</div>
+                <div className="val">{stats.leadsJ}</div>
+                <div className="sub">Nouveaux leads du jour</div>
+              </div>
+              <div className="hero-kpi">
+                <div className="lbl">7 derniers jours</div>
+                <div className="val">{stats.leadsJ7}</div>
+                <div className="sub">Volume semaine glissante</div>
+              </div>
+              <div className="hero-kpi">
+                <div className="lbl">30 derniers jours</div>
+                <div className="val">{stats.leadsJ30}</div>
+                <div className="sub">Volume mois glissant</div>
+              </div>
+            </div>
+
+            {/* FUNNEL de conversion */}
+            <div className="chart-card" style={{ marginBottom: 24 }}>
+              <div className="chart-title">Funnel de conversion</div>
+              <div className="chart-sub">Du prospect au financement — taux de passage à chaque étape</div>
+              <div className="funnel">
+                {funnel.map((s, i) => (
+                  <div key={s.label}>
+                    <div className="funnel-row">
+                      <div className="funnel-bar">
+                        <div className="funnel-fill" style={{ width: `${Math.max(s.pct, 6)}%`, background: s.color }}>
+                          {s.label} · {s.value}
+                        </div>
+                      </div>
+                      <div className="funnel-pct">{s.pct}% total</div>
+                    </div>
+                    {i < funnel.length - 1 && (
+                      <div className="funnel-arrow">↓ {s.conversionFromPrev}% passent à l'étape suivante</div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
             <div className="kpi-grid">
-              <div className="kpi-card"><div className="kpi-label">Total Leads</div><div className="kpi-value" style={{ color: '#1A6BFF' }}>{stats.total}</div><div className="kpi-sub">+{stats.nouveauxJ7} cette semaine</div></div>
+              <div className="kpi-card"><div className="kpi-label">Total Leads</div><div className="kpi-value" style={{ color: '#1A6BFF' }}>{stats.total}</div><div className="kpi-sub">Historique complet</div></div>
               <div className="kpi-card"><div className="kpi-label">Éligibles</div><div className="kpi-value" style={{ color: '#16A34A' }}>{stats.eligibles}</div><div className="kpi-sub">{stats.total ? Math.round((stats.eligibles/stats.total)*100) : 0}% des leads</div></div>
               <div className="kpi-card"><div className="kpi-label">Non Éligibles</div><div className="kpi-value" style={{ color: '#EA580C' }}>{stats.nonEligibles}</div><div className="kpi-sub">Potentiel Pack Formalisation</div></div>
               <div className="kpi-card"><div className="kpi-label">Dossiers Déposés</div><div className="kpi-value">{stats.deposes}</div><div className="kpi-sub">En instruction banque</div></div>
@@ -306,8 +549,8 @@ function Admin() {
                   </select>
                   <select className="filter-sel" value={filterType} onChange={e => setFilterType(e.target.value)}>
                     <option value="">Tous types</option>
-                    <option value="personne physique">Physique</option>
-                    <option value="personne morale">PME</option>
+                    <option value="physique">Physique</option>
+                    <option value="morale">PME</option>
                   </select>
                 </div>
               </div>
@@ -321,7 +564,7 @@ function Admin() {
                     return (
                       <tr key={l.id} onClick={() => setSelectedLead(l)}>
                         <td style={{ fontWeight: 600 }}>{nomOf(l)}</td>
-                        <td style={{ color: '#6B7280' }}>{l.type === 'personne morale' ? 'PME' : 'Physique'}</td>
+                        <td style={{ color: '#6B7280' }}>{l.type === 'morale' ? 'PME' : 'Physique'}</td>
                         <td style={{ color: '#6B7280' }}>{l.activite || '—'}</td>
                         <td style={{ color: '#6B7280', fontVariantNumeric: 'tabular-nums' }}>{l.montant_demande ? l.montant_demande.toLocaleString('fr') : '—'}</td>
                         <td><span className="score-ring" style={{ color: scoreColor(l.score), borderColor: scoreColor(l.score) }}>{l.score}</span></td>
@@ -361,7 +604,7 @@ function Admin() {
               <div className="kpi-card"><div className="kpi-label">Sans banque</div><div className="kpi-value" style={{ color: '#EA580C' }}>{leads.filter(l => !l.banque_actuelle || l.banque_actuelle === 'Aucune').length}</div><div className="kpi-sub">À bancariser</div></div>
               <div className="kpi-card"><div className="kpi-label">Salaire domicilié</div><div className="kpi-value" style={{ color: '#1A6BFF' }}>{leads.filter(l => l.eligibilite?.salaire_domic === 'Oui').length}</div><div className="kpi-sub">Prospects sérieux</div></div>
             </div>
-            <div className="chart-card"><div className="chart-title">Répartition par banque</div><div className="chart-sub">Volume de leads par institution bancaire</div><div className="bar-h">{parBanque.map(b => <div key={b.label} className="bar-h-row"><div className="bar-h-l">{b.label}</div><div className="bar-h-t"><div className="bar-h-f" style={{ width: `${Math.min(100, b.total / Math.max(...parBanque.map(x => x.total)) * 100)}%` }} /></div><div className="bar-h-v">{b.total}</div></div>)}</div></div>
+            <div className="chart-card"><div className="chart-title">Répartition par banque</div><div className="chart-sub">Volume de leads par institution bancaire</div><div className="bar-h">{parBanque.map(b => <div key={b.label} className="bar-h-row"><div className="bar-h-l">{b.label}</div><div className="bar-h-t"><div className="bar-h-f" style={{ width: `${Math.min(100, b.total / Math.max(...parBanque.map(x => x.total), 1) * 100)}%` }} /></div><div className="bar-h-v">{b.total}</div></div>)}</div></div>
           </>}
 
           {page === 'segments' && <>
@@ -419,12 +662,18 @@ function Admin() {
           {page === 'rapports' && <>
             <div style={{ marginBottom: 20 }}>
               <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Rapports automatiques</div>
-              <div style={{ fontSize: 13, color: '#6B7280' }}>Reçus par WhatsApp et Email</div>
+              <div style={{ fontSize: 13, color: '#6B7280' }}>Alertes temps réel dans ce dashboard</div>
+            </div>
+            <div style={{ background: '#FFF', border: '1px solid #E5E7EB', borderRadius: 14, padding: 20, marginBottom: 12, display: 'flex', gap: 16 }}>
+              <div style={{ width: 44, height: 44, background: '#DCFCE7', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A', flexShrink: 0 }}><Icon name="bell" size={22}/></div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: '#111' }}>Notification temps réel ACTIVE ✓</div>
+                <div style={{ fontSize: 12, color: '#6B7280', lineHeight: 1.5 }}>Chaque nouveau lead déclenche un toast + un son + une notification navigateur (si l'onglet est en arrière-plan).</div>
+              </div>
             </div>
             {[
-              { t: 'Rapport hebdo', d: `${stats.nouveauxJ7} nouveaux leads · ${stats.finances} financés · Taux ${stats.taux}%`, when: 'Lundi 8h' },
-              { t: 'Rapport bancarisation', d: `${leads.filter(l => l.banque_actuelle && l.banque_actuelle !== 'Aucune').length} bancarisés sur ${stats.total}`, when: '1er du mois' },
-              { t: 'Alerte nouveau lead', d: 'Notification temps réel à chaque soumission + score + lien CRM', when: 'Permanent' },
+              { t: 'Rapport hebdo', d: `${stats.leadsJ7} nouveaux leads · ${stats.finances} financés · Taux ${stats.taux}%`, when: 'Lundi 8h (manuel pour V1)' },
+              { t: 'Rapport mensuel', d: `${stats.leadsJ30} leads sur 30 jours · ${stats.deposes} dossiers déposés`, when: '1er du mois (manuel pour V1)' },
             ].map(r => (
               <div key={r.t} style={{ background: '#FFF', border: '1px solid #E5E7EB', borderRadius: 14, padding: 20, marginBottom: 12, display: 'flex', gap: 16 }}>
                 <div style={{ width: 44, height: 44, background: '#EEF4FF', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1A6BFF', flexShrink: 0 }}><Icon name="file" size={22}/></div>
@@ -440,13 +689,20 @@ function Admin() {
         </div>
       </main>
 
+      {/* Toast notification */}
+      {toast && (
+        <div className="toast">
+          <div className="toast-ic"><Icon name="bell" size={16}/></div>
+          <div>{toast.msg}</div>
+        </div>
+      )}
+
       {/* MODAL LEAD DETAIL */}
       {selectedLead && (() => {
         const l = selectedLead
         const identite = l.identite || {}
         const besoin = l.besoin || {}
         const nom = nomOf(l)
-        const p = pillColor(l.statut)
         return (
           <div className="modal-ov" onClick={() => setSelectedLead(null)}>
             <div className="modal" onClick={e => e.stopPropagation()}>
@@ -484,7 +740,7 @@ function Admin() {
                     <div className="detail"><div className="detail-l">Montant</div><div className="detail-v">{l.montant_demande ? `${l.montant_demande.toLocaleString('fr')} XAF` : '—'}</div></div>
                     <div className="detail"><div className="detail-l">Objet</div><div className="detail-v">{besoin.objet || '—'}</div></div>
                     <div className="detail"><div className="detail-l">Banque</div><div className="detail-v">{l.banque_actuelle || '—'}</div></div>
-                    <div className="detail"><div className="detail-l">Type</div><div className="detail-v">{l.type === 'personne morale' ? 'PME' : 'Physique'}</div></div>
+                    <div className="detail"><div className="detail-l">Type</div><div className="detail-v">{l.type === 'morale' ? 'PME' : 'Physique'}</div></div>
                   </div>
                 </div>
 
