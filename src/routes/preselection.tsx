@@ -394,10 +394,20 @@ function Simulation() {
           background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
           background-repeat: no-repeat; background-position: right 2px center; padding-right: 20px !important; cursor: pointer;
         }
-        /* FIX : "Sélectionner…" en gris (comme un placeholder) */
-        .field select.empty { color: #BBB !important; font-weight: 400 !important; }
-        .field select option { color: #111; font-weight: 500; }
-        .field select option[value=""] { color: #BBB; }
+        /* FIX blindé : "Sélectionner…" en gris comme un vrai placeholder (iOS/Android/desktop) */
+        .field select.empty,
+        .field select:invalid {
+          color: #BBB !important;
+          -webkit-text-fill-color: #BBB !important;
+          font-weight: 400 !important;
+        }
+        .field select { color: #111; -webkit-text-fill-color: #111; }
+        .field select option { color: #111; font-weight: 500; background: #fff; }
+        .field select option[value=""], .field select option:disabled {
+          color: #BBB !important;
+          -webkit-text-fill-color: #BBB !important;
+          font-weight: 400 !important;
+        }
 
         .top { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.92); backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px); height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
         @media (max-width: 640px) { .top { height: 60px; padding: 0 16px; } }
@@ -607,11 +617,12 @@ function Simulation() {
                 <div className="field"><label>Email (facultatif)</label><input type="email" placeholder="Ex : jp.moukouama@gmail.com" value={form['email']||''} onChange={e=>set('email',e.target.value)}/></div>
                 <div className="field"><label>Ville *</label>
                   <select
+                    required
                     className={!form['ville'] ? 'empty' : ''}
                     value={form['ville']||''}
                     onChange={e=>set('ville',e.target.value)}
                   >
-                    <option value="">Sélectionner…</option>
+                    <option value="" disabled>Sélectionner…</option>
                     {VILLES.map(v=><option key={v} value={v}>{v}</option>)}
                   </select>
                 </div>
@@ -688,11 +699,12 @@ function Simulation() {
                   value={formatMoney(form['montant']||'')} onChange={e=>set('montant', cleanMoney(e.target.value))}/></div>
                 <div className="field"><label>Objet du financement *</label>
                   <select
+                    required
                     className={!form['objet'] ? 'empty' : ''}
                     value={form['objet']||''}
                     onChange={e=>set('objet',e.target.value)}
                   >
-                    <option value="">Sélectionner…</option>
+                    <option value="" disabled>Sélectionner…</option>
                     {(isP ? ['Consommation','Immobilier','Véhicule','Autre'] : ['Investissement','Fonds de roulement','Marché public','Autre']).map(o=><option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
@@ -708,11 +720,12 @@ function Simulation() {
               <div className="fields">
                 <div className="field"><label>Banque actuelle *</label>
                   <select
+                    required
                     className={!form['banque'] ? 'empty' : ''}
                     value={form['banque']||''}
                     onChange={e=>set('banque',e.target.value)}
                   >
-                    <option value="">Sélectionner…</option>
+                    <option value="" disabled>Sélectionner…</option>
                     {BANQUES.map(b=><option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>
