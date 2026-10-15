@@ -232,30 +232,62 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onT
   onToggleAuto: () => void
 }) {
   const [showAutoHelp, setShowAutoHelp] = useState(false)
-  // Avatar Haki : un grand œil qui regarde dans toutes les directions
+  // Avatar Haki : sphère 3D noire avec grand œil marron qui regarde & cligne
   const avatar = (size: number) => (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
       <defs>
-        <linearGradient id="haki-grad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#1A6BFF"/>
-          <stop offset="1" stopColor="#0D4FD1"/>
-        </linearGradient>
+        {/* Sphère noire 3D (dégradé radial pour effet volume) */}
+        <radialGradient id="haki-sphere" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="#4a4a4a"/>
+          <stop offset="35%" stopColor="#1f1f1f"/>
+          <stop offset="80%" stopColor="#0a0a0a"/>
+          <stop offset="100%" stopColor="#000"/>
+        </radialGradient>
+        {/* Blanc de l'œil avec ombre interne (effet creusé) */}
+        <radialGradient id="haki-sclera" cx="50%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#ffffff"/>
+          <stop offset="70%" stopColor="#f0f0f0"/>
+          <stop offset="100%" stopColor="#c8c8c8"/>
+        </radialGradient>
+        {/* Iris marron 3D (dégradé radial) */}
+        <radialGradient id="haki-iris" cx="40%" cy="40%" r="60%">
+          <stop offset="0%" stopColor="#b07a44"/>
+          <stop offset="50%" stopColor="#7a4a22"/>
+          <stop offset="100%" stopColor="#2a1a0a"/>
+        </radialGradient>
+        {/* Ombre sous l'œil pour profondeur */}
+        <radialGradient id="haki-shadow" cx="50%" cy="55%" r="55%">
+          <stop offset="60%" stopColor="rgba(0,0,0,0)"/>
+          <stop offset="100%" stopColor="rgba(0,0,0,0.45)"/>
+        </radialGradient>
       </defs>
-      {/* Fond bleu */}
-      <circle cx="20" cy="20" r="19" fill="url(#haki-grad)"/>
-      <circle cx="20" cy="20" r="19" stroke="#fff" strokeWidth="1" opacity="0.3"/>
-      {/* Grand œil blanc */}
-      <ellipse cx="20" cy="20" rx="13" ry="9.5" fill="#fff"/>
-      {/* Groupe œil animé (iris marron + pupille + reflet) */}
+
+      {/* Sphère noire 3D */}
+      <circle cx="20" cy="20" r="19" fill="url(#haki-sphere)"/>
+      {/* Reflet spéculaire haut-gauche (donne l'aspect sphère brillante) */}
+      <ellipse cx="12" cy="9" rx="7.5" ry="4" fill="#fff" opacity="0.18"/>
+      <circle cx="10" cy="8" r="1.8" fill="#fff" opacity="0.4"/>
+      {/* Ombre bas-droit pour accentuer la 3D */}
+      <circle cx="20" cy="20" r="19" fill="url(#haki-shadow)"/>
+
+      {/* Œil creusé (blanc avec ombre interne) */}
+      <ellipse cx="20" cy="20" rx="13" ry="9.5" fill="url(#haki-sclera)"/>
+      {/* Ligne d'ombre haute (paupière supérieure permanente) */}
+      <path d="M8.5 15.5 Q 20 10, 31.5 15.5" stroke="rgba(0,0,0,0.25)" strokeWidth="1.2" fill="none" strokeLinecap="round"/>
+
+      {/* Groupe œil animé (iris marron 3D + pupille + reflets) */}
       <g className="haki-eye-ball">
-        <circle cx="20" cy="20" r="6.5" fill="#6B4423"/>
-        <circle cx="20" cy="20" r="5.5" fill="#8B5A2B"/>
-        <circle cx="20" cy="20" r="3.5" fill="#1A0F08"/>
-        <circle cx="22" cy="18" r="1.3" fill="#fff"/>
-        <circle cx="18" cy="21.5" r="0.7" fill="#fff" opacity="0.7"/>
+        <circle cx="20" cy="20" r="6.5" fill="url(#haki-iris)"/>
+        <circle cx="20" cy="20" r="3.2" fill="#120a04"/>
+        <circle cx="22" cy="18" r="1.4" fill="#fff"/>
+        <circle cx="18.5" cy="21.5" r="0.7" fill="#fff" opacity="0.75"/>
+        <circle cx="21.5" cy="22" r="0.4" fill="#fff" opacity="0.5"/>
       </g>
-      {/* Paupière qui cligne de temps en temps */}
-      <ellipse className="haki-eyelid" cx="20" cy="20" rx="13" ry="0" fill="url(#haki-grad)"/>
+
+      {/* Paupière supérieure qui cligne à chaque mouvement */}
+      <ellipse className="haki-eyelid-top" cx="20" cy="12" rx="13.5" ry="0" fill="url(#haki-sphere)"/>
+      {/* Paupière inférieure qui cligne aussi */}
+      <ellipse className="haki-eyelid-bot" cx="20" cy="28" rx="13.5" ry="0" fill="url(#haki-sphere)"/>
     </svg>
   )
 
@@ -953,22 +985,44 @@ function Simulation() {
         .cs-opt.sel { background: #EEF4FF; color: #1A6BFF; font-weight: 700; }
         .cs-opt + .cs-opt { margin-top: 2px; }
 
-        /* ==== Animation du grand œil Haki ==== */
-        .haki-eye-ball { transform-origin: 20px 20px; animation: haki-look 7s ease-in-out infinite; }
+        /* ==== Animation sphère Haki : regard 6 directions + clignement synchronisé ==== */
+        .haki-eye-ball { transform-origin: 20px 20px; animation: haki-look 9s steps(1, end) infinite; }
         @keyframes haki-look {
-          0%, 12%   { transform: translate(0, 0); }      /* centre */
-          16%, 28%  { transform: translate(4px, -1px); }  /* droite */
-          32%, 44%  { transform: translate(4px, 2px); }   /* bas-droite */
-          48%, 60%  { transform: translate(-4px, 2px); }  /* bas-gauche */
-          64%, 76%  { transform: translate(-4px, -1px); } /* haut-gauche */
-          80%, 92%  { transform: translate(0, -3px); }    /* haut */
-          100%      { transform: translate(0, 0); }       /* retour centre */
+          0%, 14%   { transform: translate(0, 0); }       /* centre */
+          16.67%, 31% { transform: translate(4.5px, 0); } /* droite */
+          33.33%, 47% { transform: translate(4.5px, 2px); } /* bas-droite */
+          50%, 64%  { transform: translate(-4.5px, 2px); }  /* bas-gauche */
+          66.67%, 81% { transform: translate(-4.5px, 0); }  /* haut-gauche */
+          83.33%, 98% { transform: translate(0, -3px); }    /* haut */
         }
-        .haki-eyelid { transform-origin: 20px 20px; animation: haki-blink 5s infinite; }
-        @keyframes haki-blink {
-          0%, 96%  { ry: 0; }
-          98%      { ry: 9.5; }
-          100%     { ry: 0; }
+        /* Clignement synchronisé : juste avant chaque nouveau mouvement */
+        .haki-eyelid-top { animation: haki-blink-top 9s infinite; }
+        .haki-eyelid-bot { animation: haki-blink-bot 9s infinite; }
+        @keyframes haki-blink-top {
+          0%, 15%     { ry: 0; cy: 12; }
+          15.5%, 16.17% { ry: 9; cy: 18; }   /* clignement avant droite */
+          16.67%, 32% { ry: 0; cy: 12; }
+          32.5%, 33.17% { ry: 9; cy: 18; }   /* clignement avant bas-droite */
+          33.33%, 48.5% { ry: 0; cy: 12; }
+          49%, 49.67% { ry: 9; cy: 18; }     /* clignement avant bas-gauche */
+          50%, 65.5%  { ry: 0; cy: 12; }
+          66%, 66.67% { ry: 9; cy: 18; }     /* clignement avant haut-gauche */
+          66.67%, 82% { ry: 0; cy: 12; }
+          82.5%, 83.17% { ry: 9; cy: 18; }   /* clignement avant haut */
+          83.33%, 100% { ry: 0; cy: 12; }
+        }
+        @keyframes haki-blink-bot {
+          0%, 15%     { ry: 0; cy: 28; }
+          15.5%, 16.17% { ry: 4; cy: 24; }
+          16.67%, 32% { ry: 0; cy: 28; }
+          32.5%, 33.17% { ry: 4; cy: 24; }
+          33.33%, 48.5% { ry: 0; cy: 28; }
+          49%, 49.67% { ry: 4; cy: 24; }
+          50%, 65.5%  { ry: 0; cy: 28; }
+          66%, 66.67% { ry: 4; cy: 24; }
+          66.67%, 82% { ry: 0; cy: 28; }
+          82.5%, 83.17% { ry: 4; cy: 24; }
+          83.33%, 100% { ry: 0; cy: 28; }
         }
 
         /* ==== Haki Assistant — design pro type Intercom ==== */
