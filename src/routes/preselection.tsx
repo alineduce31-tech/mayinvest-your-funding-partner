@@ -129,7 +129,8 @@ function MiaStrip({ tipKey }: { tipKey: string }) {
   )
 }
 
-function Mascot({ tipKey, open, onClose, onOpen }: { tipKey: string; open: boolean; onClose: () => void; onOpen: () => void }) {
+type MiaAction = { label: string; onClick: () => void; primary?: boolean; icon?: ReactNode }
+function Mascot({ tipKey, open, onClose, onOpen, actions }: { tipKey: string; open: boolean; onClose: () => void; onOpen: () => void; actions?: MiaAction[] }) {
   const tip = TIPS[tipKey] || TIPS['step1']
   return (
     <>
@@ -160,6 +161,16 @@ function Mascot({ tipKey, open, onClose, onOpen }: { tipKey: string; open: boole
             <span>Mia · {tip.title}</span>
           </div>
           <div className="mascot-body">{tip.body}</div>
+          {actions && actions.length > 0 && (
+            <div className="mascot-actions">
+              {actions.map((a, i) => (
+                <button key={i} className={`mascot-btn ${a.primary ? 'primary' : ''}`} onClick={() => { a.onClick(); }}>
+                  {a.icon}
+                  <span>{a.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </>
@@ -246,6 +257,16 @@ function Simulation() {
   const [submitError, setSubmitError] = useState('')
   const [mascotOpen, setMascotOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<'identite'|'situation'|'besoin'|'eligibilite'>('identite')
+  const sectionRefs = {
+    identite: useRef<HTMLDivElement>(null),
+    situation: useRef<HTMLDivElement>(null),
+    besoin: useRef<HTMLDivElement>(null),
+    eligibilite: useRef<HTMLDivElement>(null),
+  }
+  const scrollToSection = (k: 'identite'|'situation'|'besoin'|'eligibilite') => {
+    sectionRefs[k].current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    setActiveSection(k)
+  }
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
   const isP = type === 'physique'
 
@@ -272,6 +293,35 @@ function Simulation() {
       : activeSection === 'situation' ? (isP ? 'situation-p' : 'situation-m')
       : activeSection === 'besoin' ? 'besoin'
       : (isP ? 'eligibilite-p' : 'eligibilite-m'))
+
+  // Actions interactives de Mia : boutons qui guident l'utilisateur
+  const arrow = <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6h6M7 3l3 3-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  const miaActions: MiaAction[] = (() => {
+    if (step === 1) {
+      return [
+        { label: 'Je suis un particulier', onClick: () => { setType('physique'); setMascotOpen(false) }, primary: true },
+        { label: 'Je suis une entreprise', onClick: () => { setType('morale'); setMascotOpen(false) } },
+      ]
+    }
+    if (step === 2) {
+      return type ? [{ label: 'Revenir au choix du profil', onClick: () => { setStep(1); setMascotOpen(false) } }] : []
+    }
+    if (step === 3) {
+      return [
+        { label: 'Aller à l\'identité', onClick: () => { scrollToSection('identite'); setMascotOpen(false) }, primary: activeSection === 'identite' },
+        { label: 'Aller à la situation', onClick: () => { scrollToSection('situation'); setMascotOpen(false) }, primary: activeSection === 'situation' },
+        { label: 'Aller au besoin', onClick: () => { scrollToSection('besoin'); setMascotOpen(false) }, primary: activeSection === 'besoin' },
+        { label: 'Aller à l\'éligibilité', onClick: () => { scrollToSection('eligibilite'); setMascotOpen(false) }, primary: activeSection === 'eligibilite' },
+      ]
+    }
+    if (step === 4) {
+      return [
+        { label: 'Discuter avec un conseiller', onClick: () => { window.open(`https://wa.me/242060000000?text=Bonjour Mayinvest, j'ai soumis mon dossier. Code: ${accessCode}`, '_blank'); setMascotOpen(false) }, primary: true, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg> },
+        { label: 'Accéder à mon dossier', onClick: () => { navigate({ to: '/client/$id', params: { id: leadId } }); setMascotOpen(false) } },
+      ]
+    }
+    return []
+  })()
 
   // Contrat obligatoire uniquement pour Salarié privé
   const needContrat = isP && activite === 'Salarié privé'
@@ -532,6 +582,11 @@ function Simulation() {
         .mascot-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: #0D1B3E; margin-bottom: 8px; padding-right: 24px; }
         .mascot-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; background: #1A6BFF; }
         .mascot-body { font-size: 14px; color: #333; line-height: 1.5; }
+        .mascot-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+        .mascot-btn { background: #F5F7FB; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; font-family: inherit; font-size: 13px; font-weight: 700; color: #0D1B3E; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s; }
+        .mascot-btn:hover { background: #EEF4FF; border-color: #1A6BFF; color: #1A6BFF; }
+        .mascot-btn.primary { background: #1A6BFF; color: #fff; border-color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.3); }
+        .mascot-btn.primary:hover { background: #1560E0; }
       `}</style>
 
       <div className="top">
@@ -603,7 +658,7 @@ function Simulation() {
 
           <div className="form-stack">
             {/* 1. IDENTITÉ */}
-            <div className="form-card" onFocus={() => setActiveSection('identite')} tabIndex={-1}>
+            <div className="form-card" ref={sectionRefs.identite} onFocus={() => setActiveSection('identite')} tabIndex={-1}>
               <div className="card-title">1. Identité</div>
               <div className="fields">
                 {isP ? <>
@@ -632,7 +687,7 @@ function Simulation() {
             </div>
 
             {/* 2. SITUATION */}
-            <div className="form-card" onFocus={() => setActiveSection('situation')} tabIndex={-1}>
+            <div className="form-card" ref={sectionRefs.situation} onFocus={() => setActiveSection('situation')} tabIndex={-1}>
               <div className="card-title">2. Situation {isP ? 'professionnelle' : 'juridique'}</div>
               <div className="fields">
                 {isP ? <>
@@ -693,7 +748,7 @@ function Simulation() {
             </div>
 
             {/* 3. BESOIN */}
-            <div className="form-card" onFocus={() => setActiveSection('besoin')} tabIndex={-1}>
+            <div className="form-card" ref={sectionRefs.besoin} onFocus={() => setActiveSection('besoin')} tabIndex={-1}>
               <div className="card-title">3. Votre besoin</div>
               <div className="fields">
                 <div className="field"><label>Montant demandé (XAF) *</label><input
@@ -717,7 +772,7 @@ function Simulation() {
             </div>
 
             {/* 4. ÉLIGIBILITÉ */}
-            <div className="form-card" onFocus={() => setActiveSection('eligibilite')} tabIndex={-1}>
+            <div className="form-card" ref={sectionRefs.eligibilite} onFocus={() => setActiveSection('eligibilite')} tabIndex={-1}>
               <div className="card-title">4. Éligibilité</div>
               <div className="fields">
                 <div className="field"><label>Banque actuelle *</label>
@@ -811,7 +866,7 @@ function Simulation() {
         </div>}
       </div>
 
-      <Mascot tipKey={tipKey} open={mascotOpen} onClose={closeMia} onOpen={() => setMascotOpen(true)} />
+      <Mascot tipKey={tipKey} open={mascotOpen} onClose={closeMia} onOpen={() => setMascotOpen(true)} actions={miaActions} />
     </div>
   )
 }
