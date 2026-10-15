@@ -98,6 +98,40 @@ const VILLES = [
 ]
 const CONTRATS = ['CDI', 'CDD', 'Intérim', 'Stage', 'Autre']
 
+/* ---------- Validation par champ ---------- */
+type FieldCheck = { ok: boolean; msg?: string; example?: string; label?: string }
+function validateField(key: string, value: string, isP: boolean): FieldCheck {
+  const v = (value || '').trim()
+  switch (key) {
+    case 'prenom': return v.length >= 2 ? { ok: true, label: 'Prénom' } : { ok: false, label: 'Prénom', msg: 'Prénom trop court', example: 'Ex : Jean-Pierre' }
+    case 'nom': return v.length >= 2 ? { ok: true, label: 'Nom' } : { ok: false, label: 'Nom', msg: 'Nom trop court', example: 'Ex : Moukouama' }
+    case 'raison_sociale': return v.length >= 2 ? { ok: true, label: 'Raison sociale' } : { ok: false, label: 'Raison sociale', msg: 'Nom de la société manquant', example: 'Ex : Jespere SARL' }
+    case 'dirigeant': return v.length >= 2 ? { ok: true, label: 'Dirigeant' } : { ok: false, label: 'Dirigeant', msg: 'Nom du dirigeant manquant', example: 'Ex : Alain Mabiala' }
+    case 'tel': return v.length === 9 ? { ok: true, label: 'Téléphone' } : { ok: false, label: 'Téléphone', msg: 'Le téléphone doit faire 9 chiffres (sans le +242)', example: 'Ex : 06 123 4567' }
+    case 'email': return !v ? { ok: true, label: 'Email' } : (/\S+@\S+\.\S+/.test(v) ? { ok: true, label: 'Email' } : { ok: false, label: 'Email', msg: 'Format email invalide', example: 'Ex : jean.moukouama@gmail.com' })
+    case 'ville': return v ? { ok: true, label: 'Ville' } : { ok: false, label: 'Ville', msg: 'Choisissez votre ville dans la liste', example: 'Ex : Brazzaville' }
+    case 'employeur': return v.length >= 2 ? { ok: true, label: 'Employeur' } : { ok: false, label: 'Employeur', msg: 'Indiquez votre employeur ou administration', example: "Ex : Ministère de l'Économie, SOCOFRAN…" }
+    case 'contrat': return v ? { ok: true, label: 'Contrat' } : { ok: false, label: 'Contrat', msg: 'Choisissez votre type de contrat', example: 'CDI, CDD, Intérim, Stage ou Autre' }
+    case 'duree_restante': return parseInt(v || '0') > 0 ? { ok: true, label: 'Durée restante' } : { ok: false, label: 'Durée restante', msg: 'Indiquez combien de mois il reste à votre contrat', example: 'Ex : 18 (pour 18 mois restants)' }
+    case 'anciennete_tr': return v ? { ok: true, label: 'Ancienneté' } : { ok: false, label: 'Ancienneté', msg: 'Choisissez votre ancienneté dans la liste', example: 'Ex : « 1 à 3 ans »' }
+    case 'anciennete_soc_tr': return v ? { ok: true, label: 'Ancienneté société' } : { ok: false, label: 'Ancienneté société', msg: "Choisissez l'ancienneté de votre société", example: 'Ex : « 3 à 5 ans »' }
+    case 'anciennete_cpt_tr': return v ? { ok: true, label: 'Compte ouvert depuis' } : { ok: false, label: 'Compte', msg: 'Depuis quand le compte est-il ouvert ?', example: 'Ex : « 1 à 3 ans »' }
+    case 'revenu': return parseInt(v || '0') >= 50000 ? { ok: true, label: 'Revenu' } : { ok: false, label: 'Revenu', msg: 'Indiquez votre revenu net mensuel (minimum 50 000 XAF)', example: 'Ex : 350 000' }
+    case 'ca_annuel': return parseInt(v || '0') >= 100000 ? { ok: true, label: 'CA annuel' } : { ok: false, label: 'CA annuel', msg: "Indiquez le chiffre d'affaires annuel", example: 'Ex : 50 000 000' }
+    case 'rccm': return v ? { ok: true, label: 'RCCM' } : { ok: false, label: 'RCCM', msg: 'La société est-elle enregistrée au RCCM ?', example: 'Oui = enregistrée · Non = pas encore' }
+    case 'niu': return v.length >= 5 ? { ok: true, label: 'NIU' } : { ok: false, label: 'NIU', msg: "Numéro d'Identification Unique de la société", example: 'Ex : M2019051234' }
+    case 'montant': return parseInt(v || '0') >= 100000 ? { ok: true, label: 'Montant' } : { ok: false, label: 'Montant', msg: 'Montant minimum 100 000 XAF', example: 'Ex : 5 000 000' }
+    case 'objet': return v ? { ok: true, label: 'Objet' } : { ok: false, label: 'Objet', msg: 'Choisissez pourquoi vous voulez le prêt', example: isP ? 'Consommation, Immobilier, Véhicule…' : 'Investissement, Fonds de roulement, Marché public…' }
+    case 'flux_mois': return parseInt(v || '0') > 0 ? { ok: true, label: 'Flux mensuel' } : { ok: false, label: 'Flux mensuel', msg: 'Indiquez le flux mensuel moyen', example: 'Ex : 2 000 000' }
+    case 'banque': return v ? { ok: true, label: 'Banque' } : { ok: false, label: 'Banque', msg: 'Choisissez votre banque actuelle', example: "Ex : BGFI Bank. Choisissez « Aucune » si vous n'en avez pas." }
+    case 'salaire_domic': return v ? { ok: true, label: 'Domiciliation' } : { ok: false, label: 'Domiciliation', msg: 'Votre salaire est-il versé sur ce compte bancaire ?', example: 'Oui ou Non' }
+    case 'compte_mouvemente': return v ? { ok: true, label: 'Compte mouvementé' } : { ok: false, label: 'Compte mouvementé', msg: 'Avez-vous des transactions régulières sur ce compte ?', example: 'Oui ou Non' }
+    case 'refus_bancaire': return v ? { ok: true, label: 'Refus bancaire' } : { ok: false, label: 'Refus bancaire', msg: "Une banque a-t-elle déjà refusé un financement ?", example: 'Oui ou Non' }
+    case 'garanties': return v ? { ok: true, label: 'Garanties' } : { ok: false, label: 'Garanties', msg: 'Avez-vous des biens à mettre en garantie ?', example: 'Terrain, véhicule, matériel…' }
+    default: return { ok: true }
+  }
+}
+
 /* ---------- Dropdown custom ---------- */
 function CustomSelect({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: string[]; placeholder: string }) {
   const [open, setOpen] = useState(false)
@@ -418,6 +452,22 @@ function Simulation() {
     })
   }
   const [lastSuccess, setLastSuccess] = useState<string>('')
+  const [fieldFeedback, setFieldFeedback] = useState<(FieldCheck & { field: string }) | null>(null)
+  function onFieldBlur(key: string) {
+    // Mode guidage détaillé actif uniquement si Haki a été accepté ET mode auto activé
+    if (!hakiAccepted || !autoMode) return
+    const result = validateField(key, form[key] || '', isP)
+    setFieldFeedback({ ...result, field: key })
+    setMascotOpen(true)
+    // Succès → auto-ferme après 2.5s pour ne pas bloquer
+    if (result.ok) {
+      const t = setTimeout(() => {
+        setFieldFeedback(f => f?.field === key ? null : f)
+        setMascotOpen(false)
+      }, 2500)
+      return () => clearTimeout(t)
+    }
+  }
   const [activeSection, setActiveSection] = useState<'identite'|'situation'|'besoin'|'eligibilite'>('identite')
   const sectionRefs = {
     identite: useRef<HTMLDivElement>(null),
@@ -486,8 +536,50 @@ function Simulation() {
     }
   }, [identiteOk, situationOk, besoinOk, eligibiliteOk, activeSection, step, hakiAccepted, lastSuccess])
 
+  // Déclenche Haki après choix dans les sélecteurs non-input (chips, radios, selects custom)
+  const prevForm = useRef<Record<string,string>>({})
+  useEffect(() => {
+    if (!hakiAccepted || !autoMode || step !== 3) return
+    const chipFields = ['ville','objet','banque','anciennete_tr','anciennete_soc_tr','anciennete_cpt_tr','contrat','rccm','salaire_domic','compte_mouvemente','refus_bancaire','garanties']
+    for (const k of chipFields) {
+      const now = form[k] || ''
+      const prev = prevForm.current[k] || ''
+      if (now && now !== prev) {
+        const result = validateField(k, now, isP)
+        setFieldFeedback({ ...result, field: k })
+        setMascotOpen(true)
+        if (result.ok) {
+          const t = setTimeout(() => {
+            setFieldFeedback(f => f?.field === k ? null : f)
+            setMascotOpen(false)
+          }, 2500)
+          prevForm.current = { ...form }
+          return () => clearTimeout(t)
+        }
+      }
+    }
+    prevForm.current = { ...form }
+  }, [form, hakiAccepted, autoMode, step, isP])
+
   // Message de Haki selon l'état
   const hakiMsg: HakiMsg = (() => {
+    // PRIORITÉ : feedback immédiat sur un champ qui vient d'être rempli / raté
+    if (fieldFeedback && step === 3) {
+      if (fieldFeedback.ok) {
+        return {
+          title: `✓ ${fieldFeedback.label} bien noté`,
+          body: `Bravo, votre ${(fieldFeedback.label||'champ').toLowerCase()} est enregistré${fieldFeedback.label?.endsWith('e') ? 'e' : ''}. Continuez avec le champ suivant.`,
+          success: true,
+          actions: [{ label: 'Continuer', onClick: () => { setFieldFeedback(null); setMascotOpen(false) }, primary: true }],
+        }
+      }
+      return {
+        title: `⚠ Attention : ${fieldFeedback.label}`,
+        body: `${fieldFeedback.msg}\n\n${fieldFeedback.example || ''}\n\nPas de panique, essayez à nouveau !`,
+        actions: [{ label: "J'ai compris, je recommence", onClick: () => { setFieldFeedback(null); setMascotOpen(false) }, primary: true }],
+      }
+    }
+
     // Phase 0 : accueil, demande d'accompagnement
     if (!hakiAccepted && !hakiDeclined) {
       return {
@@ -997,16 +1089,16 @@ function Simulation() {
               <div className="card-title">1. Identité</div>
               <div className="fields">
                 {isP ? <>
-                  <div className="field"><label>Prénom *</label><input placeholder="Ex : Jean-Pierre" value={form['prenom']||''} onChange={e=>set('prenom',e.target.value)}/></div>
-                  <div className="field"><label>Nom *</label><input placeholder="Ex : Moukouama" value={form['nom']||''} onChange={e=>set('nom',e.target.value)}/></div>
+                  <div className="field"><label>Prénom *</label><input placeholder="Ex : Jean-Pierre" value={form['prenom']||''} onChange={e=>set('prenom',e.target.value)} onBlur={()=>onFieldBlur('prenom')}/></div>
+                  <div className="field"><label>Nom *</label><input placeholder="Ex : Moukouama" value={form['nom']||''} onChange={e=>set('nom',e.target.value)} onBlur={()=>onFieldBlur('nom')}/></div>
                 </> : <>
-                  <div className="field"><label>Raison sociale *</label><input placeholder="Ex : Jespere SARL" value={form['raison_sociale']||''} onChange={e=>set('raison_sociale',e.target.value)}/></div>
-                  <div className="field"><label>Nom du dirigeant *</label><input placeholder="Ex : Alain Mabiala" value={form['dirigeant']||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
+                  <div className="field"><label>Raison sociale *</label><input placeholder="Ex : Jespere SARL" value={form['raison_sociale']||''} onChange={e=>set('raison_sociale',e.target.value)} onBlur={()=>onFieldBlur('raison_sociale')}/></div>
+                  <div className="field"><label>Nom du dirigeant *</label><input placeholder="Ex : Alain Mabiala" value={form['dirigeant']||''} onChange={e=>set('dirigeant',e.target.value)} onBlur={()=>onFieldBlur('dirigeant')}/></div>
                 </>}
                 <div className="field"><label>Téléphone *</label><input
                   type="tel" inputMode="numeric" placeholder="Ex : 06 123 4567" maxLength={11}
-                  value={formatPhone(form['tel']||'')} onChange={e=>set('tel', cleanPhone(e.target.value))}/></div>
-                <div className="field"><label>Email (facultatif)</label><input type="email" placeholder="Ex : jp.moukouama@gmail.com" value={form['email']||''} onChange={e=>set('email',e.target.value)}/></div>
+                  value={formatPhone(form['tel']||'')} onChange={e=>set('tel', cleanPhone(e.target.value))} onBlur={()=>onFieldBlur('tel')}/></div>
+                <div className="field"><label>Email (facultatif)</label><input type="email" placeholder="Ex : jp.moukouama@gmail.com" value={form['email']||''} onChange={e=>set('email',e.target.value)} onBlur={()=>onFieldBlur('email')}/></div>
                 <div className="field"><label>Ville *</label>
                   <CustomSelect value={form['ville']||''} onChange={v=>set('ville',v)} options={VILLES} placeholder="Sélectionner votre ville"/>
                 </div>
@@ -1018,7 +1110,7 @@ function Simulation() {
               <div className="card-title">2. Situation {isP ? 'professionnelle' : 'juridique'}</div>
               <div className="fields">
                 {isP ? <>
-                  <div className="field"><label>Employeur / Administration *</label><input placeholder="Ex : Ministère de l'Économie" value={form['employeur']||''} onChange={e=>set('employeur',e.target.value)}/></div>
+                  <div className="field"><label>Employeur / Administration *</label><input placeholder="Ex : Ministère de l'Économie" value={form['employeur']||''} onChange={e=>set('employeur',e.target.value)} onBlur={()=>onFieldBlur('employeur')}/></div>
 
                   {/* Type de contrat (uniquement Salarié privé) */}
                   {needContrat && (
@@ -1044,6 +1136,7 @@ function Simulation() {
                       type="number" placeholder="Ex : 18" min="0" max="120"
                       value={form['duree_restante']||''}
                       onChange={e=>set('duree_restante', e.target.value)}
+                      onBlur={()=>onFieldBlur('duree_restante')}
                     /></div>
                   )}
 
@@ -1055,13 +1148,15 @@ function Simulation() {
 
                   <div className="field"><label>Revenu net mensuel (XAF) *</label><input
                     type="text" inputMode="numeric" placeholder="Ex : 350 000"
-                    value={formatMoney(form['revenu']||'')} onChange={e=>set('revenu', cleanMoney(e.target.value))}/></div>
+                    value={formatMoney(form['revenu']||'')} onChange={e=>set('revenu', cleanMoney(e.target.value))}
+                    onBlur={()=>onFieldBlur('revenu')}
+                  /></div>
                 </> : <>
                   <div className="field radio-field"><label>RCCM *</label>
                     <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['rccm']===v?'sel':''} onClick={()=>set('rccm',v)}>{v}</button>)}</div>
                   </div>
                   {form['rccm'] === 'Oui' && (
-                    <div className="field"><label>NIU *</label><input placeholder="Ex : M2019051234" value={form['niu']||''} onChange={e=>set('niu',e.target.value)}/></div>
+                    <div className="field"><label>NIU *</label><input placeholder="Ex : M2019051234" value={form['niu']||''} onChange={e=>set('niu',e.target.value)} onBlur={()=>onFieldBlur('niu')}/></div>
                   )}
                   <div className="field anc-wrap">
                     <label>Ancienneté de la société *</label>
@@ -1069,7 +1164,9 @@ function Simulation() {
                   </div>
                   <div className="field"><label>Chiffre d'affaires annuel (XAF) *</label><input
                     type="text" inputMode="numeric" placeholder="Ex : 50 000 000"
-                    value={formatMoney(form['ca_annuel']||'')} onChange={e=>set('ca_annuel', cleanMoney(e.target.value))}/></div>
+                    value={formatMoney(form['ca_annuel']||'')} onChange={e=>set('ca_annuel', cleanMoney(e.target.value))}
+                    onBlur={()=>onFieldBlur('ca_annuel')}
+                  /></div>
                 </>}
               </div>
             </div>
@@ -1080,7 +1177,9 @@ function Simulation() {
               <div className="fields">
                 <div className="field"><label>Montant demandé (XAF) *</label><input
                   type="text" inputMode="numeric" placeholder="Ex : 5 000 000"
-                  value={formatMoney(form['montant']||'')} onChange={e=>set('montant', cleanMoney(e.target.value))}/></div>
+                  value={formatMoney(form['montant']||'')} onChange={e=>set('montant', cleanMoney(e.target.value))}
+                  onBlur={()=>onFieldBlur('montant')}
+                /></div>
                 <div className="field"><label>Objet du financement *</label>
                   <CustomSelect
                     value={form['objet']||''}
@@ -1091,7 +1190,9 @@ function Simulation() {
                 </div>
                 {!isP && <div className="field"><label>Flux mensuel moyen (XAF) *</label><input
                   type="text" inputMode="numeric" placeholder="Ex : 2 000 000"
-                  value={formatMoney(form['flux_mois']||'')} onChange={e=>set('flux_mois', cleanMoney(e.target.value))}/></div>}
+                  value={formatMoney(form['flux_mois']||'')} onChange={e=>set('flux_mois', cleanMoney(e.target.value))}
+                  onBlur={()=>onFieldBlur('flux_mois')}
+                /></div>}
               </div>
             </div>
 
