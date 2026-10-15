@@ -112,13 +112,16 @@ const TIPS: Record<string, { title: string; body: string }> = {
 type HakiAction = { label: string; onClick: () => void; primary?: boolean; icon?: ReactNode }
 type HakiMsg = { title?: string; body: string; actions?: HakiAction[]; success?: boolean }
 
-function HakiAssistant({ msg, open, onToggle, onDecline, accepted }: {
+function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onToggleAuto }: {
   msg: HakiMsg
   open: boolean
   onToggle: () => void
   onDecline: () => void
   accepted: boolean
+  autoMode: boolean
+  onToggleAuto: () => void
 }) {
+  const [showAutoHelp, setShowAutoHelp] = useState(false)
   // Avatar SVG Haki
   const avatar = (size: number) => (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
@@ -161,8 +164,8 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted }: {
                 <div className="haki-sub"><span className="haki-dot" />En ligne · Assistante Mayinvest</div>
               </div>
             </div>
-            <button className="haki-minimize" onClick={onToggle} aria-label="Réduire">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            <button className="haki-minimize" onClick={onToggle} aria-label="Fermer">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
             </button>
           </div>
 
@@ -193,6 +196,39 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted }: {
 
           {!accepted && (
             <button className="haki-decline" onClick={onDecline}>Non merci, je gère seul</button>
+          )}
+
+          {/* Zone de réglage : Mode automatique */}
+          {accepted && (
+            <div className="haki-settings">
+              <div className="haki-auto-row">
+                <div className="haki-auto-info">
+                  <div className="haki-auto-label">Mode automatique</div>
+                  <div className="haki-auto-state">{autoMode ? 'Activé' : 'Désactivé'}</div>
+                </div>
+                <button
+                  className={`haki-switch ${autoMode ? 'on' : ''}`}
+                  onClick={onToggleAuto}
+                  aria-label="Activer ou désactiver le mode automatique"
+                >
+                  <span className="haki-switch-knob"/>
+                </button>
+                <button
+                  className="haki-help-btn"
+                  onClick={() => setShowAutoHelp(h => !h)}
+                  aria-label="Explication"
+                >?</button>
+              </div>
+              {showAutoHelp && (
+                <div className="haki-help-box">
+                  <div className="haki-help-title">À quoi sert ce bouton ?</div>
+                  <div className="haki-help-text">
+                    <strong>Activé</strong> : Haki s'ouvre automatiquement à chaque étape pour vous expliquer quoi faire. Idéal si c'est votre première fois.<br/><br/>
+                    <strong>Désactivé</strong> : Haki reste discret. Vous l'ouvrez quand vous avez besoin en cliquant sur le bouton bleu en bas.
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -281,6 +317,15 @@ function Simulation() {
   const [mascotOpen, setMascotOpen] = useState(false)
   const [hakiAccepted, setHakiAccepted] = useState<boolean>(() => { try { return localStorage.getItem('mayinvest_haki_accepted') === '1' } catch { return false } })
   const [hakiDeclined, setHakiDeclined] = useState<boolean>(() => { try { return localStorage.getItem('mayinvest_haki_declined') === '1' } catch { return false } })
+  // Mode auto : activé par défaut, mémorisé par le navigateur
+  const [autoMode, setAutoMode] = useState<boolean>(() => { try { const v = localStorage.getItem('mayinvest_haki_auto'); return v === null ? true : v === '1' } catch { return true } })
+  function toggleAutoMode() {
+    setAutoMode(m => {
+      const next = !m
+      try { localStorage.setItem('mayinvest_haki_auto', next ? '1' : '0') } catch {}
+      return next
+    })
+  }
   const [lastSuccess, setLastSuccess] = useState<string>('')
   const [activeSection, setActiveSection] = useState<'identite'|'situation'|'besoin'|'eligibilite'>('identite')
   const sectionRefs = {
@@ -299,21 +344,22 @@ function Simulation() {
   // Dès que l'activité change, on la mémorise dans le form pour le scoring/contrat
   useEffect(() => { if (activite) set('activite_sub', activite) }, [activite])
 
-  // Haki s'ouvre à la première visite pour proposer son accompagnement
+  // Haki s'ouvre AUTOMATIQUEMENT à chaque chargement de page si pas encore refusée
+  // (le mode auto peut être désactivé via le toggle dans le panneau)
   useEffect(() => {
-    if (!hakiAccepted && !hakiDeclined) {
-      const t = setTimeout(() => setMascotOpen(true), 1200)
+    if (!hakiDeclined) {
+      const t = setTimeout(() => setMascotOpen(true), 900)
       return () => clearTimeout(t)
     }
-  }, [hakiAccepted, hakiDeclined])
+  }, []) // ← [] = s'exécute une fois au chargement de la page
 
-  // Haki s'ouvre après chaque changement d'étape pour accompagner (si acceptée)
+  // Si acceptée ET mode auto activé : s'ouvre à chaque changement d'étape pour guider
   useEffect(() => {
-    if (hakiAccepted) {
+    if (hakiAccepted && autoMode) {
       const t = setTimeout(() => setMascotOpen(true), 400)
       return () => clearTimeout(t)
     }
-  }, [step, activeSection, hakiAccepted])
+  }, [step, activeSection, hakiAccepted, autoMode])
 
   function acceptHaki() {
     setHakiAccepted(true)
@@ -739,6 +785,23 @@ function Simulation() {
 
         .haki-decline { background: transparent; border: none; color: #888; font-family: inherit; font-size: 12px; font-weight: 600; padding: 10px; cursor: pointer; text-align: center; border-top: 1px solid #E5E7EB; }
         .haki-decline:hover { color: #B91C1C; }
+
+        /* Zone réglages Mode auto */
+        .haki-settings { border-top: 1px solid #E5E7EB; background: #FAFBFD; padding: 12px 16px 14px; }
+        .haki-auto-row { display: flex; align-items: center; gap: 10px; }
+        .haki-auto-info { flex: 1; min-width: 0; }
+        .haki-auto-label { font-size: 13px; font-weight: 700; color: #0D1B3E; line-height: 1.2; }
+        .haki-auto-state { font-size: 11px; color: #666; margin-top: 2px; font-weight: 600; }
+        .haki-switch { position: relative; width: 44px; height: 24px; background: #D1D5DB; border: none; border-radius: 100px; cursor: pointer; padding: 0; transition: background 0.2s; flex-shrink: 0; }
+        .haki-switch.on { background: #1A6BFF; }
+        .haki-switch-knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: #fff; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: transform 0.2s; }
+        .haki-switch.on .haki-switch-knob { transform: translateX(20px); }
+        .haki-help-btn { width: 24px; height: 24px; border-radius: 50%; background: #EEF4FF; border: 1.5px solid #C7D7FF; color: #1A6BFF; font-weight: 800; font-size: 13px; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: inherit; }
+        .haki-help-btn:hover { background: #1A6BFF; color: #fff; border-color: #1A6BFF; }
+        .haki-help-box { margin-top: 10px; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; animation: haki-help-in 0.2s ease-out; }
+        @keyframes haki-help-in { from { opacity: 0; transform: translateY(-4px);} to { opacity: 1; transform: translateY(0);} }
+        .haki-help-title { font-size: 11px; font-weight: 800; color: #1A6BFF; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+        .haki-help-text { font-size: 12px; color: #444; line-height: 1.5; }
       `}</style>
 
       <div className="top">
@@ -1015,7 +1078,7 @@ function Simulation() {
         </div>}
       </div>
 
-      <HakiAssistant msg={hakiMsg} open={mascotOpen} onToggle={toggleHaki} onDecline={declineHaki} accepted={hakiAccepted} />
+      <HakiAssistant msg={hakiMsg} open={mascotOpen} onToggle={toggleHaki} onDecline={declineHaki} accepted={hakiAccepted} autoMode={autoMode} onToggleAuto={toggleAutoMode} />
     </div>
   )
 }
