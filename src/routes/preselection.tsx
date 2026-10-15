@@ -65,7 +65,37 @@ const ICON_M: Record<string, ReactNode> = {
 const ACTIVITES_PHYSIQUE = Object.keys(ICON_P)
 const ACTIVITES_MORALE = Object.keys(ICON_M)
 const BANQUES = ['BGFI Bank', 'UBA', 'LCB Bank', 'MUCODEC', 'Crédit du Congo', 'Ecobank', 'Autre', 'Aucune']
-const VILLES = ['Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Ouesso', 'Autre']
+const VILLES = [
+  'Brazzaville',
+  'Pointe-Noire',
+  'Dolisie',
+  'Nkayi',
+  'Ouesso',
+  'Impfondo',
+  'Owando',
+  'Madingou',
+  'Mossendjo',
+  'Kinkala',
+  'Loandjili',
+  'Sibiti',
+  'Djambala',
+  'Gamboma',
+  'Makoua',
+  'Ewo',
+  'Oyo',
+  'Loutété',
+  'Mindouli',
+  'Boundji',
+  'Kibangou',
+  'Divénié',
+  'Dongou',
+  'Souanké',
+  'Sembé',
+  'Kellé',
+  'Mbinda',
+  'Mouyondzi',
+  'Autre',
+]
 const CONTRATS = ['CDI', 'CDD', 'Intérim', 'Stage', 'Autre']
 
 /* ---------- Dropdown custom ---------- */
