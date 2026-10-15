@@ -991,17 +991,14 @@ function Simulation() {
         }
 
         /* ==== Haki Assistant — design pro type Intercom ==== */
-        .haki-fab { position: fixed; right: 20px; bottom: 20px; width: 64px; height: 64px; border-radius: 50%; border: 3px solid #fff; background: transparent; box-shadow: 0 14px 32px rgba(13,27,62,0.25), 0 4px 10px rgba(13,27,62,0.08); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60; padding: 0; transition: transform 0.25s cubic-bezier(.3,1.6,.5,1); }
-        .haki-fab:hover { transform: scale(1.08) rotate(-6deg); }
-        .haki-fab.on { transform: scale(0.92); }
-        .haki-fab-inner { display: flex; animation: haki-breathe 3s ease-in-out infinite; }
-        @keyframes haki-breathe { 0%, 100% { transform: scale(1);} 50% { transform: scale(1.04);} }
+        .haki-fab { position: fixed; right: 20px; bottom: 20px; width: 64px; height: 64px; border-radius: 50%; border: 3px solid #fff; background: transparent; box-shadow: 0 14px 32px rgba(13,27,62,0.25), 0 4px 10px rgba(13,27,62,0.08); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60; padding: 0; }
+        .haki-fab-inner { display: flex; }
         .haki-fab-dot { position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; background: #34D058; border: 2.5px solid #fff; box-shadow: 0 0 0 0 rgba(52,208,88,0.5); animation: haki-pulse 2.2s infinite; }
         @keyframes haki-pulse { 0% { box-shadow: 0 0 0 0 rgba(52,208,88,0.5);} 70% { box-shadow: 0 0 0 12px rgba(52,208,88,0);} 100% { box-shadow: 0 0 0 0 rgba(52,208,88,0);} }
         .haki-fab-badge { position: absolute; top: -4px; right: -4px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 100px; background: #FF3B30; color: #fff; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(255,59,48,0.4); }
 
-        .haki-panel { position: fixed; right: 20px; bottom: 96px; width: calc(100% - 40px); max-width: 360px; background: #fff; border-radius: 20px; box-shadow: 0 30px 60px rgba(13,27,62,0.22), 0 8px 20px rgba(13,27,62,0.08); z-index: 60; overflow: hidden; animation: haki-pop 0.28s cubic-bezier(.2,1.3,.4,1); display: flex; flex-direction: column; max-height: calc(100vh - 130px); }
-        @keyframes haki-pop { from { opacity: 0; transform: translateY(16px) scale(0.94);} to { opacity: 1; transform: translateY(0) scale(1);} }
+        .haki-panel { position: fixed; right: 20px; bottom: 96px; width: calc(100% - 40px); max-width: 360px; background: #fff; border-radius: 20px; box-shadow: 0 30px 60px rgba(13,27,62,0.22), 0 8px 20px rgba(13,27,62,0.08); z-index: 60; overflow: hidden; animation: haki-fade 0.18s ease-out; display: flex; flex-direction: column; max-height: calc(100vh - 130px); }
+        @keyframes haki-fade { from { opacity: 0;} to { opacity: 1;} }
         @media (max-width: 480px) { .haki-panel { right: 10px; left: 10px; width: auto; max-width: none; bottom: 94px; } }
 
         .haki-head { background: linear-gradient(135deg, #0D1B3E 0%, #1A3380 100%); color: #fff; padding: 18px 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; position: relative; overflow: hidden; }
@@ -1018,8 +1015,7 @@ function Simulation() {
         .haki-chat { padding: 18px 18px 16px; overflow-y: auto; flex: 1; background: #F8FAFC; }
         .haki-msg-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; }
         .haki-msg-avatar { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; margin-top: 2px; }
-        .haki-msg { background: #fff; border-radius: 14px 14px 14px 4px; padding: 12px 14px; box-shadow: 0 2px 8px rgba(13,27,62,0.05); flex: 1; min-width: 0; animation: haki-msg-in 0.3s ease-out; }
-        @keyframes haki-msg-in { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: translateY(0);} }
+        .haki-msg { background: #fff; border-radius: 14px 14px 14px 4px; padding: 12px 14px; box-shadow: 0 2px 8px rgba(13,27,62,0.05); flex: 1; min-width: 0; }
         .haki-msg.success { background: linear-gradient(135deg, #DCFCE7 0%, #F0FDF4 100%); border: 1.5px solid #86EFAC; box-shadow: 0 4px 12px rgba(52,208,88,0.1); }
         .haki-msg-title { font-size: 11px; font-weight: 800; color: #1A6BFF; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
         .haki-msg.success .haki-msg-title { color: #166534; }
