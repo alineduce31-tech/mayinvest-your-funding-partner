@@ -94,9 +94,9 @@ function calc(type: string, d: Record<string, string>) {
   return Math.max(0, Math.min(s, 100))
 }
 
-/* ---------- Mascotte "Mia" ---------- */
+/* ---------- Mascotte "Haki" ---------- */
 const TIPS: Record<string, { title: string; body: string }> = {
-  'step1': { title: 'Bienvenue 👋', body: "Je m'appelle Mia, votre assistant Mayinvest. Choisissez votre profil pour démarrer." },
+  'step1': { title: 'Bienvenue 👋', body: "Je m'appelle Haki, votre assistant Mayinvest. Choisissez votre profil pour démarrer." },
   'step2-p': { title: 'Votre métier', body: 'Choisissez votre profession. Cela adapte les questions à votre situation.' },
   'step2-m': { title: 'Votre secteur', body: "Sélectionnez le secteur d'activité principal de votre entreprise." },
   'identite-p': { title: 'Identité', body: 'Nom, prénom, téléphone sont obligatoires. Email facultatif mais recommandé.' },
@@ -109,67 +109,90 @@ const TIPS: Record<string, { title: string; body: string }> = {
   'step4': { title: 'Félicitations 🎉', body: "Notez votre code d'accès ! Il vous permet de retrouver votre dossier à tout moment." },
 }
 
-/* Bandeau Mia visible en permanence au-dessus des sections */
-function MiaStrip({ tipKey }: { tipKey: string }) {
-  const tip = TIPS[tipKey] || TIPS['step1']
-  return (
-    <div className="mia-strip">
-      <div className="mia-strip-avatar">
-        <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
-          <circle cx="11.5" cy="14" r="1.8" fill="#fff"/>
-          <circle cx="20.5" cy="14" r="1.8" fill="#fff"/>
-          <path d="M11 20c1.5 1.5 3 2 5 2s3.5-.5 5-2" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/>
-        </svg>
-      </div>
-      <div className="mia-strip-text">
-        <div className="mia-strip-name">Mia · {tip.title}</div>
-        <div className="mia-strip-body">{tip.body}</div>
-      </div>
-    </div>
-  )
-}
+type HakiAction = { label: string; onClick: () => void; primary?: boolean; icon?: ReactNode }
+type HakiMsg = { title?: string; body: string; actions?: HakiAction[]; success?: boolean }
 
-type MiaAction = { label: string; onClick: () => void; primary?: boolean; icon?: ReactNode }
-function Mascot({ tipKey, open, onClose, onOpen, actions }: { tipKey: string; open: boolean; onClose: () => void; onOpen: () => void; actions?: MiaAction[] }) {
-  const tip = TIPS[tipKey] || TIPS['step1']
+function HakiAssistant({ msg, open, onToggle, onDecline, accepted }: {
+  msg: HakiMsg
+  open: boolean
+  onToggle: () => void
+  onDecline: () => void
+  accepted: boolean
+}) {
+  // Avatar SVG Haki
+  const avatar = (size: number) => (
+    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+      <defs>
+        <linearGradient id="haki-grad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#1A6BFF"/>
+          <stop offset="1" stopColor="#0D4FD1"/>
+        </linearGradient>
+      </defs>
+      <circle cx="20" cy="20" r="19" fill="url(#haki-grad)"/>
+      <circle cx="20" cy="20" r="19" stroke="#fff" strokeWidth="1" opacity="0.3"/>
+      <circle cx="14" cy="18" r="2.2" fill="#fff"/>
+      <circle cx="26" cy="18" r="2.2" fill="#fff"/>
+      <circle cx="14.5" cy="18.5" r="0.8" fill="#0D1B3E"/>
+      <circle cx="26.5" cy="18.5" r="0.8" fill="#0D1B3E"/>
+      <path d="M13 25c2 2.5 4.5 3.5 7 3.5s5-1 7-3.5" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  )
+
   return (
     <>
-      <button className={`mascot-fab ${open ? 'on' : ''}`} onClick={() => open ? onClose() : onOpen()} aria-label="Aide">
-        <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
-          <circle cx="16" cy="16" r="14" fill="#1A6BFF"/>
-          <circle cx="11.5" cy="14" r="1.8" fill="#fff"/>
-          <circle cx="20.5" cy="14" r="1.8" fill="#fff"/>
-          <path d="M11 20c1.5 1.5 3 2 5 2s3.5-.5 5-2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
-          <circle cx="23" cy="9" r="3" fill="#34D058"/>
-        </svg>
-        {!open && <span className="mascot-pulse" />}
+      {/* Bouton flottant Haki (toujours visible) */}
+      <button className={`haki-fab ${open ? 'on' : ''}`} onClick={onToggle} aria-label="Assistant Haki">
+        <span className="haki-fab-inner">{avatar(44)}</span>
+        {!open && accepted && <span className="haki-fab-dot" />}
+        {!open && !accepted && <span className="haki-fab-badge">1</span>}
       </button>
+
+      {/* Panneau Haki (chat-like) */}
       {open && (
-        <div className="mascot-bubble">
-          <button className="mascot-close" onClick={onClose} aria-label="Fermer">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-          </button>
-          <div className="mascot-title">
-            <span className="mascot-avatar">
-              <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
-                <circle cx="16" cy="16" r="14" fill="#1A6BFF"/>
-                <circle cx="11.5" cy="14" r="1.6" fill="#fff"/>
-                <circle cx="20.5" cy="14" r="1.6" fill="#fff"/>
-                <path d="M11 20c1.5 1.5 3 2 5 2s3.5-.5 5-2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            </span>
-            <span>Mia · {tip.title}</span>
-          </div>
-          <div className="mascot-body">{tip.body}</div>
-          {actions && actions.length > 0 && (
-            <div className="mascot-actions">
-              {actions.map((a, i) => (
-                <button key={i} className={`mascot-btn ${a.primary ? 'primary' : ''}`} onClick={() => { a.onClick(); }}>
-                  {a.icon}
-                  <span>{a.label}</span>
-                </button>
-              ))}
+        <div className="haki-panel">
+          <div className="haki-head">
+            <div className="haki-head-left">
+              <div className="haki-avatar-wrap">
+                {avatar(42)}
+                <span className="haki-status" />
+              </div>
+              <div>
+                <div className="haki-name">Haki</div>
+                <div className="haki-sub"><span className="haki-dot" />En ligne · Assistante Mayinvest</div>
+              </div>
             </div>
+            <button className="haki-minimize" onClick={onToggle} aria-label="Réduire">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            </button>
+          </div>
+
+          <div className="haki-chat">
+            <div className="haki-msg-row">
+              <div className="haki-msg-avatar">{avatar(28)}</div>
+              <div className={`haki-msg ${msg.success ? 'success' : ''}`}>
+                {msg.title && <div className="haki-msg-title">{msg.title}</div>}
+                <div className="haki-msg-body">{msg.body}</div>
+              </div>
+            </div>
+
+            {msg.actions && msg.actions.length > 0 && (
+              <div className="haki-actions">
+                {msg.actions.map((a, i) => (
+                  <button
+                    key={i}
+                    className={`haki-btn ${a.primary ? 'primary' : ''}`}
+                    onClick={a.onClick}
+                  >
+                    {a.icon}
+                    <span>{a.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {!accepted && (
+            <button className="haki-decline" onClick={onDecline}>Non merci, je gère seul</button>
           )}
         </div>
       )}
@@ -256,6 +279,9 @@ function Simulation() {
   const [codeCopied, setCodeCopied] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [mascotOpen, setMascotOpen] = useState(false)
+  const [hakiAccepted, setHakiAccepted] = useState<boolean>(() => { try { return localStorage.getItem('mayinvest_haki_accepted') === '1' } catch { return false } })
+  const [hakiDeclined, setHakiDeclined] = useState<boolean>(() => { try { return localStorage.getItem('mayinvest_haki_declined') === '1' } catch { return false } })
+  const [lastSuccess, setLastSuccess] = useState<string>('')
   const [activeSection, setActiveSection] = useState<'identite'|'situation'|'besoin'|'eligibilite'>('identite')
   const sectionRefs = {
     identite: useRef<HTMLDivElement>(null),
@@ -273,49 +299,168 @@ function Simulation() {
   // Dès que l'activité change, on la mémorise dans le form pour le scoring/contrat
   useEffect(() => { if (activite) set('activite_sub', activite) }, [activite])
 
-  // Mia s'ouvre UNIQUEMENT à la première visite — le bandeau en haut est toujours visible et porte le même message
+  // Haki s'ouvre à la première visite pour proposer son accompagnement
   useEffect(() => {
-    const seen = (() => { try { return localStorage.getItem('mayinvest_mia_seen') } catch { return '1' } })()
-    if (!seen) {
-      const t = setTimeout(() => setMascotOpen(true), 900)
-      // Auto-ferme après 6s pour ne pas bloquer
-      const t2 = setTimeout(() => setMascotOpen(false), 6900)
-      try { localStorage.setItem('mayinvest_mia_seen', '1') } catch {}
-      return () => { clearTimeout(t); clearTimeout(t2) }
+    if (!hakiAccepted && !hakiDeclined) {
+      const t = setTimeout(() => setMascotOpen(true), 1200)
+      return () => clearTimeout(t)
     }
-  }, [])
-  function closeMia() { setMascotOpen(false) }
+  }, [hakiAccepted, hakiDeclined])
 
-  const tipKey = step === 1 ? 'step1'
-    : step === 2 ? (isP ? 'step2-p' : 'step2-m')
-    : step === 4 ? 'step4'
-    : (activeSection === 'identite' ? (isP ? 'identite-p' : 'identite-m')
-      : activeSection === 'situation' ? (isP ? 'situation-p' : 'situation-m')
-      : activeSection === 'besoin' ? 'besoin'
-      : (isP ? 'eligibilite-p' : 'eligibilite-m'))
+  // Haki s'ouvre après chaque changement d'étape pour accompagner (si acceptée)
+  useEffect(() => {
+    if (hakiAccepted) {
+      const t = setTimeout(() => setMascotOpen(true), 400)
+      return () => clearTimeout(t)
+    }
+  }, [step, activeSection, hakiAccepted])
 
-  // Actions interactives de Mia : boutons qui guident l'utilisateur
-  let miaActions: MiaAction[] = []
-  if (step === 1) {
-    miaActions = [
-      { label: 'Je suis un particulier', onClick: () => { setType('physique'); setMascotOpen(false) }, primary: true },
-      { label: 'Je suis une entreprise', onClick: () => { setType('morale'); setMascotOpen(false) } },
-    ]
-  } else if (step === 2 && type) {
-    miaActions = [{ label: 'Revenir au choix du profil', onClick: () => { setStep(1); setMascotOpen(false) } }]
-  } else if (step === 3) {
-    miaActions = [
-      { label: "Aller à l'identité", onClick: () => { scrollToSection('identite'); setMascotOpen(false) }, primary: activeSection === 'identite' },
-      { label: 'Aller à la situation', onClick: () => { scrollToSection('situation'); setMascotOpen(false) }, primary: activeSection === 'situation' },
-      { label: 'Aller au besoin', onClick: () => { scrollToSection('besoin'); setMascotOpen(false) }, primary: activeSection === 'besoin' },
-      { label: "Aller à l'éligibilité", onClick: () => { scrollToSection('eligibilite'); setMascotOpen(false) }, primary: activeSection === 'eligibilite' },
-    ]
-  } else if (step === 4) {
-    miaActions = [
-      { label: 'Discuter avec un conseiller', onClick: () => { window.open(`https://wa.me/242060000000?text=Bonjour Mayinvest, mon code: ${accessCode}`, '_blank'); setMascotOpen(false) }, primary: true },
-      { label: 'Accéder à mon dossier', onClick: () => { if (leadId) { navigate({ to: '/client/$id', params: { id: leadId } }); setMascotOpen(false) } } },
-    ]
+  function acceptHaki() {
+    setHakiAccepted(true)
+    try { localStorage.setItem('mayinvest_haki_accepted', '1'); localStorage.removeItem('mayinvest_haki_declined') } catch {}
   }
+  function declineHaki() {
+    setHakiDeclined(true)
+    setMascotOpen(false)
+    try { localStorage.setItem('mayinvest_haki_declined', '1') } catch {}
+  }
+  function toggleHaki() { setMascotOpen(o => !o) }
+
+  // Validation de l'avancement des sections (step 3)
+  const identiteOk = isP
+    ? !!(form['prenom'] && form['nom'] && form['tel']?.length === 9 && form['ville'])
+    : !!(form['raison_sociale'] && form['dirigeant'] && form['tel']?.length === 9 && form['ville'])
+  const situationOk = isP
+    ? !!(form['employeur'] && form['anciennete_tr'] && form['revenu'] && (!needContrat || form['contrat']) && (!needDureeRestante || form['duree_restante']))
+    : !!(form['rccm'] && form['anciennete_soc_tr'] && form['ca_annuel'] && (form['rccm'] !== 'Oui' || form['niu']))
+  const besoinOk = !!(form['montant'] && form['objet'] && (isP || form['flux_mois']))
+  const eligibiliteOk = isP
+    ? !!(form['banque'] && form['salaire_domic'] && (form['salaire_domic'] !== 'Oui' || form['anciennete_cpt_tr']))
+    : !!(form['banque'] && form['compte_mouvemente'] && form['refus_bancaire'] && form['garanties'])
+
+  // Détection des succès pour messages de félicitation
+  useEffect(() => {
+    if (!hakiAccepted) return
+    if (step === 3) {
+      if (activeSection === 'identite' && identiteOk && lastSuccess !== 'identite') setLastSuccess('identite')
+      else if (activeSection === 'situation' && situationOk && lastSuccess !== 'situation') setLastSuccess('situation')
+      else if (activeSection === 'besoin' && besoinOk && lastSuccess !== 'besoin') setLastSuccess('besoin')
+      else if (activeSection === 'eligibilite' && eligibiliteOk && lastSuccess !== 'eligibilite') setLastSuccess('eligibilite')
+    }
+  }, [identiteOk, situationOk, besoinOk, eligibiliteOk, activeSection, step, hakiAccepted, lastSuccess])
+
+  // Message de Haki selon l'état
+  const hakiMsg: HakiMsg = (() => {
+    // Phase 0 : accueil, demande d'accompagnement
+    if (!hakiAccepted && !hakiDeclined) {
+      return {
+        title: 'Bonjour 👋 Je suis Haki',
+        body: "Je peux vous accompagner étape par étape pour remplir votre dossier de financement. Souhaitez-vous que je vous guide ?",
+        actions: [
+          { label: '✓ Oui, accompagne-moi', onClick: () => { acceptHaki() }, primary: true },
+        ],
+      }
+    }
+
+    // Phase 1 : choix du profil
+    if (step === 1) {
+      return {
+        title: 'Étape 1 sur 4',
+        body: "Pour commencer, dites-moi qui demande le financement : vous à titre personnel, ou une entreprise ?",
+        actions: [
+          { label: 'Je suis un particulier', onClick: () => { setType('physique') }, primary: true },
+          { label: "C'est pour mon entreprise", onClick: () => { setType('morale') } },
+        ],
+      }
+    }
+
+    // Phase 2 : secteur / profession
+    if (step === 2) {
+      return {
+        title: `✓ Profil enregistré · Étape 2 sur 4`,
+        body: isP
+          ? "Super ! Maintenant, sélectionnez votre profession dans la liste. Cela me permet d'adapter les questions à votre situation."
+          : "Super ! Sélectionnez le secteur d'activité de votre entreprise pour que j'adapte les questions suivantes.",
+        success: true,
+        actions: activite ? [
+          { label: "Parfait, continuons", onClick: () => { setStep(3); setMascotOpen(false) }, primary: true },
+        ] : [
+          { label: "Changer de profil", onClick: () => { setStep(1) } },
+        ],
+      }
+    }
+
+    // Phase 3 : formulaire — section par section
+    if (step === 3) {
+      // Section complétée → message de succès et passage à la suivante
+      if (activeSection === 'identite' && identiteOk) {
+        return {
+          title: '✓ Identité complétée',
+          body: "Bravo, votre identité est enregistrée. Passons maintenant à votre situation professionnelle.",
+          success: true,
+          actions: [{ label: 'Section suivante : Situation', onClick: () => { scrollToSection('situation') }, primary: true }],
+        }
+      }
+      if (activeSection === 'situation' && situationOk) {
+        return {
+          title: '✓ Situation enregistrée',
+          body: "Excellent ! Nous passons à votre besoin de financement.",
+          success: true,
+          actions: [{ label: 'Section suivante : Besoin', onClick: () => { scrollToSection('besoin') }, primary: true }],
+        }
+      }
+      if (activeSection === 'besoin' && besoinOk) {
+        return {
+          title: '✓ Besoin bien noté',
+          body: "Très bien. Dernière étape : l'éligibilité, pour calculer votre score.",
+          success: true,
+          actions: [{ label: 'Dernière section : Éligibilité', onClick: () => { scrollToSection('eligibilite') }, primary: true }],
+        }
+      }
+      if (activeSection === 'eligibilite' && eligibiliteOk) {
+        return {
+          title: '✓ Tout est prêt !',
+          body: "Toutes les sections sont remplies. Cliquez sur « Voir mon score » en bas pour envoyer votre dossier.",
+          success: true,
+        }
+      }
+      // En cours de section
+      const sectionNames = { identite: 'Identité', situation: 'Situation', besoin: 'Besoin', eligibilite: 'Éligibilité' }
+      const explanations = {
+        identite: "Remplissez vos informations personnelles : nom, téléphone (9 chiffres), ville. L'email est facultatif.",
+        situation: isP
+          ? "Indiquez votre employeur, votre ancienneté par tranche, et votre revenu mensuel. Si vous êtes salarié privé, précisez le type de contrat."
+          : "Précisez le statut RCCM de votre société, sa date de création et son chiffre d'affaires annuel.",
+        besoin: "Indiquez le montant souhaité et l'objet du prêt. Soyez réaliste, j'ajusterai avec vous si besoin.",
+        eligibilite: isP
+          ? "Dites-moi dans quelle banque votre salaire est domicilié et depuis quand. C'est un critère important."
+          : "Répondez franchement sur votre historique bancaire et vos garanties.",
+      }
+      return {
+        title: `Étape 3 sur 4 · ${sectionNames[activeSection]}`,
+        body: explanations[activeSection],
+        actions: [
+          { label: "J'ai compris, je remplis", onClick: () => { setMascotOpen(false) }, primary: true },
+          { label: 'Me montrer la section', onClick: () => { scrollToSection(activeSection) } },
+        ],
+      }
+    }
+
+    // Phase 4 : dossier soumis
+    if (step === 4) {
+      return {
+        title: '🎉 Félicitations !',
+        body: `Votre dossier est enregistré avec un score de ${score}/100. Notez bien votre code d'accès : ${accessCode}. Un conseiller vous contactera sous 24h.`,
+        success: true,
+        actions: [
+          { label: 'Discuter avec un conseiller', onClick: () => { window.open(`https://wa.me/242060000000?text=Bonjour Mayinvest, mon code: ${accessCode}`, '_blank') }, primary: true },
+          { label: 'Accéder à mon dossier', onClick: () => { if (leadId) navigate({ to: '/client/$id', params: { id: leadId } }) } },
+        ],
+      }
+    }
+
+    return { body: '' }
+  })()
 
   // Contrat obligatoire uniquement pour Salarié privé
   const needContrat = isP && activite === 'Salarié privé'
@@ -551,36 +696,49 @@ function Simulation() {
         .btn-home { width: 100%; background: transparent; color: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 100px; cursor: pointer; position: relative; z-index: 1; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
         .btn-home:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 
-        /* Mia bandeau inline (toujours visible au-dessus des cards) */
-        .mia-strip { display: flex; align-items: flex-start; gap: 12px; background: linear-gradient(135deg, #EEF4FF 0%, #DBE8FF 100%); border: 1.5px solid rgba(26,107,255,0.2); border-radius: 16px; padding: 14px 16px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(26,107,255,0.08); position: relative; }
-        .mia-strip-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1A6BFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(26,107,255,0.3); animation: mia-float 3s ease-in-out infinite; }
-        @keyframes mia-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
-        .mia-strip-text { flex: 1; min-width: 0; }
-        .mia-strip-name { font-size: 12px; font-weight: 800; color: #1A6BFF; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
-        .mia-strip-name::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34D058; display: inline-block; animation: mia-pulse-dot 2s infinite; }
-        @keyframes mia-pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
-        .mia-strip-body { font-size: 13px; color: #0D1B3E; line-height: 1.45; font-weight: 500; }
+        /* ==== Haki Assistant — design pro type Intercom ==== */
+        .haki-fab { position: fixed; right: 20px; bottom: 20px; width: 64px; height: 64px; border-radius: 50%; border: 3px solid #fff; background: transparent; box-shadow: 0 14px 32px rgba(13,27,62,0.25), 0 4px 10px rgba(13,27,62,0.08); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60; padding: 0; transition: transform 0.25s cubic-bezier(.3,1.6,.5,1); }
+        .haki-fab:hover { transform: scale(1.08) rotate(-6deg); }
+        .haki-fab.on { transform: scale(0.92); }
+        .haki-fab-inner { display: flex; animation: haki-breathe 3s ease-in-out infinite; }
+        @keyframes haki-breathe { 0%, 100% { transform: scale(1);} 50% { transform: scale(1.04);} }
+        .haki-fab-dot { position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; background: #34D058; border: 2.5px solid #fff; box-shadow: 0 0 0 0 rgba(52,208,88,0.5); animation: haki-pulse 2.2s infinite; }
+        @keyframes haki-pulse { 0% { box-shadow: 0 0 0 0 rgba(52,208,88,0.5);} 70% { box-shadow: 0 0 0 12px rgba(52,208,88,0);} 100% { box-shadow: 0 0 0 0 rgba(52,208,88,0);} }
+        .haki-fab-badge { position: absolute; top: -4px; right: -4px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 100px; background: #FF3B30; color: #fff; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 2px 6px rgba(255,59,48,0.4); }
 
-        /* Mascotte flottante (bouton bas-droite) */
-        .mascot-fab { position: fixed; right: 20px; bottom: 20px; width: 64px; height: 64px; border-radius: 50%; border: none; background: #1A6BFF; box-shadow: 0 12px 30px rgba(26,107,255,0.4), 0 2px 6px rgba(13,27,62,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60; transition: transform 0.2s; animation: mia-breathe 3s ease-in-out infinite; }
-        @keyframes mia-breathe { 0%, 100% { box-shadow: 0 12px 30px rgba(26,107,255,0.4), 0 2px 6px rgba(13,27,62,0.1); } 50% { box-shadow: 0 12px 36px rgba(26,107,255,0.55), 0 2px 6px rgba(13,27,62,0.1); } }
-        .mascot-fab:hover { transform: scale(1.08); }
-        .mascot-fab.on { background: #0D4FD1; animation: none; }
-        .mascot-pulse { position: absolute; top: 6px; right: 6px; width: 12px; height: 12px; border-radius: 50%; background: #34D058; border: 2px solid #fff; box-shadow: 0 0 0 0 rgba(52,208,88,0.6); animation: mia-pulse 2s infinite; }
-        @keyframes mia-pulse { 0% { box-shadow: 0 0 0 0 rgba(52,208,88,0.6);} 70% { box-shadow: 0 0 0 10px rgba(52,208,88,0);} 100% { box-shadow: 0 0 0 0 rgba(52,208,88,0);} }
-        .mascot-bubble { position: fixed; right: 20px; bottom: 94px; width: calc(100% - 40px); max-width: 320px; background: #fff; border-radius: 18px; box-shadow: 0 24px 50px rgba(13,27,62,0.2), 0 6px 14px rgba(13,27,62,0.08); padding: 16px 18px 18px; z-index: 60; border: 1.5px solid rgba(26,107,255,0.2); animation: mia-pop 0.25s ease-out; }
-        @keyframes mia-pop { from { opacity: 0; transform: translateY(10px) scale(0.95);} to { opacity: 1; transform: translateY(0) scale(1);} }
-        .mascot-close { position: absolute; top: 10px; right: 10px; background: #F3F4F6; border: none; width: 26px; height: 26px; border-radius: 50%; padding: 0; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-        .mascot-close:hover { background: #E5E7EB; color: #111; }
-        .mascot-close svg { display: block; }
-        .mascot-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: #0D1B3E; margin-bottom: 8px; padding-right: 24px; }
-        .mascot-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; background: #1A6BFF; }
-        .mascot-body { font-size: 14px; color: #333; line-height: 1.5; }
-        .mascot-actions { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-        .mascot-btn { background: #F5F7FB; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; font-family: inherit; font-size: 13px; font-weight: 700; color: #0D1B3E; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.15s; }
-        .mascot-btn:hover { background: #EEF4FF; border-color: #1A6BFF; color: #1A6BFF; }
-        .mascot-btn.primary { background: #1A6BFF; color: #fff; border-color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.3); }
-        .mascot-btn.primary:hover { background: #1560E0; }
+        .haki-panel { position: fixed; right: 20px; bottom: 96px; width: calc(100% - 40px); max-width: 360px; background: #fff; border-radius: 20px; box-shadow: 0 30px 60px rgba(13,27,62,0.22), 0 8px 20px rgba(13,27,62,0.08); z-index: 60; overflow: hidden; animation: haki-pop 0.28s cubic-bezier(.2,1.3,.4,1); display: flex; flex-direction: column; max-height: calc(100vh - 130px); }
+        @keyframes haki-pop { from { opacity: 0; transform: translateY(16px) scale(0.94);} to { opacity: 1; transform: translateY(0) scale(1);} }
+        @media (max-width: 480px) { .haki-panel { right: 10px; left: 10px; width: auto; max-width: none; bottom: 94px; } }
+
+        .haki-head { background: linear-gradient(135deg, #0D1B3E 0%, #1A3380 100%); color: #fff; padding: 18px 18px 20px; display: flex; align-items: center; justify-content: space-between; gap: 12px; position: relative; overflow: hidden; }
+        .haki-head::before { content: ''; position: absolute; top: -50px; right: -50px; width: 180px; height: 180px; background: radial-gradient(circle, rgba(26,107,255,0.4), transparent 65%); pointer-events: none; }
+        .haki-head-left { display: flex; align-items: center; gap: 12px; min-width: 0; position: relative; z-index: 1; }
+        .haki-avatar-wrap { position: relative; flex-shrink: 0; }
+        .haki-status { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #34D058; border: 2.5px solid #0D1B3E; }
+        .haki-name { font-size: 16px; font-weight: 800; letter-spacing: -0.3px; line-height: 1.1; }
+        .haki-sub { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 3px; display: flex; align-items: center; gap: 5px; font-weight: 500; }
+        .haki-dot { width: 6px; height: 6px; border-radius: 50%; background: #34D058; display: inline-block; }
+        .haki-minimize { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); width: 32px; height: 32px; border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; padding: 0; position: relative; z-index: 1; transition: background 0.15s; }
+        .haki-minimize:hover { background: rgba(255,255,255,0.18); }
+
+        .haki-chat { padding: 18px 18px 16px; overflow-y: auto; flex: 1; background: #F8FAFC; }
+        .haki-msg-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; }
+        .haki-msg-avatar { flex-shrink: 0; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; margin-top: 2px; }
+        .haki-msg { background: #fff; border-radius: 14px 14px 14px 4px; padding: 12px 14px; box-shadow: 0 2px 8px rgba(13,27,62,0.05); flex: 1; min-width: 0; animation: haki-msg-in 0.3s ease-out; }
+        @keyframes haki-msg-in { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: translateY(0);} }
+        .haki-msg.success { background: linear-gradient(135deg, #DCFCE7 0%, #F0FDF4 100%); border: 1.5px solid #86EFAC; box-shadow: 0 4px 12px rgba(52,208,88,0.1); }
+        .haki-msg-title { font-size: 11px; font-weight: 800; color: #1A6BFF; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+        .haki-msg.success .haki-msg-title { color: #166534; }
+        .haki-msg-body { font-size: 14px; color: #0D1B3E; line-height: 1.5; font-weight: 500; }
+
+        .haki-actions { display: flex; flex-direction: column; gap: 8px; padding: 0 2px; margin-top: 6px; }
+        .haki-btn { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 12px 14px; font-family: inherit; font-size: 13px; font-weight: 700; color: #0D1B3E; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; box-shadow: 0 1px 3px rgba(13,27,62,0.04); }
+        .haki-btn:hover { background: #EEF4FF; border-color: #1A6BFF; color: #1A6BFF; transform: translateY(-1px); box-shadow: 0 4px 10px rgba(26,107,255,0.15); }
+        .haki-btn.primary { background: #1A6BFF; color: #fff; border-color: #1A6BFF; box-shadow: 0 6px 16px rgba(26,107,255,0.3); }
+        .haki-btn.primary:hover { background: #1560E0; color: #fff; box-shadow: 0 8px 20px rgba(26,107,255,0.4); }
+
+        .haki-decline { background: transparent; border: none; color: #888; font-family: inherit; font-size: 12px; font-weight: 600; padding: 10px; cursor: pointer; text-align: center; border-top: 1px solid #E5E7EB; }
+        .haki-decline:hover { color: #B91C1C; }
       `}</style>
 
       <div className="top">
@@ -600,7 +758,6 @@ function Simulation() {
         {step === 1 && <>
           <h1 className="h1">Qui demande le financement&nbsp;?</h1>
           <p className="sub">Choisissez votre profil pour accéder au formulaire adapté.</p>
-          <MiaStrip tipKey={tipKey}/>
           <div className="cards-3d">
             <button className={`card-choix physique ${type === 'physique' ? 'sel' : ''}`} onClick={() => setType('physique')}>
               <div className="glow a" /><div className="shine" />
@@ -629,7 +786,6 @@ function Simulation() {
           <div className="badge">{isP ? 'Personne physique' : 'Personne morale'}</div>
           <h1 className="h1">{isP ? 'Votre profession' : "Votre secteur d'activité"}</h1>
           <p className="sub">{isP ? 'Sélectionnez votre situation professionnelle.' : "Sélectionnez le secteur de votre entreprise."}</p>
-          <MiaStrip tipKey={tipKey}/>
           <div className="chips">
             {(isP ? ACTIVITES_PHYSIQUE : ACTIVITES_MORALE).map(a =>
               <button key={a} className={`chip ${activite === a ? 'sel' : ''}`} onClick={() => setActivite(a)}>
@@ -648,7 +804,6 @@ function Simulation() {
           <div className="badge">{isP ? 'Personne physique' : 'Personne morale'} · {activite}</div>
           <h1 className="h1">Votre dossier</h1>
           <p className="sub">Cela prend moins de 2 minutes. Tous les champs sont obligatoires sauf l'email.</p>
-          <MiaStrip tipKey={tipKey}/>
 
           <div className="form-stack">
             {/* 1. IDENTITÉ */}
@@ -860,7 +1015,7 @@ function Simulation() {
         </div>}
       </div>
 
-      <Mascot tipKey={tipKey} open={mascotOpen} onClose={closeMia} onOpen={() => setMascotOpen(true)} actions={miaActions} />
+      <HakiAssistant msg={hakiMsg} open={mascotOpen} onToggle={toggleHaki} onDecline={declineHaki} accepted={hakiAccepted} />
     </div>
   )
 }
