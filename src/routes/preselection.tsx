@@ -243,9 +243,8 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onT
             <button className="haki-decline" onClick={onDecline}>Non merci, je gère seul</button>
           )}
 
-          {/* Zone de réglage : Mode automatique */}
-          {accepted && (
-            <div className="haki-settings">
+          {/* Zone de réglage : Mode automatique — toujours visible */}
+          <div className="haki-settings">
               <div className="haki-auto-row">
                 <div className="haki-auto-info">
                   <div className="haki-auto-label">Mode automatique</div>
@@ -273,8 +272,7 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onT
                   </div>
                 </div>
               )}
-            </div>
-          )}
+          </div>
         </div>
       )}
     </>
