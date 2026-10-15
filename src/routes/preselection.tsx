@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, type ReactNode } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 
@@ -7,6 +7,7 @@ export const Route = createFileRoute('/preselection')({
   component: Simulation,
 })
 
+/* ---------- Helpers ---------- */
 function formatPhone(digits: string): string {
   const d = digits.replace(/\D/g, '').slice(0, 9)
   if (d.length <= 2) return d
@@ -16,17 +17,37 @@ function formatPhone(digits: string): string {
 function cleanPhone(v: string): string {
   return v.replace(/\D/g, '').slice(0, 9)
 }
-
-// Génère un code d'accès unique au format MYI-XXXXXXX (7 caractères sans ambiguïté)
+function formatMoney(digits: string): string {
+  const d = digits.replace(/\D/g, '')
+  if (!d) return ''
+  return d.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+}
+function cleanMoney(v: string): string {
+  return v.replace(/\D/g, '')
+}
+function monthsBetween(iso: string): number {
+  if (!iso) return 0
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return 0
+  const now = new Date()
+  return Math.max(0, (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth()))
+}
+function humanDuration(months: number): string {
+  if (months <= 0) return '—'
+  const y = Math.floor(months / 12)
+  const m = months % 12
+  if (y === 0) return `${m} mois`
+  if (m === 0) return y === 1 ? '1 an' : `${y} ans`
+  return `${y} an${y > 1 ? 's' : ''} ${m} mois`
+}
 function generateAccessCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // pas de 0, O, 1, I, l pour éviter confusion
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   let code = 'MYI-'
-  for (let i = 0; i < 7; i++) {
-    code += chars[Math.floor(Math.random() * chars.length)]
-  }
+  for (let i = 0; i < 7; i++) code += chars[Math.floor(Math.random() * chars.length)]
   return code
 }
 
+/* ---------- Icons & lists ---------- */
 const ICON_P: Record<string, ReactNode> = {
   'Fonctionnaire': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 7h14v10H3V7z" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7V5a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.6"/></svg>,
   'Salarié privé': <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="7" width="14" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7V5a2 2 0 012-2h2a2 2 0 012 2v2" stroke="currentColor" strokeWidth="1.6"/></svg>,
@@ -52,24 +73,126 @@ const ACTIVITES_MORALE = Object.keys(ICON_M)
 const BANQUES = ['BGFI Bank', 'UBA', 'LCB Bank', 'MUCODEC', 'Crédit du Congo', 'Ecobank', 'Autre', 'Aucune']
 const VILLES = ['Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Ouesso', 'Autre']
 
+/* ---------- Scoring (adapté aux nouveaux champs) ---------- */
 function calc(type: string, d: Record<string, string>) {
   let s = 0
   if (type === 'physique') {
-    if (parseInt(d['anciennete'] || '0') >= 6) s += 25
+    const anc = monthsBetween(d['date_embauche'] || '')
+    if (anc >= 6) s += 25
     if (d['salaire_domic'] === 'Oui') s += 25
     if (parseInt(d['revenu'] || '0') >= 200000) s += 20
     if (d['banque'] && d['banque'] !== 'Aucune') s += 15
     if (parseInt(d['montant'] || '0') <= 10000000) s += 15
   } else {
+    const anc = monthsBetween(d['date_creation'] || '')
     if (d['rccm'] === 'Oui') s += 30
     if (d['compte_mouvemente'] === 'Oui') s += 25
-    if (parseInt(d['anciennete_soc'] || '0') >= 12) s += 20
+    if (anc >= 12) s += 20
     if (d['refus_bancaire'] === 'Non') s += 15
     if (d['garanties'] === 'Oui') s += 10
   }
   return Math.min(s, 100)
 }
 
+/* ---------- Mascotte tutoriel "Mia" ---------- */
+const TIPS: Record<string, { title: string; body: string }> = {
+  'step1': { title: 'Bienvenue 👋', body: "Je m'appelle Mia, votre assistant Mayinvest. Choisissez votre profil pour démarrer." },
+  'step2-p': { title: 'Votre métier', body: 'Choisissez votre profession. Cela adapte les questions à votre situation.' },
+  'step2-m': { title: 'Votre secteur', body: "Sélectionnez le secteur d'activité principal de votre entreprise." },
+  'identite-p': { title: 'Identité', body: 'Nom, prénom, téléphone sont obligatoires. Email facultatif mais recommandé.' },
+  'identite-m': { title: 'Identité société', body: 'Raison sociale et dirigeant obligatoires. Email facultatif.' },
+  'situation-p': { title: 'Situation pro', body: 'Indiquez votre employeur puis la date de prise de poste. Je calcule l\'ancienneté.' },
+  'situation-m': { title: 'Infos société', body: 'La date de création me permet de calculer automatiquement votre ancienneté.' },
+  'besoin': { title: 'Votre besoin', body: 'Montant et objet du prêt. Soyez réaliste, on étudiera la faisabilité ensemble.' },
+  'eligibilite-p': { title: 'Éligibilité', body: 'Si votre salaire est domicilié, précisez depuis quand. Ces infos remontent votre score.' },
+  'eligibilite-m': { title: 'Éligibilité PME', body: 'Compte mouvementé, antécédents bancaires, garanties — soyez honnête.' },
+  'step4': { title: 'Félicitations 🎉', body: 'Notez votre code d\'accès ! Il vous permet de retrouver votre dossier à tout moment.' },
+}
+
+function Mascot({ tipKey, open, setOpen }: { tipKey: string; open: boolean; setOpen: (v: boolean) => void }) {
+  const tip = TIPS[tipKey] || TIPS['step1']
+  return (
+    <>
+      <button className={`mascot-fab ${open ? 'on' : ''}`} onClick={() => setOpen(!open)} aria-label="Aide">
+        <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
+          <circle cx="16" cy="16" r="14" fill="#1A6BFF"/>
+          <circle cx="16" cy="16" r="14" stroke="#fff" strokeWidth="2"/>
+          <circle cx="11.5" cy="14" r="1.8" fill="#fff"/>
+          <circle cx="20.5" cy="14" r="1.8" fill="#fff"/>
+          <path d="M11 20c1.5 1.5 3 2 5 2s3.5-.5 5-2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+          <circle cx="23" cy="9" r="3" fill="#34D058"/>
+        </svg>
+        {!open && <span className="mascot-pulse" />}
+      </button>
+      {open && (
+        <div className="mascot-bubble">
+          <button className="mascot-close" onClick={() => setOpen(false)} aria-label="Fermer">×</button>
+          <div className="mascot-title">
+            <span className="mascot-avatar">
+              <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
+                <circle cx="16" cy="16" r="14" fill="#1A6BFF"/>
+                <circle cx="11.5" cy="14" r="1.6" fill="#fff"/>
+                <circle cx="20.5" cy="14" r="1.6" fill="#fff"/>
+                <path d="M11 20c1.5 1.5 3 2 5 2s3.5-.5 5-2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+            </span>
+            <span>Mia · {tip.title}</span>
+          </div>
+          <div className="mascot-body">{tip.body}</div>
+        </div>
+      )}
+    </>
+  )
+}
+
+/* ---------- Credit score animé "US style" ---------- */
+function CreditScoreMeter({ score }: { score: number }) {
+  const [v, setV] = useState(0)
+  useEffect(() => {
+    const start = performance.now()
+    const dur = 1600
+    let raf = 0
+    const tick = (t: number) => {
+      const p = Math.min(1, (t - start) / dur)
+      const eased = 1 - Math.pow(1 - p, 3)
+      setV(Math.round(eased * score))
+      if (p < 1) raf = requestAnimationFrame(tick)
+    }
+    raf = requestAnimationFrame(tick)
+    return () => cancelAnimationFrame(raf)
+  }, [score])
+  const color = v >= 70 ? '#34D058' : v >= 50 ? '#FFB020' : '#FF6B6B'
+  const label = v >= 70 ? 'Excellent' : v >= 50 ? 'Bon' : v >= 30 ? 'Moyen' : 'À renforcer'
+  // Jauge semi-circulaire 180°
+  const R = 70
+  const C = Math.PI * R
+  const pct = v / 100
+  return (
+    <div className="credit-meter">
+      <svg viewBox="0 0 180 110" width="100%" style={{ maxWidth: 260, display: 'block', margin: '0 auto' }}>
+        <defs>
+          <linearGradient id="grad-arc" x1="0" x2="1">
+            <stop offset="0" stopColor="#FF6B6B"/>
+            <stop offset="0.5" stopColor="#FFB020"/>
+            <stop offset="1" stopColor="#34D058"/>
+          </linearGradient>
+        </defs>
+        <path d="M20 100 A70 70 0 0 1 160 100" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="14" strokeLinecap="round"/>
+        <path d="M20 100 A70 70 0 0 1 160 100" fill="none" stroke="url(#grad-arc)" strokeWidth="14" strokeLinecap="round" strokeDasharray={`${pct * C} ${C}`}/>
+        {/* Aiguille */}
+        <g transform={`rotate(${-90 + pct * 180} 90 100)`}>
+          <line x1="90" y1="100" x2="90" y2="38" stroke="#fff" strokeWidth="3" strokeLinecap="round"/>
+          <circle cx="90" cy="100" r="6" fill="#fff"/>
+          <circle cx="90" cy="100" r="3" fill={color}/>
+        </g>
+      </svg>
+      <div className="credit-value" style={{ color }}>{v}</div>
+      <div className="credit-sub">/ 100 · <span style={{ color }}>{label}</span></div>
+    </div>
+  )
+}
+
+/* ---------- Component ---------- */
 function Simulation() {
   const navigate = useNavigate()
   const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
@@ -84,17 +207,63 @@ function Simulation() {
   const [accessCode, setAccessCode] = useState('')
   const [codeCopied, setCodeCopied] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [mascotOpen, setMascotOpen] = useState(false)
+  const [activeSection, setActiveSection] = useState<'identite'|'situation'|'besoin'|'eligibilite'>('identite')
+  const sectRefs = { identite: useRef<HTMLDivElement>(null), situation: useRef<HTMLDivElement>(null), besoin: useRef<HTMLDivElement>(null), eligibilite: useRef<HTMLDivElement>(null) }
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
   const isP = type === 'physique'
+
+  // Première visite : ouvre la mascotte 1 seconde pour attirer l'œil
+  useEffect(() => {
+    const seen = (() => { try { return localStorage.getItem('mayinvest_mia_seen') } catch { return '1' } })()
+    if (!seen) {
+      const t = setTimeout(() => setMascotOpen(true), 800)
+      try { localStorage.setItem('mayinvest_mia_seen', '1') } catch {}
+      return () => clearTimeout(t)
+    }
+  }, [])
+
+  // Clé tutoriel courant
+  const tipKey = step === 1 ? 'step1'
+    : step === 2 ? (isP ? 'step2-p' : 'step2-m')
+    : step === 4 ? 'step4'
+    : (activeSection === 'identite' ? (isP ? 'identite-p' : 'identite-m')
+      : activeSection === 'situation' ? (isP ? 'situation-p' : 'situation-m')
+      : activeSection === 'besoin' ? 'besoin'
+      : (isP ? 'eligibilite-p' : 'eligibilite-m'))
+
+  // Validation : tout obligatoire SAUF email
+  const canSubmit = (() => {
+    if (!form['tel'] || form['tel'].length !== 9) return false
+    if (!form['ville']) return false
+    if (!form['montant']) return false
+    if (!form['objet']) return false
+    if (isP) {
+      if (!form['prenom'] || !form['nom']) return false
+      if (!form['employeur']) return false
+      if (!form['date_embauche']) return false
+      if (!form['revenu']) return false
+      if (!form['salaire_domic']) return false
+      if (form['salaire_domic'] === 'Oui' && !form['date_compte']) return false
+    } else {
+      if (!form['raison_sociale'] || !form['dirigeant']) return false
+      if (!form['rccm'] || !form['date_creation']) return false
+      if (form['rccm'] === 'Oui' && !form['niu']) return false
+      if (!form['ca_annuel']) return false
+      if (!form['compte_mouvemente'] || !form['refus_bancaire'] || !form['garanties']) return false
+    }
+    return true
+  })()
 
   async function soumettre() {
     setLoading(true)
     setSubmitError('')
     const s = calc(type, form)
+    const ancP = monthsBetween(form['date_embauche'] || '')
+    const ancM = monthsBetween(form['date_creation'] || '')
     const nonEligible = isP
-      ? (parseInt(form['anciennete'] || '0') < 6) || form['salaire_domic'] === 'Non'
+      ? (ancP < 6) || form['salaire_domic'] === 'Non'
       : form['rccm'] === 'Non'
-    // Générer l'ID ET le code d'accès AVANT l'insert (évite le .select() après qui est bloqué par RLS)
     const code = generateAccessCode()
     const generatedId = crypto.randomUUID()
     const payload = {
@@ -107,17 +276,15 @@ function Simulation() {
       statut: 'Nouveau',
       score: s,
       access_code: code,
-      identite: { nom: form['nom'], prenom: form['prenom'], tel: form['tel'], email: form['email'] },
+      identite: { nom: form['nom'], prenom: form['prenom'], tel: form['tel'], email: form['email'] || '' },
       situation: isP
-        ? { employeur: form['employeur'], anciennete: form['anciennete'], revenu: form['revenu'] }
-        : { raison_sociale: form['raison_sociale'], dirigeant: form['dirigeant'], rccm: form['rccm'], niu: form['niu'], anciennete: form['anciennete_soc'], ca_annuel: form['ca_annuel'] },
+        ? { employeur: form['employeur'], date_embauche: form['date_embauche'], anciennete_mois: ancP, revenu: form['revenu'] }
+        : { raison_sociale: form['raison_sociale'], dirigeant: form['dirigeant'], rccm: form['rccm'], niu: form['niu'], date_creation: form['date_creation'], anciennete_mois: ancM, ca_annuel: form['ca_annuel'] },
       besoin: { montant: form['montant'], objet: form['objet'], banque: form['banque'], flux_mois: form['flux_mois'] },
       eligibilite: isP
-        ? { anciennete_ok: parseInt(form['anciennete'] || '0') >= 6, salaire_domic: form['salaire_domic'], non_eligible: nonEligible }
+        ? { anciennete_ok: ancP >= 6, salaire_domic: form['salaire_domic'], date_compte: form['date_compte'] || null, non_eligible: nonEligible }
         : { compte_mouvemente: form['compte_mouvemente'], refus_bancaire: form['refus_bancaire'], garanties: form['garanties'], non_eligible: nonEligible },
     }
-    // ⚠️ PAS DE .select() après insert ! La policy RLS autorise INSERT mais pas SELECT pour anon.
-    // On utilise directement l'ID généré côté client.
     const { error } = await supabase.from('leads').insert(payload)
     setLoading(false)
     if (error) {
@@ -125,11 +292,11 @@ function Simulation() {
       setSubmitError("Impossible d'enregistrer votre dossier : " + error.message)
       return
     }
-    // Stocker le code dans localStorage pour accès automatique plus tard
     try {
       localStorage.setItem(`mayinvest_code_${generatedId}`, code)
       localStorage.setItem(`mayinvest_phone_${form['tel']}`, code)
-    } catch (e) { /* localStorage peut être bloqué, pas grave */ }
+      if (form['email']) localStorage.setItem(`mayinvest_email_${form['email'].toLowerCase()}`, code)
+    } catch {}
     setLeadId(generatedId)
     setAccessCode(code)
     setScore(s)
@@ -142,14 +309,18 @@ function Simulation() {
       await navigator.clipboard.writeText(accessCode)
       setCodeCopied(true)
       setTimeout(() => setCodeCopied(false), 2000)
-    } catch (e) { /* non supporté */ }
+    } catch {}
   }
+
+  const todayISO = new Date().toISOString().slice(0, 10)
+  const ancPreview = isP ? monthsBetween(form['date_embauche'] || '') : monthsBetween(form['date_creation'] || '')
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#FFFFFF', color: '#111', minHeight: '100vh', WebkitFontSmoothing: 'antialiased' }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <style>{`
         * { box-sizing: border-box; }
+        input, select, textarea { font-size: 16px !important; }
         input[type="number"]::-webkit-outer-spin-button,
         input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
@@ -158,7 +329,7 @@ function Simulation() {
           background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
           background-repeat: no-repeat; background-position: right 2px center; padding-right: 20px !important; cursor: pointer;
         }
-        .top { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
+        .top { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.92); backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px); height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
         @media (max-width: 640px) { .top { height: 60px; padding: 0 16px; } }
         .back { background: #111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 11px 22px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; text-decoration: none; }
         @media (max-width: 640px) { .back { padding: 8px 14px; font-size: 12px; gap: 5px; } .back svg { width: 12px; height: 12px; } }
@@ -203,9 +374,10 @@ function Simulation() {
         .field { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 14px; padding: 12px 16px; transition: all 0.15s; }
         .field:focus-within { border-color: #1A6BFF; box-shadow: 0 4px 12px rgba(26,107,255,0.12); }
         .field label { display: block; font-size: 11px; font-weight: 600; color: #888; margin-bottom: 2px; letter-spacing: 0.02em; }
-        .field input, .field select { width: 100%; border: none; padding: 0; font-family: inherit; font-size: 15px; font-weight: 500; color: #111; background: transparent; outline: none; }
+        .field input, .field select { width: 100%; border: none; padding: 0; font-family: inherit; font-weight: 500; color: #111; background: transparent; outline: none; }
         .field input::placeholder { color: #BBB; font-weight: 400; }
         .field.radio-field { padding: 12px 16px 14px; }
+        .field-hint { font-size: 11px; color: #1A6BFF; margin-top: 4px; font-weight: 600; }
         .radio { display: flex; gap: 8px; margin-top: 6px; }
         .radio button { flex: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 700; color: #666; cursor: pointer; transition: all 0.15s; }
         .radio button.sel { border-color: #1A6BFF; background: #EEF4FF; color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.2); }
@@ -219,14 +391,12 @@ function Simulation() {
         .score-final { background: #0D1B3E; border-radius: 24px; padding: 36px 28px; color: #fff; box-shadow: 0 30px 60px rgba(13,27,62,0.3); position: relative; overflow: hidden; text-align: center; margin-top: 20px; }
         .score-final::before { content: ''; position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(26,107,255,0.3) 0%, transparent 65%); pointer-events: none; }
         .score-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(52,208,88,0.15); color: #34D058; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 20px; position: relative; z-index: 1; }
-        .ring { position: relative; width: 140px; height: 140px; margin: 0 auto 20px; z-index: 1; background: transparent !important; border: none !important; outline: none !important; box-shadow: none !important; }
-        .ring svg { display: block; background: transparent !important; border: none !important; outline: none !important; }
-        .ring svg:focus { outline: none !important; }
-        .verdict { font-size: 22px; font-weight: 800; margin-bottom: 6px; position: relative; z-index: 1; }
-        .score-sub { font-size: 14px; color: rgba(255,255,255,0.6); line-height: 1.5; margin: 0 0 24px; position: relative; z-index: 1; }
+        .credit-meter { position: relative; margin: 0 auto 18px; z-index: 1; max-width: 280px; }
+        .credit-value { font-size: 56px; font-weight: 800; line-height: 1; margin-top: -22px; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
+        .credit-sub { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 4px; font-weight: 600; }
+        .verdict { font-size: 20px; font-weight: 800; margin-bottom: 6px; position: relative; z-index: 1; }
+        .score-sub { font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.5; margin: 8px 0 24px; position: relative; z-index: 1; }
         .ref { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 12px 16px; font-family: monospace; font-size: 11px; margin-bottom: 20px; color: rgba(255,255,255,0.7); position: relative; z-index: 1; word-break: break-all; }
-
-        /* Code d'accès : box très visible et importante */
         .code-box { background: linear-gradient(145deg, #1A6BFF, #0D4FD1); border-radius: 18px; padding: 20px; margin-bottom: 20px; position: relative; z-index: 1; box-shadow: 0 12px 28px rgba(26,107,255,0.4); border: 2px solid rgba(255,255,255,0.15); }
         .code-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .code-value { font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; font-size: 28px; font-weight: 800; color: #fff; letter-spacing: 0.08em; margin-bottom: 12px; }
@@ -235,10 +405,22 @@ function Simulation() {
         .code-copy:hover { background: rgba(255,255,255,0.25); }
         .code-copy.copied { background: #34D058; border-color: #34D058; }
         .code-warn { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 10px; line-height: 1.4; }
-
         .btn-wa { width: 100%; background: #25D366; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; position: relative; z-index: 1; }
         .btn-home { width: 100%; background: transparent; color: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 100px; cursor: pointer; position: relative; z-index: 1; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
         .btn-home:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
+
+        /* Mascotte */
+        .mascot-fab { position: fixed; right: 18px; bottom: 18px; width: 56px; height: 56px; border-radius: 50%; border: none; background: #fff; box-shadow: 0 10px 24px rgba(13,27,62,0.2), 0 2px 6px rgba(13,27,62,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60; transition: transform 0.2s; }
+        .mascot-fab:hover { transform: scale(1.06); }
+        .mascot-fab.on { background: #EEF4FF; }
+        .mascot-pulse { position: absolute; top: 4px; right: 4px; width: 10px; height: 10px; border-radius: 50%; background: #34D058; box-shadow: 0 0 0 0 rgba(52,208,88,0.6); animation: mia-pulse 2s infinite; }
+        @keyframes mia-pulse { 0% { box-shadow: 0 0 0 0 rgba(52,208,88,0.6);} 70% { box-shadow: 0 0 0 10px rgba(52,208,88,0);} 100% { box-shadow: 0 0 0 0 rgba(52,208,88,0);} }
+        .mascot-bubble { position: fixed; right: 18px; bottom: 86px; width: calc(100% - 36px); max-width: 300px; background: #fff; border-radius: 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.18), 0 6px 14px rgba(13,27,62,0.08); padding: 14px 16px 16px; z-index: 60; border: 1px solid #EEF4FF; animation: mia-pop 0.22s ease-out; }
+        @keyframes mia-pop { from { opacity: 0; transform: translateY(8px) scale(0.98);} to { opacity: 1; transform: translateY(0) scale(1);} }
+        .mascot-close { position: absolute; top: 6px; right: 10px; background: transparent; border: none; font-size: 20px; color: #888; cursor: pointer; line-height: 1; }
+        .mascot-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: #0D1B3E; margin-bottom: 6px; padding-right: 20px; }
+        .mascot-avatar { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; }
+        .mascot-body { font-size: 13px; color: #444; line-height: 1.45; }
       `}</style>
 
       <div className="top">
@@ -305,88 +487,135 @@ function Simulation() {
         {step === 3 && <>
           <div className="badge">{isP ? 'Personne physique' : 'Personne morale'} · {activite}</div>
           <h1 className="h1">Votre dossier</h1>
-          <p className="sub">Cela prend moins de 2 minutes.</p>
+          <p className="sub">Cela prend moins de 2 minutes. Tous les champs sont obligatoires sauf l'email.</p>
 
           <div className="form-stack">
-            <div className="form-card">
+            {/* 1. IDENTITÉ */}
+            <div className="form-card" ref={sectRefs.identite} onFocus={() => setActiveSection('identite')} tabIndex={-1}>
               <div className="card-title">1. Identité</div>
               <div className="fields">
                 {isP ? <>
-                  <div className="field"><label>Prénom *</label><input placeholder="Jean-Pierre" value={form['prenom']||''} onChange={e=>set('prenom',e.target.value)}/></div>
-                  <div className="field"><label>Nom *</label><input placeholder="Moukouama" value={form['nom']||''} onChange={e=>set('nom',e.target.value)}/></div>
+                  <div className="field"><label>Prénom *</label><input placeholder="Ex : Jean-Pierre" value={form['prenom']||''} onChange={e=>set('prenom',e.target.value)}/></div>
+                  <div className="field"><label>Nom *</label><input placeholder="Ex : Moukouama" value={form['nom']||''} onChange={e=>set('nom',e.target.value)}/></div>
                 </> : <>
-                  <div className="field"><label>Raison sociale *</label><input placeholder="Nom de l'entreprise" value={form['raison_sociale']||''} onChange={e=>set('raison_sociale',e.target.value)}/></div>
-                  <div className="field"><label>Nom du dirigeant *</label><input placeholder="Prénom Nom" value={form['dirigeant']||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
+                  <div className="field"><label>Raison sociale *</label><input placeholder="Ex : Jespere SARL" value={form['raison_sociale']||''} onChange={e=>set('raison_sociale',e.target.value)}/></div>
+                  <div className="field"><label>Nom du dirigeant *</label><input placeholder="Ex : Alain Mabiala" value={form['dirigeant']||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
                 </>}
                 <div className="field"><label>Téléphone *</label><input
                   type="tel"
                   inputMode="numeric"
-                  placeholder="06 123 4567"
+                  placeholder="Ex : 06 123 4567"
                   maxLength={11}
                   value={formatPhone(form['tel']||'')}
                   onChange={e=>set('tel', cleanPhone(e.target.value))}
                 /></div>
-                <div className="field"><label>Email</label><input placeholder="email@exemple.com" value={form['email']||''} onChange={e=>set('email',e.target.value)}/></div>
+                <div className="field"><label>Email (facultatif)</label><input type="email" placeholder="Ex : jp.moukouama@gmail.com" value={form['email']||''} onChange={e=>set('email',e.target.value)}/></div>
                 <div className="field"><label>Ville *</label>
                   <select value={form['ville']||''} onChange={e=>set('ville',e.target.value)}>
-                    <option value=""></option>
+                    <option value="">Sélectionner…</option>
                     {VILLES.map(v=><option key={v}>{v}</option>)}
                   </select>
                 </div>
               </div>
             </div>
 
-            <div className="form-card">
+            {/* 2. SITUATION */}
+            <div className="form-card" ref={sectRefs.situation} onFocus={() => setActiveSection('situation')} tabIndex={-1}>
               <div className="card-title">2. Situation {isP ? 'professionnelle' : 'juridique'}</div>
               <div className="fields">
                 {isP ? <>
-                  <div className="field"><label>Employeur / Administration</label><input placeholder="Ministère…" value={form['employeur']||''} onChange={e=>set('employeur',e.target.value)}/></div>
-                  <div className="field"><label>Ancienneté (mois)</label><input type="number" placeholder="24" value={form['anciennete']||''} onChange={e=>set('anciennete',e.target.value)}/></div>
-                  <div className="field"><label>Revenu net/mois (XAF)</label><input type="number" placeholder="350000" value={form['revenu']||''} onChange={e=>set('revenu',e.target.value)}/></div>
+                  <div className="field"><label>Employeur / Administration *</label><input placeholder="Ex : Ministère de l'Économie" value={form['employeur']||''} onChange={e=>set('employeur',e.target.value)}/></div>
+                  <div className="field">
+                    <label>Depuis quand êtes-vous en poste ? *</label>
+                    <input type="date" max={todayISO} value={form['date_embauche']||''} onChange={e=>set('date_embauche',e.target.value)}/>
+                    {form['date_embauche'] && <div className="field-hint">Ancienneté : {humanDuration(monthsBetween(form['date_embauche']))}</div>}
+                  </div>
+                  <div className="field"><label>Revenu net mensuel (XAF) *</label><input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Ex : 350 000"
+                    value={formatMoney(form['revenu']||'')}
+                    onChange={e=>set('revenu', cleanMoney(e.target.value))}
+                  /></div>
                 </> : <>
-                  <div className="field radio-field"><label>RCCM</label>
+                  <div className="field radio-field"><label>RCCM *</label>
                     <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['rccm']===v?'sel':''} onClick={()=>set('rccm',v)}>{v}</button>)}</div>
                   </div>
-                  <div className="field"><label>NIU</label><input placeholder="NIU" value={form['niu']||''} onChange={e=>set('niu',e.target.value)}/></div>
-                  <div className="field"><label>Ancienneté (mois)</label><input type="number" placeholder="24" value={form['anciennete_soc']||''} onChange={e=>set('anciennete_soc',e.target.value)}/></div>
-                  <div className="field"><label>CA Annuel (XAF)</label><input type="number" placeholder="50000000" value={form['ca_annuel']||''} onChange={e=>set('ca_annuel',e.target.value)}/></div>
+                  {form['rccm'] === 'Oui' && (
+                    <div className="field"><label>NIU *</label><input placeholder="Ex : M2019051234" value={form['niu']||''} onChange={e=>set('niu',e.target.value)}/></div>
+                  )}
+                  <div className="field">
+                    <label>Date de création de la société *</label>
+                    <input type="date" max={todayISO} value={form['date_creation']||''} onChange={e=>set('date_creation',e.target.value)}/>
+                    {form['date_creation'] && <div className="field-hint">Ancienneté : {humanDuration(monthsBetween(form['date_creation']))}</div>}
+                  </div>
+                  <div className="field"><label>Chiffre d'affaires annuel (XAF) *</label><input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="Ex : 50 000 000"
+                    value={formatMoney(form['ca_annuel']||'')}
+                    onChange={e=>set('ca_annuel', cleanMoney(e.target.value))}
+                  /></div>
                 </>}
               </div>
             </div>
 
-            <div className="form-card">
+            {/* 3. BESOIN */}
+            <div className="form-card" ref={sectRefs.besoin} onFocus={() => setActiveSection('besoin')} tabIndex={-1}>
               <div className="card-title">3. Votre besoin</div>
               <div className="fields">
-                <div className="field"><label>Montant demandé (XAF) *</label><input type="number" placeholder="5000000" value={form['montant']||''} onChange={e=>set('montant',e.target.value)}/></div>
+                <div className="field"><label>Montant demandé (XAF) *</label><input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Ex : 5 000 000"
+                  value={formatMoney(form['montant']||'')}
+                  onChange={e=>set('montant', cleanMoney(e.target.value))}
+                /></div>
                 <div className="field"><label>Objet du financement *</label>
                   <select value={form['objet']||''} onChange={e=>set('objet',e.target.value)}>
-                    <option value=""></option>
+                    <option value="">Sélectionner…</option>
                     {(isP ? ['Consommation','Immobilier','Véhicule','Autre'] : ['Investissement','Fonds de roulement','Marché public','Autre']).map(o=><option key={o}>{o}</option>)}
                   </select>
                 </div>
-                <div className="field"><label>Banque actuelle</label>
-                  <select value={form['banque']||''} onChange={e=>set('banque',e.target.value)}>
-                    <option value=""></option>
-                    {BANQUES.map(b=><option key={b}>{b}</option>)}
-                  </select>
-                </div>
-                {!isP && <div className="field"><label>Flux mensuel moyen (XAF)</label><input type="number" placeholder="2000000" value={form['flux_mois']||''} onChange={e=>set('flux_mois',e.target.value)}/></div>}
+                {!isP && <div className="field"><label>Flux mensuel moyen (XAF) *</label><input
+                  type="text"
+                  inputMode="numeric"
+                  placeholder="Ex : 2 000 000"
+                  value={formatMoney(form['flux_mois']||'')}
+                  onChange={e=>set('flux_mois', cleanMoney(e.target.value))}
+                /></div>}
               </div>
             </div>
 
-            <div className="form-card">
+            {/* 4. ÉLIGIBILITÉ */}
+            <div className="form-card" ref={sectRefs.eligibilite} onFocus={() => setActiveSection('eligibilite')} tabIndex={-1}>
               <div className="card-title">4. Éligibilité</div>
               <div className="fields">
-                {isP ? <div className="field radio-field"><label>Salaire domicilié dans une banque ?</label>
-                  <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['salaire_domic']===v?'sel':''} onClick={()=>set('salaire_domic',v)}>{v}</button>)}</div>
-                </div> : <>
-                  <div className="field radio-field"><label>Compte bancaire mouvementé ?</label>
+                <div className="field"><label>Banque actuelle *</label>
+                  <select value={form['banque']||''} onChange={e=>set('banque',e.target.value)}>
+                    <option value="">Sélectionner…</option>
+                    {BANQUES.map(b=><option key={b}>{b}</option>)}
+                  </select>
+                </div>
+                {isP ? <>
+                  <div className="field radio-field"><label>Salaire domicilié dans cette banque ? *</label>
+                    <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['salaire_domic']===v?'sel':''} onClick={()=>set('salaire_domic',v)}>{v}</button>)}</div>
+                  </div>
+                  {form['salaire_domic'] === 'Oui' && (
+                    <div className="field">
+                      <label>Depuis quand le compte est-il ouvert ? *</label>
+                      <input type="date" max={todayISO} value={form['date_compte']||''} onChange={e=>set('date_compte',e.target.value)}/>
+                      {form['date_compte'] && <div className="field-hint">Compte ouvert depuis : {humanDuration(monthsBetween(form['date_compte']))}</div>}
+                    </div>
+                  )}
+                </> : <>
+                  <div className="field radio-field"><label>Compte bancaire mouvementé ? *</label>
                     <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['compte_mouvemente']===v?'sel':''} onClick={()=>set('compte_mouvemente',v)}>{v}</button>)}</div>
                   </div>
-                  <div className="field radio-field"><label>Refus bancaire antérieur ?</label>
+                  <div className="field radio-field"><label>Refus bancaire antérieur ? *</label>
                     <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['refus_bancaire']===v?'sel':''} onClick={()=>set('refus_bancaire',v)}>{v}</button>)}</div>
                   </div>
-                  <div className="field radio-field"><label>Garanties disponibles ?</label>
+                  <div className="field radio-field"><label>Garanties disponibles ? *</label>
                     <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['garanties']===v?'sel':''} onClick={()=>set('garanties',v)}>{v}</button>)}</div>
                   </div>
                 </>}
@@ -394,7 +623,7 @@ function Simulation() {
             </div>
           </div>
 
-          <button className="btn-main" disabled={loading || (form['tel']||'').length !== 9 || !form['montant'] || (isP ? !form['prenom'] : !form['raison_sociale'])} onClick={soumettre}>
+          <button className="btn-main" disabled={loading || !canSubmit} onClick={soumettre}>
             {loading ? 'Envoi en cours…' : 'Voir mon score'}
             {!loading && <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
           </button>
@@ -410,24 +639,16 @@ function Simulation() {
         {step === 4 && <div className="score-final">
           <div className="score-badge">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6l2 2 4-4" stroke="#34D058" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Dossier reçu
+            Dossier reçu · Score crédit
           </div>
-          <div className="ring">
-            <svg viewBox="0 0 140 140" width="140" height="140" style={{ transform: 'rotate(-90deg)' }}>
-              <circle cx="70" cy="70" r="60" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="10"/>
-              <circle cx="70" cy="70" r="60" fill="none" stroke={score>=70?'#34D058':score>=50?'#FFB020':'#FF6B6B'} strokeWidth="10" strokeLinecap="round" strokeDasharray={`${(score/100)*377} 377`}/>
-            </svg>
-            <div style={{ position:'absolute', inset:0, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', color:'#fff' }}>
-              <div style={{ fontSize: 36, fontWeight: 800 }}>{score}</div>
-              <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>/100</div>
-            </div>
-          </div>
+
+          <CreditScoreMeter score={score} />
+
           <div className="verdict" style={{ color: score>=70?'#34D058':score>=50?'#FFB020':'#FF6B6B' }}>
-            {score >= 70 ? 'Excellent' : score >= 50 ? 'Éligible' : 'À renforcer'}
+            {score >= 70 ? 'Dossier excellent' : score >= 50 ? 'Dossier éligible' : 'Dossier à renforcer'}
           </div>
           <p className="score-sub">{score >= 70 ? 'Votre dossier est très éligible. Un conseiller Mayinvest vous contacte sous 24h.' : score >= 50 ? 'Éligible. Notre équipe va renforcer votre dossier avec vous.' : 'Améliorons votre dossier ensemble. Un conseiller vous rappelle sous 24h.'}</p>
 
-          {/* 🔐 CODE D'ACCÈS — très visible */}
           <div className="code-box">
             <div className="code-label">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#fff" strokeWidth="2"/></svg>
@@ -443,7 +664,7 @@ function Simulation() {
                 Copier le code
               </>}
             </button>
-            <div className="code-warn">⚠️ Notez ce code. Il vous servira à retrouver votre dossier plus tard.</div>
+            <div className="code-warn">⚠️ Notez ce code. Il vous servira à retrouver votre dossier (avec votre numéro ou email).</div>
           </div>
 
           <div className="ref">Réf. {leadId}</div>
@@ -453,11 +674,14 @@ function Simulation() {
           </button>
           <button className="btn-wa" onClick={() => window.open(`https://wa.me/242060000000?text=Bonjour Mayinvest, j'ai soumis mon dossier. Code: ${accessCode}`,'_blank')}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
-            Envoyer sur WhatsApp
+            Discuter avec un conseiller sur WhatsApp
           </button>
           <a className="btn-home" href="/" onClick={(e) => { e.preventDefault(); navigate({ to: '/' }) }}>← Retour à l'accueil</a>
         </div>}
       </div>
+
+      {/* Mascotte tutoriel flottante */}
+      <Mascot tipKey={tipKey} open={mascotOpen} setOpen={setMascotOpen} />
     </div>
   )
 }
