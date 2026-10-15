@@ -185,7 +185,8 @@ const TIPS: Record<string, { title: string; body: string }> = {
 }
 
 type HakiAction = { label: string; onClick: () => void; primary?: boolean; icon?: ReactNode }
-type HakiMsg = { title?: string; body: string; actions?: HakiAction[]; success?: boolean }
+type HakiChip = { label: string; onClick: () => void; selected?: boolean; icon?: ReactNode }
+type HakiMsg = { title?: string; body: string; actions?: HakiAction[]; chips?: HakiChip[]; success?: boolean }
 
 function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onToggleAuto }: {
   msg: HakiMsg
@@ -253,6 +254,20 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onT
               </div>
             </div>
 
+            {msg.chips && msg.chips.length > 0 && (
+              <div className="haki-chips">
+                {msg.chips.map((c, i) => (
+                  <button
+                    key={i}
+                    className={`haki-chip ${c.selected ? 'sel' : ''}`}
+                    onClick={c.onClick}
+                  >
+                    {c.icon && <span className="haki-chip-ic">{c.icon}</span>}
+                    <span>{c.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {msg.actions && msg.actions.length > 0 && (
               <div className="haki-actions">
                 {msg.actions.map((a, i) => (
@@ -496,18 +511,24 @@ function Simulation() {
       }
     }
 
-    // Phase 2 : secteur / profession
+    // Phase 2 : secteur / profession — chips de sélection directe dans Haki
     if (step === 2) {
+      const list = isP ? ACTIVITES_PHYSIQUE : ACTIVITES_MORALE
+      const iconMap = isP ? ICON_P : ICON_M
       return {
         title: `✓ Profil enregistré · Étape 2 sur 4`,
         body: isP
-          ? "Super ! Maintenant, sélectionnez votre profession dans la liste. Cela me permet d'adapter les questions à votre situation."
-          : "Super ! Sélectionnez le secteur d'activité de votre entreprise pour que j'adapte les questions suivantes.",
+          ? "Choisissez votre profession ci-dessous. Haki adaptera les questions suivantes."
+          : "Choisissez le secteur d'activité de votre entreprise.",
         success: true,
-        actions: activite ? [
-          { label: "Parfait, continuons", onClick: () => { setStep(3); setMascotOpen(false) }, primary: true },
-        ] : [
-          { label: "Changer de profil", onClick: () => { setStep(1) } },
+        chips: list.map(a => ({
+          label: a,
+          icon: iconMap[a],
+          selected: activite === a,
+          onClick: () => { setActivite(a); setStep(3) },
+        })),
+        actions: [
+          { label: "Changer de profil", onClick: () => { setStep(1); setActivite('') } },
         ],
       }
     }
@@ -866,6 +887,16 @@ function Simulation() {
         .haki-msg-title { font-size: 11px; font-weight: 800; color: #1A6BFF; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
         .haki-msg.success .haki-msg-title { color: #166534; }
         .haki-msg-body { font-size: 14px; color: #0D1B3E; line-height: 1.5; font-weight: 500; }
+
+        /* Chips de sélection Haki (ex: professions, secteurs) */
+        .haki-chips { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; padding: 0 2px; margin-top: 6px; margin-bottom: 10px; }
+        .haki-chip { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 10px 10px; font-family: inherit; font-size: 12px; font-weight: 700; color: #0D1B3E; cursor: pointer; display: flex; align-items: center; gap: 7px; transition: all 0.15s; text-align: left; min-height: 42px; box-shadow: 0 1px 3px rgba(13,27,62,0.04); }
+        .haki-chip:hover { background: #EEF4FF; border-color: #1A6BFF; color: #1A6BFF; transform: translateY(-1px); }
+        .haki-chip.sel { background: #1A6BFF; color: #fff; border-color: #1A6BFF; box-shadow: 0 6px 14px rgba(26,107,255,0.3); }
+        .haki-chip-ic { display: inline-flex; flex-shrink: 0; }
+        .haki-chip.sel .haki-chip-ic svg path,
+        .haki-chip.sel .haki-chip-ic svg circle,
+        .haki-chip.sel .haki-chip-ic svg rect { stroke: #fff; }
 
         .haki-actions { display: flex; flex-direction: column; gap: 8px; padding: 0 2px; margin-top: 6px; }
         .haki-btn { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 12px 14px; font-family: inherit; font-size: 13px; font-weight: 700; color: #0D1B3E; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.15s; box-shadow: 0 1px 3px rgba(13,27,62,0.04); }
