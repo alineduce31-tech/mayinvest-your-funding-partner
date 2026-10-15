@@ -145,7 +145,9 @@ function Mascot({ tipKey, open, onClose, onOpen }: { tipKey: string; open: boole
       </button>
       {open && (
         <div className="mascot-bubble">
-          <button className="mascot-close" onClick={onClose} aria-label="Fermer">×</button>
+          <button className="mascot-close" onClick={onClose} aria-label="Fermer">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+          </button>
           <div className="mascot-title">
             <span className="mascot-avatar">
               <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
@@ -250,19 +252,18 @@ function Simulation() {
   // Dès que l'activité change, on la mémorise dans le form pour le scoring/contrat
   useEffect(() => { if (activite) set('activite_sub', activite) }, [activite])
 
-  // Mia s'ouvre à chaque changement d'étape / section (sauf si l'utilisateur l'a fermée récemment)
-  const [miaDismissed, setMiaDismissed] = useState(false)
+  // Mia s'ouvre UNIQUEMENT à la première visite — le bandeau en haut est toujours visible et porte le même message
   useEffect(() => {
-    if (miaDismissed) return
-    const t = setTimeout(() => setMascotOpen(true), 500)
-    return () => clearTimeout(t)
-  }, [step, activeSection, activite, type, miaDismissed])
-  // Si l'utilisateur ferme Mia, on respecte pendant 20s puis on la réactive
-  function closeMia() {
-    setMascotOpen(false)
-    setMiaDismissed(true)
-    setTimeout(() => setMiaDismissed(false), 20000)
-  }
+    const seen = (() => { try { return localStorage.getItem('mayinvest_mia_seen') } catch { return '1' } })()
+    if (!seen) {
+      const t = setTimeout(() => setMascotOpen(true), 900)
+      // Auto-ferme après 6s pour ne pas bloquer
+      const t2 = setTimeout(() => setMascotOpen(false), 6900)
+      try { localStorage.setItem('mayinvest_mia_seen', '1') } catch {}
+      return () => { clearTimeout(t); clearTimeout(t2) }
+    }
+  }, [])
+  function closeMia() { setMascotOpen(false) }
 
   const tipKey = step === 1 ? 'step1'
     : step === 2 ? (isP ? 'step2-p' : 'step2-m')
@@ -525,8 +526,9 @@ function Simulation() {
         @keyframes mia-pulse { 0% { box-shadow: 0 0 0 0 rgba(52,208,88,0.6);} 70% { box-shadow: 0 0 0 10px rgba(52,208,88,0);} 100% { box-shadow: 0 0 0 0 rgba(52,208,88,0);} }
         .mascot-bubble { position: fixed; right: 20px; bottom: 94px; width: calc(100% - 40px); max-width: 320px; background: #fff; border-radius: 18px; box-shadow: 0 24px 50px rgba(13,27,62,0.2), 0 6px 14px rgba(13,27,62,0.08); padding: 16px 18px 18px; z-index: 60; border: 1.5px solid rgba(26,107,255,0.2); animation: mia-pop 0.25s ease-out; }
         @keyframes mia-pop { from { opacity: 0; transform: translateY(10px) scale(0.95);} to { opacity: 1; transform: translateY(0) scale(1);} }
-        .mascot-close { position: absolute; top: 8px; right: 12px; background: #F3F4F6; border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 16px; color: #666; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .mascot-close { position: absolute; top: 10px; right: 10px; background: #F3F4F6; border: none; width: 26px; height: 26px; border-radius: 50%; padding: 0; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; }
         .mascot-close:hover { background: #E5E7EB; color: #111; }
+        .mascot-close svg { display: block; }
         .mascot-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: #0D1B3E; margin-bottom: 8px; padding-right: 24px; }
         .mascot-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; background: #1A6BFF; }
         .mascot-body { font-size: 14px; color: #333; line-height: 1.5; }
