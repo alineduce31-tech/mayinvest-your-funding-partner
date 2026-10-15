@@ -1,92 +1,84 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { Logo } from '@/components/Logo'
 
-export const Route = createFileRoute('/admin')({ component: AdminGate })
+export const Route = createFileRoute('/admin')({
+  component: AdminGate,
+})
 
-type Lead = {
-  id: string; type: string | null; activite: string | null; ville: string | null;
-  montant_demande: number | null; banque_actuelle: string | null;
-  statut: string; score: number; identite: any; situation: any; besoin: any;
-  eligibilite: any; raison_non_eligibilite: string | null; created_at: string;
-}
-
-type Page = 'general' | 'non-eligibles' | 'bancarisation' | 'segments' | 'crm' | 'rapports'
-
-function Logo() {
-  return (
-    <svg width="34" height="24" viewBox="0 0 72 52" fill="none" aria-label="Mayinvest">
-      <path d="M4 32 Q 18 10, 36 26 T 68 20" stroke="#1A6BFF" strokeWidth="3.5" strokeLinecap="round" fill="none" opacity="0.4"/>
-      <path d="M4 38 Q 18 16, 36 32 T 68 26" stroke="#1A6BFF" strokeWidth="3.5" strokeLinecap="round" fill="none" opacity="0.7"/>
-      <path d="M4 44 Q 18 22, 36 38 T 68 32" stroke="#fff" strokeWidth="3.5" strokeLinecap="round" fill="none"/>
-    </svg>
-  )
-}
-
-function Icon({ name, size = 16 }: { name: string; size?: number }) {
-  const common = { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const }
-  const paths: Record<string, ReactNode> = {
-    grid: <><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></>,
-    alert: <><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></>,
-    bank: <><path d="M3 9l9-6 9 6v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9,22 9,12 15,12 15,22"/></>,
-    bars: <><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></>,
-    users: <><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></>,
-    file: <><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></>,
-    download: <><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></>,
-    search: <><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
-    arrow: <><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12,5 19,12 12,19"/></>,
-    logout: <><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16,17 21,12 16,7"/><line x1="21" y1="12" x2="9" y2="12"/></>,
-    bell: <><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></>,
-    lock: <><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></>,
-    calendar: <><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
-  }
-  return <svg {...common}>{paths[name]}</svg>
-}
-
+/* ============================================================
+ * HELPERS
+ * ============================================================ */
 const STATUSES = ['Nouveau', 'Contacté', 'RDV', 'Dossier Déposé', 'Éligible', 'Financé', 'Non Éligible', 'Perdu']
+const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
+  'Nouveau': { bg: '#EEF4FF', fg: '#1A6BFF' },
+  'Contacté': { bg: '#FFF4E5', fg: '#B45309' },
+  'RDV': { bg: '#F3E8FF', fg: '#6B21A8' },
+  'Dossier Déposé': { bg: '#E0F2FE', fg: '#075985' },
+  'Éligible': { bg: '#DCFCE7', fg: '#166534' },
+  'Financé': { bg: '#D1FAE5', fg: '#065F46' },
+  'Non Éligible': { bg: '#FEE2E2', fg: '#991B1B' },
+  'Perdu': { bg: '#F3F4F6', fg: '#6B7280' },
+}
+const TRANCHE_LABELS: Record<string, string> = {
+  '0-6': 'Moins de 6 mois', '6-12': '6 mois à 1 an', '1-3': '1 à 3 ans',
+  '3-5': '3 à 5 ans', '5-10': '5 à 10 ans', '10+': 'Plus de 10 ans',
+}
+function formatXAF(n: any): string {
+  if (!n) return '—'
+  const v = typeof n === 'string' ? parseInt(n) : n
+  if (isNaN(v) || !v) return '—'
+  return v.toLocaleString('fr-FR').replace(/,/g, ' ') + ' XAF'
+}
+function daysBetween(iso: string): number {
+  const d = new Date(iso)
+  return Math.floor((Date.now() - d.getTime()) / 86400000)
+}
+function csvEscape(s: any): string {
+  if (s === null || s === undefined) return ''
+  const t = String(s).replace(/"/g, '""')
+  return /[",\n]/.test(t) ? `"${t}"` : t
+}
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)()
+    const osc = ctx.createOscillator()
+    const g = ctx.createGain()
+    osc.type = 'sine'
+    osc.frequency.value = 880
+    g.gain.setValueAtTime(0.0001, ctx.currentTime)
+    g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.02)
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4)
+    osc.connect(g); g.connect(ctx.destination)
+    osc.start(); osc.stop(ctx.currentTime + 0.42)
+  } catch {}
+}
 
-// ═══════════════════════════════════════════════════════════════
-// GATE AUTH — affiche login si non connecté, sinon Admin
-// ═══════════════════════════════════════════════════════════════
+/* ============================================================
+ * AUTH GATE
+ * ============================================================ */
 function AdminGate() {
   const [session, setSession] = useState<any>(null)
-  const [authLoading, setAuthLoading] = useState(true)
+  const [checking, setChecking] = useState(true)
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session)
-      setAuthLoading(false)
+      setChecking(false)
     })
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s))
-    return () => sub.subscription.unsubscribe()
+    const { data: sub } = supabase.auth.onAuthStateChange((_, s) => setSession(s))
+    return () => sub?.subscription?.unsubscribe()
   }, [])
 
-  if (authLoading) {
-    return (
-      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#F4F5F7', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280', fontSize: 14 }}>
-        Chargement…
-      </div>
-    )
-  }
-
+  if (checking) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>Chargement…</div>
   if (!session) return <LoginScreen />
   return <Admin session={session} />
 }
 
-// ═══════════════════════════════════════════════════════════════
-// LOGIN SCREEN
-// ═══════════════════════════════════════════════════════════════
-const LOGIN_ICONS = [
-  // Cadenas
-  <svg key="lock" width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#fff" strokeWidth="2"/><circle cx="12" cy="16" r="1.5" fill="#fff"/></svg>,
-  // Bouclier
-  <svg key="shield" width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-3z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/><path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-  // Clé
-  <svg key="key" width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="15" r="4" stroke="#fff" strokeWidth="2"/><path d="M10.5 12.5L20 3M17 6l3 3M15 8l2 2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-  // Graphique (admin stats)
-  <svg key="chart" width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M3 20V10M9 20V4M15 20v-7M21 20V8" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>,
-]
-
+/* ============================================================
+ * LOGIN SCREEN
+ * ============================================================ */
 function LoginScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -95,714 +87,702 @@ function LoginScreen() {
   const [iconIdx, setIconIdx] = useState(0)
 
   useEffect(() => {
-    const t = setInterval(() => setIconIdx(i => (i + 1) % LOGIN_ICONS.length), 2000)
+    const t = setInterval(() => setIconIdx(i => (i + 1) % 4), 2200)
     return () => clearInterval(t)
   }, [])
 
   async function login() {
-    if (!email || !password) { setError('Entrez votre email et mot de passe'); return }
     setLoading(true); setError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     setLoading(false)
-    if (error) setError("Email ou mot de passe incorrect")
-    // Si succès, le AuthStateChange gère le re-render automatiquement
+    if (error) setError(error.message)
   }
 
+  const icons = [
+    <svg key="lock" width="36" height="36" viewBox="0 0 32 32" fill="none"><rect x="7" y="14" width="18" height="13" rx="2" stroke="#1A6BFF" strokeWidth="2.4"/><path d="M11 14v-4a5 5 0 0110 0v4" stroke="#1A6BFF" strokeWidth="2.4"/></svg>,
+    <svg key="shield" width="36" height="36" viewBox="0 0 32 32" fill="none"><path d="M16 3l10 4v8c0 7-4.5 12-10 14-5.5-2-10-7-10-14V7l10-4z" stroke="#1A6BFF" strokeWidth="2.4" strokeLinejoin="round"/></svg>,
+    <svg key="key" width="36" height="36" viewBox="0 0 32 32" fill="none"><circle cx="11" cy="21" r="5" stroke="#1A6BFF" strokeWidth="2.4"/><path d="M14 18L26 6M22 10l4 4" stroke="#1A6BFF" strokeWidth="2.4" strokeLinecap="round"/></svg>,
+    <svg key="chart" width="36" height="36" viewBox="0 0 32 32" fill="none"><path d="M5 25V7M5 25h22M9 20V13M14 20V9M19 20V15M24 20V11" stroke="#1A6BFF" strokeWidth="2.4" strokeLinecap="round"/></svg>,
+  ]
+
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#F4F5F7', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", minHeight: '100vh', background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-      <div style={{ background: 'linear-gradient(145deg, #0D1B3E 0%, #0A1532 100%)', borderRadius: 28, padding: 40, maxWidth: 420, width: '100%', color: '#fff', boxShadow: '0 40px 80px rgba(13,27,62,0.3)', position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -80, right: -80, width: 260, height: 260, background: 'radial-gradient(circle, rgba(26,107,255,0.3), transparent 65%)', pointerEvents: 'none' }} />
-        {/* Icône animée (rotation 4 icônes toutes les 2s) */}
-        <div style={{ width: 56, height: 56, background: '#1A6BFF', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, position: 'relative', zIndex: 1, boxShadow: '0 8px 20px rgba(26,107,255,0.4)', overflow: 'hidden' }}>
-          <div style={{ position: 'relative', width: 26, height: 26 }}>
-            {LOGIN_ICONS.map((Ic, i) => (
-              <div key={i} style={{ position: 'absolute', inset: 0, opacity: i === iconIdx ? 1 : 0, transform: i === iconIdx ? 'scale(1) rotate(0)' : 'scale(0.6) rotate(-12deg)', transition: 'opacity 0.5s ease, transform 0.5s cubic-bezier(.2,.9,.3,1.2)' }}>
-                {Ic}
-              </div>
-            ))}
-          </div>
-        </div>
-        {/* Dots indicateurs */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 20, position: 'relative', zIndex: 1 }} aria-hidden="true">
-          {LOGIN_ICONS.map((_, i) => (
-            <div key={i} style={{ width: i === iconIdx ? 16 : 5, height: 5, borderRadius: 100, background: i === iconIdx ? '#1A6BFF' : 'rgba(255,255,255,0.15)', transition: 'all 0.3s ease' }} />
-          ))}
-        </div>
-        <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 10px', position: 'relative', zIndex: 1 }}>Admin Mayinvest</h1>
-        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', margin: '0 0 24px', position: 'relative', zIndex: 1 }}>Connectez-vous pour accéder au back-office.</p>
-
-        <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: '12px 16px', marginBottom: 14, position: 'relative', zIndex: 1 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Email</label>
-          <input type="email" autoComplete="username" placeholder="admin@mayinvest.cg" value={email} onChange={e => { setEmail(e.target.value); setError('') }} style={{ width: '100%', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 16, fontWeight: 600, color: '#fff', background: 'transparent', outline: 'none' }}/>
-        </div>
-        <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: '12px 16px', marginBottom: 14, position: 'relative', zIndex: 1 }}>
-          <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'rgba(255,255,255,0.5)', marginBottom: 4 }}>Mot de passe</label>
-          <input type="password" autoComplete="current-password" placeholder="••••••••" value={password} onChange={e => { setPassword(e.target.value); setError('') }} onKeyDown={e => { if (e.key === 'Enter') login() }} style={{ width: '100%', border: 'none', padding: 0, fontFamily: 'inherit', fontSize: 16, fontWeight: 600, color: '#fff', background: 'transparent', outline: 'none' }}/>
-        </div>
-
-        <button disabled={loading} onClick={login} style={{ width: '100%', background: '#1A6BFF', color: '#fff', fontFamily: 'inherit', fontSize: 15, fontWeight: 700, padding: 16, borderRadius: 100, border: 'none', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 8px 20px rgba(26,107,255,0.4)', position: 'relative', zIndex: 1, marginTop: 6 }}>
-          {loading ? 'Connexion…' : 'Se connecter'}
-          {!loading && <Icon name="arrow" size={14}/>}
-        </button>
-
-        {error && <div style={{ color: '#FF6B6B', fontSize: 13, marginTop: 12, textAlign: 'center', position: 'relative', zIndex: 1 }}>{error}</div>}
-
-        <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 20, textAlign: 'center', position: 'relative', zIndex: 1, lineHeight: 1.5 }}>
-          Compte créé par un administrateur depuis le dashboard Supabase.<br/>
-          Besoin d'aide ? Contactez votre équipe technique.
-        </div>
+      <style>{`
+        input { font-size: 16px !important; }
+        .login-card { background: #fff; border-radius: 24px; padding: 36px 28px; box-shadow: 0 20px 50px rgba(13,27,62,0.1); max-width: 400px; width: 100%; text-align: center; }
+        .lg-icon { width: 72px; height: 72px; border-radius: 20px; background: #EEF4FF; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 18px; }
+        .lg-dots { display: flex; gap: 5px; justify-content: center; margin-bottom: 20px; }
+        .lg-dot { width: 5px; height: 5px; border-radius: 50%; background: #D1D5DB; transition: all 0.3s; }
+        .lg-dot.on { background: #1A6BFF; width: 14px; border-radius: 100px; }
+        .lg-h { font-size: 22px; font-weight: 800; color: #0D1B3E; margin: 0 0 8px; }
+        .lg-sub { color: #666; font-size: 14px; margin: 0 0 24px; }
+        .lg-field { background: #F8FAFC; border: 1.5px solid #E5E7EB; border-radius: 14px; padding: 12px 16px; text-align: left; margin-bottom: 10px; }
+        .lg-field label { display: block; font-size: 11px; color: #888; font-weight: 600; margin-bottom: 2px; }
+        .lg-field input { width: 100%; border: none; background: transparent; outline: none; font-family: inherit; font-weight: 500; }
+        .lg-field:focus-within { border-color: #1A6BFF; }
+        .lg-btn { width: 100%; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; padding: 14px; border-radius: 100px; border: none; cursor: pointer; margin-top: 10px; }
+        .lg-btn:disabled { background: #C7D0DB; cursor: not-allowed; }
+        .lg-err { background: #FEF2F2; border: 1.5px solid #FCA5A5; color: #B91C1C; font-size: 13px; padding: 10px; border-radius: 10px; margin-top: 10px; }
+      `}</style>
+      <div className="login-card">
+        <div className="lg-icon">{icons[iconIdx]}</div>
+        <div className="lg-dots">{icons.map((_, i) => <div key={i} className={`lg-dot ${i === iconIdx ? 'on' : ''}`}/>)}</div>
+        <h1 className="lg-h">Mayinvest Admin</h1>
+        <p className="lg-sub">Connectez-vous pour accéder au back-office</p>
+        <div className="lg-field"><label>Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@mayinvest.cg"/></div>
+        <div className="lg-field"><label>Mot de passe</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && login()}/></div>
+        <button className="lg-btn" disabled={loading || !email || !password} onClick={login}>{loading ? 'Connexion…' : 'Se connecter'}</button>
+        {error && <div className="lg-err">{error}</div>}
       </div>
     </div>
   )
 }
 
-// ═══════════════════════════════════════════════════════════════
-// ADMIN DASHBOARD
-// ═══════════════════════════════════════════════════════════════
+/* ============================================================
+ * ADMIN APP
+ * ============================================================ */
+type Page = 'general' | 'crm' | 'segments' | 'bancarisation' | 'non-eligibles' | 'rapports'
+
 function Admin({ session }: { session: any }) {
+  const navigate = useNavigate()
   const [page, setPage] = useState<Page>('general')
-  const [leads, setLeads] = useState<Lead[]>([])
+  const [leads, setLeads] = useState<any[]>([])
+  const [msgCounts, setMsgCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
-  const [filterStatut, setFilterStatut] = useState('')
-  const [filterType, setFilterType] = useState('')
   const [search, setSearch] = useState('')
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null)
-  const [toast, setToast] = useState<{ msg: string; time: number } | null>(null)
+  const [filterStatut, setFilterStatut] = useState<string>('')
+  const [filterType, setFilterType] = useState<string>('')
+  const [selectedLead, setSelectedLead] = useState<any>(null)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [toast, setToast] = useState<{ msg: string; score: number } | null>(null)
 
-  // Son de notification via Web Audio API (bip court et agréable)
-  function playBeep() {
-    try {
-      const AC = (window as any).AudioContext || (window as any).webkitAudioContext
-      if (!AC) return
-      const ctx = new AC()
-      const osc = ctx.createOscillator()
-      const gain = ctx.createGain()
-      osc.connect(gain)
-      gain.connect(ctx.destination)
-      osc.type = 'sine'
-      osc.frequency.setValueAtTime(880, ctx.currentTime) // La4
-      osc.frequency.setValueAtTime(1320, ctx.currentTime + 0.1) // Mi5
-      gain.gain.setValueAtTime(0.18, ctx.currentTime)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4)
-      osc.start()
-      osc.stop(ctx.currentTime + 0.4)
-    } catch (e) {}
+  async function loadLeads() {
+    const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
+    if (data) setLeads(data)
+    // Compteur messages non lus par lead (de l'admin point de vue = messages client non lus)
+    const { data: msgs } = await supabase.from('messages').select('lead_id').eq('sender', 'client').is('read_at', null)
+    const counts: Record<string, number> = {}
+    msgs?.forEach(m => { counts[m.lead_id] = (counts[m.lead_id] || 0) + 1 })
+    setMsgCounts(counts)
+    setLoading(false)
   }
 
-  function showToast(msg: string) {
-    setToast({ msg, time: Date.now() })
-    setTimeout(() => setToast(t => (t && t.time === Date.now()) ? null : t), 5000)
-  }
-
-  // Permission notifications navigateur
   useEffect(() => {
-    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission().catch(() => {})
-    }
-  }, [])
-
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
-      if (data) setLeads(data as Lead[])
-      setLoading(false)
-    })()
-    const ch = supabase.channel('admin-leads')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads' }, async (payload) => {
-        const newLead = payload.new as Lead
-        const nom = newLead.identite?.raison_sociale || `${newLead.identite?.prenom || ''} ${newLead.identite?.nom || ''}`.trim() || 'Nouveau prospect'
-        // Toast
-        showToast(`🎉 Nouveau lead : ${nom} · Score ${newLead.score}/100`)
-        // Son
+    loadLeads()
+    // Realtime : nouveaux leads + nouveaux messages
+    const leadsChan = supabase.channel('admin-leads')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads' }, (payload) => {
+        const n = payload.new as any
+        setLeads(prev => [n, ...prev])
+        setToast({ msg: `Nouveau lead · ${n.activite || '?'} · ${n.ville || '?'}`, score: n.score || 0 })
         playBeep()
-        // Notification navigateur (si onglet pas focalisé)
-        if ('Notification' in window && Notification.permission === 'granted' && document.hidden) {
-          try {
-            new Notification('Nouveau lead Mayinvest', {
-              body: `${nom} · Score ${newLead.score}/100 · ${newLead.activite || ''}`,
-              icon: '/favicon.ico',
-              tag: `lead-${newLead.id}`,
-            })
-          } catch (e) {}
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Mayinvest · Nouveau lead', { body: `${n.activite} · Score ${n.score}/100` })
         }
-        // Refresh liste
-        const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
-        if (data) setLeads(data as Lead[])
-      })
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'leads' }, async () => {
-        const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
-        if (data) setLeads(data as Lead[])
+        setTimeout(() => setToast(null), 5000)
       })
       .subscribe()
-    return () => { supabase.removeChannel(ch) }
+    const msgChan = supabase.channel('admin-msgs')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
+        const m = payload.new as any
+        if (m.sender === 'client') {
+          setMsgCounts(c => ({ ...c, [m.lead_id]: (c[m.lead_id] || 0) + 1 }))
+          playBeep()
+        }
+      })
+      .subscribe()
+    // Demander permission notifications
+    if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission()
+    return () => { supabase.removeChannel(leadsChan); supabase.removeChannel(msgChan) }
   }, [])
+
+  async function updateStatut(id: string, statut: string) {
+    const { error } = await supabase.from('leads').update({ statut, updated_at: new Date().toISOString() }).eq('id', id)
+    if (!error) setLeads(prev => prev.map(l => l.id === id ? { ...l, statut } : l))
+  }
 
   async function logout() {
     await supabase.auth.signOut()
   }
 
-  // ═══ STATS ═══
-  const stats = useMemo(() => {
-    const total = leads.length
-    const eligibles = leads.filter(l => l.statut !== 'Non Éligible' && l.score >= 70).length
-    const nonEligibles = leads.filter(l => l.statut === 'Non Éligible').length
-    const contactes = leads.filter(l => l.statut === 'Contacté' || l.statut === 'RDV' || l.statut === 'Dossier Déposé' || l.statut === 'Financé').length
-    const rdv = leads.filter(l => l.statut === 'RDV' || l.statut === 'Dossier Déposé' || l.statut === 'Financé').length
-    const deposes = leads.filter(l => l.statut === 'Dossier Déposé' || l.statut === 'Financé').length
-    const finances = leads.filter(l => l.statut === 'Financé').length
-
-    // KPI temporels J / J-7 / J-30
-    const now = new Date()
-    const start_j = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-    const start_j7 = new Date(now.getTime() - 7*864e5)
-    const start_j30 = new Date(now.getTime() - 30*864e5)
-    const leadsJ = leads.filter(l => new Date(l.created_at) >= start_j).length
-    const leadsJ7 = leads.filter(l => new Date(l.created_at) >= start_j7).length
-    const leadsJ30 = leads.filter(l => new Date(l.created_at) >= start_j30).length
-
-    const taux = total ? Math.round((finances / total) * 100) : 0
-    return { total, eligibles, nonEligibles, contactes, rdv, deposes, finances, leadsJ, leadsJ7, leadsJ30, taux }
-  }, [leads])
-
-  const filteredLeads = useMemo(() => {
+  // Filtering
+  const filtered = useMemo(() => {
     return leads.filter(l => {
       if (filterStatut && l.statut !== filterStatut) return false
       if (filterType && l.type !== filterType) return false
       if (search) {
-        const txt = search.toLowerCase()
-        const nom = (l.identite?.prenom || '') + ' ' + (l.identite?.nom || '') + ' ' + (l.identite?.raison_sociale || '')
-        if (!nom.toLowerCase().includes(txt)) return false
+        const s = search.toLowerCase()
+        const nom = (l.identite?.nom || l.situation?.raison_sociale || '').toLowerCase()
+        const prenom = (l.identite?.prenom || l.situation?.dirigeant || '').toLowerCase()
+        const tel = (l.identite?.tel || '').toLowerCase()
+        const email = (l.identite?.email || '').toLowerCase()
+        const code = (l.access_code || '').toLowerCase()
+        if (!nom.includes(s) && !prenom.includes(s) && !tel.includes(s) && !email.includes(s) && !code.includes(s)) return false
       }
       return true
     })
-  }, [leads, filterStatut, filterType, search])
+  }, [leads, search, filterStatut, filterType])
 
-  async function updateStatut(id: string, statut: string) {
-    await supabase.from('leads').update({ statut }).eq('id', id)
-  }
+  // KPIs J/J-7/J-30
+  const kpi = useMemo(() => {
+    const now = Date.now()
+    const jj = leads.filter(l => daysBetween(l.created_at) === 0).length
+    const j7 = leads.filter(l => daysBetween(l.created_at) <= 7).length
+    const j30 = leads.filter(l => daysBetween(l.created_at) <= 30).length
+    const finances = leads.filter(l => l.statut === 'Financé').length
+    const conv = leads.length ? Math.round((finances / leads.length) * 100) : 0
+    return { jj, j7, j30, conv, total: leads.length, finances }
+  }, [leads])
+
+  // Funnel
+  const funnel = useMemo(() => {
+    return STATUSES.map(s => ({ statut: s, count: leads.filter(l => l.statut === s).length, color: STATUS_COLORS[s] }))
+  }, [leads])
 
   function exportCSV() {
-    const headers = ['Nom', 'Type', 'Activité', 'Ville', 'Montant', 'Score', 'Statut', 'Date', 'Téléphone', 'Email']
-    const rows = filteredLeads.map(l => [
-      (l.identite?.raison_sociale || `${l.identite?.prenom || ''} ${l.identite?.nom || ''}`.trim()),
-      l.type || '', l.activite || '', l.ville || '',
-      l.montant_demande || 0, l.score, l.statut,
-      new Date(l.created_at).toLocaleDateString('fr'),
-      l.identite?.tel || '', l.identite?.email || ''
+    const headers = ['Date', 'Type', 'Activité', 'Nom', 'Prénom/Dirigeant', 'Téléphone', 'Email', 'Ville', 'Montant', 'Objet', 'Banque', 'Contrat', 'Durée restante', 'Ancienneté', 'Revenu/CA', 'Score', 'Statut', 'Code', 'Ref']
+    const rows = filtered.map(l => [
+      new Date(l.created_at).toLocaleString('fr-FR'),
+      l.type,
+      l.activite,
+      l.identite?.nom || l.situation?.raison_sociale || '',
+      l.identite?.prenom || l.situation?.dirigeant || '',
+      l.identite?.tel || '',
+      l.identite?.email || '',
+      l.ville || '',
+      l.montant_demande || 0,
+      l.besoin?.objet || '',
+      l.banque_actuelle || '',
+      l.situation?.contrat || '',
+      l.situation?.duree_restante || '',
+      TRANCHE_LABELS[l.situation?.anciennete_tranche] || '',
+      l.situation?.revenu || l.situation?.ca_annuel || '',
+      l.score,
+      l.statut,
+      l.access_code || '',
+      l.id,
     ])
-    const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const csv = [headers, ...rows].map(r => r.map(csvEscape).join(',')).join('\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' })
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob)
-    a.download = `mayinvest-leads-${new Date().toISOString().slice(0,10)}.csv`; a.click()
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `mayinvest-leads-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
-  function nomOf(l: Lead) { return l.identite?.raison_sociale || `${l.identite?.prenom || ''} ${l.identite?.nom || ''}`.trim() || '—' }
-  function pillColor(statut: string) {
-    if (statut === 'Nouveau') return { bg: '#EEF4FF', c: '#1A6BFF' }
-    if (statut === 'Contacté') return { bg: '#E0F7FA', c: '#0891B2' }
-    if (statut === 'RDV') return { bg: '#FEF3C7', c: '#A16207' }
-    if (statut === 'Éligible' || statut === 'Financé') return { bg: '#DCFCE7', c: '#16A34A' }
-    if (statut === 'Dossier Déposé') return { bg: '#FEF9C3', c: '#854D0E' }
-    if (statut === 'Non Éligible') return { bg: '#FFF0E6', c: '#EA580C' }
-    if (statut === 'Perdu') return { bg: '#FEE2E2', c: '#DC2626' }
-    return { bg: '#F5F5F5', c: '#6B7280' }
-  }
-  function scoreColor(s: number) { return s >= 70 ? '#16A34A' : s >= 50 ? '#CA8A04' : '#DC2626' }
-
-  // Segments
-  const parSecteur = useMemo(() => {
-    const map = new Map<string, { total: number; eligibles: number }>()
-    leads.forEach(l => {
-      if (!l.activite) return
-      const e = map.get(l.activite) || { total: 0, eligibles: 0 }
-      e.total++; if (l.score >= 70) e.eligibles++
-      map.set(l.activite, e)
-    })
-    return Array.from(map.entries()).map(([k, v]) => ({ label: k, pct: v.total ? Math.round((v.eligibles/v.total)*100) : 0, total: v.total }))
-      .sort((a, b) => b.pct - a.pct).slice(0, 8)
-  }, [leads])
-
-  const parMontant = useMemo(() => {
-    const buckets = [{ label: '< 5M', min: 0, max: 5e6 }, { label: '5M–10M', min: 5e6, max: 10e6 }, { label: '10M–30M', min: 10e6, max: 30e6 }, { label: '30M–50M', min: 30e6, max: 50e6 }, { label: '> 50M', min: 50e6, max: Infinity }]
-    return buckets.map(b => {
-      const inB = leads.filter(l => (l.montant_demande || 0) >= b.min && (l.montant_demande || 0) < b.max)
-      const fin = inB.filter(l => l.statut === 'Financé').length
-      return { label: b.label, pct: inB.length ? Math.round((fin/inB.length)*100) : 0, total: inB.length }
-    })
-  }, [leads])
-
-  const parBanque = useMemo(() => {
-    const map = new Map<string, { total: number; finances: number }>()
-    leads.forEach(l => {
-      if (!l.banque_actuelle) return
-      const e = map.get(l.banque_actuelle) || { total: 0, finances: 0 }
-      e.total++; if (l.statut === 'Financé') e.finances++
-      map.set(l.banque_actuelle, e)
-    })
-    return Array.from(map.entries()).map(([k, v]) => ({ label: k, pct: v.total ? Math.round((v.finances/v.total)*100) : 0, total: v.total }))
-      .sort((a, b) => b.pct - a.pct).slice(0, 8)
-  }, [leads])
-
-  // Funnel conversion
-  const funnel = useMemo(() => {
-    const total = stats.total
-    const steps = [
-      { label: 'Leads totaux', value: total, color: '#1A6BFF' },
-      { label: 'Contactés', value: stats.contactes, color: '#0891B2' },
-      { label: 'RDV conseiller', value: stats.rdv, color: '#A16207' },
-      { label: 'Dossiers déposés', value: stats.deposes, color: '#854D0E' },
-      { label: 'Financés', value: stats.finances, color: '#16A34A' },
-    ]
-    return steps.map((s, i) => ({
-      ...s,
-      pct: total ? Math.round((s.value / total) * 100) : 0,
-      conversionFromPrev: i > 0 && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : 100,
-    }))
-  }, [stats])
-
-  const titles: Record<Page, string> = {
-    general: 'Vue Générale', 'non-eligibles': "Non Éligibles — Mine d'or", bancarisation: 'Impact Bancarisation',
-    segments: 'Performance par Segment', crm: 'CRM Leads', rapports: 'Rapports Automatiques'
-  }
+  const NAV: { k: Page; label: string; icon: string }[] = [
+    { k: 'general', label: 'Dashboard', icon: '📊' },
+    { k: 'crm', label: 'CRM', icon: '👥' },
+    { k: 'segments', label: 'Segments', icon: '🎯' },
+    { k: 'bancarisation', label: 'Bancarisation', icon: '🏦' },
+    { k: 'non-eligibles', label: 'Non éligibles', icon: '🚫' },
+    { k: 'rapports', label: 'Rapports', icon: '📈' },
+  ]
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#F4F5F7', minHeight: '100vh', WebkitFontSmoothing: 'antialiased', color: '#111827', display: 'flex' }}>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", minHeight: '100vh', background: '#F5F7FA', color: '#111' }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <style>{`
         * { box-sizing: border-box; }
-        .sidebar { width: 220px; background: #0D1B3E; min-height: 100vh; display: flex; flex-direction: column; flex-shrink: 0; position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; }
-        .sb-logo { padding: 20px 20px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
-        .sb-brand { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -0.3px; }
-        .sb-sub { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; }
-        .sb-section { padding: 16px 16px 6px; font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; text-transform: uppercase; }
-        .sb-item { display: flex; align-items: center; gap: 10px; padding: 9px 16px; cursor: pointer; color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 500; position: relative; background: transparent; border: none; font-family: inherit; width: 100%; text-align: left; }
-        .sb-item:hover { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.9); }
-        .sb-item.on { background: rgba(26,107,255,0.2); color: #fff; font-weight: 600; }
-        .sb-item.on::before { content: ''; position: absolute; left: 0; top: 4px; bottom: 4px; width: 3px; background: #1A6BFF; border-radius: 0 3px 3px 0; }
-        .sb-badge { margin-left: auto; background: #1A6BFF; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 100px; }
-        .sb-badge.o { background: #EA580C; }
-        .sb-footer { padding: 16px; border-top: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 10px; }
-        .sb-avatar { width: 32px; height: 32px; background: #1A6BFF; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0; }
-        .sb-user { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.85); max-width: 130px; overflow: hidden; text-overflow: ellipsis; }
-        .sb-role { font-size: 10px; color: rgba(255,255,255,0.35); }
-        .sb-logout { background: transparent; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 6px; margin-left: auto; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
-        .sb-logout:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        input, select, textarea, button { font-family: inherit; font-size: 16px !important; }
+        body { margin: 0; }
 
-        .main { margin-left: 220px; flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
-        .topbar { height: 60px; background: #FFF; border-bottom: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 50; }
-        .topbar-title { font-size: 16px; font-weight: 700; color: #111827; }
-        .topbar-right { display: flex; align-items: center; gap: 12px; }
-        .btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 100px; border: none; cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 600; transition: opacity 0.15s; }
-        .btn:hover { opacity: 0.85; }
-        .btn-primary { background: #1A6BFF; color: #fff; }
-        .btn-ghost { background: #F9FAFB; color: #111; border: 1px solid #E5E7EB; }
-        .content { padding: 24px 28px; flex: 1; }
+        .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+        @media (max-width: 900px) { .app { grid-template-columns: 1fr; } }
 
-        /* Hero KPIs — J/J-7/J-30 (les 3 KPI stratégiques) */
-        .hero-kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
-        .hero-kpi { background: linear-gradient(145deg, #0D1B3E 0%, #0A1532 100%); color: #fff; border-radius: 16px; padding: 20px 22px; position: relative; overflow: hidden; box-shadow: 0 8px 24px rgba(13,27,62,0.14); }
-        .hero-kpi::before { content: ''; position: absolute; top: -40px; right: -40px; width: 160px; height: 160px; background: radial-gradient(circle, rgba(26,107,255,0.3), transparent 65%); pointer-events: none; }
-        .hero-kpi .lbl { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; position: relative; z-index: 1; }
-        .hero-kpi .val { font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 4px; position: relative; z-index: 1; }
-        .hero-kpi .sub { font-size: 12px; color: rgba(255,255,255,0.5); position: relative; z-index: 1; }
+        .sidebar { background: #0D1B3E; color: #fff; padding: 24px 0; position: sticky; top: 0; height: 100vh; display: flex; flex-direction: column; }
+        @media (max-width: 900px) {
+          .sidebar { position: fixed; width: 240px; z-index: 100; transform: translateX(-100%); transition: transform 0.25s; height: 100vh; }
+          .sidebar.open { transform: translateX(0); }
+          .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 99; }
+        }
+        .sb-logo { padding: 0 24px 24px; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 16px; }
+        .sb-nav { flex: 1; padding: 0 12px; display: flex; flex-direction: column; gap: 2px; }
+        .sb-link { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; background: transparent; border: none; color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; cursor: pointer; text-align: left; width: 100%; transition: all 0.15s; }
+        .sb-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
+        .sb-link.on { background: #1A6BFF; color: #fff; }
+        .sb-footer { padding: 12px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .sb-user { font-size: 11px; color: rgba(255,255,255,0.5); padding: 0 14px 8px; word-break: break-all; }
+        .sb-logout { width: 100%; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: rgba(255,255,255,0.7); font-size: 12px; font-weight: 600; padding: 10px; border-radius: 10px; cursor: pointer; }
 
-        .kpi-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-bottom: 24px; }
-        .kpi-card { background: #FFF; border: 1px solid #E5E7EB; border-radius: 14px; padding: 18px; box-shadow: 0 1px 3px rgba(13,27,62,0.04); }
-        .kpi-label { font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px; }
-        .kpi-value { font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
-        .kpi-sub { font-size: 11px; color: #9CA3AF; }
+        .main { padding: 24px 32px 60px; min-width: 0; }
+        @media (max-width: 900px) { .main { padding: 20px 16px 40px; } }
 
-        .charts-row { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 24px; }
-        .chart-card { background: #FFF; border: 1px solid #E5E7EB; border-radius: 14px; padding: 20px; box-shadow: 0 1px 3px rgba(13,27,62,0.04); }
-        .chart-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; color: #111; }
-        .chart-sub { font-size: 12px; color: #6B7280; margin-bottom: 16px; }
+        .top-bar { position: sticky; top: 0; z-index: 40; background: rgba(245,247,250,0.9); backdrop-filter: blur(10px); margin: -24px -32px 20px; padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-bottom: 1px solid #E5E7EB; }
+        @media (max-width: 900px) { .top-bar { margin: -20px -16px 20px; padding: 14px 16px; } }
+        .burger { display: none; width: 38px; height: 38px; border-radius: 10px; background: #fff; border: 1px solid #E5E7EB; cursor: pointer; align-items: center; justify-content: center; }
+        @media (max-width: 900px) { .burger { display: flex; } }
+        .page-title { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; margin: 0; flex: 1; }
 
-        /* FUNNEL */
-        .funnel { display: flex; flex-direction: column; gap: 8px; }
-        .funnel-row { display: flex; align-items: center; gap: 12px; }
-        .funnel-bar { flex: 1; background: #F9FAFB; border-radius: 10px; height: 44px; overflow: hidden; position: relative; display: flex; align-items: center; }
-        .funnel-fill { height: 100%; border-radius: 10px; display: flex; align-items: center; padding: 0 14px; color: #fff; font-weight: 700; font-size: 13px; min-width: fit-content; transition: width 0.5s ease; }
-        .funnel-pct { font-size: 12px; font-weight: 700; color: #111; width: 90px; text-align: right; }
-        .funnel-arrow { color: #9CA3AF; font-size: 11px; padding: 2px 0 2px 12px; }
+        /* KPI grid */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px; }
+        .kpi { background: #fff; border-radius: 16px; padding: 18px; box-shadow: 0 2px 8px rgba(13,27,62,0.04); }
+        .kpi-l { font-size: 11px; color: #888; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+        .kpi-v { font-size: 28px; font-weight: 800; margin-top: 4px; letter-spacing: -1px; }
+        .kpi-s { font-size: 11px; color: #666; margin-top: 2px; }
 
-        .table-card { background: #FFF; border: 1px solid #E5E7EB; border-radius: 14px; overflow: hidden; margin-bottom: 24px; box-shadow: 0 1px 3px rgba(13,27,62,0.04); }
-        .table-head { padding: 16px 20px; border-bottom: 1px solid #E5E7EB; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-        .table-h-t { font-size: 14px; font-weight: 700; color: #111; }
-        .filters { display: flex; gap: 8px; flex-wrap: wrap; }
-        .filter-sel { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 7px 10px; font-family: inherit; font-size: 12px; color: #111; cursor: pointer; }
-        .filter-inp { background: #F9FAFB; border: 1px solid #E5E7EB; border-radius: 8px; padding: 7px 12px; font-family: inherit; font-size: 12px; color: #111; width: 220px; outline: none; }
-        table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 600; color: #6B7280; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid #E5E7EB; background: #F9FAFB; }
-        td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #F0F0F0; color: #111; }
-        tr:last-child td { border-bottom: none; }
-        tr:hover td { background: #F9FAFB; cursor: pointer; }
-        .pill { display: inline-flex; padding: 3px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-        .score-ring { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; font-size: 12px; font-weight: 800; border: 2.5px solid; }
+        /* Funnel */
+        .funnel { background: #fff; border-radius: 16px; padding: 20px; box-shadow: 0 2px 8px rgba(13,27,62,0.04); margin-bottom: 20px; }
+        .funnel-h { font-size: 13px; font-weight: 700; color: #0D1B3E; margin: 0 0 14px; }
+        .funnel-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+        .funnel-l { font-size: 12px; font-weight: 700; width: 120px; flex-shrink: 0; }
+        .funnel-bar { flex: 1; height: 24px; border-radius: 8px; position: relative; background: #F3F4F6; overflow: hidden; }
+        .funnel-fill { height: 100%; border-radius: 8px; display: flex; align-items: center; justify-content: flex-end; padding: 0 10px; font-size: 11px; font-weight: 800; color: #fff; min-width: 40px; }
 
-        .bar-h { display: flex; flex-direction: column; gap: 10px; }
-        .bar-h-row { display: flex; align-items: center; gap: 10px; }
-        .bar-h-l { font-size: 12px; font-weight: 500; width: 90px; flex-shrink: 0; color: #111; }
-        .bar-h-t { flex: 1; height: 8px; background: #F0F0F0; border-radius: 100px; overflow: hidden; }
-        .bar-h-f { height: 100%; border-radius: 100px; background: #1A6BFF; }
-        .bar-h-v { font-size: 12px; font-weight: 700; width: 48px; text-align: right; flex-shrink: 0; color: #111; }
+        /* Toolbar */
+        .toolbar { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+        .toolbar input, .toolbar select { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px 14px; font-weight: 500; }
+        .toolbar input { flex: 1; min-width: 180px; }
+        .toolbar input:focus, .toolbar select:focus { border-color: #1A6BFF; outline: none; }
+        .btn-export { background: #0D1B3E; color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
 
-        .seg-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        /* Table / Cards leads */
+        .lead-grid { display: grid; gap: 10px; }
+        .lead-row { background: #fff; border-radius: 14px; padding: 14px 16px; box-shadow: 0 1px 4px rgba(13,27,62,0.04); display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; cursor: pointer; transition: all 0.15s; border: 1.5px solid transparent; }
+        .lead-row:hover { border-color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.1); }
+        .lead-l { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+        .lead-name { font-size: 14px; font-weight: 700; color: #111; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .lead-badge { font-size: 10px; padding: 2px 8px; border-radius: 100px; font-weight: 800; }
+        .lead-meta { font-size: 12px; color: #666; }
+        .lead-r { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        .lead-score { background: #EEF4FF; color: #1A6BFF; font-size: 13px; font-weight: 800; padding: 5px 10px; border-radius: 8px; min-width: 42px; text-align: center; }
+        .lead-score.hi { background: #DCFCE7; color: #166534; }
+        .lead-score.lo { background: #FEE2E2; color: #991B1B; }
+        .lead-statut-sel { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 8px; padding: 6px 10px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .msg-badge { background: #FF3B30; color: #fff; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 100px; min-width: 18px; text-align: center; }
 
-        /* Toast notif */
-        .toast { position: fixed; top: 80px; right: 28px; background: linear-gradient(145deg, #0D1B3E, #0A1532); color: #fff; padding: 14px 20px; border-radius: 14px; box-shadow: 0 12px 32px rgba(13,27,62,0.4); z-index: 300; display: flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 600; animation: slideIn 0.3s ease-out; max-width: 400px; }
-        .toast-ic { width: 32px; height: 32px; background: #1A6BFF; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        @keyframes slideIn { from { transform: translateX(400px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        .empty { text-align: center; padding: 60px 20px; color: #999; font-size: 14px; }
 
-        /* Modal */
-        .modal-ov { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .modal { background: #FFF; border-radius: 20px; width: 600px; max-width: 100%; max-height: 90vh; overflow-y: auto; }
-        .modal-h { padding: 24px 28px 16px; display: flex; justify-content: space-between; align-items: start; border-bottom: 1px solid #F0F0F0; }
-        .modal-t { font-size: 20px; font-weight: 800; color: #111; }
-        .modal-close { background: #F9FAFB; border: none; border-radius: 50%; width: 34px; height: 34px; cursor: pointer; font-size: 18px; color: #6B7280; display: flex; align-items: center; justify-content: center; }
-        .modal-b { padding: 20px 28px 28px; }
-        .modal-sec { margin-bottom: 20px; }
-        .modal-sec-t { font-size: 11px; font-weight: 700; color: #1A6BFF; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
-        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .detail { background: #F9FAFB; border-radius: 10px; padding: 10px 14px; }
-        .detail-l { font-size: 11px; color: #6B7280; margin-bottom: 2px; }
-        .detail-v { font-size: 13px; font-weight: 600; color: #111; }
-        .wa-btn { background: #25D366; color: #fff; border: none; border-radius: 12px; padding: 12px 18px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-bottom: 8px; }
-        .devis-btn { background: #7C3AED; color: #fff; border: none; border-radius: 12px; padding: 12px 18px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; }
-        .client-link { background: #1A6BFF; color: #fff; border: none; border-radius: 12px; padding: 12px 18px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-bottom: 8px; text-decoration: none; }
+        /* Drawer détail lead */
+        .drawer-ovr { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; display: flex; justify-content: flex-end; }
+        .drawer { background: #fff; width: 100%; max-width: 540px; height: 100vh; overflow-y: auto; animation: slideIn 0.25s ease; }
+        @keyframes slideIn { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        .dr-head { padding: 20px 22px 16px; border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; background: #fff; z-index: 1; }
+        .dr-close { position: absolute; top: 14px; right: 14px; background: #F3F4F6; border: none; width: 32px; height: 32px; border-radius: 50%; font-size: 20px; cursor: pointer; }
+        .dr-name { font-size: 20px; font-weight: 800; margin: 0 36px 4px 0; }
+        .dr-code { font-size: 11px; color: #666; font-family: monospace; }
+        .dr-tabs { display: flex; gap: 4px; padding: 10px 22px 0; border-bottom: 1px solid #E5E7EB; }
+        .dr-tab { padding: 10px 16px; font-size: 13px; font-weight: 700; color: #666; background: transparent; border: none; cursor: pointer; border-bottom: 2px solid transparent; }
+        .dr-tab.on { color: #1A6BFF; border-color: #1A6BFF; }
+        .dr-body { padding: 20px 22px 40px; }
+        .dr-section { margin-bottom: 20px; }
+        .dr-s-h { font-size: 11px; color: #1A6BFF; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+        .dr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        @media (max-width: 500px) { .dr-grid { grid-template-columns: 1fr; } }
+        .dr-field { }
+        .dr-k { font-size: 11px; color: #888; font-weight: 600; }
+        .dr-v { font-size: 14px; font-weight: 600; color: #111; word-break: break-word; }
+        .dr-wa { background: #25D366; color: #fff; border: none; padding: 10px 16px; border-radius: 100px; font-weight: 700; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; }
 
-        @media (max-width: 1200px) { .kpi-grid { grid-template-columns: repeat(3, 1fr); } .charts-row { grid-template-columns: 1fr; } .seg-grid { grid-template-columns: 1fr; } .hero-kpis { grid-template-columns: 1fr; } }
-        @media (max-width: 900px) { .sidebar { transform: translateX(-100%); } .main { margin-left: 0; } }
+        /* Chat */
+        .chat-wrap { display: flex; flex-direction: column; height: 60vh; min-height: 400px; }
+        .chat-scroll { flex: 1; overflow-y: auto; padding: 10px 0; display: flex; flex-direction: column; gap: 8px; }
+        .msg { max-width: 80%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.4; word-break: break-word; }
+        .msg.admin { align-self: flex-end; background: #1A6BFF; color: #fff; border-bottom-right-radius: 4px; }
+        .msg.client { align-self: flex-start; background: #F0F3F8; color: #111; border-bottom-left-radius: 4px; }
+        .msg-meta { font-size: 10px; margin-top: 2px; opacity: 0.65; text-align: right; }
+        .msg.client .msg-meta { text-align: left; }
+        .chat-form { display: flex; gap: 8px; padding: 10px 10px 10px 14px; border: 1.5px solid #E5E7EB; border-radius: 14px; margin-top: 10px; }
+        .chat-form:focus-within { border-color: #1A6BFF; }
+        .chat-form textarea { flex: 1; border: none; outline: none; resize: none; min-height: 20px; max-height: 100px; font-family: inherit; }
+        .chat-send-btn { background: #1A6BFF; color: #fff; border: none; width: 42px; height: 42px; border-radius: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .chat-send-btn:disabled { background: #C7D0DB; }
+        .chat-empty { color: #999; text-align: center; padding: 40px 10px; font-size: 13px; }
+
+        /* Toast */
+        .toast { position: fixed; top: 16px; right: 16px; background: #0D1B3E; color: #fff; padding: 14px 18px; border-radius: 12px; box-shadow: 0 10px 24px rgba(0,0,0,0.2); z-index: 300; display: flex; align-items: center; gap: 12px; animation: toastIn 0.3s ease; max-width: 320px; }
+        @keyframes toastIn { from { transform: translateY(-10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .toast-sc { background: #1A6BFF; color: #fff; border-radius: 8px; padding: 6px 10px; font-weight: 800; font-size: 13px; flex-shrink: 0; }
       `}</style>
 
-      {/* SIDEBAR */}
-      <aside className="sidebar">
-        <div className="sb-logo">
-          <Logo />
-          <div>
-            <div className="sb-brand">Mayinvest</div>
-            <div className="sb-sub">Admin</div>
+      <div className="app">
+        {/* SIDEBAR */}
+        {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)}/>}
+        <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+          <div className="sb-logo">
+            <Logo height={32} tone="dark"/>
           </div>
-        </div>
-        <nav style={{ flex: 1, padding: '12px 0' }}>
-          <div className="sb-section">Tableaux de bord</div>
-          <button className={`sb-item ${page === 'general' ? 'on' : ''}`} onClick={() => setPage('general')}><Icon name="grid"/>Vue Générale</button>
-          <button className={`sb-item ${page === 'non-eligibles' ? 'on' : ''}`} onClick={() => setPage('non-eligibles')}><Icon name="alert"/>Non Éligibles<span className="sb-badge o">{stats.nonEligibles}</span></button>
-          <button className={`sb-item ${page === 'bancarisation' ? 'on' : ''}`} onClick={() => setPage('bancarisation')}><Icon name="bank"/>Bancarisation</button>
-          <button className={`sb-item ${page === 'segments' ? 'on' : ''}`} onClick={() => setPage('segments')}><Icon name="bars"/>Segments</button>
-          <div className="sb-section">Gestion</div>
-          <button className={`sb-item ${page === 'crm' ? 'on' : ''}`} onClick={() => setPage('crm')}><Icon name="users"/>CRM Leads<span className="sb-badge">{stats.total}</span></button>
-          <button className={`sb-item ${page === 'rapports' ? 'on' : ''}`} onClick={() => setPage('rapports')}><Icon name="file"/>Rapports Auto</button>
-        </nav>
-        <div className="sb-footer">
-          <div className="sb-avatar">{(session.user.email || 'A')[0].toUpperCase()}</div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="sb-user" title={session.user.email}>{session.user.email}</div>
-            <div className="sb-role">Admin</div>
-          </div>
-          <button className="sb-logout" onClick={logout} title="Déconnexion"><Icon name="logout" size={16}/></button>
-        </div>
-      </aside>
-
-      {/* MAIN */}
-      <main className="main">
-        <div className="topbar">
-          <div className="topbar-title">{titles[page]}</div>
-          <div className="topbar-right">
-            <div style={{ fontSize: 12, color: '#6B7280' }}>{new Date().toLocaleDateString('fr', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}</div>
-            <button className="btn btn-ghost" onClick={exportCSV}><Icon name="download" size={13}/>Export CSV</button>
-          </div>
-        </div>
-
-        <div className="content">
-
-          {page === 'general' && <>
-            {/* ★ Les 3 KPI STRATÉGIQUES (hero) : J / J-7 / J-30 */}
-            <div className="hero-kpis">
-              <div className="hero-kpi">
-                <div className="lbl">Aujourd'hui</div>
-                <div className="val">{stats.leadsJ}</div>
-                <div className="sub">Nouveaux leads du jour</div>
-              </div>
-              <div className="hero-kpi">
-                <div className="lbl">7 derniers jours</div>
-                <div className="val">{stats.leadsJ7}</div>
-                <div className="sub">Volume semaine glissante</div>
-              </div>
-              <div className="hero-kpi">
-                <div className="lbl">30 derniers jours</div>
-                <div className="val">{stats.leadsJ30}</div>
-                <div className="sub">Volume mois glissant</div>
-              </div>
-            </div>
-
-            {/* FUNNEL de conversion */}
-            <div className="chart-card" style={{ marginBottom: 24 }}>
-              <div className="chart-title">Funnel de conversion</div>
-              <div className="chart-sub">Du prospect au financement — taux de passage à chaque étape</div>
-              <div className="funnel">
-                {funnel.map((s, i) => (
-                  <div key={s.label}>
-                    <div className="funnel-row">
-                      <div className="funnel-bar">
-                        <div className="funnel-fill" style={{ width: `${Math.max(s.pct, 6)}%`, background: s.color }}>
-                          {s.label} · {s.value}
-                        </div>
-                      </div>
-                      <div className="funnel-pct">{s.pct}% total</div>
-                    </div>
-                    {i < funnel.length - 1 && (
-                      <div className="funnel-arrow">↓ {s.conversionFromPrev}% passent à l'étape suivante</div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="kpi-grid">
-              <div className="kpi-card"><div className="kpi-label">Total Leads</div><div className="kpi-value" style={{ color: '#1A6BFF' }}>{stats.total}</div><div className="kpi-sub">Historique complet</div></div>
-              <div className="kpi-card"><div className="kpi-label">Éligibles</div><div className="kpi-value" style={{ color: '#16A34A' }}>{stats.eligibles}</div><div className="kpi-sub">{stats.total ? Math.round((stats.eligibles/stats.total)*100) : 0}% des leads</div></div>
-              <div className="kpi-card"><div className="kpi-label">Non Éligibles</div><div className="kpi-value" style={{ color: '#EA580C' }}>{stats.nonEligibles}</div><div className="kpi-sub">Potentiel Pack Formalisation</div></div>
-              <div className="kpi-card"><div className="kpi-label">Dossiers Déposés</div><div className="kpi-value">{stats.deposes}</div><div className="kpi-sub">En instruction banque</div></div>
-              <div className="kpi-card"><div className="kpi-label">Financés</div><div className="kpi-value" style={{ color: '#16A34A' }}>{stats.finances}</div><div className="kpi-sub">Taux {stats.taux}%</div></div>
-              <div className="kpi-card"><div className="kpi-label">CA Mayinvest</div><div className="kpi-value" style={{ color: '#7C3AED', fontSize: 22 }}>{(stats.finances * 50000 / 1e6).toFixed(2)}M</div><div className="kpi-sub">XAF estimé</div></div>
-            </div>
-
-            <div className="table-card">
-              <div className="table-head">
-                <div className="table-h-t">Derniers leads</div>
-                <div className="filters">
-                  <input className="filter-inp" placeholder="Rechercher..." value={search} onChange={e => setSearch(e.target.value)}/>
-                  <select className="filter-sel" value={filterStatut} onChange={e => setFilterStatut(e.target.value)}>
-                    <option value="">Tous statuts</option>
-                    {STATUSES.map(s => <option key={s}>{s}</option>)}
-                  </select>
-                  <select className="filter-sel" value={filterType} onChange={e => setFilterType(e.target.value)}>
-                    <option value="">Tous types</option>
-                    <option value="physique">Physique</option>
-                    <option value="morale">PME</option>
-                  </select>
-                </div>
-              </div>
-              <table>
-                <thead><tr><th>Nom</th><th>Type</th><th>Activité</th><th>Montant XAF</th><th>Score</th><th>Statut</th><th>Date</th></tr></thead>
-                <tbody>
-                  {loading && <tr><td colSpan={7} style={{ textAlign: 'center', padding: 30, color: '#6B7280' }}>Chargement…</td></tr>}
-                  {!loading && filteredLeads.length === 0 && <tr><td colSpan={7} style={{ textAlign: 'center', padding: 30, color: '#6B7280' }}>Aucun lead</td></tr>}
-                  {filteredLeads.slice(0, 15).map(l => {
-                    const p = pillColor(l.statut)
-                    return (
-                      <tr key={l.id} onClick={() => setSelectedLead(l)}>
-                        <td style={{ fontWeight: 600 }}>{nomOf(l)}</td>
-                        <td style={{ color: '#6B7280' }}>{l.type === 'morale' ? 'PME' : 'Physique'}</td>
-                        <td style={{ color: '#6B7280' }}>{l.activite || '—'}</td>
-                        <td style={{ color: '#6B7280', fontVariantNumeric: 'tabular-nums' }}>{l.montant_demande ? l.montant_demande.toLocaleString('fr') : '—'}</td>
-                        <td><span className="score-ring" style={{ color: scoreColor(l.score), borderColor: scoreColor(l.score) }}>{l.score}</span></td>
-                        <td><span className="pill" style={{ background: p.bg, color: p.c }}>{l.statut}</span></td>
-                        <td style={{ color: '#6B7280' }}>{new Date(l.created_at).toLocaleDateString('fr')}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </>}
-
-          {page === 'non-eligibles' && <>
-            <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>
-              <div className="kpi-card"><div className="kpi-label">Total Non Éligibles</div><div className="kpi-value" style={{ color: '#EA580C' }}>{stats.nonEligibles}</div><div className="kpi-sub">{stats.total ? Math.round((stats.nonEligibles/stats.total)*100) : 0}% des leads</div></div>
-              <div className="kpi-card"><div className="kpi-label">Pack Formalisation</div><div className="kpi-value" style={{ color: '#7C3AED', fontSize: 22 }}>{(leads.filter(l => l.eligibilite?.rccm === 'Non').length * 50000 / 1e6).toFixed(2)}M</div><div className="kpi-sub">XAF potentiel</div></div>
-              <div className="kpi-card"><div className="kpi-label">Sans RCCM</div><div className="kpi-value">{leads.filter(l => l.eligibilite?.rccm === 'Non').length}</div><div className="kpi-sub">PME à formaliser</div></div>
-              <div className="kpi-card"><div className="kpi-label">Refus bancaire</div><div className="kpi-value">{leads.filter(l => l.eligibilite?.refus_bancaire === 'Oui').length}</div><div className="kpi-sub">Restructuration</div></div>
-            </div>
-            <div className="table-card">
-              <div className="table-head"><div className="table-h-t">Analyse des raisons</div></div>
-              <table>
-                <thead><tr><th>Raison</th><th>Nombre</th><th>%</th><th>Potentiel</th><th>Action</th></tr></thead>
-                <tbody>
-                  <tr><td style={{ fontWeight: 600 }}>Pas de RCCM</td><td>{leads.filter(l => l.eligibilite?.rccm === 'Non').length}</td><td>{stats.nonEligibles ? Math.round(leads.filter(l => l.eligibilite?.rccm === 'Non').length / stats.nonEligibles * 100) : 0}%</td><td style={{ color: '#7C3AED', fontWeight: 700 }}>{(leads.filter(l => l.eligibilite?.rccm === 'Non').length * 50000).toLocaleString('fr')} XAF</td><td><span className="pill" style={{ background: '#EDE9FE', color: '#7C3AED' }}>Pack Formalisation</span></td></tr>
-                  <tr><td style={{ fontWeight: 600 }}>Ancienneté insuffisante</td><td>{leads.filter(l => l.eligibilite?.anciennete_ok === false).length}</td><td>—</td><td style={{ color: '#6B7280' }}>Couveuse 3 mois</td><td><span className="pill" style={{ background: '#F5F5F5', color: '#6B7280' }}>Couveuse</span></td></tr>
-                  <tr><td style={{ fontWeight: 600 }}>Refus bancaire</td><td>{leads.filter(l => l.eligibilite?.refus_bancaire === 'Oui').length}</td><td>—</td><td style={{ color: '#DC2626' }}>Restructuration</td><td><span className="pill" style={{ background: '#FEE2E2', color: '#DC2626' }}>Restructuration</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </>}
-
-          {page === 'bancarisation' && <>
-            <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
-              <div className="kpi-card"><div className="kpi-label">Avec banque</div><div className="kpi-value" style={{ color: '#16A34A' }}>{leads.filter(l => l.banque_actuelle && l.banque_actuelle !== 'Aucune').length}</div><div className="kpi-sub">{stats.total ? Math.round(leads.filter(l => l.banque_actuelle && l.banque_actuelle !== 'Aucune').length / stats.total * 100) : 0}% bancarisés</div></div>
-              <div className="kpi-card"><div className="kpi-label">Sans banque</div><div className="kpi-value" style={{ color: '#EA580C' }}>{leads.filter(l => !l.banque_actuelle || l.banque_actuelle === 'Aucune').length}</div><div className="kpi-sub">À bancariser</div></div>
-              <div className="kpi-card"><div className="kpi-label">Salaire domicilié</div><div className="kpi-value" style={{ color: '#1A6BFF' }}>{leads.filter(l => l.eligibilite?.salaire_domic === 'Oui').length}</div><div className="kpi-sub">Prospects sérieux</div></div>
-            </div>
-            <div className="chart-card"><div className="chart-title">Répartition par banque</div><div className="chart-sub">Volume de leads par institution bancaire</div><div className="bar-h">{parBanque.map(b => <div key={b.label} className="bar-h-row"><div className="bar-h-l">{b.label}</div><div className="bar-h-t"><div className="bar-h-f" style={{ width: `${Math.min(100, b.total / Math.max(...parBanque.map(x => x.total), 1) * 100)}%` }} /></div><div className="bar-h-v">{b.total}</div></div>)}</div></div>
-          </>}
-
-          {page === 'segments' && <>
-            <div className="seg-grid">
-              <div className="chart-card">
-                <div className="chart-title">Par Secteur</div>
-                <div className="chart-sub">Taux d'éligibilité</div>
-                <div className="bar-h">{parSecteur.map(b => <div key={b.label} className="bar-h-row"><div className="bar-h-l">{b.label}</div><div className="bar-h-t"><div className="bar-h-f" style={{ width: `${b.pct}%` }} /></div><div className="bar-h-v">{b.pct}%</div></div>)}</div>
-              </div>
-              <div className="chart-card">
-                <div className="chart-title">Par Montant</div>
-                <div className="chart-sub">Taux de financement</div>
-                <div className="bar-h">{parMontant.map(b => <div key={b.label} className="bar-h-row"><div className="bar-h-l">{b.label}</div><div className="bar-h-t"><div className="bar-h-f" style={{ width: `${b.pct}%`, background: '#7C3AED' }} /></div><div className="bar-h-v">{b.pct}%</div></div>)}</div>
-              </div>
-              <div className="chart-card">
-                <div className="chart-title">Par Banque</div>
-                <div className="chart-sub">Taux de succès</div>
-                <div className="bar-h">{parBanque.map(b => <div key={b.label} className="bar-h-row"><div className="bar-h-l">{b.label}</div><div className="bar-h-t"><div className="bar-h-f" style={{ width: `${b.pct}%`, background: '#16A34A' }} /></div><div className="bar-h-v">{b.pct}%</div></div>)}</div>
-              </div>
-            </div>
-          </>}
-
-          {page === 'crm' && <>
-            <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-              <input className="filter-inp" style={{ flex: 1, minWidth: 240 }} placeholder="Rechercher un lead..." value={search} onChange={e => setSearch(e.target.value)}/>
-              <select className="filter-sel" value={filterStatut} onChange={e => setFilterStatut(e.target.value)}>
-                <option value="">Tous les statuts</option>
-                {STATUSES.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div style={{ display: 'flex', gap: 12, overflowX: 'auto', paddingBottom: 8 }}>
-              {STATUSES.map(s => {
-                const col = pillColor(s)
-                const items = filteredLeads.filter(l => l.statut === s)
-                return (
-                  <div key={s} style={{ flex: '0 0 240px' }}>
-                    <div style={{ padding: '10px 14px', background: col.bg, color: col.c, borderRadius: '10px 10px 0 0', fontSize: 12, fontWeight: 700, display: 'flex', justifyContent: 'space-between' }}>
-                      <span>{s}</span><span>{items.length}</span>
-                    </div>
-                    <div style={{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderTop: 'none', borderRadius: '0 0 10px 10px', padding: 8, display: 'flex', flexDirection: 'column', gap: 6, minHeight: 200 }}>
-                      {items.map(l => (
-                        <div key={l.id} onClick={() => setSelectedLead(l)} style={{ background: '#FFF', border: '1px solid #E5E7EB', borderRadius: 8, padding: 10, cursor: 'pointer', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                          <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2, color: '#111' }}>{nomOf(l)}</div>
-                          <div style={{ fontSize: 11, color: '#6B7280' }}>{l.activite} · {l.montant_demande ? `${(l.montant_demande/1e6).toFixed(1)}M` : '—'}</div>
-                          <div style={{ fontSize: 11, fontWeight: 700, marginTop: 4, color: scoreColor(l.score) }}>{l.score}/100</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </>}
-
-          {page === 'rapports' && <>
-            <div style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>Rapports automatiques</div>
-              <div style={{ fontSize: 13, color: '#6B7280' }}>Alertes temps réel dans ce dashboard</div>
-            </div>
-            <div style={{ background: '#FFF', border: '1px solid #E5E7EB', borderRadius: 14, padding: 20, marginBottom: 12, display: 'flex', gap: 16 }}>
-              <div style={{ width: 44, height: 44, background: '#DCFCE7', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#16A34A', flexShrink: 0 }}><Icon name="bell" size={22}/></div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: '#111' }}>Notification temps réel ACTIVE ✓</div>
-                <div style={{ fontSize: 12, color: '#6B7280', lineHeight: 1.5 }}>Chaque nouveau lead déclenche un toast + un son + une notification navigateur (si l'onglet est en arrière-plan).</div>
-              </div>
-            </div>
-            {[
-              { t: 'Rapport hebdo', d: `${stats.leadsJ7} nouveaux leads · ${stats.finances} financés · Taux ${stats.taux}%`, when: 'Lundi 8h (manuel pour V1)' },
-              { t: 'Rapport mensuel', d: `${stats.leadsJ30} leads sur 30 jours · ${stats.deposes} dossiers déposés`, when: '1er du mois (manuel pour V1)' },
-            ].map(r => (
-              <div key={r.t} style={{ background: '#FFF', border: '1px solid #E5E7EB', borderRadius: 14, padding: 20, marginBottom: 12, display: 'flex', gap: 16 }}>
-                <div style={{ width: 44, height: 44, background: '#EEF4FF', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1A6BFF', flexShrink: 0 }}><Icon name="file" size={22}/></div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 4, color: '#111' }}>{r.t}</div>
-                  <div style={{ fontSize: 12, color: '#6B7280', lineHeight: 1.5 }}>{r.d}</div>
-                  <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 6 }}>Prochain : {r.when}</div>
-                </div>
-              </div>
+          <nav className="sb-nav">
+            {NAV.map(n => (
+              <button key={n.k} className={`sb-link ${page === n.k ? 'on' : ''}`} onClick={() => { setPage(n.k); setSidebarOpen(false) }}>
+                <span>{n.icon}</span><span>{n.label}</span>
+              </button>
             ))}
+          </nav>
+          <div className="sb-footer">
+            <div className="sb-user">{session.user.email}</div>
+            <button className="sb-logout" onClick={logout}>Déconnexion</button>
+          </div>
+        </aside>
+
+        {/* MAIN */}
+        <main className="main">
+          <div className="top-bar">
+            <button className="burger" onClick={() => setSidebarOpen(true)} aria-label="Menu">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="#111" strokeWidth="2" strokeLinecap="round"/></svg>
+            </button>
+            <h1 className="page-title">{NAV.find(n => n.k === page)?.label}</h1>
+          </div>
+
+          {loading ? <div className="empty">Chargement…</div> : <>
+            {page === 'general' && <DashboardView kpi={kpi} funnel={funnel} total={leads.length}/>}
+            {page === 'crm' && <CRMView leads={filtered} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} onOpen={setSelectedLead} updateStatut={updateStatut} exportCSV={exportCSV}/>}
+            {page === 'segments' && <SegmentsView leads={leads}/>}
+            {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead}/>}
+            {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead}/>}
+            {page === 'rapports' && <RapportsView leads={leads} exportCSV={exportCSV}/>}
           </>}
+        </main>
+      </div>
 
-        </div>
-      </main>
-
-      {/* Toast notification */}
-      {toast && (
-        <div className="toast">
-          <div className="toast-ic"><Icon name="bell" size={16}/></div>
-          <div>{toast.msg}</div>
-        </div>
+      {/* DRAWER DÉTAIL LEAD */}
+      {selectedLead && (
+        <LeadDrawer
+          lead={selectedLead}
+          onClose={() => { setSelectedLead(null); loadLeads() }}
+          onStatutChange={(s) => { updateStatut(selectedLead.id, s); setSelectedLead({ ...selectedLead, statut: s }) }}
+          msgCount={msgCounts[selectedLead.id] || 0}
+          onMsgRead={() => setMsgCounts(c => ({ ...c, [selectedLead.id]: 0 }))}
+        />
       )}
 
-      {/* MODAL LEAD DETAIL */}
-      {selectedLead && (() => {
-        const l = selectedLead
-        const identite = l.identite || {}
-        const besoin = l.besoin || {}
-        const nom = nomOf(l)
-        return (
-          <div className="modal-ov" onClick={() => setSelectedLead(null)}>
-            <div className="modal" onClick={e => e.stopPropagation()}>
-              <div className="modal-h">
-                <div>
-                  <div className="modal-t">{nom}</div>
-                  <div style={{ fontSize: 13, color: '#6B7280', marginTop: 4 }}>{l.activite || '—'} · {l.ville || '—'}</div>
-                </div>
-                <button className="modal-close" onClick={() => setSelectedLead(null)}>×</button>
-              </div>
-              <div className="modal-b">
+      {/* TOAST */}
+      {toast && (
+        <div className="toast">
+          <div className="toast-sc">{toast.score}</div>
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 13 }}>Nouveau dossier</div>
+            <div style={{ fontSize: 12, opacity: 0.8, marginTop: 2 }}>{toast.msg}</div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
-                <div className="modal-sec">
-                  <div className="modal-sec-t">Score</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 16, background: '#F9FAFB', borderRadius: 12, padding: 16 }}>
-                    <div style={{ width: 60, height: 60, borderRadius: '50%', border: `3px solid ${scoreColor(l.score)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: scoreColor(l.score) }}>{l.score}</div>
-                    <div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: scoreColor(l.score) }}>{l.score >= 70 ? 'Excellent' : l.score >= 50 ? 'Éligible' : 'À renforcer'}</div>
-                      <div style={{ fontSize: 12, color: '#6B7280' }}>Score calculé automatiquement</div>
-                    </div>
-                  </div>
-                </div>
+/* ============================================================
+ * SUB-VIEWS
+ * ============================================================ */
 
-                <div className="modal-sec">
-                  <div className="modal-sec-t">Contact</div>
-                  <div className="detail-grid">
-                    <div className="detail"><div className="detail-l">Téléphone</div><div className="detail-v">{identite.tel || '—'}</div></div>
-                    <div className="detail"><div className="detail-l">Email</div><div className="detail-v">{identite.email || '—'}</div></div>
-                  </div>
-                </div>
+function DashboardView({ kpi, funnel, total }: any) {
+  return (
+    <>
+      <div className="kpi-grid">
+        <div className="kpi"><div className="kpi-l">Aujourd'hui</div><div className="kpi-v">{kpi.jj}</div><div className="kpi-s">nouveaux leads</div></div>
+        <div className="kpi"><div className="kpi-l">7 jours</div><div className="kpi-v">{kpi.j7}</div><div className="kpi-s">leads cumulés</div></div>
+        <div className="kpi"><div className="kpi-l">30 jours</div><div className="kpi-v">{kpi.j30}</div><div className="kpi-s">leads cumulés</div></div>
+        <div className="kpi"><div className="kpi-l">Total</div><div className="kpi-v">{total}</div><div className="kpi-s">tous dossiers</div></div>
+        <div className="kpi"><div className="kpi-l">Financés</div><div className="kpi-v" style={{ color: '#166534' }}>{kpi.finances}</div><div className="kpi-s">conversion {kpi.conv}%</div></div>
+      </div>
 
-                <div className="modal-sec">
-                  <div className="modal-sec-t">Dossier</div>
-                  <div className="detail-grid">
-                    <div className="detail"><div className="detail-l">Montant</div><div className="detail-v">{l.montant_demande ? `${l.montant_demande.toLocaleString('fr')} XAF` : '—'}</div></div>
-                    <div className="detail"><div className="detail-l">Objet</div><div className="detail-v">{besoin.objet || '—'}</div></div>
-                    <div className="detail"><div className="detail-l">Banque</div><div className="detail-v">{l.banque_actuelle || '—'}</div></div>
-                    <div className="detail"><div className="detail-l">Type</div><div className="detail-v">{l.type === 'morale' ? 'PME' : 'Physique'}</div></div>
-                  </div>
-                </div>
-
-                <div className="modal-sec">
-                  <div className="modal-sec-t">Statut</div>
-                  <select className="filter-sel" style={{ width: '100%', padding: '10px 14px', fontSize: 13 }} value={l.statut} onChange={e => { updateStatut(l.id, e.target.value); setSelectedLead({ ...l, statut: e.target.value }) }}>
-                    {STATUSES.map(s => <option key={s}>{s}</option>)}
-                  </select>
-                </div>
-
-                <div className="modal-sec">
-                  <div className="modal-sec-t">Actions</div>
-                  <a className="client-link" href={`/client/${l.id}`} target="_blank" rel="noopener noreferrer">
-                    <Icon name="arrow" size={14}/>Ouvrir espace client
-                  </a>
-                  <button className="wa-btn" onClick={() => window.open(`https://wa.me/${(identite.tel || '').replace(/\D/g,'')}?text=Bonjour ${identite.prenom || ''}, Mayinvest Conseil au sujet de votre dossier.`, '_blank')}>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
-                    Contacter sur WhatsApp
-                  </button>
-                  {l.eligibilite?.rccm === 'Non' && (
-                    <button className="devis-btn">
-                      <Icon name="file" size={14}/>Proposer Pack Formalisation 50 000 XAF
-                    </button>
-                  )}
-                </div>
-
+      <div className="funnel">
+        <h3 className="funnel-h">Entonnoir de conversion</h3>
+        {funnel.map((f: any) => {
+          const pct = total ? (f.count / total) * 100 : 0
+          return (
+            <div key={f.statut} className="funnel-row">
+              <div className="funnel-l">{f.statut}</div>
+              <div className="funnel-bar">
+                <div className="funnel-fill" style={{ width: `${Math.max(pct, 2)}%`, background: f.color.fg }}>{f.count}</div>
               </div>
             </div>
-          </div>
-        )
-      })()}
+          )
+        })}
+      </div>
+    </>
+  )
+}
 
+function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, onOpen, updateStatut, exportCSV }: any) {
+  return (
+    <>
+      <div className="toolbar">
+        <input placeholder="Rechercher nom, téléphone, code…" value={search} onChange={e => setSearch(e.target.value)}/>
+        <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)}>
+          <option value="">Tous statuts</option>
+          {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+        <select value={filterType} onChange={e => setFilterType(e.target.value)}>
+          <option value="">Tous types</option>
+          <option value="physique">Particulier</option>
+          <option value="morale">PME</option>
+        </select>
+        <button className="btn-export" onClick={exportCSV}>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 7l4 4 4-4M2 13h10" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          Export CSV
+        </button>
+      </div>
+
+      {leads.length === 0 ? <div className="empty">Aucun lead trouvé.</div> : (
+        <div className="lead-grid">
+          {leads.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={msgCounts[l.id] || 0} onOpen={onOpen} updateStatut={updateStatut}/>)}
+        </div>
+      )}
+    </>
+  )
+}
+
+function LeadRow({ lead, msgCount, onOpen, updateStatut }: any) {
+  const c = STATUS_COLORS[lead.statut] || STATUS_COLORS['Nouveau']
+  const isP = lead.type === 'physique' || lead.type === 'Personne physique'
+  const nom = isP ? `${lead.identite?.prenom || ''} ${lead.identite?.nom || ''}`.trim() : (lead.situation?.raison_sociale || lead.identite?.raison_sociale || '—')
+  const scoreCls = lead.score >= 70 ? 'hi' : lead.score < 40 ? 'lo' : ''
+  return (
+    <div className="lead-row" onClick={() => onOpen(lead)}>
+      <div className="lead-l">
+        <div className="lead-name">
+          <span>{nom || '—'}</span>
+          <span className="lead-badge" style={{ background: c.bg, color: c.fg }}>{lead.statut}</span>
+          {msgCount > 0 && <span className="msg-badge">{msgCount}</span>}
+        </div>
+        <div className="lead-meta">{isP ? 'Particulier' : 'PME'} · {lead.activite} · {lead.ville || '—'} · {formatXAF(lead.montant_demande)} · {new Date(lead.created_at).toLocaleDateString('fr-FR')}</div>
+      </div>
+      <div className="lead-r" onClick={e => e.stopPropagation()}>
+        <div className={`lead-score ${scoreCls}`}>{lead.score}</div>
+        <select className="lead-statut-sel" value={lead.statut} onChange={e => updateStatut(lead.id, e.target.value)}>
+          {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+    </div>
+  )
+}
+
+function SegmentsView({ leads }: any) {
+  const bySecteur = useMemo(() => {
+    const m: Record<string, number> = {}
+    leads.forEach((l: any) => { const k = l.activite || 'Non défini'; m[k] = (m[k] || 0) + 1 })
+    return Object.entries(m).sort((a, b) => b[1] - a[1])
+  }, [leads])
+  const byVille = useMemo(() => {
+    const m: Record<string, number> = {}
+    leads.forEach((l: any) => { const k = l.ville || 'Non défini'; m[k] = (m[k] || 0) + 1 })
+    return Object.entries(m).sort((a, b) => b[1] - a[1])
+  }, [leads])
+  const byMontant = useMemo(() => {
+    const tranches = [{ k: '< 1M', min: 0, max: 1_000_000 }, { k: '1M–5M', min: 1_000_000, max: 5_000_000 }, { k: '5M–20M', min: 5_000_000, max: 20_000_000 }, { k: '20M+', min: 20_000_000, max: Infinity }]
+    return tranches.map(t => ({ k: t.k, c: leads.filter((l: any) => (l.montant_demande || 0) >= t.min && (l.montant_demande || 0) < t.max).length }))
+  }, [leads])
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
+      <Panel title="Par secteur / profession">
+        {bySecteur.map(([k, v]) => <Bar key={k} label={k} value={v} total={leads.length}/>)}
+      </Panel>
+      <Panel title="Par ville">
+        {byVille.map(([k, v]) => <Bar key={k} label={k} value={v} total={leads.length}/>)}
+      </Panel>
+      <Panel title="Par tranche de montant">
+        {byMontant.map(t => <Bar key={t.k} label={t.k} value={t.c} total={leads.length}/>)}
+      </Panel>
+    </div>
+  )
+}
+
+function Panel({ title, children }: any) {
+  return <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 2px 8px rgba(13,27,62,0.04)' }}><h3 style={{ fontSize: 13, fontWeight: 700, color: '#0D1B3E', margin: '0 0 14px' }}>{title}</h3>{children}</div>
+}
+
+function Bar({ label, value, total }: { label: string; value: number; total: number }) {
+  const pct = total ? (value / total) * 100 : 0
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, marginBottom: 3 }}><span>{label}</span><span>{value}</span></div>
+      <div style={{ height: 6, background: '#F3F4F6', borderRadius: 100, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${pct}%`, background: '#1A6BFF', borderRadius: 100 }}/>
+      </div>
+    </div>
+  )
+}
+
+function BancarisationView({ leads, onOpen }: any) {
+  const list = leads.filter((l: any) => l.eligibilite?.salaire_domic === 'Non' || l.banque_actuelle === 'Aucune')
+  return <>
+    <p style={{ color: '#666', fontSize: 13, marginBottom: 16 }}>Prospects à bancariser ({list.length})</p>
+    {list.length === 0 ? <div className="empty">Aucun prospect à bancariser.</div> : (
+      <div className="lead-grid">{list.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={0} onOpen={onOpen} updateStatut={() => {}}/>)}</div>
+    )}
+  </>
+}
+
+function NonEligiblesView({ leads, onOpen }: any) {
+  const list = leads.filter((l: any) => l.eligibilite?.non_eligible === true || l.statut === 'Non Éligible' || l.situation?.rccm === 'Non')
+  return <>
+    <p style={{ color: '#666', fontSize: 13, marginBottom: 16 }}>Dossiers non éligibles ({list.length}) — pack formalisation, up-sell, reconversion</p>
+    {list.length === 0 ? <div className="empty">Aucun dossier non éligible.</div> : (
+      <div className="lead-grid">{list.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={0} onOpen={onOpen} updateStatut={() => {}}/>)}</div>
+    )}
+  </>
+}
+
+function RapportsView({ leads, exportCSV }: any) {
+  const totalMontant = leads.reduce((s: number, l: any) => s + (l.montant_demande || 0), 0)
+  const avg = leads.length ? Math.round(totalMontant / leads.length) : 0
+  return <>
+    <div className="kpi-grid">
+      <div className="kpi"><div className="kpi-l">Total demandé</div><div className="kpi-v" style={{ fontSize: 20 }}>{formatXAF(totalMontant)}</div></div>
+      <div className="kpi"><div className="kpi-l">Panier moyen</div><div className="kpi-v" style={{ fontSize: 20 }}>{formatXAF(avg)}</div></div>
+      <div className="kpi"><div className="kpi-l">Score moyen</div><div className="kpi-v">{leads.length ? Math.round(leads.reduce((s: number, l: any) => s + (l.score || 0), 0) / leads.length) : 0}</div></div>
+    </div>
+    <button className="btn-export" onClick={exportCSV}>📥 Exporter tous les leads en CSV</button>
+  </>
+}
+
+/* ============================================================
+ * DRAWER DÉTAIL + CHAT
+ * ============================================================ */
+function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead }: any) {
+  const [tab, setTab] = useState<'infos' | 'chat'>('infos')
+  const [messages, setMessages] = useState<any[]>([])
+  const [newMsg, setNewMsg] = useState('')
+  const [sending, setSending] = useState(false)
+  const chatEnd = useRef<HTMLDivElement>(null)
+
+  const isP = lead.type === 'physique' || lead.type === 'Personne physique'
+  const nom = isP ? `${lead.identite?.prenom || ''} ${lead.identite?.nom || ''}`.trim() : (lead.situation?.raison_sociale || lead.identite?.raison_sociale || '—')
+  const tel = lead.identite?.tel || ''
+  const waPhone = tel ? '242' + tel.replace(/\D/g, '') : ''
+
+  async function loadMessages() {
+    const { data } = await supabase.from('messages').select('*').eq('lead_id', lead.id).order('created_at')
+    if (data) setMessages(data)
+    // Marquer les messages client comme lus
+    await supabase.rpc('mark_messages_read', { p_lead_id: lead.id, p_reader: 'admin' })
+    onMsgRead()
+  }
+
+  useEffect(() => {
+    loadMessages()
+    const chan = supabase.channel(`drawer-${lead.id}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `lead_id=eq.${lead.id}` },
+        (payload) => setMessages(p => [...p, payload.new]))
+      .subscribe()
+    return () => { supabase.removeChannel(chan) }
+  }, [lead.id])
+
+  useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+
+  async function sendMsg() {
+    if (!newMsg.trim() || sending) return
+    setSending(true)
+    const t = newMsg.trim()
+    setNewMsg('')
+    await supabase.from('messages').insert({ lead_id: lead.id, sender: 'admin', content: t })
+    setSending(false)
+  }
+
+  return (
+    <div className="drawer-ovr" onClick={onClose}>
+      <div className="drawer" onClick={e => e.stopPropagation()}>
+        <div className="dr-head">
+          <button className="dr-close" onClick={onClose}>×</button>
+          <h2 className="dr-name">{nom}</h2>
+          <div className="dr-code">{lead.access_code || '—'} · {lead.id}</div>
+          <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <select value={lead.statut} onChange={e => onStatutChange(e.target.value)} style={{ background: STATUS_COLORS[lead.statut]?.bg, color: STATUS_COLORS[lead.statut]?.fg, border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 800, fontSize: 12 }}>
+              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <span style={{ background: '#EEF4FF', color: '#1A6BFF', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800 }}>Score {lead.score}/100</span>
+            {waPhone && <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener" className="dr-wa">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
+              WhatsApp
+            </a>}
+          </div>
+        </div>
+
+        <div className="dr-tabs">
+          <button className={`dr-tab ${tab === 'infos' ? 'on' : ''}`} onClick={() => setTab('infos')}>Infos dossier</button>
+          <button className={`dr-tab ${tab === 'chat' ? 'on' : ''}`} onClick={() => setTab('chat')}>
+            Discussion {messages.filter(m => m.sender === 'client' && !m.read_at).length > 0 && <span className="msg-badge" style={{ marginLeft: 4 }}>{messages.filter(m => m.sender === 'client' && !m.read_at).length}</span>}
+          </button>
+        </div>
+
+        <div className="dr-body">
+          {tab === 'infos' && <>
+            <div className="dr-section">
+              <div className="dr-s-h">Contact</div>
+              <div className="dr-grid">
+                <div className="dr-field"><div className="dr-k">Téléphone</div><div className="dr-v">{tel || '—'}</div></div>
+                <div className="dr-field"><div className="dr-k">Email</div><div className="dr-v">{lead.identite?.email || '—'}</div></div>
+                <div className="dr-field"><div className="dr-k">Ville</div><div className="dr-v">{lead.ville || '—'}</div></div>
+                <div className="dr-field"><div className="dr-k">Activité</div><div className="dr-v">{lead.activite || '—'}</div></div>
+              </div>
+            </div>
+
+            <div className="dr-section">
+              <div className="dr-s-h">Situation {isP ? 'professionnelle' : 'juridique'}</div>
+              <div className="dr-grid">
+                {isP ? <>
+                  <div className="dr-field"><div className="dr-k">Employeur</div><div className="dr-v">{lead.situation?.employeur || '—'}</div></div>
+                  <div className="dr-field"><div className="dr-k">Type de contrat</div><div className="dr-v">{lead.situation?.contrat || '—'}</div></div>
+                  {lead.situation?.duree_restante && <div className="dr-field"><div className="dr-k">Durée restante</div><div className="dr-v">{lead.situation.duree_restante} mois</div></div>}
+                  <div className="dr-field"><div className="dr-k">Ancienneté</div><div className="dr-v">{TRANCHE_LABELS[lead.situation?.anciennete_tranche] || lead.situation?.anciennete || '—'}</div></div>
+                  <div className="dr-field"><div className="dr-k">Revenu mensuel</div><div className="dr-v">{formatXAF(lead.situation?.revenu)}</div></div>
+                </> : <>
+                  <div className="dr-field"><div className="dr-k">Dirigeant</div><div className="dr-v">{lead.situation?.dirigeant || '—'}</div></div>
+                  <div className="dr-field"><div className="dr-k">RCCM</div><div className="dr-v">{lead.situation?.rccm || '—'}</div></div>
+                  <div className="dr-field"><div className="dr-k">NIU</div><div className="dr-v">{lead.situation?.niu || '—'}</div></div>
+                  <div className="dr-field"><div className="dr-k">Ancienneté</div><div className="dr-v">{TRANCHE_LABELS[lead.situation?.anciennete_tranche] || '—'}</div></div>
+                  <div className="dr-field"><div className="dr-k">CA annuel</div><div className="dr-v">{formatXAF(lead.situation?.ca_annuel)}</div></div>
+                </>}
+              </div>
+            </div>
+
+            <div className="dr-section">
+              <div className="dr-s-h">Besoin</div>
+              <div className="dr-grid">
+                <div className="dr-field"><div className="dr-k">Montant demandé</div><div className="dr-v">{formatXAF(lead.montant_demande)}</div></div>
+                <div className="dr-field"><div className="dr-k">Objet</div><div className="dr-v">{lead.besoin?.objet || '—'}</div></div>
+                <div className="dr-field"><div className="dr-k">Banque actuelle</div><div className="dr-v">{lead.banque_actuelle || '—'}</div></div>
+                {!isP && <div className="dr-field"><div className="dr-k">Flux mensuel</div><div className="dr-v">{formatXAF(lead.besoin?.flux_mois)}</div></div>}
+              </div>
+            </div>
+
+            <div className="dr-section">
+              <div className="dr-s-h">Éligibilité</div>
+              <div className="dr-grid">
+                {isP ? <>
+                  <div className="dr-field"><div className="dr-k">Salaire domicilié</div><div className="dr-v">{lead.eligibilite?.salaire_domic || '—'}</div></div>
+                  {lead.eligibilite?.anciennete_compte_tranche && <div className="dr-field"><div className="dr-k">Compte ouvert depuis</div><div className="dr-v">{TRANCHE_LABELS[lead.eligibilite.anciennete_compte_tranche]}</div></div>}
+                  <div className="dr-field"><div className="dr-k">Non éligible</div><div className="dr-v" style={{ color: lead.eligibilite?.non_eligible ? '#B91C1C' : '#166534' }}>{lead.eligibilite?.non_eligible ? 'Oui ⚠' : 'Non ✓'}</div></div>
+                </> : <>
+                  <div className="dr-field"><div className="dr-k">Compte mouvementé</div><div className="dr-v">{lead.eligibilite?.compte_mouvemente || '—'}</div></div>
+                  <div className="dr-field"><div className="dr-k">Refus bancaire antérieur</div><div className="dr-v">{lead.eligibilite?.refus_bancaire || '—'}</div></div>
+                  <div className="dr-field"><div className="dr-k">Garanties</div><div className="dr-v">{lead.eligibilite?.garanties || '—'}</div></div>
+                </>}
+              </div>
+            </div>
+
+            <div className="dr-section">
+              <div className="dr-s-h">Métadonnées</div>
+              <div className="dr-grid">
+                <div className="dr-field"><div className="dr-k">Créé le</div><div className="dr-v">{new Date(lead.created_at).toLocaleString('fr-FR')}</div></div>
+                <div className="dr-field"><div className="dr-k">Mis à jour</div><div className="dr-v">{new Date(lead.updated_at).toLocaleString('fr-FR')}</div></div>
+              </div>
+            </div>
+          </>}
+
+          {tab === 'chat' && <div className="chat-wrap">
+            <div className="chat-scroll">
+              {messages.length === 0 && <div className="chat-empty">Aucun message. Démarrez la conversation.</div>}
+              {messages.map(m => (
+                <div key={m.id} className={`msg ${m.sender === 'admin' ? 'admin' : 'client'}`}>
+                  <div>{m.content}</div>
+                  <div className="msg-meta">{new Date(m.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+              ))}
+              <div ref={chatEnd}/>
+            </div>
+            <div className="chat-form">
+              <textarea placeholder="Votre message au client…" value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg() } }} rows={1}/>
+              <button className="chat-send-btn" disabled={!newMsg.trim() || sending} onClick={sendMsg} aria-label="Envoyer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11l17-7-7 17-3-7-7-3z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
+              </button>
+            </div>
+          </div>}
+        </div>
+      </div>
     </div>
   )
 }
