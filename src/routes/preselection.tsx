@@ -490,8 +490,8 @@ function Simulation() {
         title: 'Étape 1 sur 4',
         body: "Pour commencer, dites-moi qui demande le financement : vous à titre personnel, ou une entreprise ?",
         actions: [
-          { label: 'Je suis un particulier', onClick: () => { setType('physique') }, primary: true },
-          { label: "C'est pour mon entreprise", onClick: () => { setType('morale') } },
+          { label: 'Je suis un particulier', onClick: () => { setType('physique'); setStep(2) }, primary: true },
+          { label: "C'est pour mon entreprise", onClick: () => { setType('morale'); setStep(2) } },
         ],
       }
     }
