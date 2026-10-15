@@ -68,6 +68,51 @@ const BANQUES = ['BGFI Bank', 'UBA', 'LCB Bank', 'MUCODEC', 'Crédit du Congo', 
 const VILLES = ['Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Ouesso', 'Autre']
 const CONTRATS = ['CDI', 'CDD', 'Intérim', 'Stage', 'Autre']
 
+/* ---------- Dropdown custom ---------- */
+function CustomSelect({ value, onChange, options, placeholder }: { value: string; onChange: (v: string) => void; options: string[]; placeholder: string }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+  return (
+    <div className="cs-wrap" ref={ref}>
+      <button
+        type="button"
+        className={`cs-trigger ${!value ? 'empty' : ''} ${open ? 'open' : ''}`}
+        onClick={() => setOpen(o => !o)}
+      >
+        <span>{value || placeholder}</span>
+        <svg className={`cs-chev ${open ? 'rot' : ''}`} width="14" height="14" viewBox="0 0 14 14" fill="none">
+          <path d="M3 5l4 4 4-4" stroke="#888" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      {open && (
+        <div className="cs-menu">
+          {options.map(o => (
+            <button
+              key={o}
+              type="button"
+              className={`cs-opt ${o === value ? 'sel' : ''}`}
+              onClick={() => { onChange(o); setOpen(false) }}
+            >
+              <span>{o}</span>
+              {o === value && (
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7l3 3 5-6" stroke="#1A6BFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ---------- Scoring (adapté aux nouveaux champs) ---------- */
 function calc(type: string, d: Record<string, string>) {
   let s = 0
@@ -742,6 +787,20 @@ function Simulation() {
         .btn-home { width: 100%; background: transparent; color: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 100px; cursor: pointer; position: relative; z-index: 1; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
         .btn-home:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 
+        /* ==== Dropdown custom (remplace les <select> natifs moches) ==== */
+        .cs-wrap { position: relative; width: 100%; }
+        .cs-trigger { width: 100%; background: transparent; border: none; padding: 0; font-family: inherit; font-size: 16px; font-weight: 500; color: #111; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; }
+        .cs-trigger.empty { color: #BBB; font-weight: 400; }
+        .cs-trigger > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cs-chev { transition: transform 0.2s; flex-shrink: 0; }
+        .cs-chev.rot { transform: rotate(180deg); }
+        .cs-menu { position: absolute; top: calc(100% + 10px); left: -16px; right: -16px; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.14), 0 6px 14px rgba(13,27,62,0.06); z-index: 30; padding: 8px; max-height: 320px; overflow-y: auto; animation: cs-pop 0.18s ease-out; }
+        @keyframes cs-pop { from { opacity: 0; transform: translateY(-6px);} to { opacity: 1; transform: translateY(0);} }
+        .cs-opt { width: 100%; background: transparent; border: none; padding: 14px 16px; font-family: inherit; font-size: 15px; font-weight: 500; color: #0D1B3E; cursor: pointer; border-radius: 10px; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; transition: background 0.1s; }
+        .cs-opt:hover { background: #EEF4FF; color: #1A6BFF; }
+        .cs-opt.sel { background: #EEF4FF; color: #1A6BFF; font-weight: 700; }
+        .cs-opt + .cs-opt { margin-top: 2px; }
+
         /* ==== Haki Assistant — design pro type Intercom ==== */
         .haki-fab { position: fixed; right: 20px; bottom: 20px; width: 64px; height: 64px; border-radius: 50%; border: 3px solid #fff; background: transparent; box-shadow: 0 14px 32px rgba(13,27,62,0.25), 0 4px 10px rgba(13,27,62,0.08); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60; padding: 0; transition: transform 0.25s cubic-bezier(.3,1.6,.5,1); }
         .haki-fab:hover { transform: scale(1.08) rotate(-6deg); }
@@ -885,15 +944,7 @@ function Simulation() {
                   value={formatPhone(form['tel']||'')} onChange={e=>set('tel', cleanPhone(e.target.value))}/></div>
                 <div className="field"><label>Email (facultatif)</label><input type="email" placeholder="Ex : jp.moukouama@gmail.com" value={form['email']||''} onChange={e=>set('email',e.target.value)}/></div>
                 <div className="field"><label>Ville *</label>
-                  <select
-                    required
-                    className={!form['ville'] ? 'empty' : ''}
-                    value={form['ville']||''}
-                    onChange={e=>set('ville',e.target.value)}
-                  >
-                    <option value="" disabled>Sélectionner…</option>
-                    {VILLES.map(v=><option key={v} value={v}>{v}</option>)}
-                  </select>
+                  <CustomSelect value={form['ville']||''} onChange={v=>set('ville',v)} options={VILLES} placeholder="Sélectionner votre ville"/>
                 </div>
               </div>
             </div>
@@ -967,15 +1018,12 @@ function Simulation() {
                   type="text" inputMode="numeric" placeholder="Ex : 5 000 000"
                   value={formatMoney(form['montant']||'')} onChange={e=>set('montant', cleanMoney(e.target.value))}/></div>
                 <div className="field"><label>Objet du financement *</label>
-                  <select
-                    required
-                    className={!form['objet'] ? 'empty' : ''}
+                  <CustomSelect
                     value={form['objet']||''}
-                    onChange={e=>set('objet',e.target.value)}
-                  >
-                    <option value="" disabled>Sélectionner…</option>
-                    {(isP ? ['Consommation','Immobilier','Véhicule','Autre'] : ['Investissement','Fonds de roulement','Marché public','Autre']).map(o=><option key={o} value={o}>{o}</option>)}
-                  </select>
+                    onChange={v=>set('objet',v)}
+                    options={isP ? ['Consommation','Immobilier','Véhicule','Autre'] : ['Investissement','Fonds de roulement','Marché public','Autre']}
+                    placeholder="Choisir l'objet"
+                  />
                 </div>
                 {!isP && <div className="field"><label>Flux mensuel moyen (XAF) *</label><input
                   type="text" inputMode="numeric" placeholder="Ex : 2 000 000"
@@ -988,15 +1036,7 @@ function Simulation() {
               <div className="card-title">4. Éligibilité</div>
               <div className="fields">
                 <div className="field"><label>Banque actuelle *</label>
-                  <select
-                    required
-                    className={!form['banque'] ? 'empty' : ''}
-                    value={form['banque']||''}
-                    onChange={e=>set('banque',e.target.value)}
-                  >
-                    <option value="" disabled>Sélectionner…</option>
-                    {BANQUES.map(b=><option key={b} value={b}>{b}</option>)}
-                  </select>
+                  <CustomSelect value={form['banque']||''} onChange={v=>set('banque',v)} options={BANQUES} placeholder="Choisir votre banque"/>
                 </div>
                 {isP ? <>
                   <div className="field radio-field"><label>Salaire domicilié dans cette banque ? *</label>
