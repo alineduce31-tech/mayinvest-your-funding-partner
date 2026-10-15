@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 
@@ -295,33 +295,27 @@ function Simulation() {
       : (isP ? 'eligibilite-p' : 'eligibilite-m'))
 
   // Actions interactives de Mia : boutons qui guident l'utilisateur
-  const arrow = <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6h6M7 3l3 3-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-  const miaActions: MiaAction[] = (() => {
-    if (step === 1) {
-      return [
-        { label: 'Je suis un particulier', onClick: () => { setType('physique'); setMascotOpen(false) }, primary: true },
-        { label: 'Je suis une entreprise', onClick: () => { setType('morale'); setMascotOpen(false) } },
-      ]
-    }
-    if (step === 2) {
-      return type ? [{ label: 'Revenir au choix du profil', onClick: () => { setStep(1); setMascotOpen(false) } }] : []
-    }
-    if (step === 3) {
-      return [
-        { label: 'Aller à l\'identité', onClick: () => { scrollToSection('identite'); setMascotOpen(false) }, primary: activeSection === 'identite' },
-        { label: 'Aller à la situation', onClick: () => { scrollToSection('situation'); setMascotOpen(false) }, primary: activeSection === 'situation' },
-        { label: 'Aller au besoin', onClick: () => { scrollToSection('besoin'); setMascotOpen(false) }, primary: activeSection === 'besoin' },
-        { label: 'Aller à l\'éligibilité', onClick: () => { scrollToSection('eligibilite'); setMascotOpen(false) }, primary: activeSection === 'eligibilite' },
-      ]
-    }
-    if (step === 4) {
-      return [
-        { label: 'Discuter avec un conseiller', onClick: () => { window.open(`https://wa.me/242060000000?text=Bonjour Mayinvest, j'ai soumis mon dossier. Code: ${accessCode}`, '_blank'); setMascotOpen(false) }, primary: true, icon: <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg> },
-        { label: 'Accéder à mon dossier', onClick: () => { navigate({ to: '/client/$id', params: { id: leadId } }); setMascotOpen(false) } },
-      ]
-    }
-    return []
-  })()
+  let miaActions: MiaAction[] = []
+  if (step === 1) {
+    miaActions = [
+      { label: 'Je suis un particulier', onClick: () => { setType('physique'); setMascotOpen(false) }, primary: true },
+      { label: 'Je suis une entreprise', onClick: () => { setType('morale'); setMascotOpen(false) } },
+    ]
+  } else if (step === 2 && type) {
+    miaActions = [{ label: 'Revenir au choix du profil', onClick: () => { setStep(1); setMascotOpen(false) } }]
+  } else if (step === 3) {
+    miaActions = [
+      { label: "Aller à l'identité", onClick: () => { scrollToSection('identite'); setMascotOpen(false) }, primary: activeSection === 'identite' },
+      { label: 'Aller à la situation', onClick: () => { scrollToSection('situation'); setMascotOpen(false) }, primary: activeSection === 'situation' },
+      { label: 'Aller au besoin', onClick: () => { scrollToSection('besoin'); setMascotOpen(false) }, primary: activeSection === 'besoin' },
+      { label: "Aller à l'éligibilité", onClick: () => { scrollToSection('eligibilite'); setMascotOpen(false) }, primary: activeSection === 'eligibilite' },
+    ]
+  } else if (step === 4) {
+    miaActions = [
+      { label: 'Discuter avec un conseiller', onClick: () => { window.open(`https://wa.me/242060000000?text=Bonjour Mayinvest, mon code: ${accessCode}`, '_blank'); setMascotOpen(false) }, primary: true },
+      { label: 'Accéder à mon dossier', onClick: () => { if (leadId) { navigate({ to: '/client/$id', params: { id: leadId } }); setMascotOpen(false) } } },
+    ]
+  }
 
   // Contrat obligatoire uniquement pour Salarié privé
   const needContrat = isP && activite === 'Salarié privé'
