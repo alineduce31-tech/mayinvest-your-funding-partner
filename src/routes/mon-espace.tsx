@@ -21,7 +21,7 @@ function formatCode(v: string): string {
   return s.slice(0, 11)
 }
 
-/* ---------- Mascotte Mia ---------- */
+/* ---------- Mascotte Haki ---------- */
 const TIPS: Record<string, { title: string; body: string }> = {
   'phone': { title: 'Accès par téléphone', body: "Entrez votre numéro (celui du dossier) et votre code MYI-XXX. Vous retrouverez tous vos dossiers." },
   'code': { title: 'Accès par code', body: "Entrez uniquement votre code MYI-XXX, c'est le moyen le plus rapide." },
@@ -54,7 +54,7 @@ function Mascot({ tipKey, open, setOpen }: { tipKey: string; open: boolean; setO
                 <path d="M11 20c1.5 1.5 3 2 5 2s3.5-.5 5-2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
               </svg>
             </span>
-            <span>Mia · {tip.title}</span>
+            <span>Haki · {tip.title}</span>
           </div>
           <div className="mascot-body">{tip.body}</div>
         </div>
@@ -199,10 +199,10 @@ function MonEspace() {
         .mascot-fab { position: fixed; right: 18px; bottom: 18px; width: 56px; height: 56px; border-radius: 50%; border: none; background: #fff; box-shadow: 0 10px 24px rgba(13,27,62,0.2), 0 2px 6px rgba(13,27,62,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60; transition: transform 0.2s; }
         .mascot-fab:hover { transform: scale(1.06); }
         .mascot-fab.on { background: #EEF4FF; }
-        .mascot-pulse { position: absolute; top: 4px; right: 4px; width: 10px; height: 10px; border-radius: 50%; background: #34D058; box-shadow: 0 0 0 0 rgba(52,208,88,0.6); animation: mia-pulse 2s infinite; }
-        @keyframes mia-pulse { 0% { box-shadow: 0 0 0 0 rgba(52,208,88,0.6);} 70% { box-shadow: 0 0 0 10px rgba(52,208,88,0);} 100% { box-shadow: 0 0 0 0 rgba(52,208,88,0);} }
-        .mascot-bubble { position: fixed; right: 18px; bottom: 86px; width: calc(100% - 36px); max-width: 300px; background: #fff; border-radius: 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.18), 0 6px 14px rgba(13,27,62,0.08); padding: 14px 16px 16px; z-index: 60; border: 1px solid #EEF4FF; animation: mia-pop 0.22s ease-out; }
-        @keyframes mia-pop { from { opacity: 0; transform: translateY(8px) scale(0.98);} to { opacity: 1; transform: translateY(0) scale(1);} }
+        .mascot-pulse { position: absolute; top: 4px; right: 4px; width: 10px; height: 10px; border-radius: 50%; background: #34D058; box-shadow: 0 0 0 0 rgba(52,208,88,0.6); animation: haki-pulse 2s infinite; }
+        @keyframes haki-pulse { 0% { box-shadow: 0 0 0 0 rgba(52,208,88,0.6);} 70% { box-shadow: 0 0 0 10px rgba(52,208,88,0);} 100% { box-shadow: 0 0 0 0 rgba(52,208,88,0);} }
+        .mascot-bubble { position: fixed; right: 18px; bottom: 86px; width: calc(100% - 36px); max-width: 300px; background: #fff; border-radius: 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.18), 0 6px 14px rgba(13,27,62,0.08); padding: 14px 16px 16px; z-index: 60; border: 1px solid #EEF4FF; animation: haki-pop 0.22s ease-out; }
+        @keyframes haki-pop { from { opacity: 0; transform: translateY(8px) scale(0.98);} to { opacity: 1; transform: translateY(0) scale(1);} }
         .mascot-close { position: absolute; top: 6px; right: 10px; background: transparent; border: none; font-size: 20px; color: #888; cursor: pointer; line-height: 1; }
         .mascot-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: #0D1B3E; margin-bottom: 6px; padding-right: 20px; }
         .mascot-avatar { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; }
