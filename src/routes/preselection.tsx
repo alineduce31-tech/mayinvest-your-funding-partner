@@ -109,11 +109,31 @@ const TIPS: Record<string, { title: string; body: string }> = {
   'step4': { title: 'Félicitations 🎉', body: "Notez votre code d'accès ! Il vous permet de retrouver votre dossier à tout moment." },
 }
 
-function Mascot({ tipKey, open, setOpen }: { tipKey: string; open: boolean; setOpen: (v: boolean) => void }) {
+/* Bandeau Mia visible en permanence au-dessus des sections */
+function MiaStrip({ tipKey }: { tipKey: string }) {
+  const tip = TIPS[tipKey] || TIPS['step1']
+  return (
+    <div className="mia-strip">
+      <div className="mia-strip-avatar">
+        <svg width="24" height="24" viewBox="0 0 32 32" fill="none">
+          <circle cx="11.5" cy="14" r="1.8" fill="#fff"/>
+          <circle cx="20.5" cy="14" r="1.8" fill="#fff"/>
+          <path d="M11 20c1.5 1.5 3 2 5 2s3.5-.5 5-2" stroke="#fff" strokeWidth="2.2" strokeLinecap="round"/>
+        </svg>
+      </div>
+      <div className="mia-strip-text">
+        <div className="mia-strip-name">Mia · {tip.title}</div>
+        <div className="mia-strip-body">{tip.body}</div>
+      </div>
+    </div>
+  )
+}
+
+function Mascot({ tipKey, open, onClose, onOpen }: { tipKey: string; open: boolean; onClose: () => void; onOpen: () => void }) {
   const tip = TIPS[tipKey] || TIPS['step1']
   return (
     <>
-      <button className={`mascot-fab ${open ? 'on' : ''}`} onClick={() => setOpen(!open)} aria-label="Aide">
+      <button className={`mascot-fab ${open ? 'on' : ''}`} onClick={() => open ? onClose() : onOpen()} aria-label="Aide">
         <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
           <circle cx="16" cy="16" r="14" fill="#1A6BFF"/>
           <circle cx="11.5" cy="14" r="1.8" fill="#fff"/>
@@ -125,7 +145,7 @@ function Mascot({ tipKey, open, setOpen }: { tipKey: string; open: boolean; setO
       </button>
       {open && (
         <div className="mascot-bubble">
-          <button className="mascot-close" onClick={() => setOpen(false)} aria-label="Fermer">×</button>
+          <button className="mascot-close" onClick={onClose} aria-label="Fermer">×</button>
           <div className="mascot-title">
             <span className="mascot-avatar">
               <svg width="20" height="20" viewBox="0 0 32 32" fill="none">
@@ -230,15 +250,19 @@ function Simulation() {
   // Dès que l'activité change, on la mémorise dans le form pour le scoring/contrat
   useEffect(() => { if (activite) set('activite_sub', activite) }, [activite])
 
-  // Première visite → ouvre mascotte 1s
+  // Mia s'ouvre à chaque changement d'étape / section (sauf si l'utilisateur l'a fermée récemment)
+  const [miaDismissed, setMiaDismissed] = useState(false)
   useEffect(() => {
-    const seen = (() => { try { return localStorage.getItem('mayinvest_mia_seen') } catch { return '1' } })()
-    if (!seen) {
-      const t = setTimeout(() => setMascotOpen(true), 800)
-      try { localStorage.setItem('mayinvest_mia_seen', '1') } catch {}
-      return () => clearTimeout(t)
-    }
-  }, [])
+    if (miaDismissed) return
+    const t = setTimeout(() => setMascotOpen(true), 500)
+    return () => clearTimeout(t)
+  }, [step, activeSection, activite, type, miaDismissed])
+  // Si l'utilisateur ferme Mia, on respecte pendant 20s puis on la réactive
+  function closeMia() {
+    setMascotOpen(false)
+    setMiaDismissed(true)
+    setTimeout(() => setMiaDismissed(false), 20000)
+  }
 
   const tipKey = step === 1 ? 'step1'
     : step === 2 ? (isP ? 'step2-p' : 'step2-m')
@@ -442,7 +466,7 @@ function Simulation() {
         @media (max-width: 400px) { .contrat-chips { grid-template-columns: repeat(2, 1fr); } }
         .contrat-chip { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px 6px; font-family: inherit; font-size: 12px; font-weight: 700; color: #666; cursor: pointer; transition: all 0.15s; text-align: center; }
         .contrat-chip:hover { background: #EEF4FF; color: #1A6BFF; }
-        .contrat-chip.sel { background: #0D1B3E; color: #fff; border-color: #0D1B3E; box-shadow: 0 4px 10px rgba(13,27,62,0.2); }
+        .contrat-chip.sel { background: #EEF4FF; color: #1A6BFF; border-color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.2); }
 
         .badge { display: inline-flex; align-items: center; gap: 6px; background: #EEF4FF; color: #1A6BFF; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; }
         .submit-error { background: #FEF2F2; border: 1.5px solid #FCA5A5; color: #B91C1C; font-size: 13px; font-weight: 600; padding: 12px 16px; border-radius: 12px; margin-top: 12px; display: flex; align-items: flex-start; gap: 10px; }
@@ -472,18 +496,30 @@ function Simulation() {
         .btn-home { width: 100%; background: transparent; color: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 100px; cursor: pointer; position: relative; z-index: 1; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
         .btn-home:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
 
-        /* Mascotte */
-        .mascot-fab { position: fixed; right: 18px; bottom: 18px; width: 56px; height: 56px; border-radius: 50%; border: none; background: #fff; box-shadow: 0 10px 24px rgba(13,27,62,0.2), 0 2px 6px rgba(13,27,62,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60; transition: transform 0.2s; }
-        .mascot-fab:hover { transform: scale(1.06); }
-        .mascot-fab.on { background: #EEF4FF; }
-        .mascot-pulse { position: absolute; top: 4px; right: 4px; width: 10px; height: 10px; border-radius: 50%; background: #34D058; box-shadow: 0 0 0 0 rgba(52,208,88,0.6); animation: mia-pulse 2s infinite; }
+        /* Mia bandeau inline (toujours visible au-dessus des cards) */
+        .mia-strip { display: flex; align-items: flex-start; gap: 12px; background: linear-gradient(135deg, #EEF4FF 0%, #DBE8FF 100%); border: 1.5px solid rgba(26,107,255,0.2); border-radius: 16px; padding: 14px 16px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(26,107,255,0.08); position: relative; }
+        .mia-strip-avatar { width: 40px; height: 40px; border-radius: 50%; background: #1A6BFF; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(26,107,255,0.3); animation: mia-float 3s ease-in-out infinite; }
+        @keyframes mia-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+        .mia-strip-text { flex: 1; min-width: 0; }
+        .mia-strip-name { font-size: 12px; font-weight: 800; color: #1A6BFF; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+        .mia-strip-name::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34D058; display: inline-block; animation: mia-pulse-dot 2s infinite; }
+        @keyframes mia-pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .mia-strip-body { font-size: 13px; color: #0D1B3E; line-height: 1.45; font-weight: 500; }
+
+        /* Mascotte flottante (bouton bas-droite) */
+        .mascot-fab { position: fixed; right: 20px; bottom: 20px; width: 64px; height: 64px; border-radius: 50%; border: none; background: #1A6BFF; box-shadow: 0 12px 30px rgba(26,107,255,0.4), 0 2px 6px rgba(13,27,62,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60; transition: transform 0.2s; animation: mia-breathe 3s ease-in-out infinite; }
+        @keyframes mia-breathe { 0%, 100% { box-shadow: 0 12px 30px rgba(26,107,255,0.4), 0 2px 6px rgba(13,27,62,0.1); } 50% { box-shadow: 0 12px 36px rgba(26,107,255,0.55), 0 2px 6px rgba(13,27,62,0.1); } }
+        .mascot-fab:hover { transform: scale(1.08); }
+        .mascot-fab.on { background: #0D4FD1; animation: none; }
+        .mascot-pulse { position: absolute; top: 6px; right: 6px; width: 12px; height: 12px; border-radius: 50%; background: #34D058; border: 2px solid #fff; box-shadow: 0 0 0 0 rgba(52,208,88,0.6); animation: mia-pulse 2s infinite; }
         @keyframes mia-pulse { 0% { box-shadow: 0 0 0 0 rgba(52,208,88,0.6);} 70% { box-shadow: 0 0 0 10px rgba(52,208,88,0);} 100% { box-shadow: 0 0 0 0 rgba(52,208,88,0);} }
-        .mascot-bubble { position: fixed; right: 18px; bottom: 86px; width: calc(100% - 36px); max-width: 300px; background: #fff; border-radius: 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.18), 0 6px 14px rgba(13,27,62,0.08); padding: 14px 16px 16px; z-index: 60; border: 1px solid #EEF4FF; animation: mia-pop 0.22s ease-out; }
-        @keyframes mia-pop { from { opacity: 0; transform: translateY(8px) scale(0.98);} to { opacity: 1; transform: translateY(0) scale(1);} }
-        .mascot-close { position: absolute; top: 6px; right: 10px; background: transparent; border: none; font-size: 20px; color: #888; cursor: pointer; line-height: 1; }
-        .mascot-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: #0D1B3E; margin-bottom: 6px; padding-right: 20px; }
-        .mascot-avatar { width: 26px; height: 26px; border-radius: 50%; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; }
-        .mascot-body { font-size: 13px; color: #444; line-height: 1.45; }
+        .mascot-bubble { position: fixed; right: 20px; bottom: 94px; width: calc(100% - 40px); max-width: 320px; background: #fff; border-radius: 18px; box-shadow: 0 24px 50px rgba(13,27,62,0.2), 0 6px 14px rgba(13,27,62,0.08); padding: 16px 18px 18px; z-index: 60; border: 1.5px solid rgba(26,107,255,0.2); animation: mia-pop 0.25s ease-out; }
+        @keyframes mia-pop { from { opacity: 0; transform: translateY(10px) scale(0.95);} to { opacity: 1; transform: translateY(0) scale(1);} }
+        .mascot-close { position: absolute; top: 8px; right: 12px; background: #F3F4F6; border: none; width: 24px; height: 24px; border-radius: 50%; font-size: 16px; color: #666; cursor: pointer; line-height: 1; display: flex; align-items: center; justify-content: center; }
+        .mascot-close:hover { background: #E5E7EB; color: #111; }
+        .mascot-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 800; color: #0D1B3E; margin-bottom: 8px; padding-right: 24px; }
+        .mascot-avatar { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; display: inline-flex; align-items: center; justify-content: center; background: #1A6BFF; }
+        .mascot-body { font-size: 14px; color: #333; line-height: 1.5; }
       `}</style>
 
       <div className="top">
@@ -503,6 +539,7 @@ function Simulation() {
         {step === 1 && <>
           <h1 className="h1">Qui demande le financement&nbsp;?</h1>
           <p className="sub">Choisissez votre profil pour accéder au formulaire adapté.</p>
+          <MiaStrip tipKey={tipKey}/>
           <div className="cards-3d">
             <button className={`card-choix physique ${type === 'physique' ? 'sel' : ''}`} onClick={() => setType('physique')}>
               <div className="glow a" /><div className="shine" />
@@ -531,6 +568,7 @@ function Simulation() {
           <div className="badge">{isP ? 'Personne physique' : 'Personne morale'}</div>
           <h1 className="h1">{isP ? 'Votre profession' : "Votre secteur d'activité"}</h1>
           <p className="sub">{isP ? 'Sélectionnez votre situation professionnelle.' : "Sélectionnez le secteur de votre entreprise."}</p>
+          <MiaStrip tipKey={tipKey}/>
           <div className="chips">
             {(isP ? ACTIVITES_PHYSIQUE : ACTIVITES_MORALE).map(a =>
               <button key={a} className={`chip ${activite === a ? 'sel' : ''}`} onClick={() => setActivite(a)}>
@@ -549,6 +587,7 @@ function Simulation() {
           <div className="badge">{isP ? 'Personne physique' : 'Personne morale'} · {activite}</div>
           <h1 className="h1">Votre dossier</h1>
           <p className="sub">Cela prend moins de 2 minutes. Tous les champs sont obligatoires sauf l'email.</p>
+          <MiaStrip tipKey={tipKey}/>
 
           <div className="form-stack">
             {/* 1. IDENTITÉ */}
@@ -757,7 +796,7 @@ function Simulation() {
         </div>}
       </div>
 
-      <Mascot tipKey={tipKey} open={mascotOpen} setOpen={setMascotOpen} />
+      <Mascot tipKey={tipKey} open={mascotOpen} onClose={closeMia} onOpen={() => setMascotOpen(true)} />
     </div>
   )
 }
