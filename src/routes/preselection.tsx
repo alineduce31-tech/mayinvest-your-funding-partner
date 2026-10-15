@@ -232,7 +232,7 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onT
   onToggleAuto: () => void
 }) {
   const [showAutoHelp, setShowAutoHelp] = useState(false)
-  // Avatar SVG Haki
+  // Avatar Haki : un grand œil qui regarde dans toutes les directions
   const avatar = (size: number) => (
     <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
       <defs>
@@ -241,13 +241,20 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onT
           <stop offset="1" stopColor="#0D4FD1"/>
         </linearGradient>
       </defs>
+      {/* Fond bleu */}
       <circle cx="20" cy="20" r="19" fill="url(#haki-grad)"/>
       <circle cx="20" cy="20" r="19" stroke="#fff" strokeWidth="1" opacity="0.3"/>
-      <circle cx="14" cy="18" r="2.2" fill="#fff"/>
-      <circle cx="26" cy="18" r="2.2" fill="#fff"/>
-      <circle cx="14.5" cy="18.5" r="0.8" fill="#0D1B3E"/>
-      <circle cx="26.5" cy="18.5" r="0.8" fill="#0D1B3E"/>
-      <path d="M13 25c2 2.5 4.5 3.5 7 3.5s5-1 7-3.5" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+      {/* Grand œil blanc */}
+      <ellipse cx="20" cy="20" rx="13" ry="9.5" fill="#fff"/>
+      {/* Groupe œil animé (iris + pupille + reflet) */}
+      <g className="haki-eye-ball">
+        <circle cx="20" cy="20" r="6.5" fill="#1A6BFF"/>
+        <circle cx="20" cy="20" r="3.5" fill="#0D1B3E"/>
+        <circle cx="22" cy="18" r="1.3" fill="#fff"/>
+        <circle cx="18" cy="21.5" r="0.7" fill="#fff" opacity="0.7"/>
+      </g>
+      {/* Paupière qui cligne de temps en temps */}
+      <ellipse className="haki-eyelid" cx="20" cy="20" rx="13" ry="0" fill="url(#haki-grad)"/>
     </svg>
   )
 
@@ -944,6 +951,24 @@ function Simulation() {
         .cs-opt:hover { background: #EEF4FF; color: #1A6BFF; }
         .cs-opt.sel { background: #EEF4FF; color: #1A6BFF; font-weight: 700; }
         .cs-opt + .cs-opt { margin-top: 2px; }
+
+        /* ==== Animation du grand œil Haki ==== */
+        .haki-eye-ball { transform-origin: 20px 20px; animation: haki-look 7s ease-in-out infinite; }
+        @keyframes haki-look {
+          0%, 12%   { transform: translate(0, 0); }      /* centre */
+          16%, 28%  { transform: translate(4px, -1px); }  /* droite */
+          32%, 44%  { transform: translate(4px, 2px); }   /* bas-droite */
+          48%, 60%  { transform: translate(-4px, 2px); }  /* bas-gauche */
+          64%, 76%  { transform: translate(-4px, -1px); } /* haut-gauche */
+          80%, 92%  { transform: translate(0, -3px); }    /* haut */
+          100%      { transform: translate(0, 0); }       /* retour centre */
+        }
+        .haki-eyelid { transform-origin: 20px 20px; animation: haki-blink 5s infinite; }
+        @keyframes haki-blink {
+          0%, 96%  { ry: 0; }
+          98%      { ry: 9.5; }
+          100%     { ry: 0; }
+        }
 
         /* ==== Haki Assistant — design pro type Intercom ==== */
         .haki-fab { position: fixed; right: 20px; bottom: 20px; width: 64px; height: 64px; border-radius: 50%; border: 3px solid #fff; background: transparent; box-shadow: 0 14px 32px rgba(13,27,62,0.25), 0 4px 10px rgba(13,27,62,0.08); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 60; padding: 0; transition: transform 0.25s cubic-bezier(.3,1.6,.5,1); }
