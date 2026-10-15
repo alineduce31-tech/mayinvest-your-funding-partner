@@ -232,11 +232,11 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onT
   onToggleAuto: () => void
 }) {
   const [showAutoHelp, setShowAutoHelp] = useState(false)
-  // Avatar Haki : globe oculaire 3D complet (toute la sphère = œil)
+  // Avatar Haki : globe oculaire 3D haute résolution (viewBox 200x200 pour netteté max)
   const avatar = (size: number) => (
-    <svg width={size} height={size} viewBox="0 0 40 40" fill="none">
+    <svg width={size} height={size} viewBox="0 0 200 200" fill="none" shapeRendering="geometricPrecision">
       <defs>
-        {/* Blanc de l'œil avec rendu 3D (dégradé radial doux) */}
+        {/* Blanc de l'œil avec rendu 3D */}
         <radialGradient id="haki-eyeball" cx="35%" cy="30%" r="75%">
           <stop offset="0%" stopColor="#ffffff"/>
           <stop offset="55%" stopColor="#f5f5f5"/>
@@ -257,36 +257,30 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onT
         </radialGradient>
       </defs>
 
-      {/* Globe oculaire principal (toute la sphère) */}
-      <circle cx="20" cy="20" r="19" fill="url(#haki-eyeball)"/>
+      {/* Globe oculaire principal */}
+      <circle cx="100" cy="100" r="95" fill="url(#haki-eyeball)"/>
       {/* Ombre interne pour profondeur 3D */}
-      <circle cx="20" cy="20" r="19" fill="url(#haki-inner-shadow)"/>
+      <circle cx="100" cy="100" r="95" fill="url(#haki-inner-shadow)"/>
       {/* Contour noir fin */}
-      <circle cx="20" cy="20" r="19" fill="none" stroke="#000" strokeWidth="1.2"/>
+      <circle cx="100" cy="100" r="95" fill="none" stroke="#000" strokeWidth="4"/>
 
-      {/* Veines rouges légères (plus réaliste) */}
-      <path d="M3 24 Q 8 23, 11 25" stroke="#f0a0a0" strokeWidth="0.3" fill="none" opacity="0.5"/>
-      <path d="M37 18 Q 33 20, 30 18" stroke="#f0a0a0" strokeWidth="0.3" fill="none" opacity="0.5"/>
+      {/* Veines rouges légères */}
+      <path d="M15 120 Q 40 115, 55 125" stroke="#f0a0a0" strokeWidth="1.2" fill="none" opacity="0.5"/>
+      <path d="M185 90 Q 165 100, 150 90" stroke="#f0a0a0" strokeWidth="1.2" fill="none" opacity="0.5"/>
 
       {/* Groupe œil animé (iris + pupille + reflets) */}
       <g className="haki-eye-ball">
-        {/* Iris marron 3D */}
-        <circle cx="20" cy="20" r="11" fill="url(#haki-iris)"/>
-        {/* Anneau foncé bord iris pour relief */}
-        <circle cx="20" cy="20" r="11" fill="none" stroke="#1a0d04" strokeWidth="0.6" opacity="0.6"/>
-        {/* Texture iris (traits fins qui irradient) */}
-        <circle cx="20" cy="20" r="8" fill="none" stroke="#2a1a0a" strokeWidth="0.4" opacity="0.4"/>
-        {/* Pupille noire profonde */}
-        <circle cx="20" cy="20" r="4.5" fill="#000"/>
-        {/* Reflets spéculaires (donne la vie) */}
-        <ellipse cx="22.5" cy="17" rx="2" ry="1.6" fill="#fff" opacity="0.95"/>
-        <circle cx="18" cy="22" r="0.9" fill="#fff" opacity="0.75"/>
-        <circle cx="24" cy="22.5" r="0.5" fill="#fff" opacity="0.6"/>
+        <circle cx="100" cy="100" r="55" fill="url(#haki-iris)"/>
+        <circle cx="100" cy="100" r="55" fill="none" stroke="#1a0d04" strokeWidth="2.5" opacity="0.6"/>
+        <circle cx="100" cy="100" r="40" fill="none" stroke="#2a1a0a" strokeWidth="1.5" opacity="0.4"/>
+        <circle cx="100" cy="100" r="22" fill="#000"/>
+        <ellipse cx="112" cy="85" rx="10" ry="8" fill="#fff" opacity="0.95"/>
+        <circle cx="90" cy="110" r="4.5" fill="#fff" opacity="0.75"/>
+        <circle cx="120" cy="112" r="2.5" fill="#fff" opacity="0.6"/>
       </g>
 
-      {/* Reflet spéculaire GÉNÉRAL sur toute la sphère (effet brillant 3D) */}
-      <ellipse cx="12" cy="9" rx="6" ry="3.5" fill="#fff" opacity="0.35"/>
-
+      {/* Reflet spéculaire général sphère brillante */}
+      <ellipse cx="60" cy="45" rx="30" ry="18" fill="#fff" opacity="0.35"/>
     </svg>
   )
 
@@ -985,14 +979,14 @@ function Simulation() {
         .cs-opt + .cs-opt { margin-top: 2px; }
 
         /* ==== Animation globe Haki : regard fluide 6 directions, SANS clignement ==== */
-        .haki-eye-ball { transform-origin: 20px 20px; animation: haki-look 12s ease-in-out infinite; }
+        .haki-eye-ball { transform-origin: 100px 100px; animation: haki-look 12s ease-in-out infinite; }
         @keyframes haki-look {
-          0%, 10%    { transform: translate(0, 0); }       /* centre */
-          16%, 26%   { transform: translate(4px, 0); }     /* droite */
-          32%, 42%   { transform: translate(3px, 3px); }   /* bas-droite */
-          48%, 58%   { transform: translate(-3px, 3px); }  /* bas-gauche */
-          64%, 74%   { transform: translate(-4px, 0); }    /* gauche */
-          80%, 90%   { transform: translate(0, -3px); }    /* haut */
+          0%, 10%    { transform: translate(0, 0); }         /* centre */
+          16%, 26%   { transform: translate(20px, 0); }      /* droite */
+          32%, 42%   { transform: translate(15px, 15px); }   /* bas-droite */
+          48%, 58%   { transform: translate(-15px, 15px); }  /* bas-gauche */
+          64%, 74%   { transform: translate(-20px, 0); }     /* gauche */
+          80%, 90%   { transform: translate(0, -15px); }     /* haut */
           100%       { transform: translate(0, 0); }
         }
 
