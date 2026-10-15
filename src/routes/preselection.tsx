@@ -287,10 +287,6 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onT
       {/* Reflet spéculaire GÉNÉRAL sur toute la sphère (effet brillant 3D) */}
       <ellipse cx="12" cy="9" rx="6" ry="3.5" fill="#fff" opacity="0.35"/>
 
-      {/* Paupière supérieure qui cligne à chaque mouvement */}
-      <path className="haki-eyelid-top" d="M 1 20 Q 20 20, 39 20 L 39 1 L 1 1 Z" fill="#f5c89a" opacity="0"/>
-      {/* Paupière inférieure qui cligne aussi */}
-      <path className="haki-eyelid-bot" d="M 1 20 Q 20 20, 39 20 L 39 39 L 1 39 Z" fill="#f5c89a" opacity="0"/>
     </svg>
   )
 
@@ -988,44 +984,16 @@ function Simulation() {
         .cs-opt.sel { background: #EEF4FF; color: #1A6BFF; font-weight: 700; }
         .cs-opt + .cs-opt { margin-top: 2px; }
 
-        /* ==== Animation globe Haki : regard 6 directions + clignement synchronisé ==== */
-        .haki-eye-ball { transform-origin: 20px 20px; animation: haki-look 10s steps(1, end) infinite; }
+        /* ==== Animation globe Haki : regard fluide 6 directions, SANS clignement ==== */
+        .haki-eye-ball { transform-origin: 20px 20px; animation: haki-look 12s ease-in-out infinite; }
         @keyframes haki-look {
-          0%, 14%     { transform: translate(0, 0); }       /* centre */
-          16.67%, 31% { transform: translate(4px, 0); }     /* droite */
-          33.33%, 47% { transform: translate(3px, 3px); }   /* bas-droite */
-          50%, 64%    { transform: translate(-3px, 3px); }  /* bas-gauche */
-          66.67%, 81% { transform: translate(-4px, 0); }    /* gauche */
-          83.33%, 98% { transform: translate(0, -3px); }    /* haut */
-        }
-        /* Paupières : apparaissent et se referment brièvement avant chaque mouvement */
-        .haki-eyelid-top { transform-origin: 20px 1px; animation: haki-blink-top 10s infinite; }
-        .haki-eyelid-bot { transform-origin: 20px 39px; animation: haki-blink-bot 10s infinite; }
-        @keyframes haki-blink-top {
-          0%, 14.5%     { transform: scaleY(0); opacity: 0; }
-          15%, 16.33%   { transform: scaleY(0.75); opacity: 1; }
-          16.67%, 31.5% { transform: scaleY(0); opacity: 0; }
-          32%, 33.17%   { transform: scaleY(0.75); opacity: 1; }
-          33.33%, 48.5% { transform: scaleY(0); opacity: 0; }
-          49%, 49.83%   { transform: scaleY(0.75); opacity: 1; }
-          50%, 65.5%    { transform: scaleY(0); opacity: 0; }
-          66%, 66.5%    { transform: scaleY(0.75); opacity: 1; }
-          66.67%, 82%   { transform: scaleY(0); opacity: 0; }
-          82.5%, 83.17% { transform: scaleY(0.75); opacity: 1; }
-          83.33%, 100%  { transform: scaleY(0); opacity: 0; }
-        }
-        @keyframes haki-blink-bot {
-          0%, 14.5%     { transform: scaleY(0); opacity: 0; }
-          15%, 16.33%   { transform: scaleY(0.75); opacity: 1; }
-          16.67%, 31.5% { transform: scaleY(0); opacity: 0; }
-          32%, 33.17%   { transform: scaleY(0.75); opacity: 1; }
-          33.33%, 48.5% { transform: scaleY(0); opacity: 0; }
-          49%, 49.83%   { transform: scaleY(0.75); opacity: 1; }
-          50%, 65.5%    { transform: scaleY(0); opacity: 0; }
-          66%, 66.5%    { transform: scaleY(0.75); opacity: 1; }
-          66.67%, 82%   { transform: scaleY(0); opacity: 0; }
-          82.5%, 83.17% { transform: scaleY(0.75); opacity: 1; }
-          83.33%, 100%  { transform: scaleY(0); opacity: 0; }
+          0%, 10%    { transform: translate(0, 0); }       /* centre */
+          16%, 26%   { transform: translate(4px, 0); }     /* droite */
+          32%, 42%   { transform: translate(3px, 3px); }   /* bas-droite */
+          48%, 58%   { transform: translate(-3px, 3px); }  /* bas-gauche */
+          64%, 74%   { transform: translate(-4px, 0); }    /* gauche */
+          80%, 90%   { transform: translate(0, -3px); }    /* haut */
+          100%       { transform: translate(0, 0); }
         }
 
         /* ==== Haki Assistant — design pro type Intercom ==== */
