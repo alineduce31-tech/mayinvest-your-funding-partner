@@ -76,11 +76,28 @@ function AdminGate() {
 // ═══════════════════════════════════════════════════════════════
 // LOGIN SCREEN
 // ═══════════════════════════════════════════════════════════════
+const LOGIN_ICONS = [
+  // Cadenas
+  <svg key="lock" width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#fff" strokeWidth="2"/><circle cx="12" cy="16" r="1.5" fill="#fff"/></svg>,
+  // Bouclier
+  <svg key="shield" width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 3l8 3v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6l8-3z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/><path d="M9 12l2 2 4-4" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  // Clé
+  <svg key="key" width="26" height="26" viewBox="0 0 24 24" fill="none"><circle cx="8" cy="15" r="4" stroke="#fff" strokeWidth="2"/><path d="M10.5 12.5L20 3M17 6l3 3M15 8l2 2" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  // Graphique (admin stats)
+  <svg key="chart" width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M3 20V10M9 20V4M15 20v-7M21 20V8" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>,
+]
+
 function LoginScreen() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [iconIdx, setIconIdx] = useState(0)
+
+  useEffect(() => {
+    const t = setInterval(() => setIconIdx(i => (i + 1) % LOGIN_ICONS.length), 2000)
+    return () => clearInterval(t)
+  }, [])
 
   async function login() {
     if (!email || !password) { setError('Entrez votre email et mot de passe'); return }
@@ -96,8 +113,21 @@ function LoginScreen() {
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
       <div style={{ background: 'linear-gradient(145deg, #0D1B3E 0%, #0A1532 100%)', borderRadius: 28, padding: 40, maxWidth: 420, width: '100%', color: '#fff', boxShadow: '0 40px 80px rgba(13,27,62,0.3)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', top: -80, right: -80, width: 260, height: 260, background: 'radial-gradient(circle, rgba(26,107,255,0.3), transparent 65%)', pointerEvents: 'none' }} />
-        <div style={{ width: 56, height: 56, background: '#1A6BFF', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 20, position: 'relative', zIndex: 1, boxShadow: '0 8px 20px rgba(26,107,255,0.4)' }}>
-          <Icon name="lock" size={26}/>
+        {/* Icône animée (rotation 4 icônes toutes les 2s) */}
+        <div style={{ width: 56, height: 56, background: '#1A6BFF', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, position: 'relative', zIndex: 1, boxShadow: '0 8px 20px rgba(26,107,255,0.4)', overflow: 'hidden' }}>
+          <div style={{ position: 'relative', width: 26, height: 26 }}>
+            {LOGIN_ICONS.map((Ic, i) => (
+              <div key={i} style={{ position: 'absolute', inset: 0, opacity: i === iconIdx ? 1 : 0, transform: i === iconIdx ? 'scale(1) rotate(0)' : 'scale(0.6) rotate(-12deg)', transition: 'opacity 0.5s ease, transform 0.5s cubic-bezier(.2,.9,.3,1.2)' }}>
+                {Ic}
+              </div>
+            ))}
+          </div>
+        </div>
+        {/* Dots indicateurs */}
+        <div style={{ display: 'flex', gap: 4, marginBottom: 20, position: 'relative', zIndex: 1 }} aria-hidden="true">
+          {LOGIN_ICONS.map((_, i) => (
+            <div key={i} style={{ width: i === iconIdx ? 16 : 5, height: 5, borderRadius: 100, background: i === iconIdx ? '#1A6BFF' : 'rgba(255,255,255,0.15)', transition: 'all 0.3s ease' }} />
+          ))}
         </div>
         <h1 style={{ fontSize: 26, fontWeight: 800, margin: '0 0 10px', position: 'relative', zIndex: 1 }}>Admin Mayinvest</h1>
         <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', margin: '0 0 24px', position: 'relative', zIndex: 1 }}>Connectez-vous pour accéder au back-office.</p>
