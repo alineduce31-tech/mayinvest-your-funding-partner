@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect, useRef, type ReactNode } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 
@@ -14,37 +14,31 @@ function formatPhone(digits: string): string {
   if (d.length <= 5) return `${d.slice(0, 2)} ${d.slice(2)}`
   return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`
 }
-function cleanPhone(v: string): string {
-  return v.replace(/\D/g, '').slice(0, 9)
-}
+function cleanPhone(v: string): string { return v.replace(/\D/g, '').slice(0, 9) }
 function formatMoney(digits: string): string {
   const d = digits.replace(/\D/g, '')
   if (!d) return ''
   return d.replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
-function cleanMoney(v: string): string {
-  return v.replace(/\D/g, '')
-}
-function monthsBetween(iso: string): number {
-  if (!iso) return 0
-  const d = new Date(iso)
-  if (isNaN(d.getTime())) return 0
-  const now = new Date()
-  return Math.max(0, (now.getFullYear() - d.getFullYear()) * 12 + (now.getMonth() - d.getMonth()))
-}
-function humanDuration(months: number): string {
-  if (months <= 0) return '—'
-  const y = Math.floor(months / 12)
-  const m = months % 12
-  if (y === 0) return `${m} mois`
-  if (m === 0) return y === 1 ? '1 an' : `${y} ans`
-  return `${y} an${y > 1 ? 's' : ''} ${m} mois`
-}
+function cleanMoney(v: string): string { return v.replace(/\D/g, '') }
 function generateAccessCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   let code = 'MYI-'
   for (let i = 0; i < 7; i++) code += chars[Math.floor(Math.random() * chars.length)]
   return code
+}
+
+/* ---------- Tranches d'ancienneté (plus simple qu'un date picker) ---------- */
+const TRANCHES = [
+  { key: '0-6',   label: 'Moins de 6 mois', months: 3 },
+  { key: '6-12',  label: '6 mois à 1 an',   months: 9 },
+  { key: '1-3',   label: '1 à 3 ans',       months: 24 },
+  { key: '3-5',   label: '3 à 5 ans',       months: 48 },
+  { key: '5-10',  label: '5 à 10 ans',      months: 84 },
+  { key: '10+',   label: 'Plus de 10 ans',  months: 144 },
+]
+function tranche(key: string): number {
+  return TRANCHES.find(t => t.key === key)?.months || 0
 }
 
 /* ---------- Icons & lists ---------- */
@@ -72,41 +66,47 @@ const ACTIVITES_PHYSIQUE = Object.keys(ICON_P)
 const ACTIVITES_MORALE = Object.keys(ICON_M)
 const BANQUES = ['BGFI Bank', 'UBA', 'LCB Bank', 'MUCODEC', 'Crédit du Congo', 'Ecobank', 'Autre', 'Aucune']
 const VILLES = ['Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Ouesso', 'Autre']
+const CONTRATS = ['CDI', 'CDD', 'Intérim', 'Stage', 'Autre']
 
 /* ---------- Scoring (adapté aux nouveaux champs) ---------- */
 function calc(type: string, d: Record<string, string>) {
   let s = 0
   if (type === 'physique') {
-    const anc = monthsBetween(d['date_embauche'] || '')
+    const anc = tranche(d['anciennete_tr'] || '')
     if (anc >= 6) s += 25
     if (d['salaire_domic'] === 'Oui') s += 25
     if (parseInt(d['revenu'] || '0') >= 200000) s += 20
     if (d['banque'] && d['banque'] !== 'Aucune') s += 15
     if (parseInt(d['montant'] || '0') <= 10000000) s += 15
+    // Bonus/malus contrat (Salarié privé uniquement)
+    if (d['activite_sub'] === 'Salarié privé') {
+      if (d['contrat'] === 'CDI') s += 5
+      if (d['contrat'] === 'Stage') s -= 15
+    }
   } else {
-    const anc = monthsBetween(d['date_creation'] || '')
+    const anc = tranche(d['anciennete_soc_tr'] || '')
     if (d['rccm'] === 'Oui') s += 30
     if (d['compte_mouvemente'] === 'Oui') s += 25
     if (anc >= 12) s += 20
     if (d['refus_bancaire'] === 'Non') s += 15
     if (d['garanties'] === 'Oui') s += 10
   }
-  return Math.min(s, 100)
+  return Math.max(0, Math.min(s, 100))
 }
 
-/* ---------- Mascotte tutoriel "Mia" ---------- */
+/* ---------- Mascotte "Mia" ---------- */
 const TIPS: Record<string, { title: string; body: string }> = {
   'step1': { title: 'Bienvenue 👋', body: "Je m'appelle Mia, votre assistant Mayinvest. Choisissez votre profil pour démarrer." },
   'step2-p': { title: 'Votre métier', body: 'Choisissez votre profession. Cela adapte les questions à votre situation.' },
   'step2-m': { title: 'Votre secteur', body: "Sélectionnez le secteur d'activité principal de votre entreprise." },
   'identite-p': { title: 'Identité', body: 'Nom, prénom, téléphone sont obligatoires. Email facultatif mais recommandé.' },
   'identite-m': { title: 'Identité société', body: 'Raison sociale et dirigeant obligatoires. Email facultatif.' },
-  'situation-p': { title: 'Situation pro', body: 'Indiquez votre employeur puis la date de prise de poste. Je calcule l\'ancienneté.' },
-  'situation-m': { title: 'Infos société', body: 'La date de création me permet de calculer automatiquement votre ancienneté.' },
+  'situation-p': { title: 'Situation pro', body: "Employeur, type de contrat et ancienneté — ces infos déterminent les plafonds de prêt possibles." },
+  'situation-m': { title: 'Infos société', body: "L'ancienneté de l'entreprise rassure la banque. Soyez précis." },
   'besoin': { title: 'Votre besoin', body: 'Montant et objet du prêt. Soyez réaliste, on étudiera la faisabilité ensemble.' },
-  'eligibilite-p': { title: 'Éligibilité', body: 'Si votre salaire est domicilié, précisez depuis quand. Ces infos remontent votre score.' },
+  'eligibilite-p': { title: 'Éligibilité', body: 'La domiciliation du salaire est un critère majeur. Précisez depuis quand le compte est ouvert.' },
   'eligibilite-m': { title: 'Éligibilité PME', body: 'Compte mouvementé, antécédents bancaires, garanties — soyez honnête.' },
-  'step4': { title: 'Félicitations 🎉', body: 'Notez votre code d\'accès ! Il vous permet de retrouver votre dossier à tout moment.' },
+  'step4': { title: 'Félicitations 🎉', body: "Notez votre code d'accès ! Il vous permet de retrouver votre dossier à tout moment." },
 }
 
 function Mascot({ tipKey, open, setOpen }: { tipKey: string; open: boolean; setOpen: (v: boolean) => void }) {
@@ -116,7 +116,6 @@ function Mascot({ tipKey, open, setOpen }: { tipKey: string; open: boolean; setO
       <button className={`mascot-fab ${open ? 'on' : ''}`} onClick={() => setOpen(!open)} aria-label="Aide">
         <svg width="26" height="26" viewBox="0 0 32 32" fill="none">
           <circle cx="16" cy="16" r="14" fill="#1A6BFF"/>
-          <circle cx="16" cy="16" r="14" stroke="#fff" strokeWidth="2"/>
           <circle cx="11.5" cy="14" r="1.8" fill="#fff"/>
           <circle cx="20.5" cy="14" r="1.8" fill="#fff"/>
           <path d="M11 20c1.5 1.5 3 2 5 2s3.5-.5 5-2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
@@ -163,7 +162,6 @@ function CreditScoreMeter({ score }: { score: number }) {
   }, [score])
   const color = v >= 70 ? '#34D058' : v >= 50 ? '#FFB020' : '#FF6B6B'
   const label = v >= 70 ? 'Excellent' : v >= 50 ? 'Bon' : v >= 30 ? 'Moyen' : 'À renforcer'
-  // Jauge semi-circulaire 180°
   const R = 70
   const C = Math.PI * R
   const pct = v / 100
@@ -179,7 +177,6 @@ function CreditScoreMeter({ score }: { score: number }) {
         </defs>
         <path d="M20 100 A70 70 0 0 1 160 100" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="14" strokeLinecap="round"/>
         <path d="M20 100 A70 70 0 0 1 160 100" fill="none" stroke="url(#grad-arc)" strokeWidth="14" strokeLinecap="round" strokeDasharray={`${pct * C} ${C}`}/>
-        {/* Aiguille */}
         <g transform={`rotate(${-90 + pct * 180} 90 100)`}>
           <line x1="90" y1="100" x2="90" y2="38" stroke="#fff" strokeWidth="3" strokeLinecap="round"/>
           <circle cx="90" cy="100" r="6" fill="#fff"/>
@@ -188,6 +185,24 @@ function CreditScoreMeter({ score }: { score: number }) {
       </svg>
       <div className="credit-value" style={{ color }}>{v}</div>
       <div className="credit-sub">/ 100 · <span style={{ color }}>{label}</span></div>
+    </div>
+  )
+}
+
+/* ---------- Sélecteur d'ancienneté (chips) ---------- */
+function AncienneteChips({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <div className="tranches">
+      {TRANCHES.map(t => (
+        <button
+          key={t.key}
+          type="button"
+          className={`tranche-chip ${value === t.key ? 'sel' : ''}`}
+          onClick={() => onChange(t.key)}
+        >
+          {t.label}
+        </button>
+      ))}
     </div>
   )
 }
@@ -209,11 +224,13 @@ function Simulation() {
   const [submitError, setSubmitError] = useState('')
   const [mascotOpen, setMascotOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<'identite'|'situation'|'besoin'|'eligibilite'>('identite')
-  const sectRefs = { identite: useRef<HTMLDivElement>(null), situation: useRef<HTMLDivElement>(null), besoin: useRef<HTMLDivElement>(null), eligibilite: useRef<HTMLDivElement>(null) }
   const set = (k: string, v: string) => setForm(f => ({ ...f, [k]: v }))
   const isP = type === 'physique'
 
-  // Première visite : ouvre la mascotte 1 seconde pour attirer l'œil
+  // Dès que l'activité change, on la mémorise dans le form pour le scoring/contrat
+  useEffect(() => { if (activite) set('activite_sub', activite) }, [activite])
+
+  // Première visite → ouvre mascotte 1s
   useEffect(() => {
     const seen = (() => { try { return localStorage.getItem('mayinvest_mia_seen') } catch { return '1' } })()
     if (!seen) {
@@ -223,7 +240,6 @@ function Simulation() {
     }
   }, [])
 
-  // Clé tutoriel courant
   const tipKey = step === 1 ? 'step1'
     : step === 2 ? (isP ? 'step2-p' : 'step2-m')
     : step === 4 ? 'step4'
@@ -232,7 +248,10 @@ function Simulation() {
       : activeSection === 'besoin' ? 'besoin'
       : (isP ? 'eligibilite-p' : 'eligibilite-m'))
 
-  // Validation : tout obligatoire SAUF email
+  // Contrat obligatoire uniquement pour Salarié privé
+  const needContrat = isP && activite === 'Salarié privé'
+  const needDureeRestante = needContrat && (form['contrat'] === 'CDD' || form['contrat'] === 'Intérim' || form['contrat'] === 'Stage')
+
   const canSubmit = (() => {
     if (!form['tel'] || form['tel'].length !== 9) return false
     if (!form['ville']) return false
@@ -241,13 +260,16 @@ function Simulation() {
     if (isP) {
       if (!form['prenom'] || !form['nom']) return false
       if (!form['employeur']) return false
-      if (!form['date_embauche']) return false
+      if (!form['anciennete_tr']) return false
       if (!form['revenu']) return false
       if (!form['salaire_domic']) return false
-      if (form['salaire_domic'] === 'Oui' && !form['date_compte']) return false
+      if (form['salaire_domic'] === 'Oui' && !form['anciennete_cpt_tr']) return false
+      if (needContrat && !form['contrat']) return false
+      if (needDureeRestante && !form['duree_restante']) return false
     } else {
       if (!form['raison_sociale'] || !form['dirigeant']) return false
-      if (!form['rccm'] || !form['date_creation']) return false
+      if (!form['rccm']) return false
+      if (!form['anciennete_soc_tr']) return false
       if (form['rccm'] === 'Oui' && !form['niu']) return false
       if (!form['ca_annuel']) return false
       if (!form['compte_mouvemente'] || !form['refus_bancaire'] || !form['garanties']) return false
@@ -259,10 +281,11 @@ function Simulation() {
     setLoading(true)
     setSubmitError('')
     const s = calc(type, form)
-    const ancP = monthsBetween(form['date_embauche'] || '')
-    const ancM = monthsBetween(form['date_creation'] || '')
+    const ancP = tranche(form['anciennete_tr'] || '')
+    const ancM = tranche(form['anciennete_soc_tr'] || '')
+    const ancCpt = tranche(form['anciennete_cpt_tr'] || '')
     const nonEligible = isP
-      ? (ancP < 6) || form['salaire_domic'] === 'Non'
+      ? (ancP < 6) || form['salaire_domic'] === 'Non' || form['contrat'] === 'Stage'
       : form['rccm'] === 'Non'
     const code = generateAccessCode()
     const generatedId = crypto.randomUUID()
@@ -278,11 +301,32 @@ function Simulation() {
       access_code: code,
       identite: { nom: form['nom'], prenom: form['prenom'], tel: form['tel'], email: form['email'] || '' },
       situation: isP
-        ? { employeur: form['employeur'], date_embauche: form['date_embauche'], anciennete_mois: ancP, revenu: form['revenu'] }
-        : { raison_sociale: form['raison_sociale'], dirigeant: form['dirigeant'], rccm: form['rccm'], niu: form['niu'], date_creation: form['date_creation'], anciennete_mois: ancM, ca_annuel: form['ca_annuel'] },
+        ? {
+            employeur: form['employeur'],
+            contrat: form['contrat'] || null,
+            duree_restante: form['duree_restante'] || null,
+            anciennete_tranche: form['anciennete_tr'],
+            anciennete_mois_estim: ancP,
+            revenu: form['revenu'],
+          }
+        : {
+            raison_sociale: form['raison_sociale'],
+            dirigeant: form['dirigeant'],
+            rccm: form['rccm'],
+            niu: form['niu'] || null,
+            anciennete_tranche: form['anciennete_soc_tr'],
+            anciennete_mois_estim: ancM,
+            ca_annuel: form['ca_annuel'],
+          },
       besoin: { montant: form['montant'], objet: form['objet'], banque: form['banque'], flux_mois: form['flux_mois'] },
       eligibilite: isP
-        ? { anciennete_ok: ancP >= 6, salaire_domic: form['salaire_domic'], date_compte: form['date_compte'] || null, non_eligible: nonEligible }
+        ? {
+            anciennete_ok: ancP >= 6,
+            salaire_domic: form['salaire_domic'],
+            anciennete_compte_tranche: form['anciennete_cpt_tr'] || null,
+            anciennete_compte_mois_estim: ancCpt,
+            non_eligible: nonEligible,
+          }
         : { compte_mouvemente: form['compte_mouvemente'], refus_bancaire: form['refus_bancaire'], garanties: form['garanties'], non_eligible: nonEligible },
     }
     const { error } = await supabase.from('leads').insert(payload)
@@ -312,9 +356,6 @@ function Simulation() {
     } catch {}
   }
 
-  const todayISO = new Date().toISOString().slice(0, 10)
-  const ancPreview = isP ? monthsBetween(form['date_embauche'] || '') : monthsBetween(form['date_creation'] || '')
-
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#FFFFFF', color: '#111', minHeight: '100vh', WebkitFontSmoothing: 'antialiased' }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -329,6 +370,11 @@ function Simulation() {
           background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none'%3E%3Cpath d='M3 4.5l3 3 3-3' stroke='%23888' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
           background-repeat: no-repeat; background-position: right 2px center; padding-right: 20px !important; cursor: pointer;
         }
+        /* FIX : "Sélectionner…" en gris (comme un placeholder) */
+        .field select.empty { color: #BBB !important; font-weight: 400 !important; }
+        .field select option { color: #111; font-weight: 500; }
+        .field select option[value=""] { color: #BBB; }
+
         .top { position: sticky; top: 0; z-index: 50; background: rgba(255,255,255,0.92); backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px); height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #F0F0F0; }
         @media (max-width: 640px) { .top { height: 60px; padding: 0 16px; } }
         .back { background: #111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 11px 22px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; text-decoration: none; }
@@ -381,6 +427,23 @@ function Simulation() {
         .radio { display: flex; gap: 8px; margin-top: 6px; }
         .radio button { flex: 1; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px; background: #fff; font-family: inherit; font-size: 13px; font-weight: 700; color: #666; cursor: pointer; transition: all 0.15s; }
         .radio button.sel { border-color: #1A6BFF; background: #EEF4FF; color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.2); }
+
+        /* Tranches d'ancienneté (chips) */
+        .anc-wrap { padding: 10px 14px 14px; }
+        .anc-wrap > label { display: block; font-size: 11px; font-weight: 600; color: #888; margin-bottom: 8px; }
+        .tranches { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        @media (min-width: 480px) { .tranches { grid-template-columns: repeat(3, 1fr); } }
+        .tranche-chip { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px 8px; font-family: inherit; font-size: 12px; font-weight: 700; color: #666; cursor: pointer; transition: all 0.15s; text-align: center; }
+        .tranche-chip:hover { background: #EEF4FF; color: #1A6BFF; }
+        .tranche-chip.sel { background: #1A6BFF; color: #fff; border-color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.25); }
+
+        /* Chips contrat */
+        .contrat-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 6px; }
+        @media (max-width: 400px) { .contrat-chips { grid-template-columns: repeat(2, 1fr); } }
+        .contrat-chip { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px 6px; font-family: inherit; font-size: 12px; font-weight: 700; color: #666; cursor: pointer; transition: all 0.15s; text-align: center; }
+        .contrat-chip:hover { background: #EEF4FF; color: #1A6BFF; }
+        .contrat-chip.sel { background: #0D1B3E; color: #fff; border-color: #0D1B3E; box-shadow: 0 4px 10px rgba(13,27,62,0.2); }
+
         .badge { display: inline-flex; align-items: center; gap: 6px; background: #EEF4FF; color: #1A6BFF; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 16px; }
         .submit-error { background: #FEF2F2; border: 1.5px solid #FCA5A5; color: #B91C1C; font-size: 13px; font-weight: 600; padding: 12px 16px; border-radius: 12px; margin-top: 12px; display: flex; align-items: flex-start; gap: 10px; }
         .btn-main { width: 100%; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 8px 20px rgba(26,107,255,0.35); transition: all 0.2s; }
@@ -442,8 +505,7 @@ function Simulation() {
           <p className="sub">Choisissez votre profil pour accéder au formulaire adapté.</p>
           <div className="cards-3d">
             <button className={`card-choix physique ${type === 'physique' ? 'sel' : ''}`} onClick={() => setType('physique')}>
-              <div className="glow a" />
-              <div className="shine" />
+              <div className="glow a" /><div className="shine" />
               <div className="card-icon on">
                 <svg width="26" height="26" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="6.5" r="3.5" fill="white"/><path d="M3 17c0-3.866 3.134-7 7-7s7 3.134 7 7" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
               </div>
@@ -472,8 +534,7 @@ function Simulation() {
           <div className="chips">
             {(isP ? ACTIVITES_PHYSIQUE : ACTIVITES_MORALE).map(a =>
               <button key={a} className={`chip ${activite === a ? 'sel' : ''}`} onClick={() => setActivite(a)}>
-                {(isP ? ICON_P : ICON_M)[a]}
-                <span>{a}</span>
+                {(isP ? ICON_P : ICON_M)[a]}<span>{a}</span>
               </button>
             )}
           </div>
@@ -491,7 +552,7 @@ function Simulation() {
 
           <div className="form-stack">
             {/* 1. IDENTITÉ */}
-            <div className="form-card" ref={sectRefs.identite} onFocus={() => setActiveSection('identite')} tabIndex={-1}>
+            <div className="form-card" onFocus={() => setActiveSection('identite')} tabIndex={-1}>
               <div className="card-title">1. Identité</div>
               <div className="fields">
                 {isP ? <>
@@ -502,41 +563,65 @@ function Simulation() {
                   <div className="field"><label>Nom du dirigeant *</label><input placeholder="Ex : Alain Mabiala" value={form['dirigeant']||''} onChange={e=>set('dirigeant',e.target.value)}/></div>
                 </>}
                 <div className="field"><label>Téléphone *</label><input
-                  type="tel"
-                  inputMode="numeric"
-                  placeholder="Ex : 06 123 4567"
-                  maxLength={11}
-                  value={formatPhone(form['tel']||'')}
-                  onChange={e=>set('tel', cleanPhone(e.target.value))}
-                /></div>
+                  type="tel" inputMode="numeric" placeholder="Ex : 06 123 4567" maxLength={11}
+                  value={formatPhone(form['tel']||'')} onChange={e=>set('tel', cleanPhone(e.target.value))}/></div>
                 <div className="field"><label>Email (facultatif)</label><input type="email" placeholder="Ex : jp.moukouama@gmail.com" value={form['email']||''} onChange={e=>set('email',e.target.value)}/></div>
                 <div className="field"><label>Ville *</label>
-                  <select value={form['ville']||''} onChange={e=>set('ville',e.target.value)}>
+                  <select
+                    className={!form['ville'] ? 'empty' : ''}
+                    value={form['ville']||''}
+                    onChange={e=>set('ville',e.target.value)}
+                  >
                     <option value="">Sélectionner…</option>
-                    {VILLES.map(v=><option key={v}>{v}</option>)}
+                    {VILLES.map(v=><option key={v} value={v}>{v}</option>)}
                   </select>
                 </div>
               </div>
             </div>
 
             {/* 2. SITUATION */}
-            <div className="form-card" ref={sectRefs.situation} onFocus={() => setActiveSection('situation')} tabIndex={-1}>
+            <div className="form-card" onFocus={() => setActiveSection('situation')} tabIndex={-1}>
               <div className="card-title">2. Situation {isP ? 'professionnelle' : 'juridique'}</div>
               <div className="fields">
                 {isP ? <>
                   <div className="field"><label>Employeur / Administration *</label><input placeholder="Ex : Ministère de l'Économie" value={form['employeur']||''} onChange={e=>set('employeur',e.target.value)}/></div>
-                  <div className="field">
-                    <label>Depuis quand êtes-vous en poste ? *</label>
-                    <input type="date" max={todayISO} value={form['date_embauche']||''} onChange={e=>set('date_embauche',e.target.value)}/>
-                    {form['date_embauche'] && <div className="field-hint">Ancienneté : {humanDuration(monthsBetween(form['date_embauche']))}</div>}
+
+                  {/* Type de contrat (uniquement Salarié privé) */}
+                  {needContrat && (
+                    <div className="field radio-field">
+                      <label>Type de contrat *</label>
+                      <div className="contrat-chips">
+                        {CONTRATS.map(c => (
+                          <button
+                            key={c} type="button"
+                            className={`contrat-chip ${form['contrat'] === c ? 'sel' : ''}`}
+                            onClick={() => set('contrat', c)}
+                          >{c}</button>
+                        ))}
+                      </div>
+                      {form['contrat'] === 'CDI' && <div className="field-hint">✓ CDI = meilleure éligibilité</div>}
+                      {form['contrat'] === 'Stage' && <div className="field-hint" style={{ color: '#B91C1C' }}>⚠ Les stagiaires ne sont généralement pas éligibles</div>}
+                    </div>
+                  )}
+
+                  {/* Durée restante si CDD/Intérim/Stage */}
+                  {needDureeRestante && (
+                    <div className="field"><label>Durée restante du contrat (mois) *</label><input
+                      type="number" placeholder="Ex : 18" min="0" max="120"
+                      value={form['duree_restante']||''}
+                      onChange={e=>set('duree_restante', e.target.value)}
+                    /></div>
+                  )}
+
+                  {/* Ancienneté par tranches */}
+                  <div className="field anc-wrap">
+                    <label>Ancienneté dans l'emploi *</label>
+                    <AncienneteChips value={form['anciennete_tr']||''} onChange={v=>set('anciennete_tr', v)}/>
                   </div>
+
                   <div className="field"><label>Revenu net mensuel (XAF) *</label><input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Ex : 350 000"
-                    value={formatMoney(form['revenu']||'')}
-                    onChange={e=>set('revenu', cleanMoney(e.target.value))}
-                  /></div>
+                    type="text" inputMode="numeric" placeholder="Ex : 350 000"
+                    value={formatMoney(form['revenu']||'')} onChange={e=>set('revenu', cleanMoney(e.target.value))}/></div>
                 </> : <>
                   <div className="field radio-field"><label>RCCM *</label>
                     <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['rccm']===v?'sel':''} onClick={()=>set('rccm',v)}>{v}</button>)}</div>
@@ -544,57 +629,52 @@ function Simulation() {
                   {form['rccm'] === 'Oui' && (
                     <div className="field"><label>NIU *</label><input placeholder="Ex : M2019051234" value={form['niu']||''} onChange={e=>set('niu',e.target.value)}/></div>
                   )}
-                  <div className="field">
-                    <label>Date de création de la société *</label>
-                    <input type="date" max={todayISO} value={form['date_creation']||''} onChange={e=>set('date_creation',e.target.value)}/>
-                    {form['date_creation'] && <div className="field-hint">Ancienneté : {humanDuration(monthsBetween(form['date_creation']))}</div>}
+                  <div className="field anc-wrap">
+                    <label>Ancienneté de la société *</label>
+                    <AncienneteChips value={form['anciennete_soc_tr']||''} onChange={v=>set('anciennete_soc_tr', v)}/>
                   </div>
                   <div className="field"><label>Chiffre d'affaires annuel (XAF) *</label><input
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Ex : 50 000 000"
-                    value={formatMoney(form['ca_annuel']||'')}
-                    onChange={e=>set('ca_annuel', cleanMoney(e.target.value))}
-                  /></div>
+                    type="text" inputMode="numeric" placeholder="Ex : 50 000 000"
+                    value={formatMoney(form['ca_annuel']||'')} onChange={e=>set('ca_annuel', cleanMoney(e.target.value))}/></div>
                 </>}
               </div>
             </div>
 
             {/* 3. BESOIN */}
-            <div className="form-card" ref={sectRefs.besoin} onFocus={() => setActiveSection('besoin')} tabIndex={-1}>
+            <div className="form-card" onFocus={() => setActiveSection('besoin')} tabIndex={-1}>
               <div className="card-title">3. Votre besoin</div>
               <div className="fields">
                 <div className="field"><label>Montant demandé (XAF) *</label><input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Ex : 5 000 000"
-                  value={formatMoney(form['montant']||'')}
-                  onChange={e=>set('montant', cleanMoney(e.target.value))}
-                /></div>
+                  type="text" inputMode="numeric" placeholder="Ex : 5 000 000"
+                  value={formatMoney(form['montant']||'')} onChange={e=>set('montant', cleanMoney(e.target.value))}/></div>
                 <div className="field"><label>Objet du financement *</label>
-                  <select value={form['objet']||''} onChange={e=>set('objet',e.target.value)}>
+                  <select
+                    className={!form['objet'] ? 'empty' : ''}
+                    value={form['objet']||''}
+                    onChange={e=>set('objet',e.target.value)}
+                  >
                     <option value="">Sélectionner…</option>
-                    {(isP ? ['Consommation','Immobilier','Véhicule','Autre'] : ['Investissement','Fonds de roulement','Marché public','Autre']).map(o=><option key={o}>{o}</option>)}
+                    {(isP ? ['Consommation','Immobilier','Véhicule','Autre'] : ['Investissement','Fonds de roulement','Marché public','Autre']).map(o=><option key={o} value={o}>{o}</option>)}
                   </select>
                 </div>
                 {!isP && <div className="field"><label>Flux mensuel moyen (XAF) *</label><input
-                  type="text"
-                  inputMode="numeric"
-                  placeholder="Ex : 2 000 000"
-                  value={formatMoney(form['flux_mois']||'')}
-                  onChange={e=>set('flux_mois', cleanMoney(e.target.value))}
-                /></div>}
+                  type="text" inputMode="numeric" placeholder="Ex : 2 000 000"
+                  value={formatMoney(form['flux_mois']||'')} onChange={e=>set('flux_mois', cleanMoney(e.target.value))}/></div>}
               </div>
             </div>
 
             {/* 4. ÉLIGIBILITÉ */}
-            <div className="form-card" ref={sectRefs.eligibilite} onFocus={() => setActiveSection('eligibilite')} tabIndex={-1}>
+            <div className="form-card" onFocus={() => setActiveSection('eligibilite')} tabIndex={-1}>
               <div className="card-title">4. Éligibilité</div>
               <div className="fields">
                 <div className="field"><label>Banque actuelle *</label>
-                  <select value={form['banque']||''} onChange={e=>set('banque',e.target.value)}>
+                  <select
+                    className={!form['banque'] ? 'empty' : ''}
+                    value={form['banque']||''}
+                    onChange={e=>set('banque',e.target.value)}
+                  >
                     <option value="">Sélectionner…</option>
-                    {BANQUES.map(b=><option key={b}>{b}</option>)}
+                    {BANQUES.map(b=><option key={b} value={b}>{b}</option>)}
                   </select>
                 </div>
                 {isP ? <>
@@ -602,10 +682,9 @@ function Simulation() {
                     <div className="radio">{['Oui','Non'].map(v=><button key={v} type="button" className={form['salaire_domic']===v?'sel':''} onClick={()=>set('salaire_domic',v)}>{v}</button>)}</div>
                   </div>
                   {form['salaire_domic'] === 'Oui' && (
-                    <div className="field">
+                    <div className="field anc-wrap">
                       <label>Depuis quand le compte est-il ouvert ? *</label>
-                      <input type="date" max={todayISO} value={form['date_compte']||''} onChange={e=>set('date_compte',e.target.value)}/>
-                      {form['date_compte'] && <div className="field-hint">Compte ouvert depuis : {humanDuration(monthsBetween(form['date_compte']))}</div>}
+                      <AncienneteChips value={form['anciennete_cpt_tr']||''} onChange={v=>set('anciennete_cpt_tr', v)}/>
                     </div>
                   )}
                 </> : <>
@@ -641,9 +720,7 @@ function Simulation() {
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6l2 2 4-4" stroke="#34D058" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             Dossier reçu · Score crédit
           </div>
-
           <CreditScoreMeter score={score} />
-
           <div className="verdict" style={{ color: score>=70?'#34D058':score>=50?'#FFB020':'#FF6B6B' }}>
             {score >= 70 ? 'Dossier excellent' : score >= 50 ? 'Dossier éligible' : 'Dossier à renforcer'}
           </div>
@@ -680,7 +757,6 @@ function Simulation() {
         </div>}
       </div>
 
-      {/* Mascotte tutoriel flottante */}
       <Mascot tipKey={tipKey} open={mascotOpen} setOpen={setMascotOpen} />
     </div>
   )
