@@ -246,10 +246,11 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onT
       <circle cx="20" cy="20" r="19" stroke="#fff" strokeWidth="1" opacity="0.3"/>
       {/* Grand œil blanc */}
       <ellipse cx="20" cy="20" rx="13" ry="9.5" fill="#fff"/>
-      {/* Groupe œil animé (iris + pupille + reflet) */}
+      {/* Groupe œil animé (iris marron + pupille + reflet) */}
       <g className="haki-eye-ball">
-        <circle cx="20" cy="20" r="6.5" fill="#1A6BFF"/>
-        <circle cx="20" cy="20" r="3.5" fill="#0D1B3E"/>
+        <circle cx="20" cy="20" r="6.5" fill="#6B4423"/>
+        <circle cx="20" cy="20" r="5.5" fill="#8B5A2B"/>
+        <circle cx="20" cy="20" r="3.5" fill="#1A0F08"/>
         <circle cx="22" cy="18" r="1.3" fill="#fff"/>
         <circle cx="18" cy="21.5" r="0.7" fill="#fff" opacity="0.7"/>
       </g>
