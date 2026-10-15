@@ -295,6 +295,9 @@ function HakiAssistant({ msg, open, onToggle, onDecline, accepted, autoMode, onT
               </div>
               {showAutoHelp && (
                 <div className="haki-help-box">
+                  <button className="haki-help-close" onClick={() => setShowAutoHelp(false)} aria-label="Fermer l'explication">
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                  </button>
                   <div className="haki-help-title">À quoi sert ce bouton ?</div>
                   <div className="haki-help-text">
                     <strong>Activé</strong> : Haki s'ouvre automatiquement à chaque étape pour vous expliquer quoi faire. Idéal si c'est votre première fois.<br/><br/>
@@ -885,7 +888,9 @@ function Simulation() {
         .haki-switch.on .haki-switch-knob { transform: translateX(20px); }
         .haki-help-btn { width: 24px; height: 24px; border-radius: 50%; background: #EEF4FF; border: 1.5px solid #C7D7FF; color: #1A6BFF; font-weight: 800; font-size: 13px; cursor: pointer; padding: 0; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-family: inherit; }
         .haki-help-btn:hover { background: #1A6BFF; color: #fff; border-color: #1A6BFF; }
-        .haki-help-box { margin-top: 10px; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; animation: haki-help-in 0.2s ease-out; }
+        .haki-help-box { position: relative; margin-top: 10px; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 10px 32px 10px 12px; animation: haki-help-in 0.2s ease-out; }
+        .haki-help-close { position: absolute; top: 8px; right: 8px; width: 20px; height: 20px; border-radius: 50%; background: #F3F4F6; border: none; color: #666; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+        .haki-help-close:hover { background: #E5E7EB; color: #111; }
         @keyframes haki-help-in { from { opacity: 0; transform: translateY(-4px);} to { opacity: 1; transform: translateY(0);} }
         .haki-help-title { font-size: 11px; font-weight: 800; color: #1A6BFF; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
         .haki-help-text { font-size: 12px; color: #444; line-height: 1.5; }
