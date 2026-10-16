@@ -200,6 +200,10 @@ function ClientPortal() {
   const [codeInput, setCodeInput] = useState('MYI-')
   const [codeError, setCodeError] = useState('')
   const [codeLoading, setCodeLoading] = useState(false)
+  const [loginMode, setLoginMode] = useState<'password' | 'code'>('password')
+  const [phoneInput, setPhoneInput] = useState('')
+  const [passwordInput, setPasswordInput] = useState('')
+  const [recoveryMsg, setRecoveryMsg] = useState('')
   const [lead, setLead] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [newMsg, setNewMsg] = useState('')
@@ -207,7 +211,8 @@ function ClientPortal() {
   const [activeTab, setActiveTab] = useState<'suivi' | 'chat' | 'infos'>('suivi')
   const chatEnd = useRef<HTMLDivElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
-  const [attachMenu, setAttachMenu] = useState(false)
+  const [attachOpen, setAttachOpen] = useState(false)
+  function closeAttach() { setAttachOpen(false) }
   const [uploading, setUploading] = useState(false)
   const [documents, setDocuments] = useState<any[]>([])
   const docInput = useRef<HTMLInputElement>(null)
@@ -219,9 +224,13 @@ function ClientPortal() {
   function toggleAuto() { setAutoMode(m => { const n = !m; try { localStorage.setItem('mayinvest_haki_auto', n ? '1' : '0') } catch {}; return n }) }
 
   useEffect(() => {
-    const tryCode = (() => { try { return localStorage.getItem(`mayinvest_code_${id}`) || '' } catch { return '' } })()
-    if (tryCode) openWithCode(tryCode, true)
-    else setStage('needsCode')
+    try {
+      const tryPwd = localStorage.getItem(`mayinvest_pwd_${id}`) || ''
+      const tryCode = localStorage.getItem(`mayinvest_code_${id}`) || ''
+      if (tryPwd) { openWithPassword(tryPwd, true); return }
+      if (tryCode) { openWithCode(tryCode, true); return }
+    } catch {}
+    setStage('needsCode')
   }, [id])
 
   async function openWithCode(code: string, silent = false) {
@@ -239,6 +248,41 @@ function ClientPortal() {
     try { localStorage.setItem(`mayinvest_code_${id}`, code) } catch {}
     setStage('portal')
     loadMessages()
+  }
+
+  async function openWithPassword(password: string, silent = false) {
+    if (!silent) setCodeLoading(true)
+    setCodeError('')
+    const { data, error } = await supabase.rpc('get_lead_by_password', { p_id: id, p_password: password })
+    if (!silent) setCodeLoading(false)
+    if (error || !data || (Array.isArray(data) && data.length === 0)) {
+      if (silent) { setStage('needsCode'); return }
+      setCodeError("Mot de passe incorrect. Vérifiez vos 6 chiffres.")
+      return
+    }
+    const leadRow = Array.isArray(data) ? data[0] : data
+    setLead(leadRow)
+    try { localStorage.setItem(`mayinvest_pwd_${id}`, password) } catch {}
+    setStage('portal')
+    loadMessages()
+  }
+
+  async function recoverPassword() {
+    setRecoveryMsg('')
+    const phone = phoneInput.replace(/\D/g, '').slice(0, 9)
+    if (phone.length !== 9) { setRecoveryMsg('Entrez d\'abord votre téléphone (9 chiffres)'); return }
+    const { data } = await supabase.rpc('find_recovery_contact', { p_phone: phone })
+    const email = (data as any)?.[0]?.email || ''
+    if (email) {
+      // Pour l'instant on redirige vers WhatsApp (email auto nécessitera Resend + Edge Function)
+      const text = encodeURIComponent(`Bonjour Mayinvest, j'ai oublié mon mot de passe. Mon téléphone : ${phone}. Mon email : ${email}. Merci de me le renvoyer.`)
+      window.open(`https://wa.me/242060000000?text=${text}`, '_blank')
+      setRecoveryMsg(`✓ Nous allons vous renvoyer votre mot de passe à ${email}`)
+    } else {
+      const text = encodeURIComponent(`Bonjour Mayinvest, j'ai oublié mon mot de passe. Mon téléphone : ${phone}. Merci de me le renvoyer.`)
+      window.open(`https://wa.me/242060000000?text=${text}`, '_blank')
+      setRecoveryMsg('Un conseiller va vous recontacter sur WhatsApp')
+    }
   }
 
   async function loadMessages() {
@@ -299,7 +343,7 @@ function ClientPortal() {
       alert("Impossible d'uploader : " + (e?.message || 'erreur'))
     }
     setUploading(false)
-    setAttachMenu(false)
+    closeAttach()
   }
 
   async function loadDocuments() {
@@ -423,7 +467,7 @@ function ClientPortal() {
           onClick: () => {
             setNewMsg(q)
             setHakiOpen(false)
-            setAttachMenu(false)
+            closeAttach()
             setTimeout(() => {
               const ta = document.querySelector('.c-msg-input-field textarea') as HTMLTextAreaElement
               if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length) }
@@ -523,10 +567,29 @@ function ClientPortal() {
         .c-gate-err { background: #FEF2F2; border: 1.5px solid #FCA5A5; color: #B91C1C; font-size: 13px; font-weight: 600; padding: 12px 14px; border-radius: 12px; margin-top: 12px; text-align: left; }
         .c-gate-help { margin-top: 20px; font-size: 13px; color: #666; }
         .c-gate-help a { color: #1A6BFF; text-decoration: none; font-weight: 700; }
+        .c-gate-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: #EEF2F7; padding: 4px; border-radius: 12px; margin-bottom: 16px; }
+        .c-gate-tab { background: transparent; border: none; padding: 10px; font-size: 13px; font-weight: 700; color: #666; cursor: pointer; border-radius: 8px; font-family: inherit; }
+        .c-gate-tab:hover { color: #111; }
+        .c-gate-tab.on { background: #fff; color: #1A6BFF; box-shadow: 0 2px 6px rgba(13,27,62,0.08); }
+        .c-gate-recovery { margin-top: 16px; padding: 14px; background: #F8FAFC; border: 1.5px solid #E5E7EB; border-radius: 14px; text-align: left; }
+        .c-btn-recovery { width: 100%; background: transparent; color: #1A6BFF; border: 1.5px solid #1A6BFF; font-family: inherit; font-size: 13px; font-weight: 700; padding: 10px; border-radius: 100px; cursor: pointer; }
+        .c-btn-recovery:hover:not(:disabled) { background: #EEF4FF; }
+        .c-btn-recovery:disabled { color: #999; border-color: #D1D5DB; cursor: not-allowed; }
 
         /* ----- Portal : grand header unique mobile-first ----- */
         .c-portal-head { background: linear-gradient(135deg, #0D1B3E 0%, #1A3380 100%); color: #fff; border-radius: 20px; padding: 18px 16px 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.2); margin-bottom: 16px; position: relative; overflow: hidden; }
         @media (min-width: 640px) { .c-portal-head { padding: 24px 22px 20px; border-radius: 24px; margin-bottom: 20px; } }
+        /* PC : header en layout 2 colonnes (identité à gauche, score+actions à droite) */
+        @media (min-width: 900px) {
+          .c-wrap { max-width: 1000px; }
+          .c-portal-head { padding: 28px 32px; display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: center; }
+          .c-head-top { margin-bottom: 0; display: flex; flex-direction: column; align-items: flex-start; }
+          .c-head-identity { order: 1; }
+          .c-head-score { order: 2; margin-top: 12px; align-self: flex-start; }
+          .c-head-right { display: flex; flex-direction: column; gap: 12px; align-items: stretch; min-width: 220px; }
+          .c-head-meta { margin-bottom: 0; }
+          .c-head-actions { flex-direction: column !important; gap: 8px !important; width: 100%; }
+        }
         .c-portal-head::before { content: ''; position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(26,107,255,0.35), transparent 65%); pointer-events: none; }
         .c-head-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; position: relative; z-index: 1; }
         .c-head-identity { min-width: 0; flex: 1; }
@@ -596,19 +659,30 @@ function ClientPortal() {
         .c-contact-sub { font-size: 12px; color: #166534; line-height: 1.5; margin-bottom: 12px; }
         .c-btn-wa { width: 100%; background: #25D366; color: #fff; border: none; padding: 13px 20px; border-radius: 100px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-        /* ----- Chat type WhatsApp / Messenger ----- */
-        .c-messenger { background: #fff; border-radius: 20px; box-shadow: 0 4px 14px rgba(13,27,62,0.05); overflow: hidden; display: flex; flex-direction: column; height: calc(100vh - 260px); min-height: 420px; }
-        /* Haki fab global masqué en mode chat (desktop + mobile) : l'œil dans la barre le remplace */
+        /* ----- Chat PLEIN ÉCRAN (mobile + PC) type Messenger ----- */
+        .c-messenger { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; height: 100dvh; background: #fff; display: flex; flex-direction: column; overflow: hidden; }
+        body:has(.c-messenger-fs-active) { overflow: hidden; }
         body:has(.c-messenger-fs-active) .c-haki-fab,
         body:has(.c-messenger-fs-active) .c-haki-panel { display: none !important; }
-        @media (max-width: 640px) {
-          /* Mode plein écran sur mobile */
-          .c-messenger { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; height: 100dvh; border-radius: 0; box-shadow: none; }
-          body:has(.c-messenger-fs-active) { overflow: hidden; }
+        /* Sur PC : centré en fenêtre avec max-width + fond flouté */
+        @media (min-width: 900px) {
+          .c-messenger {
+            top: 24px; bottom: 24px; left: 50%; right: auto;
+            transform: translateX(-50%);
+            width: calc(100% - 48px); max-width: 820px;
+            height: auto;
+            border-radius: 22px;
+            box-shadow: 0 30px 70px rgba(13,27,62,0.3), 0 10px 24px rgba(13,27,62,0.1);
+          }
+          body:has(.c-messenger-fs-active)::before {
+            content: ''; position: fixed; inset: 0; background: rgba(13,27,62,0.35); backdrop-filter: blur(8px); z-index: 49;
+            animation: c-fade 0.2s ease-out;
+          }
         }
         .c-msg-head { background: linear-gradient(135deg, #0D1B3E 0%, #1A3380 100%); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
-        .c-msg-head-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
-        @media (max-width: 640px) { .c-msg-head-back { display: flex; } }
+        @media (min-width: 900px) { .c-msg-head { padding: 18px 24px; border-radius: 22px 22px 0 0; } }
+        .c-msg-head-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
+        .c-msg-head-back:hover { background: rgba(255,255,255,0.2); }
         .c-msg-head-avatar { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
         .c-msg-head-dot { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #34D058; border: 2.5px solid #0D1B3E; }
         .c-msg-head-info { flex: 1; min-width: 0; }
@@ -651,13 +725,21 @@ function ClientPortal() {
         .c-msg-attach-btn:hover:not(:disabled) { box-shadow: 0 4px 10px rgba(26,107,255,0.3); }
         .c-msg-attach-eye { display: flex; width: 36px; height: 36px; border-radius: 50%; overflow: hidden; }
         .c-msg-attach-dot { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: #34D058; border: 2px solid #fff; }
-        .c-attach-menu { position: absolute; bottom: calc(100% + 8px); left: 0; width: 260px; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.15); padding: 8px; animation: c-fade 0.15s ease-out; z-index: 20; }
+        .c-attach-menu { position: absolute; bottom: calc(100% + 8px); left: 0; width: 290px; max-height: 420px; overflow-y: auto; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.15); padding: 8px; animation: c-fade 0.15s ease-out; z-index: 20; }
+        .c-attach-head { display: flex; align-items: center; gap: 8px; padding: 10px 8px; border-bottom: 1px solid #F0F2F5; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #0D1B3E; }
+        .c-attach-haki-ic { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+        .c-attach-back { background: #F3F4F6; border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #666; padding: 0; margin-right: 4px; }
+        .c-attach-back:hover { background: #E5E7EB; color: #111; }
         .c-attach-opt { width: 100%; background: transparent; border: none; padding: 10px 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-radius: 10px; text-align: left; font-family: inherit; }
         .c-attach-opt:hover { background: #F8FAFC; }
         .c-attach-opt + .c-attach-opt { margin-top: 2px; }
         .c-attach-ic { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .c-attach-ttl { font-size: 13px; font-weight: 700; color: #0D1B3E; }
         .c-attach-sub { font-size: 11px; color: #666; margin-top: 2px; }
+        .c-attach-reply { width: 100%; background: transparent; border: 1.5px solid transparent; padding: 10px 12px; display: flex; align-items: flex-start; gap: 8px; cursor: pointer; border-radius: 10px; text-align: left; font-family: inherit; font-size: 12.5px; font-weight: 600; color: #0D1B3E; line-height: 1.4; }
+        .c-attach-reply:hover { background: #EEF4FF; border-color: #1A6BFF; color: #1A6BFF; }
+        .c-attach-reply + .c-attach-reply { margin-top: 2px; }
+        .c-attach-reply-ic { font-size: 14px; flex-shrink: 0; }
 
         /* Documents checklist */
         .c-docs { display: flex; flex-direction: column; gap: 10px; }
@@ -708,18 +790,76 @@ function ClientPortal() {
               <svg width="36" height="36" viewBox="0 0 32 32" fill="none"><rect x="7" y="14" width="18" height="13" rx="2" stroke="#1A6BFF" strokeWidth="2.4"/><path d="M11 14v-4a5 5 0 0110 0v4" stroke="#1A6BFF" strokeWidth="2.4"/></svg>
             </div>
             <h1 className="c-gate-h">Accès à votre dossier</h1>
-            <p className="c-gate-sub">Entrez le code d'accès reçu lors de votre inscription pour consulter votre dossier.</p>
-            <div className="c-gate-field">
-              <label>Code d'accès</label>
-              <input placeholder="MYI-ABC1234" maxLength={11} value={codeInput} onChange={e => setCodeInput(formatCode(e.target.value))} onKeyDown={e => e.key === 'Enter' && codeInput.length === 11 && openWithCode(codeInput)}/>
+            <p className="c-gate-sub">Entrez le mot de passe choisi lors de votre inscription.</p>
+
+            {/* Tabs : mot de passe (par défaut) ou code d'accès */}
+            <div className="c-gate-tabs">
+              <button className={`c-gate-tab ${loginMode === 'password' ? 'on' : ''}`} onClick={() => { setLoginMode('password'); setCodeError('') }}>
+                🔐 Mot de passe
+              </button>
+              <button className={`c-gate-tab ${loginMode === 'code' ? 'on' : ''}`} onClick={() => { setLoginMode('code'); setCodeError('') }}>
+                📄 Code d'accès
+              </button>
             </div>
-            <button className="c-btn-main" disabled={codeLoading || codeInput.length < 11} onClick={() => openWithCode(codeInput)}>
-              {codeLoading ? 'Vérification…' : 'Déverrouiller'}
-              {!codeLoading && <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-            </button>
+
+            {loginMode === 'password' ? <>
+              <div className="c-gate-field">
+                <label>Mot de passe (6 chiffres)</label>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="••••••"
+                  maxLength={6}
+                  value={passwordInput}
+                  onChange={e => setPasswordInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  onKeyDown={e => e.key === 'Enter' && passwordInput.length === 6 && openWithPassword(passwordInput)}
+                  autoComplete="current-password"
+                  style={{ textAlign: 'center', fontSize: 22 + 'px !important', letterSpacing: '0.6em' } as any}
+                />
+              </div>
+              <button className="c-btn-main" disabled={codeLoading || passwordInput.length !== 6} onClick={() => openWithPassword(passwordInput)}>
+                {codeLoading ? 'Vérification…' : 'Déverrouiller'}
+                {!codeLoading && <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+              </button>
+            </> : <>
+              <div className="c-gate-field">
+                <label>Code d'accès</label>
+                <input placeholder="MYI-ABC1234" maxLength={11} value={codeInput} onChange={e => setCodeInput(formatCode(e.target.value))} onKeyDown={e => e.key === 'Enter' && codeInput.length === 11 && openWithCode(codeInput)}/>
+              </div>
+              <button className="c-btn-main" disabled={codeLoading || codeInput.length < 11} onClick={() => openWithCode(codeInput)}>
+                {codeLoading ? 'Vérification…' : 'Déverrouiller'}
+                {!codeLoading && <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+              </button>
+            </>}
+
             {codeError && <div className="c-gate-err">{codeError}</div>}
+
+            {/* Récupération mot de passe */}
+            {loginMode === 'password' && (
+              <div className="c-gate-recovery">
+                <div style={{ fontSize: 12, color: '#666', marginBottom: 8, fontWeight: 700 }}>Mot de passe oublié ?</div>
+                <div className="c-gate-field" style={{ marginBottom: 10 }}>
+                  <label>Votre téléphone</label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="06 123 4567"
+                    maxLength={9}
+                    value={phoneInput}
+                    onChange={e => setPhoneInput(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                    style={{ fontFamily: 'inherit', letterSpacing: 'normal', fontSize: '15px !important' } as any}
+                  />
+                </div>
+                <button className="c-btn-recovery" onClick={recoverPassword} disabled={phoneInput.length !== 9}>
+                  📧 M'envoyer mon mot de passe
+                </button>
+                {recoveryMsg && <div style={{ fontSize: 12, color: '#166534', marginTop: 10, textAlign: 'center', fontWeight: 700 }}>{recoveryMsg}</div>}
+              </div>
+            )}
+
             <div className="c-gate-help">
-              Code perdu ? <a href="https://wa.me/242060000000?text=Bonjour%20Mayinvest%2C%20j%27ai%20perdu%20mon%20code" target="_blank" rel="noopener">Contactez un expert</a>
+              Besoin d'aide ? <a href="https://wa.me/242060000000?text=Bonjour%20Mayinvest" target="_blank" rel="noopener">Contactez un expert</a>
             </div>
           </div>
         </div>
@@ -742,7 +882,7 @@ function ClientPortal() {
       {commonStyle}
 
       <div className="c-wrap">
-        {/* ----- HEADER UNIQUE (le navy card = seul header) ----- */}
+        {/* ----- HEADER UNIQUE (2 cols sur PC, stacké sur mobile) ----- */}
         <div className="c-portal-head">
           <div className="c-head-top">
             <div className="c-head-identity">
@@ -753,22 +893,24 @@ function ClientPortal() {
               <div className="c-head-score-v">{lead?.score || 0}</div>
               <div className="c-head-score-l">/ 100</div>
             </div>
+            <div className="c-head-meta" style={{ marginTop: 12 }}>
+              <span className="c-chip c-chip-statut" style={{ background: col.bg, color: col.fg }}>● {lead?.statut}</span>
+              <span className="c-chip">{isP ? 'Particulier' : 'PME'}{lead?.activite ? ' · ' + lead.activite : ''}</span>
+              {lead?.ville && <span className="c-chip">📍 {lead.ville}</span>}
+            </div>
           </div>
-          <div className="c-head-meta">
-            <span className="c-chip c-chip-statut" style={{ background: col.bg, color: col.fg }}>● {lead?.statut}</span>
-            <span className="c-chip">{isP ? 'Particulier' : 'PME'}{lead?.activite ? ' · ' + lead.activite : ''}</span>
-            {lead?.ville && <span className="c-chip">📍 {lead.ville}</span>}
-          </div>
-          <div className="c-head-actions">
-            <button className="c-btn-chat-head" onClick={() => setActiveTab('chat')}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
-              Mon conseiller
-              {unreadMsgs > 0 && <span style={{ background: '#fff', color: '#25D366', fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 100, marginLeft: 4 }}>{unreadMsgs}</span>}
-            </button>
-            <button className="c-btn-logout" onClick={deconnecter}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 1h3v12H9M5 10l-3-3 3-3M2 7h8" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Déconnexion
-            </button>
+          <div className="c-head-right">
+            <div className="c-head-actions">
+              <button className="c-btn-chat-head" onClick={() => setActiveTab('chat')}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
+                Mon conseiller
+                {unreadMsgs > 0 && <span style={{ background: '#fff', color: '#25D366', fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 100, marginLeft: 4 }}>{unreadMsgs}</span>}
+              </button>
+              <button className="c-btn-logout" onClick={deconnecter}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 1h3v12H9M5 10l-3-3 3-3M2 7h8" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Déconnexion
+              </button>
+            </div>
           </div>
         </div>
 
@@ -887,12 +1029,16 @@ function ClientPortal() {
             <div className="c-msg-input-bar">
               {/* Bouton Haki : ouvre menu options */}
               <div className="c-msg-attach-wrap">
-                <button className={`c-msg-attach-btn ${attachMenu ? 'on' : ''}`} onClick={() => setAttachMenu(a => !a)} aria-label="Options Haki" disabled={uploading}>
+                <button className={`c-msg-attach-btn ${attachOpen ? 'on' : ''}`} onClick={() => setAttachOpen(a => !a)} aria-label="Partager un fichier" disabled={uploading}>
                   <span className="c-msg-attach-eye">{hakiAvatar(36)}</span>
                   <span className="c-msg-attach-dot"/>
                 </button>
-                {attachMenu && (
+                {attachOpen && (
                   <div className="c-attach-menu">
+                    <div className="c-attach-head">
+                      <span className="c-attach-haki-ic">{hakiAvatar(22)}</span>
+                      <span>Haki · Partager un fichier</span>
+                    </div>
                     <button className="c-attach-opt" onClick={() => { fileInput.current?.click() }}>
                       <span className="c-attach-ic" style={{ background: '#DCFCE7', color: '#166534' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -900,15 +1046,6 @@ function ClientPortal() {
                       <div>
                         <div className="c-attach-ttl">Partager un document</div>
                         <div className="c-attach-sub">Photo, PDF, Word… (max 10 Mo)</div>
-                      </div>
-                    </button>
-                    <button className="c-attach-opt" onClick={() => { setAttachMenu(false); setHakiOpen(true) }}>
-                      <span className="c-attach-ic" style={{ background: '#EEF4FF', color: '#1A6BFF' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>
-                      </span>
-                      <div>
-                        <div className="c-attach-ttl">Messages prêts</div>
-                        <div className="c-attach-sub">Suggestions de Haki</div>
                       </div>
                     </button>
                   </div>
