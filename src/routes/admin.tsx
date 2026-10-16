@@ -825,32 +825,47 @@ function SegmentsView({ leads }: any) {
     const tranches = [{ k: '< 1M', min: 0, max: 1_000_000 }, { k: '1M–5M', min: 1_000_000, max: 5_000_000 }, { k: '5M–20M', min: 5_000_000, max: 20_000_000 }, { k: '20M+', min: 20_000_000, max: Infinity }]
     return tranches.map(t => ({ k: t.k, c: leads.filter((l: any) => (l.montant_demande || 0) >= t.min && (l.montant_demande || 0) < t.max).length }))
   }, [leads])
+  const SICONS = {
+    sector: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="7" width="5" height="10" rx="1" stroke="currentColor" strokeWidth="1.6"/><rect x="7.5" y="3" width="5" height="14" rx="1" stroke="currentColor" strokeWidth="1.6"/><rect x="12.5" y="10" width="5" height="7" rx="1" stroke="currentColor" strokeWidth="1.6"/></svg>,
+    city: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2C7 2 5 4.5 5 7c0 4 5 10 5 10s5-6 5-10c0-2.5-2-5-5-5z" stroke="currentColor" strokeWidth="1.6"/><circle cx="10" cy="7" r="1.8" fill="currentColor"/></svg>,
+    amount: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M10 5v10M12.5 7.5h-3.75a1.75 1.75 0 000 3.5h2.5a1.75 1.75 0 010 3.5H7.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
+  }
+  const empty = <div style={{ padding: '30px 10px', textAlign: 'center', color: '#94A3B8', fontSize: 13, fontWeight: 500 }}>Aucune donnée</div>
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 16 }}>
-      <Panel title="Par secteur / profession">
-        {bySecteur.map(([k, v]) => <Bar key={k} label={k} value={v} total={leads.length}/>)}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
+      <Panel title="Par secteur / profession" icon={SICONS.sector}>
+        {bySecteur.length ? bySecteur.map(([k, v]) => <Bar key={k} label={k} value={v} total={leads.length}/>) : empty}
       </Panel>
-      <Panel title="Par ville">
-        {byVille.map(([k, v]) => <Bar key={k} label={k} value={v} total={leads.length}/>)}
+      <Panel title="Par ville" icon={SICONS.city}>
+        {byVille.length ? byVille.map(([k, v]) => <Bar key={k} label={k} value={v} total={leads.length}/>) : empty}
       </Panel>
-      <Panel title="Par tranche de montant">
-        {byMontant.map(t => <Bar key={t.k} label={t.k} value={t.c} total={leads.length}/>)}
+      <Panel title="Par tranche de montant" icon={SICONS.amount}>
+        {byMontant.map(t => <Bar key={t.k} label={t.k} value={t.c} total={leads.length} color="#1A6BFF"/>)}
       </Panel>
     </div>
   )
 }
 
-function Panel({ title, children }: any) {
-  return <div style={{ background: '#fff', borderRadius: 16, padding: 20, boxShadow: '0 2px 8px rgba(13,27,62,0.04)' }}><h3 style={{ fontSize: 13, fontWeight: 700, color: '#0D1B3E', margin: '0 0 14px' }}>{title}</h3>{children}</div>
+function Panel({ title, children, icon }: any) {
+  return (
+    <div className="card">
+      <h3 className="card-h">{icon}{title}</h3>
+      {children}
+    </div>
+  )
 }
 
-function Bar({ label, value, total }: { label: string; value: number; total: number }) {
+function Bar({ label, value, total, color }: { label: string; value: number; total: number; color?: string }) {
   const pct = total ? (value / total) * 100 : 0
+  const barColor = color || '#1A6BFF'
   return (
-    <div style={{ marginBottom: 8 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, fontWeight: 600, marginBottom: 3 }}><span>{label}</span><span>{value}</span></div>
-      <div style={{ height: 6, background: '#F3F4F6', borderRadius: 100, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: '#1A6BFF', borderRadius: 100 }}/>
+    <div style={{ marginBottom: 14, padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, marginBottom: 7, color: '#0D1B3E' }}>
+        <span>{label}</span>
+        <span style={{ fontWeight: 800, color: barColor, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+      </div>
+      <div style={{ height: 10, background: '#F1F5F9', borderRadius: 100, overflow: 'hidden' }}>
+        <div style={{ height: '100%', width: `${Math.max(pct, 2)}%`, background: barColor, borderRadius: 100, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)' }}/>
       </div>
     </div>
   )
@@ -858,34 +873,66 @@ function Bar({ label, value, total }: { label: string; value: number; total: num
 
 function BancarisationView({ leads, onOpen }: any) {
   const list = leads.filter((l: any) => l.eligibilite?.salaire_domic === 'Non' || l.banque_actuelle === 'Aucune')
-  return <>
-    <p style={{ color: '#666', fontSize: 13, marginBottom: 16 }}>Prospects à bancariser ({list.length})</p>
-    {list.length === 0 ? <div className="empty">Aucun prospect à bancariser.</div> : (
-      <div className="lead-grid">{list.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={0} onOpen={onOpen} updateStatut={() => {}}/>)}</div>
-    )}
-  </>
+  const bankIcon = <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M2.5 8L10 3l7.5 5v1h-15V8z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M4.5 9v7M8 9v7M12 9v7M15.5 9v7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><path d="M2 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  return (
+    <div className="card">
+      <h3 className="card-h">{bankIcon}Prospects à bancariser · <span style={{ color: '#1A6BFF', marginLeft: 4 }}>{list.length}</span></h3>
+      {list.length === 0 ? <div className="empty">Aucun prospect à bancariser.</div> : (
+        <div className="lead-grid">{list.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={0} onOpen={onOpen} updateStatut={() => {}}/>)}</div>
+      )}
+    </div>
+  )
 }
 
 function NonEligiblesView({ leads, onOpen }: any) {
   const list = leads.filter((l: any) => l.eligibilite?.non_eligible === true || l.statut === 'Non Éligible' || l.situation?.rccm === 'Non')
-  return <>
-    <p style={{ color: '#666', fontSize: 13, marginBottom: 16 }}>Dossiers non éligibles ({list.length}) — pack formalisation, up-sell, reconversion</p>
-    {list.length === 0 ? <div className="empty">Aucun dossier non éligible.</div> : (
-      <div className="lead-grid">{list.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={0} onOpen={onOpen} updateStatut={() => {}}/>)}</div>
-    )}
-  </>
+  const icon = <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M4.5 4.5l11 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  return (
+    <div className="card">
+      <h3 className="card-h">{icon}Dossiers non éligibles · <span style={{ color: '#1A6BFF', marginLeft: 4 }}>{list.length}</span></h3>
+      <p style={{ color: '#64748B', fontSize: 13, margin: '-12px 0 18px', fontWeight: 500 }}>Pack formalisation · up-sell · reconversion</p>
+      {list.length === 0 ? <div className="empty">Aucun dossier non éligible.</div> : (
+        <div className="lead-grid">{list.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={0} onOpen={onOpen} updateStatut={() => {}}/>)}</div>
+      )}
+    </div>
+  )
 }
 
 function RapportsView({ leads, exportCSV }: any) {
   const totalMontant = leads.reduce((s: number, l: any) => s + (l.montant_demande || 0), 0)
   const avg = leads.length ? Math.round(totalMontant / leads.length) : 0
+  const scoreAvg = leads.length ? Math.round(leads.reduce((s: number, l: any) => s + (l.score || 0), 0) / leads.length) : 0
+  const RICONS = {
+    total: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 17V7l7-4 7 4v10M3 17h14M8 10h4M8 13h4M8 17v-4h4v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+    avg: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M6.5 10h7M10 6.5v7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
+    score: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8L10 2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>,
+    down: <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 7l4 4 4-4M2 13h10" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  }
   return <>
     <div className="kpi-grid">
-      <div className="kpi"><div className="kpi-l">Total demandé</div><div className="kpi-v" style={{ fontSize: 20 }}>{formatXAF(totalMontant)}</div></div>
-      <div className="kpi"><div className="kpi-l">Panier moyen</div><div className="kpi-v" style={{ fontSize: 20 }}>{formatXAF(avg)}</div></div>
-      <div className="kpi"><div className="kpi-l">Score moyen</div><div className="kpi-v">{leads.length ? Math.round(leads.reduce((s: number, l: any) => s + (l.score || 0), 0) / leads.length) : 0}</div></div>
+      <div className="kpi">
+        <div className="kpi-head"><div className="kpi-icon">{RICONS.total}</div></div>
+        <div className="kpi-l">Total demandé</div>
+        <div className="kpi-v" style={{ fontSize: 22 }}>{leads.length ? formatXAF(totalMontant) : '—'}</div>
+        <div className="kpi-s">sur {leads.length} dossier(s)</div>
+      </div>
+      <div className="kpi">
+        <div className="kpi-head"><div className="kpi-icon" style={{ background: '#0D1B3E' }}>{RICONS.avg}</div></div>
+        <div className="kpi-l">Panier moyen</div>
+        <div className="kpi-v" style={{ fontSize: 22 }}>{leads.length ? formatXAF(avg) : '—'}</div>
+        <div className="kpi-s">par dossier</div>
+      </div>
+      <div className="kpi">
+        <div className="kpi-head"><div className="kpi-icon" style={{ background: '#F59E0B' }}>{RICONS.score}</div></div>
+        <div className="kpi-l">Score moyen</div>
+        <div className="kpi-v">{scoreAvg}</div>
+        <div className="kpi-s">/ 100</div>
+      </div>
     </div>
-    <button className="btn-export" onClick={exportCSV}>📥 Exporter tous les leads en CSV</button>
+    <button className="btn-export" onClick={exportCSV} style={{ padding: '14px 24px', fontSize: 14 }}>
+      {RICONS.down}
+      Exporter tous les leads en CSV
+    </button>
   </>
 }
 
