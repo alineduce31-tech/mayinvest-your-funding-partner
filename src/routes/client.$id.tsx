@@ -201,9 +201,12 @@ function ClientPortal() {
   const [codeError, setCodeError] = useState('')
   const [codeLoading, setCodeLoading] = useState(false)
   const [loginMode, setLoginMode] = useState<'password' | 'code'>('password')
-  const [phoneInput, setPhoneInput] = useState('')
   const [passwordInput, setPasswordInput] = useState('')
+  const [recoveryStep, setRecoveryStep] = useState<'' | 'ask' | 'sent'>('')
+  const [recoveryEmail, setRecoveryEmail] = useState('')
+  const [recoveryBusy, setRecoveryBusy] = useState(false)
   const [recoveryMsg, setRecoveryMsg] = useState('')
+  const [recoveryLink, setRecoveryLink] = useState('')
   const [lead, setLead] = useState<any>(null)
   const [messages, setMessages] = useState<any[]>([])
   const [newMsg, setNewMsg] = useState('')
@@ -267,23 +270,37 @@ function ClientPortal() {
     loadMessages()
   }
 
-  async function recoverPassword() {
-    setRecoveryMsg('')
-    const phone = phoneInput.replace(/\D/g, '').slice(0, 9)
-    if (phone.length !== 9) { setRecoveryMsg('Entrez d\'abord votre téléphone (9 chiffres)'); return }
-    const { data } = await supabase.rpc('find_recovery_contact', { p_phone: phone })
-    const email = (data as any)?.[0]?.email || ''
-    if (email) {
-      // Pour l'instant on redirige vers WhatsApp (email auto nécessitera Resend + Edge Function)
-      const text = encodeURIComponent(`Bonjour Mayinvest, j'ai oublié mon mot de passe. Mon téléphone : ${phone}. Mon email : ${email}. Merci de me le renvoyer.`)
-      window.open(`https://wa.me/242060000000?text=${text}`, '_blank')
-      setRecoveryMsg(`✓ Nous allons vous renvoyer votre mot de passe à ${email}`)
-    } else {
-      const text = encodeURIComponent(`Bonjour Mayinvest, j'ai oublié mon mot de passe. Mon téléphone : ${phone}. Merci de me le renvoyer.`)
-      window.open(`https://wa.me/242060000000?text=${text}`, '_blank')
-      setRecoveryMsg('Un conseiller va vous recontacter sur WhatsApp')
+  async function askRecovery() {
+    setRecoveryMsg(''); setRecoveryLink(''); setRecoveryBusy(true)
+    const email = recoveryEmail.trim().toLowerCase()
+    if (!email || !/\S+@\S+\.\S+/.test(email)) {
+      setRecoveryMsg('Email invalide'); setRecoveryBusy(false); return
+    }
+    const { data, error } = await supabase.rpc('request_password_reset', { p_email: email })
+    setRecoveryBusy(false)
+    const row: any = Array.isArray(data) ? data[0] : data
+    if (error || !row?.success) {
+      setRecoveryMsg(row?.message || "Aucun dossier trouvé avec cet email")
+      return
+    }
+    // On a un token. Appel Edge Function pour envoyer l'email via Resend.
+    // Fallback : si l'Edge Function n'est pas déployée, on affiche le lien directement.
+    const resetUrl = `${window.location.origin}/reset-password?token=${row.token}`
+    try {
+      const { error: fnErr } = await supabase.functions.invoke('send-reset-email', {
+        body: { email, link: resetUrl }
+      })
+      if (fnErr) throw fnErr
+      setRecoveryStep('sent')
+      setRecoveryMsg(`✓ Email envoyé à ${email}. Vérifiez votre boîte (et les spams).`)
+    } catch {
+      // Fallback : affiche directement le lien (en attendant Resend)
+      setRecoveryStep('sent')
+      setRecoveryLink(resetUrl)
+      setRecoveryMsg(`Email automatique indisponible. Cliquez sur le lien ci-dessous pour réinitialiser.`)
     }
   }
+  function startRecovery() { setRecoveryStep('ask'); setRecoveryEmail(''); setRecoveryMsg(''); setRecoveryLink('') }
 
   async function loadMessages() {
     const { data } = await supabase.from('messages').select('*').eq('lead_id', id).order('created_at')
@@ -804,21 +821,17 @@ function ClientPortal() {
 
             {loginMode === 'password' ? <>
               <div className="c-gate-field">
-                <label>Mot de passe (6 chiffres)</label>
+                <label>Mot de passe</label>
                 <input
-                  type="tel"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  placeholder="••••••"
-                  maxLength={6}
+                  type="password"
+                  placeholder="Votre mot de passe"
                   value={passwordInput}
-                  onChange={e => setPasswordInput(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  onKeyDown={e => e.key === 'Enter' && passwordInput.length === 6 && openWithPassword(passwordInput)}
+                  onChange={e => setPasswordInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && passwordInput.length >= 8 && openWithPassword(passwordInput)}
                   autoComplete="current-password"
-                  style={{ textAlign: 'center', fontSize: 22 + 'px !important', letterSpacing: '0.6em' } as any}
                 />
               </div>
-              <button className="c-btn-main" disabled={codeLoading || passwordInput.length !== 6} onClick={() => openWithPassword(passwordInput)}>
+              <button className="c-btn-main" disabled={codeLoading || passwordInput.length < 8} onClick={() => openWithPassword(passwordInput)}>
                 {codeLoading ? 'Vérification…' : 'Déverrouiller'}
                 {!codeLoading && <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
               </button>
@@ -835,26 +848,61 @@ function ClientPortal() {
 
             {codeError && <div className="c-gate-err">{codeError}</div>}
 
-            {/* Récupération mot de passe */}
+            {/* Récupération par email */}
             {loginMode === 'password' && (
               <div className="c-gate-recovery">
-                <div style={{ fontSize: 12, color: '#666', marginBottom: 8, fontWeight: 700 }}>Mot de passe oublié ?</div>
-                <div className="c-gate-field" style={{ marginBottom: 10 }}>
-                  <label>Votre téléphone</label>
-                  <input
-                    type="tel"
-                    inputMode="numeric"
-                    placeholder="06 123 4567"
-                    maxLength={9}
-                    value={phoneInput}
-                    onChange={e => setPhoneInput(e.target.value.replace(/\D/g, '').slice(0, 9))}
-                    style={{ fontFamily: 'inherit', letterSpacing: 'normal', fontSize: '15px !important' } as any}
-                  />
-                </div>
-                <button className="c-btn-recovery" onClick={recoverPassword} disabled={phoneInput.length !== 9}>
-                  📧 M'envoyer mon mot de passe
-                </button>
-                {recoveryMsg && <div style={{ fontSize: 12, color: '#166534', marginTop: 10, textAlign: 'center', fontWeight: 700 }}>{recoveryMsg}</div>}
+                {recoveryStep === '' && (
+                  <button className="c-btn-recovery" onClick={startRecovery}>
+                    🔑 Mot de passe oublié ?
+                  </button>
+                )}
+
+                {recoveryStep === 'ask' && (
+                  <>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#0D1B3E', marginBottom: 4 }}>Récupération par email</div>
+                    <div style={{ fontSize: 12, color: '#666', marginBottom: 10 }}>Entrez l'email utilisé lors de votre inscription. Un lien de réinitialisation vous sera envoyé.</div>
+                    <div className="c-gate-field" style={{ marginBottom: 10 }}>
+                      <label>Email du dossier</label>
+                      <input
+                        type="email"
+                        placeholder="votre@email.com"
+                        value={recoveryEmail}
+                        onChange={e => setRecoveryEmail(e.target.value)}
+                        onKeyDown={e => e.key === 'Enter' && askRecovery()}
+                        style={{ fontFamily: 'inherit', letterSpacing: 'normal', fontSize: '15px !important' } as any}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button className="c-btn-recovery" style={{ flex: 1 }} onClick={() => setRecoveryStep('')}>Annuler</button>
+                      <button className="c-btn-main" style={{ flex: 1, marginTop: 0, padding: '12px' }} disabled={recoveryBusy || !recoveryEmail.includes('@')} onClick={askRecovery}>
+                        {recoveryBusy ? 'Envoi…' : 'Envoyer le lien'}
+                      </button>
+                    </div>
+                    {recoveryMsg && !recoveryLink && <div style={{ fontSize: 12, color: '#B91C1C', marginTop: 10, textAlign: 'left', fontWeight: 600 }}>{recoveryMsg}</div>}
+                  </>
+                )}
+
+                {recoveryStep === 'sent' && (
+                  <>
+                    <div style={{ fontSize: 32, textAlign: 'center', marginBottom: 8 }}>📧</div>
+                    <div style={{ fontSize: 13, color: '#166534', marginBottom: 10, textAlign: 'center', fontWeight: 700 }}>{recoveryMsg}</div>
+                    {recoveryLink && (
+                      <>
+                        <div style={{ fontSize: 11, color: '#666', marginBottom: 6, textAlign: 'center' }}>Lien de réinitialisation :</div>
+                        <a href={recoveryLink} style={{ display: 'block', padding: '10px', background: '#1A6BFF', color: '#fff', borderRadius: 10, textDecoration: 'none', textAlign: 'center', fontSize: 12, fontWeight: 700, wordBreak: 'break-all' }}>
+                          Réinitialiser mon mot de passe
+                        </a>
+                        <div style={{ fontSize: 10, color: '#999', marginTop: 6, textAlign: 'center' }}>Lien valable 1 heure</div>
+                      </>
+                    )}
+                    <div style={{ marginTop: 12, textAlign: 'center' }}>
+                      <button style={{ background: 'transparent', border: 'none', color: '#1A6BFF', fontSize: 12, fontWeight: 700, cursor: 'pointer' }} onClick={() => setRecoveryStep('')}>← Retour à la connexion</button>
+                    </div>
+                    <div style={{ marginTop: 10, padding: 10, background: '#FFF4E5', borderRadius: 8, fontSize: 11, color: '#92400E', textAlign: 'center' }}>
+                      Email non reçu ? <a href="https://wa.me/242060000000?text=Bonjour%2C%20j%27ai%20oubli%C3%A9%20mon%20mot%20de%20passe%20et%20je%20n%27ai%20pas%20re%C3%A7u%20l%27email" target="_blank" rel="noopener" style={{ color: '#B45309', fontWeight: 700 }}>Contact urgent WhatsApp</a>
+                    </div>
+                  </>
+                )}
               </div>
             )}
 
