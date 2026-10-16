@@ -649,7 +649,7 @@ function Simulation() {
   const canSubmit = (() => {
     if (!form['tel'] || form['tel'].length !== 9) return false
     if (!form['ville']) return false
-    if (!form['password'] || form['password'].length !== 6) return false
+    if (!form['password'] || form['password'].length < 8) return false
     if (form['password'] !== form['password_confirm']) return false
     if (!form['montant']) return false
     if (!form['objet']) return false
@@ -1252,38 +1252,34 @@ function Simulation() {
                 <div className="field"><label>Ville *</label>
                   <CustomSelect value={form['ville']||''} onChange={v=>set('ville',v)} options={VILLES} placeholder="Sélectionner votre ville"/>
                 </div>
-                {/* Mot de passe (PIN 6 chiffres) */}
+                {/* Mot de passe alphanumérique (lettres + chiffres, min 8 caractères) */}
                 <div className="field">
-                  <label>Choisir un mot de passe (6 chiffres) *</label>
+                  <label>Choisir un mot de passe * <span style={{ color: '#888', fontWeight: 500 }}>(min 8 caractères, lettres + chiffres)</span></label>
                   <input
-                    type="tel"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="Ex : 123456"
-                    maxLength={6}
+                    type="password"
+                    placeholder="Ex : Mayinvest2026"
+                    minLength={8}
                     value={form['password']||''}
-                    onChange={e=>set('password', e.target.value.replace(/\D/g,'').slice(0,6))}
+                    onChange={e=>set('password', e.target.value)}
                     autoComplete="new-password"
-                    style={{ letterSpacing: '0.3em', fontFamily: 'monospace', fontWeight: 700 }}
                   />
+                  {form['password'] && form['password'].length > 0 && form['password'].length < 8 && (
+                    <div className="field-hint" style={{ color: '#B45309' }}>Encore {8 - form['password'].length} caractère(s)</div>
+                  )}
                 </div>
                 <div className="field">
                   <label>Confirmer le mot de passe *</label>
                   <input
-                    type="tel"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="Retapez les 6 chiffres"
-                    maxLength={6}
+                    type="password"
+                    placeholder="Retapez votre mot de passe"
                     value={form['password_confirm']||''}
-                    onChange={e=>set('password_confirm', e.target.value.replace(/\D/g,'').slice(0,6))}
+                    onChange={e=>set('password_confirm', e.target.value)}
                     autoComplete="new-password"
-                    style={{ letterSpacing: '0.3em', fontFamily: 'monospace', fontWeight: 700 }}
                   />
                   {form['password'] && form['password_confirm'] && form['password'] !== form['password_confirm'] && (
                     <div className="field-hint" style={{ color: '#B91C1C' }}>⚠ Les mots de passe ne correspondent pas</div>
                   )}
-                  {form['password'] && form['password'].length === 6 && form['password'] === form['password_confirm'] && (
+                  {form['password'] && form['password'].length >= 8 && form['password'] === form['password_confirm'] && (
                     <div className="field-hint" style={{ color: '#166534' }}>✓ Mots de passe identiques</div>
                   )}
                 </div>
