@@ -160,6 +160,12 @@ function ClientPortal() {
   const [sending, setSending] = useState(false)
   const [activeTab, setActiveTab] = useState<'suivi' | 'chat' | 'infos'>('suivi')
   const chatEnd = useRef<HTMLDivElement>(null)
+  const fileInput = useRef<HTMLInputElement>(null)
+  const [attachMenu, setAttachMenu] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [documents, setDocuments] = useState<any[]>([])
+  const docInput = useRef<HTMLInputElement>(null)
+  const [uploadingDocType, setUploadingDocType] = useState<string>('')
 
   // Haki
   const [hakiOpen, setHakiOpen] = useState(false)
@@ -229,6 +235,62 @@ function ClientPortal() {
     if (error) { setNewMsg(msg); alert("Impossible d'envoyer : " + error.message) }
   }
 
+  async function uploadFileToChat(file: File) {
+    if (uploading) return
+    setUploading(true)
+    try {
+      const ext = file.name.split('.').pop() || 'bin'
+      const path = `${id}/chat/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
+      const { error: upErr } = await supabase.storage.from('lead-documents').upload(path, file, { contentType: file.type, upsert: false })
+      if (upErr) throw upErr
+      const { data: pub } = supabase.storage.from('lead-documents').getPublicUrl(path)
+      await supabase.from('messages').insert({
+        lead_id: id,
+        sender: 'client',
+        content: `📎 ${file.name}\n${pub.publicUrl}`,
+      })
+    } catch (e: any) {
+      alert("Impossible d'uploader : " + (e?.message || 'erreur'))
+    }
+    setUploading(false)
+    setAttachMenu(false)
+  }
+
+  async function loadDocuments() {
+    const { data } = await supabase.rpc('get_lead_documents', { p_id: id })
+    if (data) setDocuments(data)
+  }
+
+  async function uploadDocument(docRow: any, file: File) {
+    setUploadingDocType(docRow.id)
+    try {
+      const ext = file.name.split('.').pop() || 'bin'
+      const path = `${id}/docs/${docRow.doc_type}-${Date.now()}.${ext}`
+      const { error: upErr } = await supabase.storage.from('lead-documents').upload(path, file, { contentType: file.type, upsert: true })
+      if (upErr) throw upErr
+      const { data: pub } = supabase.storage.from('lead-documents').getPublicUrl(path)
+      await supabase.from('documents').update({
+        file_url: pub.publicUrl,
+        file_name: file.name,
+        file_size: file.size,
+        mime_type: file.type,
+        uploaded_at: new Date().toISOString(),
+        uploaded_by: 'client',
+        status: 'uploaded',
+      }).eq('id', docRow.id)
+      await loadDocuments()
+    } catch (e: any) {
+      alert("Impossible d'uploader : " + (e?.message || 'erreur'))
+    }
+    setUploadingDocType('')
+  }
+
+  useEffect(() => {
+    if (stage === 'portal' && activeTab === 'infos' && documents.length === 0) {
+      loadDocuments()
+    }
+  }, [stage, activeTab])
+
   function deconnecter() {
     try { localStorage.removeItem(`mayinvest_code_${id}`) } catch {}
     navigate({ to: '/mon-espace' })
@@ -272,16 +334,55 @@ function ClientPortal() {
     }
     if (activeTab === 'chat') {
       const unread = messages.filter(m => m.sender === 'admin' && !m.read_at).length
+      // Messages prédéfinis selon le statut du dossier
+      const quickReplies: string[] = (() => {
+        if (lead.statut === 'Nouveau') return [
+          'Bonjour, pouvez-vous me rappeler quand mon dossier sera traité ?',
+          'Quelles sont les prochaines étapes ?',
+          'Je dois modifier une information de mon dossier',
+        ]
+        if (lead.statut === 'Contacté') return [
+          'Quels documents dois-je préparer ?',
+          'Pouvez-vous me rappeler s\'il vous plaît ?',
+          'Je suis disponible pour un rendez-vous',
+        ]
+        if (lead.statut === 'RDV') return [
+          'Pouvez-vous me confirmer la date du RDV ?',
+          'Quels documents dois-je apporter ?',
+          'Je souhaite reporter le rendez-vous',
+        ]
+        if (lead.statut === 'Dossier Déposé') return [
+          'Où en est l\'analyse de mon dossier ?',
+          'Dans combien de temps aurai-je une réponse ?',
+          'Avez-vous besoin d\'autres documents ?',
+        ]
+        if (lead.statut === 'Éligible') return [
+          'Quelles sont les conditions proposées ?',
+          'Quand les fonds seront-ils débloqués ?',
+          'Je souhaite finaliser le dossier',
+        ]
+        return [
+          'Bonjour, j\'ai une question sur mon dossier',
+          'Pouvez-vous me donner des nouvelles ?',
+          'Je souhaite discuter avec un conseiller',
+        ]
+      })()
       return {
-        title: unread > 0 ? `💬 ${unread} nouveau${unread > 1 ? 'x' : ''} message${unread > 1 ? 's' : ''}` : '💬 Discussion directe',
+        title: unread > 0 ? `💬 ${unread} nouveau${unread > 1 ? 'x' : ''} message${unread > 1 ? 's' : ''}` : '💬 Messages pré-écrits',
         body: unread > 0
-          ? "Votre conseiller vous a écrit. Lisez le message et répondez-lui directement ici."
-          : "Posez vos questions à votre conseiller Mayinvest. Il répond directement ici (vous recevez une notification).",
-        actions: messages.length === 0 ? [{
-          label: 'Démarrer : écrire au conseiller',
-          onClick: () => { setHakiOpen(false); setTimeout(() => { (document.querySelector('.c-chat-input textarea') as HTMLTextAreaElement)?.focus() }, 300) },
-          primary: true,
-        }] : [],
+          ? "Votre conseiller vous a écrit. Lisez le message et répondez-lui ci-dessous. Je peux aussi vous proposer des réponses rapides."
+          : "Pas d'inspiration ? Choisissez un message prêt-à-envoyer ci-dessous, ou écrivez le vôtre dans la zone de saisie.",
+        actions: quickReplies.map(q => ({
+          label: q,
+          onClick: () => {
+            setNewMsg(q)
+            setHakiOpen(false)
+            setTimeout(() => {
+              const ta = document.querySelector('.c-msg-input-field textarea') as HTMLTextAreaElement
+              ta?.focus()
+            }, 200)
+          },
+        })),
       }
     }
     // infos
@@ -340,10 +441,12 @@ function ClientPortal() {
         .c-haki-msg.success .c-haki-msg-title { color: #166534; }
         .c-haki-msg-body { font-size: 14px; color: #0D1B3E; line-height: 1.5; font-weight: 500; }
         .c-haki-actions { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
-        .c-haki-btn { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 12px 14px; font-size: 13px; font-weight: 700; color: #0D1B3E; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .c-haki-btn { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 10px 14px; font-size: 12.5px; font-weight: 600; color: #0D1B3E; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; gap: 8px; text-align: left; line-height: 1.3; }
         .c-haki-btn:hover { background: #EEF4FF; border-color: #1A6BFF; color: #1A6BFF; }
-        .c-haki-btn.primary { background: #1A6BFF; color: #fff; border-color: #1A6BFF; }
+        .c-haki-btn.primary { background: #1A6BFF; color: #fff; border-color: #1A6BFF; justify-content: center; font-weight: 700; font-size: 13px; padding: 12px 14px; }
         .c-haki-btn.primary:hover { background: #1560E0; color: #fff; }
+        .c-haki-btn::before { content: '💬'; font-size: 14px; flex-shrink: 0; }
+        .c-haki-btn.primary::before { display: none; }
         .c-haki-settings { border-top: 1px solid #E5E7EB; background: #FAFBFD; padding: 12px 16px; }
         .c-haki-auto-row { display: flex; align-items: center; gap: 10px; }
         .c-haki-auto-info { flex: 1; }
@@ -451,8 +554,10 @@ function ClientPortal() {
         @media (max-width: 640px) {
           /* Mode plein écran sur mobile */
           .c-messenger { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; height: 100dvh; border-radius: 0; box-shadow: none; }
-          /* Masquer wrap du dessus pour éviter double scroll */
           body:has(.c-messenger-fs-active) { overflow: hidden; }
+          /* Haki fab masqué en chat mobile (remplacé par le bouton + intégré dans l'input) */
+          body:has(.c-messenger-fs-active) .c-haki-fab,
+          body:has(.c-messenger-fs-active) .c-haki-panel { display: none !important; }
         }
         .c-msg-head { background: linear-gradient(135deg, #0D1B3E 0%, #1A3380 100%); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
         .c-msg-head-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
@@ -476,7 +581,38 @@ function ClientPortal() {
         .c-msg.client .c-msg-meta { text-align: right; }
         .c-msg-check { display: inline-block; margin-left: 3px; }
 
-        .c-msg-input-bar { background: #fff; border-top: 1px solid #E5E7EB; padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; align-items: flex-end; }
+        .c-msg-input-bar { background: #fff; border-top: 1px solid #E5E7EB; padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; align-items: flex-end; position: relative; }
+        /* Bouton + attach (gauche de l'input) */
+        .c-msg-attach-wrap { position: relative; flex-shrink: 0; }
+        .c-msg-attach-btn { background: #1A6BFF; color: #fff; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; padding: 0; }
+        .c-msg-attach-btn.on { background: #0D4FD1; }
+        .c-msg-attach-btn:hover:not(:disabled) { background: #1560E0; }
+        .c-attach-menu { position: absolute; bottom: calc(100% + 8px); left: 0; width: 260px; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.15); padding: 8px; animation: c-fade 0.15s ease-out; z-index: 20; }
+        .c-attach-opt { width: 100%; background: transparent; border: none; padding: 10px 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-radius: 10px; text-align: left; font-family: inherit; }
+        .c-attach-opt:hover { background: #F8FAFC; }
+        .c-attach-opt + .c-attach-opt { margin-top: 2px; }
+        .c-attach-ic { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .c-attach-ttl { font-size: 13px; font-weight: 700; color: #0D1B3E; }
+        .c-attach-sub { font-size: 11px; color: #666; margin-top: 2px; }
+
+        /* Documents checklist */
+        .c-docs { display: flex; flex-direction: column; gap: 10px; }
+        .c-docs-progress { height: 8px; background: #F3F4F6; border-radius: 100px; overflow: hidden; margin-bottom: 4px; }
+        .c-docs-progress-bar { height: 100%; background: linear-gradient(90deg, #1A6BFF, #34D058); border-radius: 100px; transition: width 0.3s; }
+        .c-docs-progress-txt { font-size: 11px; color: #666; font-weight: 700; margin-bottom: 12px; text-align: right; }
+        .c-doc-row { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; background: #F8FAFC; border: 1.5px solid #E5E7EB; border-radius: 14px; transition: all 0.15s; }
+        .c-doc-row.ok { background: #F0FDF4; border-color: #86EFAC; }
+        .c-doc-row.ko { background: #FEF2F2; border-color: #FCA5A5; }
+        .c-doc-ic { flex-shrink: 0; margin-top: 2px; }
+        .c-doc-info { flex: 1; min-width: 0; }
+        .c-doc-name { font-size: 13px; font-weight: 700; color: #0D1B3E; margin-bottom: 2px; }
+        .c-doc-status { font-size: 11px; color: #666; }
+        .c-doc-link { display: inline-block; margin-top: 4px; font-size: 11px; color: #1A6BFF; text-decoration: none; font-weight: 600; word-break: break-all; }
+        .c-doc-link:hover { text-decoration: underline; }
+        .c-doc-upload-btn { background: #1A6BFF; color: #fff; font-size: 12px; font-weight: 700; padding: 8px 14px; border-radius: 100px; cursor: pointer; flex-shrink: 0; white-space: nowrap; }
+        .c-doc-upload-btn:hover { background: #1560E0; }
+        .c-doc-row.ok .c-doc-upload-btn { background: transparent; color: #166534; border: 1.5px solid #86EFAC; }
+        .c-doc-row.ok .c-doc-upload-btn:hover { background: #86EFAC; color: #fff; }
         .c-msg-input-field { flex: 1; display: flex; align-items: center; background: #F0F3F8; border: 1.5px solid transparent; border-radius: 22px; padding: 10px 16px; min-height: 44px; }
         .c-msg-input-field:focus-within { border-color: #1A6BFF; background: #fff; box-shadow: 0 4px 12px rgba(26,107,255,0.08); }
         .c-msg-input-field textarea { flex: 1; border: none; outline: none; resize: none; background: transparent; min-height: 20px; max-height: 120px; padding: 0; line-height: 1.4; }
@@ -683,18 +819,52 @@ function ClientPortal() {
               <div ref={chatEnd}/>
             </div>
 
-            {/* Barre de saisie type WhatsApp */}
+            {/* Barre de saisie type WhatsApp avec bouton + à gauche */}
             <div className="c-msg-input-bar">
+              {/* Bouton + : ouvre menu attach */}
+              <div className="c-msg-attach-wrap">
+                <button className={`c-msg-attach-btn ${attachMenu ? 'on' : ''}`} onClick={() => setAttachMenu(a => !a)} aria-label="Options" disabled={uploading}>
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ transform: attachMenu ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>
+                    <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
+                  </svg>
+                </button>
+                {attachMenu && (
+                  <div className="c-attach-menu">
+                    <button className="c-attach-opt" onClick={() => { fileInput.current?.click() }}>
+                      <span className="c-attach-ic" style={{ background: '#DCFCE7', color: '#166534' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      </span>
+                      <div>
+                        <div className="c-attach-ttl">Partager un document</div>
+                        <div className="c-attach-sub">Photo, PDF, Word… (max 10 Mo)</div>
+                      </div>
+                    </button>
+                    <button className="c-attach-opt" onClick={() => { setAttachMenu(false); setHakiOpen(true) }}>
+                      <span className="c-attach-ic" style={{ background: '#EEF4FF', color: '#1A6BFF' }}>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>
+                      </span>
+                      <div>
+                        <div className="c-attach-ttl">Messages prêts</div>
+                        <div className="c-attach-sub">Suggestions de Haki</div>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
+              <input ref={fileInput} type="file" style={{ display: 'none' }}
+                accept="image/*,application/pdf,.doc,.docx"
+                onChange={e => { const f = e.target.files?.[0]; if (f) uploadFileToChat(f); e.currentTarget.value = '' }}/>
               <div className="c-msg-input-field">
                 <textarea
-                  placeholder="Écrire un message…"
+                  placeholder={uploading ? "Envoi du fichier…" : "Écrire un message…"}
                   value={newMsg}
                   onChange={e => setNewMsg(e.target.value)}
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); envoyer() } }}
                   rows={1}
+                  disabled={uploading}
                 />
               </div>
-              <button className="c-msg-send" onClick={envoyer} disabled={!newMsg.trim() || sending} aria-label="Envoyer">
+              <button className="c-msg-send" onClick={envoyer} disabled={!newMsg.trim() || sending || uploading} aria-label="Envoyer">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M3 11l18-8-8 18-3-8-7-2z" fill="#fff"/>
                 </svg>
@@ -726,6 +896,70 @@ function ClientPortal() {
               </>}
             </div>
             <div className="c-info-note">💡 Besoin de modifier une info ? Envoyez un message à votre conseiller dans l'onglet Discussion.</div>
+          </div>
+        )}
+
+        {/* ----- DOCUMENTS CHECKLIST (dans Mes infos) ----- */}
+        {activeTab === 'infos' && (
+          <div className="c-card">
+            <div className="c-card-h">Mes documents</div>
+            <div style={{ fontSize: 13, color: '#666', marginBottom: 14, lineHeight: 1.5 }}>
+              Téléversez vos documents un par un. Chaque pièce est validée automatiquement par votre conseiller.
+            </div>
+            {documents.length === 0 ? (
+              <div style={{ color: '#999', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Chargement de la liste…</div>
+            ) : (
+              <div className="c-docs">
+                <div className="c-docs-progress">
+                  <div className="c-docs-progress-bar" style={{ width: `${(documents.filter(d => d.status !== 'pending').length / documents.length) * 100}%` }}/>
+                </div>
+                <div className="c-docs-progress-txt">
+                  {documents.filter(d => d.status !== 'pending').length} / {documents.length} documents déposés
+                </div>
+                {documents.map(d => {
+                  const isUploaded = d.status === 'uploaded' || d.status === 'validated'
+                  const isValidated = d.status === 'validated'
+                  const isRejected = d.status === 'rejected'
+                  const isUploading = uploadingDocType === d.id
+                  return (
+                    <div key={d.id} className={`c-doc-row ${isUploaded ? 'ok' : ''} ${isRejected ? 'ko' : ''}`}>
+                      <div className="c-doc-ic">
+                        {isValidated ? (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#34D058"/><path d="M8 12l3 3 5-6" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        ) : isUploaded ? (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#1A6BFF"/><path d="M8 12l3 3 5-6" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                        ) : isRejected ? (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#DC2626"/><path d="M15 9l-6 6M9 9l6 6" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
+                        ) : (
+                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F3F4F6" stroke="#E5E7EB" strokeWidth="1.5"/></svg>
+                        )}
+                      </div>
+                      <div className="c-doc-info">
+                        <div className="c-doc-name">{d.doc_label}</div>
+                        <div className="c-doc-status">
+                          {isValidated && <span style={{ color: '#166534', fontWeight: 700 }}>✓ Validé par le conseiller</span>}
+                          {!isValidated && isUploaded && <span style={{ color: '#1A6BFF', fontWeight: 700 }}>Déposé · En attente de validation</span>}
+                          {isRejected && <span style={{ color: '#DC2626', fontWeight: 700 }}>✗ À remplacer · {d.admin_note || 'Fichier non conforme'}</span>}
+                          {!isUploaded && !isRejected && <span style={{ color: '#888' }}>À déposer</span>}
+                        </div>
+                        {d.file_name && (
+                          <a href={d.file_url} target="_blank" rel="noopener" className="c-doc-link">
+                            📎 {d.file_name}
+                          </a>
+                        )}
+                      </div>
+                      <label className="c-doc-upload-btn">
+                        {isUploading ? '…' : isUploaded ? 'Remplacer' : 'Déposer'}
+                        <input type="file" style={{ display: 'none' }}
+                          accept="image/*,application/pdf,.doc,.docx"
+                          disabled={isUploading}
+                          onChange={e => { const f = e.target.files?.[0]; if (f) uploadDocument(d, f); e.currentTarget.value = '' }}/>
+                      </label>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         )}
       </div>
