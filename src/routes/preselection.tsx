@@ -649,6 +649,8 @@ function Simulation() {
   const canSubmit = (() => {
     if (!form['tel'] || form['tel'].length !== 9) return false
     if (!form['ville']) return false
+    if (!form['password'] || form['password'].length !== 6) return false
+    if (form['password'] !== form['password_confirm']) return false
     if (!form['montant']) return false
     if (!form['objet']) return false
     if (isP) {
@@ -900,6 +902,10 @@ function Simulation() {
         : { compte_mouvemente: form['compte_mouvemente'], refus_bancaire: form['refus_bancaire'], garanties: form['garanties'], non_eligible: nonEligible },
     }
     const { error } = await supabase.from('leads').insert(payload)
+    // Enregistrer le mot de passe hashé via RPC
+    if (!error && form['password']) {
+      await supabase.rpc('set_lead_password', { p_id: generatedId, p_password: form['password'] })
+    }
     setLoading(false)
     if (error) {
       console.error('[Mayinvest] Erreur insert lead:', error)
@@ -1245,6 +1251,41 @@ function Simulation() {
                 <div className="field"><label>Email (facultatif)</label><input type="email" placeholder="Ex : jp.moukouama@gmail.com" value={form['email']||''} onChange={e=>set('email',e.target.value)} onBlur={()=>onFieldBlur('email')}/></div>
                 <div className="field"><label>Ville *</label>
                   <CustomSelect value={form['ville']||''} onChange={v=>set('ville',v)} options={VILLES} placeholder="Sélectionner votre ville"/>
+                </div>
+                {/* Mot de passe (PIN 6 chiffres) */}
+                <div className="field">
+                  <label>Choisir un mot de passe (6 chiffres) *</label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="Ex : 123456"
+                    maxLength={6}
+                    value={form['password']||''}
+                    onChange={e=>set('password', e.target.value.replace(/\D/g,'').slice(0,6))}
+                    autoComplete="new-password"
+                    style={{ letterSpacing: '0.3em', fontFamily: 'monospace', fontWeight: 700 }}
+                  />
+                </div>
+                <div className="field">
+                  <label>Confirmer le mot de passe *</label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="Retapez les 6 chiffres"
+                    maxLength={6}
+                    value={form['password_confirm']||''}
+                    onChange={e=>set('password_confirm', e.target.value.replace(/\D/g,'').slice(0,6))}
+                    autoComplete="new-password"
+                    style={{ letterSpacing: '0.3em', fontFamily: 'monospace', fontWeight: 700 }}
+                  />
+                  {form['password'] && form['password_confirm'] && form['password'] !== form['password_confirm'] && (
+                    <div className="field-hint" style={{ color: '#B91C1C' }}>⚠ Les mots de passe ne correspondent pas</div>
+                  )}
+                  {form['password'] && form['password'].length === 6 && form['password'] === form['password_confirm'] && (
+                    <div className="field-hint" style={{ color: '#166534' }}>✓ Mots de passe identiques</div>
+                  )}
                 </div>
               </div>
             </div>
