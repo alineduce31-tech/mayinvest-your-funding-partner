@@ -299,7 +299,7 @@ function ClientPortal() {
       alert("Impossible d'uploader : " + (e?.message || 'erreur'))
     }
     setUploading(false)
-    setAttachMenu(false)
+    setAttachMenu('')
   }
 
   async function loadDocuments() {
@@ -423,7 +423,7 @@ function ClientPortal() {
           onClick: () => {
             setNewMsg(q)
             setHakiOpen(false)
-            setAttachMenu(false)
+            setAttachMenu('')
             setTimeout(() => {
               const ta = document.querySelector('.c-msg-input-field textarea') as HTMLTextAreaElement
               if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length) }
