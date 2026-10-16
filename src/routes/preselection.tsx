@@ -599,6 +599,32 @@ function Simulation() {
   }, [form, hakiAccepted, autoMode, step, isP])
 
   // Message de Haki selon l'état
+  // canSubmit déclaré AVANT hakiMsg (sinon TDZ)
+  const canSubmit = (() => {
+    if (!form['tel'] || form['tel'].length !== 9) return false
+    if (!form['ville']) return false
+    if (!form['montant']) return false
+    if (!form['objet']) return false
+    if (isP) {
+      if (!form['prenom'] || !form['nom']) return false
+      if (!form['employeur']) return false
+      if (!form['anciennete_tr']) return false
+      if (!form['revenu']) return false
+      if (!form['salaire_domic']) return false
+      if (form['salaire_domic'] === 'Oui' && !form['anciennete_cpt_tr']) return false
+      if (needContrat && !form['contrat']) return false
+      if (needDureeRestante && !form['duree_restante']) return false
+    } else {
+      if (!form['raison_sociale'] || !form['dirigeant']) return false
+      if (!form['rccm']) return false
+      if (!form['anciennete_soc_tr']) return false
+      if (form['rccm'] === 'Oui' && !form['niu']) return false
+      if (!form['ca_annuel']) return false
+      if (!form['compte_mouvemente'] || !form['refus_bancaire'] || !form['garanties']) return false
+    }
+    return true
+  })()
+
   const hakiMsg: HakiMsg = (() => {
     // PRIORITÉ : feedback immédiat sur un champ qui vient d'être rempli / raté
     if (fieldFeedback && step === 3) {
@@ -690,10 +716,46 @@ function Simulation() {
         }
       }
       if (activeSection === 'eligibilite' && eligibiliteOk) {
+        if (canSubmit) {
+          return {
+            title: '✓ Tout est prêt !',
+            body: "Toutes les sections sont remplies. Cliquez sur « Voir mon score » en bas pour envoyer votre dossier.",
+            success: true,
+            actions: [{ label: 'Voir mon score', onClick: () => { soumettre() }, primary: true }],
+          }
+        }
+        // Éligibilité OK mais d'autres champs manquent → lister les problèmes
+        const missing: {label: string; section: 'identite'|'situation'|'besoin'}[] = []
+        if (isP) {
+          if (!form['prenom']) missing.push({ label: 'Prénom', section: 'identite' })
+          if (!form['nom']) missing.push({ label: 'Nom', section: 'identite' })
+        } else {
+          if (!form['raison_sociale']) missing.push({ label: 'Raison sociale', section: 'identite' })
+          if (!form['dirigeant']) missing.push({ label: 'Dirigeant', section: 'identite' })
+        }
+        if (!form['tel'] || form['tel'].length !== 9) missing.push({ label: 'Téléphone (9 chiffres)', section: 'identite' })
+        if (!form['ville']) missing.push({ label: 'Ville', section: 'identite' })
+        if (isP) {
+          if (!form['employeur']) missing.push({ label: 'Employeur', section: 'situation' })
+          if (!form['anciennete_tr']) missing.push({ label: 'Ancienneté', section: 'situation' })
+          if (!form['revenu']) missing.push({ label: 'Revenu net mensuel', section: 'situation' })
+          if (needContrat && !form['contrat']) missing.push({ label: 'Type de contrat (CDI/CDD...)', section: 'situation' })
+          if (needDureeRestante && !form['duree_restante']) missing.push({ label: 'Durée restante du contrat', section: 'situation' })
+        } else {
+          if (!form['rccm']) missing.push({ label: 'RCCM Oui/Non', section: 'situation' })
+          if (form['rccm'] === 'Oui' && !form['niu']) missing.push({ label: 'NIU', section: 'situation' })
+          if (!form['anciennete_soc_tr']) missing.push({ label: 'Ancienneté société', section: 'situation' })
+          if (!form['ca_annuel']) missing.push({ label: "Chiffre d'affaires annuel", section: 'situation' })
+        }
+        if (!form['montant']) missing.push({ label: 'Montant demandé', section: 'besoin' })
+        if (!form['objet']) missing.push({ label: 'Objet du financement', section: 'besoin' })
+        if (!isP && !form['flux_mois']) missing.push({ label: 'Flux mensuel moyen', section: 'besoin' })
+        const firstMissingSection = missing[0]?.section || 'identite'
+        const sectionLabel = { identite: 'Identité', situation: 'Situation', besoin: 'Besoin' }[firstMissingSection]
         return {
-          title: '✓ Tout est prêt !',
-          body: "Toutes les sections sont remplies. Cliquez sur « Voir mon score » en bas pour envoyer votre dossier.",
-          success: true,
+          title: '⚠ Encore un petit effort !',
+          body: `Il manque ${missing.length} information${missing.length > 1 ? 's' : ''} :\n\n• ${missing.map(m => m.label).join('\n• ')}\n\nRetournez à la section ${sectionLabel} pour compléter.`,
+          actions: [{ label: `Aller à ${sectionLabel}`, onClick: () => { scrollToSection(firstMissingSection as any); setMascotOpen(false) }, primary: true }],
         }
       }
       // En cours de section
@@ -732,31 +794,6 @@ function Simulation() {
     }
 
     return { body: '' }
-  })()
-
-  const canSubmit = (() => {
-    if (!form['tel'] || form['tel'].length !== 9) return false
-    if (!form['ville']) return false
-    if (!form['montant']) return false
-    if (!form['objet']) return false
-    if (isP) {
-      if (!form['prenom'] || !form['nom']) return false
-      if (!form['employeur']) return false
-      if (!form['anciennete_tr']) return false
-      if (!form['revenu']) return false
-      if (!form['salaire_domic']) return false
-      if (form['salaire_domic'] === 'Oui' && !form['anciennete_cpt_tr']) return false
-      if (needContrat && !form['contrat']) return false
-      if (needDureeRestante && !form['duree_restante']) return false
-    } else {
-      if (!form['raison_sociale'] || !form['dirigeant']) return false
-      if (!form['rccm']) return false
-      if (!form['anciennete_soc_tr']) return false
-      if (form['rccm'] === 'Oui' && !form['niu']) return false
-      if (!form['ca_annuel']) return false
-      if (!form['compte_mouvemente'] || !form['refus_bancaire'] || !form['garanties']) return false
-    }
-    return true
   })()
 
   async function soumettre() {
