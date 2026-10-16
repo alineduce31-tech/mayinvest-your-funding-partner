@@ -70,6 +70,52 @@ function hakiAvatar(size: number) {
   )
 }
 
+/* ---------- Rendu message avec détection fichiers ---------- */
+function MessageContent({ content, isClient }: { content: string; isClient: boolean }) {
+  // Détecte "📎 nom.ext\nhttps://..." ou juste une URL de notre bucket Supabase
+  const lines = content.split('\n')
+  const fileLine = lines.find(l => l.startsWith('📎'))
+  const urlLine = lines.find(l => l.startsWith('http'))
+
+  if (fileLine && urlLine) {
+    const name = fileLine.replace('📎', '').trim()
+    const ext = (name.split('.').pop() || '').toLowerCase()
+    const isImage = ['jpg','jpeg','png','webp','gif'].includes(ext)
+    const isPdf = ext === 'pdf'
+    const text = lines.filter(l => !l.startsWith('📎') && !l.startsWith('http')).join('\n').trim()
+
+    if (isImage) {
+      return (
+        <>
+          <a href={urlLine} target="_blank" rel="noopener" className="c-msg-img-wrap">
+            <img src={urlLine} alt={name} className="c-msg-img"/>
+          </a>
+          <div className="c-msg-img-name">{name}</div>
+          {text && <div style={{ marginTop: 6 }}>{text}</div>}
+        </>
+      )
+    }
+    return (
+      <>
+        <a href={urlLine} target="_blank" rel="noopener" className={`c-msg-file ${isClient ? 'client' : ''}`}>
+          <div className={`c-msg-file-ic ${isPdf ? 'pdf' : 'doc'}`}>
+            {isPdf
+              ? <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
+              : <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm0 7V3.5L18.5 9H14z"/></svg>}
+          </div>
+          <div className="c-msg-file-info">
+            <div className="c-msg-file-name">{name}</div>
+            <div className="c-msg-file-sub">{isPdf ? 'Document PDF' : 'Fichier'} · Cliquez pour ouvrir</div>
+          </div>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4v12M6 10l6 6 6-6M4 20h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </a>
+        {text && <div style={{ marginTop: 6 }}>{text}</div>}
+      </>
+    )
+  }
+  return <div>{content}</div>
+}
+
 /* ---------- Haki Assistant ---------- */
 type HakiAction = { label: string; onClick: () => void; primary?: boolean; icon?: ReactNode }
 type HakiMsg = { title?: string; body: string; actions?: HakiAction[]; success?: boolean }
@@ -377,9 +423,10 @@ function ClientPortal() {
           onClick: () => {
             setNewMsg(q)
             setHakiOpen(false)
+            setAttachMenu(false)
             setTimeout(() => {
               const ta = document.querySelector('.c-msg-input-field textarea') as HTMLTextAreaElement
-              ta?.focus()
+              if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length) }
             }, 200)
           },
         })),
@@ -551,13 +598,13 @@ function ClientPortal() {
 
         /* ----- Chat type WhatsApp / Messenger ----- */
         .c-messenger { background: #fff; border-radius: 20px; box-shadow: 0 4px 14px rgba(13,27,62,0.05); overflow: hidden; display: flex; flex-direction: column; height: calc(100vh - 260px); min-height: 420px; }
+        /* Haki fab global masqué en mode chat (desktop + mobile) : l'œil dans la barre le remplace */
+        body:has(.c-messenger-fs-active) .c-haki-fab,
+        body:has(.c-messenger-fs-active) .c-haki-panel { display: none !important; }
         @media (max-width: 640px) {
           /* Mode plein écran sur mobile */
           .c-messenger { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; height: 100dvh; border-radius: 0; box-shadow: none; }
           body:has(.c-messenger-fs-active) { overflow: hidden; }
-          /* Haki fab masqué en chat mobile (remplacé par le bouton + intégré dans l'input) */
-          body:has(.c-messenger-fs-active) .c-haki-fab,
-          body:has(.c-messenger-fs-active) .c-haki-panel { display: none !important; }
         }
         .c-msg-head { background: linear-gradient(135deg, #0D1B3E 0%, #1A3380 100%); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
         .c-msg-head-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
@@ -580,6 +627,21 @@ function ClientPortal() {
         .c-msg-meta { font-size: 10px; margin-top: 2px; opacity: 0.7; }
         .c-msg.client .c-msg-meta { text-align: right; }
         .c-msg-check { display: inline-block; margin-left: 3px; }
+
+        /* Cards fichier dans le chat */
+        .c-msg-img-wrap { display: block; margin: -4px -4px 4px; border-radius: 12px; overflow: hidden; }
+        .c-msg-img { display: block; max-width: 240px; width: 100%; height: auto; cursor: zoom-in; }
+        .c-msg-img-name { font-size: 11px; opacity: 0.7; }
+        .c-msg-file { display: flex; align-items: center; gap: 10px; padding: 10px 12px; background: rgba(13,27,62,0.06); border-radius: 10px; text-decoration: none; color: inherit; margin: -2px 0 2px; }
+        .c-msg.client .c-msg-file { background: rgba(255,255,255,0.15); color: #fff; }
+        .c-msg-file:hover { background: rgba(13,27,62,0.1); }
+        .c-msg.client .c-msg-file:hover { background: rgba(255,255,255,0.22); }
+        .c-msg-file-ic { width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .c-msg-file-ic.pdf { background: #DC2626; }
+        .c-msg-file-ic.doc { background: #2563EB; }
+        .c-msg-file-info { flex: 1; min-width: 0; }
+        .c-msg-file-name { font-size: 13px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .c-msg-file-sub { font-size: 10px; opacity: 0.65; margin-top: 2px; }
 
         .c-msg-input-bar { background: #fff; border-top: 1px solid #E5E7EB; padding: 10px 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 6px; align-items: flex-end; position: relative; }
         /* Bouton Haki œil (gauche de l'input) */
@@ -805,7 +867,7 @@ function ClientPortal() {
                   <div key={m.id} style={{ display: 'contents' }}>
                     {showDate && <div className="c-msg-date-sep">{dateLabel}</div>}
                     <div className={`c-msg ${m.sender === 'client' ? 'client' : 'admin'}`}>
-                      <div>{m.content}</div>
+                      <MessageContent content={m.content} isClient={m.sender === 'client'}/>
                       <div className="c-msg-meta">
                         {new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
                         {m.sender === 'client' && (
