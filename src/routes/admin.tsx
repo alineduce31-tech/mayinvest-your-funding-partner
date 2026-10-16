@@ -11,15 +11,16 @@ export const Route = createFileRoute('/admin')({
  * HELPERS
  * ============================================================ */
 const STATUSES = ['Nouveau', 'Contacté', 'RDV', 'Dossier Déposé', 'Éligible', 'Financé', 'Non Éligible', 'Perdu']
+// Palette pipeline : progression du prospect (froid → chaud), outcomes différenciés
 const STATUS_COLORS: Record<string, { bg: string; fg: string }> = {
-  'Nouveau': { bg: '#EEF4FF', fg: '#1A6BFF' },
-  'Contacté': { bg: '#FFF4E5', fg: '#B45309' },
-  'RDV': { bg: '#F3E8FF', fg: '#6B21A8' },
-  'Dossier Déposé': { bg: '#E0F2FE', fg: '#075985' },
-  'Éligible': { bg: '#DCFCE7', fg: '#166534' },
-  'Financé': { bg: '#D1FAE5', fg: '#065F46' },
-  'Non Éligible': { bg: '#FEE2E2', fg: '#991B1B' },
-  'Perdu': { bg: '#F3F4F6', fg: '#6B7280' },
+  'Nouveau':        { bg: '#F1F5F9', fg: '#475569' }, // slate neutre (entrée)
+  'Contacté':       { bg: '#DBE8FF', fg: '#1A6BFF' }, // bleu Mayinvest (actif)
+  'RDV':            { bg: '#DDEEFF', fg: '#0369A1' }, // bleu plus profond (engagement)
+  'Dossier Déposé': { bg: '#E0E7FF', fg: '#4338CA' }, // indigo (en traitement)
+  'Éligible':       { bg: '#CCFBF1', fg: '#0F766E' }, // teal (signal positif)
+  'Financé':        { bg: '#D1FAE5', fg: '#047857' }, // vert emeraude (succès)
+  'Non Éligible':   { bg: '#FEF3C7', fg: '#B45309' }, // ambre (opportunité à transformer)
+  'Perdu':          { bg: '#FEE2E2', fg: '#B91C1C' }, // rouge (perdu définitivement)
 }
 const TRANCHE_LABELS: Record<string, string> = {
   '0-6': 'Moins de 6 mois', '6-12': '6 mois à 1 an', '1-3': '1 à 3 ans',
