@@ -269,7 +269,7 @@ function MonEspaceAdmin() {
             Pilotez votre pipeline, <em>en temps réel.</em>
           </h1>
           <p className="me-tagline">
-            Scoring automatique, segmentation par typologie, suivi des dossiers de la préselection au financement — depuis un seul tableau de bord.
+            Scoring automatique, segmentation par typologie, suivi des dossiers de la préselection au financement depuis un seul tableau de bord.
           </p>
 
           <div className="me-meta">
