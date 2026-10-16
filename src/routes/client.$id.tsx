@@ -204,6 +204,7 @@ function ClientPortal() {
   const [identifierType, setIdentifierType] = useState<'phone' | 'email'>('phone')
   const [identifierInput, setIdentifierInput] = useState('')
   const [passwordInput, setPasswordInput] = useState('')
+  const [showGatePwd, setShowGatePwd] = useState(false)
   const [recoveryStep, setRecoveryStep] = useState<'' | 'ask' | 'sent'>('')
   const [recoveryEmail, setRecoveryEmail] = useState('')
   const [recoveryBusy, setRecoveryBusy] = useState(false)
@@ -420,7 +421,7 @@ function ClientPortal() {
       return {
         title: '🔐 Accès sécurisé',
         body: "Pour voir votre dossier, entrez votre code d'accès reçu lors de l'inscription (format MYI-XXXXXXX). Ce code protège vos informations.",
-        actions: [{ label: 'Code perdu ? Contacter un expert', onClick: () => window.open('https://wa.me/242060000000?text=Bonjour%20Mayinvest%2C%20j%27ai%20perdu%20mon%20code', '_blank') }],
+        actions: [{ label: 'Code perdu ? Contacter un expert', onClick: () => window.open('https://wa.me/24265313187?text=Bonjour%20Mayinvest%2C%20j%27ai%20perdu%20mon%20code', '_blank') }],
       }
     }
     if (!lead) return { body: '' }
@@ -445,8 +446,8 @@ function ClientPortal() {
         body: `Votre dossier est au statut : « ${lead.statut} » (étape ${statutIdx + 1} sur 6).\n\n${explanations[lead.statut] || "Suivez l'avancement dans la timeline."}`,
         success: ['Éligible','Financé'].includes(lead.statut),
         actions: [
-          { label: 'Discuter sur WhatsApp', onClick: () => window.open(`https://wa.me/242060000000?text=Bonjour%2C%20mon%20dossier%20${lead.access_code || id}`, '_blank'), primary: true },
-          ...(packNeeded ? [{ label: '📄 Je veux le Pack Formalisation', onClick: () => window.open(`https://wa.me/242060000000?text=Pack%20Formalisation%20${lead.access_code || id}`, '_blank') }] : []),
+          { label: 'Discuter sur WhatsApp', onClick: () => window.open(`https://wa.me/24265313187?text=Bonjour%2C%20mon%20dossier%20${lead.access_code || id}`, '_blank'), primary: true },
+          ...(packNeeded ? [{ label: '📄 Je veux le Pack Formalisation', onClick: () => window.open(`https://wa.me/24265313187?text=Pack%20Formalisation%20${lead.access_code || id}`, '_blank') }] : []),
         ],
       }
     }
@@ -863,10 +864,10 @@ function ClientPortal() {
                   />
                 </div>
               )}
-              <div className="c-gate-field">
+              <div className="c-gate-field has-eye" style={{ position: 'relative', paddingRight: 48 }}>
                 <label>Mot de passe</label>
                 <input
-                  type="password"
+                  type={showGatePwd ? 'text' : 'password'}
                   placeholder="Votre mot de passe"
                   value={passwordInput}
                   onChange={e => setPasswordInput(e.target.value)}
@@ -876,6 +877,15 @@ function ClientPortal() {
                   }}
                   autoComplete="current-password"
                 />
+                <button type="button" onClick={() => setShowGatePwd(v => !v)}
+                  style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', padding: 8, color: '#888', borderRadius: 8, display: 'flex' }}
+                  aria-label={showGatePwd ? 'Masquer' : 'Afficher'}>
+                  {showGatePwd ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                  )}
+                </button>
               </div>
               <button
                 className="c-btn-main"
@@ -949,7 +959,7 @@ function ClientPortal() {
                       <button style={{ background: 'transparent', border: 'none', color: '#1A6BFF', fontSize: 12, fontWeight: 700, cursor: 'pointer' }} onClick={() => setRecoveryStep('')}>← Retour à la connexion</button>
                     </div>
                     <div style={{ marginTop: 10, padding: 10, background: '#FFF4E5', borderRadius: 8, fontSize: 11, color: '#92400E', textAlign: 'center' }}>
-                      Email non reçu ? <a href="https://wa.me/242060000000?text=Bonjour%2C%20j%27ai%20oubli%C3%A9%20mon%20mot%20de%20passe%20et%20je%20n%27ai%20pas%20re%C3%A7u%20l%27email" target="_blank" rel="noopener" style={{ color: '#B45309', fontWeight: 700 }}>Contact urgent WhatsApp</a>
+                      Email non reçu ? <a href="https://wa.me/24265313187?text=Bonjour%2C%20j%27ai%20oubli%C3%A9%20mon%20mot%20de%20passe%20et%20je%20n%27ai%20pas%20re%C3%A7u%20l%27email" target="_blank" rel="noopener" style={{ color: '#B45309', fontWeight: 700 }}>Contact urgent WhatsApp</a>
                     </div>
                   </>
                 )}
@@ -957,7 +967,7 @@ function ClientPortal() {
             )}
 
             <div className="c-gate-help">
-              Besoin d'aide ? <a href="https://wa.me/242060000000?text=Bonjour%20Mayinvest" target="_blank" rel="noopener">Contactez un expert</a>
+              Besoin d'aide ? <a href="https://wa.me/24265313187?text=Bonjour%20Mayinvest" target="_blank" rel="noopener">Contactez un expert</a>
             </div>
           </div>
         </div>
@@ -1041,7 +1051,7 @@ function ClientPortal() {
               <div className="c-pack">
                 <div className="c-pack-h">📄 Pack Formalisation Mayinvest</div>
                 <div className="c-pack-p">Votre société n'a pas encore de RCCM. Nous pouvons nous charger de la création : statuts, immatriculation, NIU et compte bancaire.</div>
-                <button className="c-btn-pack" onClick={() => window.open('https://wa.me/242060000000?text=Pack%20Formalisation', '_blank')}>Je suis intéressé</button>
+                <button className="c-btn-pack" onClick={() => window.open('https://wa.me/24265313187?text=Pack%20Formalisation', '_blank')}>Je suis intéressé</button>
               </div>
             </div>
           )}
@@ -1054,7 +1064,7 @@ function ClientPortal() {
                 Discuter avec un expert
               </div>
               <div className="c-contact-sub">Un conseiller Mayinvest vous répond directement sur WhatsApp sous 24h.</div>
-              <button className="c-btn-wa" onClick={() => window.open(`https://wa.me/242060000000?text=Bonjour%20Mayinvest%2C%20mon%20dossier%20${lead?.access_code || id}`, '_blank')}>
+              <button className="c-btn-wa" onClick={() => window.open(`https://wa.me/24265313187?text=Bonjour%20Mayinvest%2C%20mon%20dossier%20${lead?.access_code || id}`, '_blank')}>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
                 Ouvrir WhatsApp
               </button>
