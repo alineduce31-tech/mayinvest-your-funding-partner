@@ -546,6 +546,10 @@ function Simulation() {
   }
   function toggleHaki() { setMascotOpen(o => !o) }
 
+  // Contrat obligatoire uniquement pour Salarié privé (déclaré tôt pour TDZ)
+  const needContrat = isP && activite === 'Salarié privé'
+  const needDureeRestante = needContrat && (form['contrat'] === 'CDD' || form['contrat'] === 'Intérim' || form['contrat'] === 'Stage')
+
   // Validation de l'avancement des sections (step 3)
   const identiteOk = isP
     ? !!(form['prenom'] && form['nom'] && form['tel']?.length === 9 && form['ville'])
@@ -729,10 +733,6 @@ function Simulation() {
 
     return { body: '' }
   })()
-
-  // Contrat obligatoire uniquement pour Salarié privé
-  const needContrat = isP && activite === 'Salarié privé'
-  const needDureeRestante = needContrat && (form['contrat'] === 'CDD' || form['contrat'] === 'Intérim' || form['contrat'] === 'Stage')
 
   const canSubmit = (() => {
     if (!form['tel'] || form['tel'].length !== 9) return false
