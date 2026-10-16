@@ -207,7 +207,9 @@ function ClientPortal() {
   const [activeTab, setActiveTab] = useState<'suivi' | 'chat' | 'infos'>('suivi')
   const chatEnd = useRef<HTMLDivElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
-  const [attachMenu, setAttachMenu] = useState<'' | 'options' | 'quickreplies'>('')
+  const [attachOpen, setAttachOpen] = useState(false)
+  const [showQuickReplies, setShowQuickReplies] = useState(false)
+  function closeAttach() { setAttachOpen(false); setShowQuickReplies(false) }
   const [uploading, setUploading] = useState(false)
   const [documents, setDocuments] = useState<any[]>([])
   const docInput = useRef<HTMLInputElement>(null)
@@ -299,7 +301,7 @@ function ClientPortal() {
       alert("Impossible d'uploader : " + (e?.message || 'erreur'))
     }
     setUploading(false)
-    setAttachMenu('')
+    closeAttach()
   }
 
   async function loadDocuments() {
@@ -423,7 +425,7 @@ function ClientPortal() {
           onClick: () => {
             setNewMsg(q)
             setHakiOpen(false)
-            setAttachMenu('')
+            closeAttach()
             setTimeout(() => {
               const ta = document.querySelector('.c-msg-input-field textarea') as HTMLTextAreaElement
               if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length) }
@@ -895,11 +897,11 @@ function ClientPortal() {
             <div className="c-msg-input-bar">
               {/* Bouton Haki : ouvre menu options */}
               <div className="c-msg-attach-wrap">
-                <button className={`c-msg-attach-btn ${attachMenu ? 'on' : ''}`} onClick={() => setAttachMenu(a => a ? '' : 'options')} aria-label="Options Haki" disabled={uploading}>
+                <button className={`c-msg-attach-btn ${attachOpen ? 'on' : ''}`} onClick={() => { if (attachOpen) closeAttach(); else { setAttachOpen(true); setShowQuickReplies(false) } }} aria-label="Options Haki" disabled={uploading}>
                   <span className="c-msg-attach-eye">{hakiAvatar(36)}</span>
                   <span className="c-msg-attach-dot"/>
                 </button>
-                {attachMenu === 'options' && (
+                {attachOpen && !showQuickReplies && (
                   <div className="c-attach-menu">
                     <div className="c-attach-head">
                       <span className="c-attach-haki-ic">{hakiAvatar(22)}</span>
@@ -914,7 +916,7 @@ function ClientPortal() {
                         <div className="c-attach-sub">Photo, PDF, Word… (max 10 Mo)</div>
                       </div>
                     </button>
-                    <button className="c-attach-opt" onClick={() => setAttachMenu('quickreplies')}>
+                    <button className="c-attach-opt" onClick={() => setShowQuickReplies(true)}>
                       <span className="c-attach-ic" style={{ background: '#EEF4FF', color: '#1A6BFF' }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>
                       </span>
@@ -926,10 +928,10 @@ function ClientPortal() {
                     </button>
                   </div>
                 )}
-                {attachMenu === 'quickreplies' && (
+                {attachOpen && showQuickReplies && (
                   <div className="c-attach-menu">
                     <div className="c-attach-head">
-                      <button className="c-attach-back" onClick={() => setAttachMenu('options')} aria-label="Retour">
+                      <button className="c-attach-back" onClick={() => setShowQuickReplies(false)} aria-label="Retour">
                         <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                       </button>
                       <span className="c-attach-haki-ic">{hakiAvatar(22)}</span>
@@ -948,7 +950,7 @@ function ClientPortal() {
                       return quickReplies.map((q, i) => (
                         <button key={i} className="c-attach-reply" onClick={() => {
                           setNewMsg(q)
-                          setAttachMenu('')
+                          closeAttach()
                           setTimeout(() => {
                             const ta = document.querySelector('.c-msg-input-field textarea') as HTMLTextAreaElement
                             if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length) }
