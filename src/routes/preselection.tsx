@@ -428,9 +428,10 @@ function CreditScoreMeter({ score }: { score: number }) {
         <path d="M20 100 A70 70 0 0 1 160 100" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="14" strokeLinecap="round"/>
         <path d="M20 100 A70 70 0 0 1 160 100" fill="none" stroke="url(#grad-arc)" strokeWidth="14" strokeLinecap="round" strokeDasharray={`${pct * C} ${C}`}/>
         <g transform={`rotate(${-90 + pct * 180} 90 100)`}>
-          <line x1="90" y1="100" x2="90" y2="38" stroke="#fff" strokeWidth="3" strokeLinecap="round"/>
-          <circle cx="90" cy="100" r="6" fill="#fff"/>
-          <circle cx="90" cy="100" r="3" fill={color}/>
+          <line x1="90" y1="100" x2="90" y2="48" stroke="#fff" strokeWidth="3" strokeLinecap="round"/>
+          <circle cx="90" cy="48" r="2.5" fill="#fff"/>
+          <circle cx="90" cy="100" r="7" fill="#fff"/>
+          <circle cx="90" cy="100" r="4" fill={color}/>
         </g>
       </svg>
       <div className="credit-value" style={{ color }}>{v}</div>
@@ -780,15 +781,20 @@ function Simulation() {
       }
     }
 
-    // Phase 4 : dossier soumis
+    // Phase 4 : dossier soumis — Haki aide pour les prochaines étapes
     if (step === 4) {
+      const verdict = score >= 70 ? 'Excellent dossier !' : score >= 50 ? 'Dossier éligible' : 'Dossier à renforcer'
+      const docs = isP
+        ? '• CNI ou passeport\n• Bulletins de salaire (3 derniers)\n• Relevé bancaire (3 derniers mois)\n• Attestation d\'employeur'
+        : '• RCCM + NIU de la société\n• Statuts de la société\n• Relevés bancaires (6 derniers mois)\n• Bilan et compte de résultat'
       return {
-        title: '🎉 Félicitations !',
-        body: `Votre dossier est enregistré avec un score de ${score}/100. Notez bien votre code d'accès : ${accessCode}. Un conseiller vous contactera sous 24h.`,
+        title: `🎉 ${verdict} · Score ${score}/100`,
+        body: `Votre dossier a bien été envoyé. Voici les 3 prochaines étapes :\n\n1️⃣ **Notez votre code** : ${accessCode}\n2️⃣ **Préparez vos documents** :\n${docs}\n3️⃣ **Un conseiller vous appelle sous 24h** pour la suite.`,
         success: true,
         actions: [
-          { label: 'Discuter avec un conseiller', onClick: () => { window.open(`https://wa.me/242060000000?text=Bonjour Mayinvest, mon code: ${accessCode}`, '_blank') }, primary: true },
-          { label: 'Accéder à mon dossier', onClick: () => { if (leadId) navigate({ to: '/client/$id', params: { id: leadId } }) } },
+          { label: 'Parler à un conseiller maintenant', onClick: () => { window.open(`https://wa.me/242060000000?text=Bonjour Mayinvest, mon code: ${accessCode}. Mon score: ${score}/100.`, '_blank') }, primary: true },
+          { label: 'Suivre mon dossier', onClick: () => { if (leadId) navigate({ to: '/client/$id', params: { id: leadId } }) } },
+          { label: "Retour à l'accueil", onClick: () => { navigate({ to: '/' }) } },
         ],
       }
     }
@@ -983,9 +989,9 @@ function Simulation() {
         .score-final { background: #0D1B3E; border-radius: 24px; padding: 36px 28px; color: #fff; box-shadow: 0 30px 60px rgba(13,27,62,0.3); position: relative; overflow: hidden; text-align: center; margin-top: 20px; }
         .score-final::before { content: ''; position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(26,107,255,0.3) 0%, transparent 65%); pointer-events: none; }
         .score-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(52,208,88,0.15); color: #34D058; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 20px; position: relative; z-index: 1; }
-        .credit-meter { position: relative; margin: 0 auto 18px; z-index: 1; max-width: 280px; }
-        .credit-value { font-size: 56px; font-weight: 800; line-height: 1; margin-top: -22px; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
-        .credit-sub { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 4px; font-weight: 600; }
+        .credit-meter { position: relative; margin: 0 auto 24px; z-index: 1; max-width: 280px; }
+        .credit-value { font-size: 56px; font-weight: 800; line-height: 1; margin-top: 10px; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
+        .credit-sub { font-size: 13px; color: rgba(255,255,255,0.65); margin-top: 6px; font-weight: 600; }
         .verdict { font-size: 20px; font-weight: 800; margin-bottom: 6px; position: relative; z-index: 1; }
         .score-sub { font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.5; margin: 8px 0 24px; position: relative; z-index: 1; }
         .ref { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 12px 16px; font-family: monospace; font-size: 11px; margin-bottom: 20px; color: rgba(255,255,255,0.7); position: relative; z-index: 1; word-break: break-all; }
@@ -1357,7 +1363,12 @@ function Simulation() {
             <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
             Discuter avec un conseiller sur WhatsApp
           </button>
-          <a className="btn-home" href="/" onClick={(e) => { e.preventDefault(); navigate({ to: '/' }) }}>← Retour à l'accueil</a>
+          <a className="btn-home" href="/" onClick={(e) => { e.preventDefault(); navigate({ to: '/' }) }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ marginRight: 8, verticalAlign: 'middle' }}>
+              <path d="M11 7H3M6 4L3 7l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+            Retour à l'accueil
+          </a>
         </div>}
       </div>
 
