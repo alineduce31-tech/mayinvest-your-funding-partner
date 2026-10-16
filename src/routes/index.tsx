@@ -96,12 +96,9 @@ function Index() {
       <nav className="nav">
         <LogoSVG height={56} tone="light" />
         <div className="nav-actions">
-          <a href="/mon-espace" onClick={(e) => { e.preventDefault(); navigate({ to: '/mon-espace' }) }} className="nav-link">
+          <a href="/mon-dossier" onClick={(e) => { e.preventDefault(); navigate({ to: '/mon-dossier' }) }} className="nav-link">
             <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
             Mon dossier
-          </a>
-          <a href="/admin" onClick={(e) => { e.preventDefault(); navigate({ to: '/admin' }) }} className="nav-link muted hide-mobile">
-            Espace agent
           </a>
           <button className="nav-btn" onClick={goto}>
             Commencer
