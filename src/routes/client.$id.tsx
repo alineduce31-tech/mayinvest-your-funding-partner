@@ -389,9 +389,10 @@ function ClientPortal() {
         .c-chip { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); border-radius: 100px; padding: 6px 12px; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.95); }
         .c-chip-statut { font-weight: 800; }
         .c-head-actions { display: flex; gap: 8px; flex-wrap: wrap; position: relative; z-index: 1; }
-        .c-btn-logout { flex: 1; min-width: 140px; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); color: #fff; font-size: 13px; font-weight: 700; padding: 11px 14px; border-radius: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .c-btn-logout:hover { background: rgba(255,255,255,0.15); }
-        .c-btn-wa-head { flex: 1; min-width: 140px; background: #25D366; border: none; color: #fff; font-size: 13px; font-weight: 700; padding: 11px 14px; border-radius: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; text-decoration: none; }
+        .c-btn-logout { flex: 1; min-width: 140px; background: #000; border: 1.5px solid #000; color: #fff; font-size: 13px; font-weight: 700; padding: 11px 14px; border-radius: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .c-btn-logout:hover { background: #1a1a1a; }
+        .c-btn-chat-head { flex: 1; min-width: 140px; background: #25D366; border: none; color: #fff; font-size: 13px; font-weight: 700; padding: 11px 14px; border-radius: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .c-btn-chat-head:hover { background: #1EB354; }
 
         /* ----- Tabs ----- */
         .c-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: #EEF2F7; padding: 5px; border-radius: 14px; margin-bottom: 16px; position: sticky; top: 10px; z-index: 10; }
@@ -526,10 +527,11 @@ function ClientPortal() {
             {lead?.ville && <span className="c-chip">📍 {lead.ville}</span>}
           </div>
           <div className="c-head-actions">
-            {tel && <a className="c-btn-wa-head" href={`https://wa.me/242${tel.replace(/\D/g, '')}?text=Bonjour%20Mayinvest`} target="_blank" rel="noopener">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
-              Mon conseiller
-            </a>}
+            <button className="c-btn-chat-head" onClick={() => setActiveTab('chat')}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
+              Discuter avec mon conseiller
+              {unreadMsgs > 0 && <span style={{ background: '#fff', color: '#25D366', fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 100, marginLeft: 4 }}>{unreadMsgs}</span>}
+            </button>
             <button className="c-btn-logout" onClick={deconnecter}>
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 1h3v12H9M5 10l-3-3 3-3M2 7h8" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
               Déconnexion
