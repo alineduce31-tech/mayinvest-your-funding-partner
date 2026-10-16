@@ -226,7 +226,7 @@ function MonDossier() {
               {forgotLoading ? 'Envoi…' : 'Envoyer le lien par email'}
             </button>
             {forgotMsg && <div style={{ marginTop: 10, padding: 10, borderRadius: 10, fontSize: 12, fontWeight: 600, background: forgotMsg.startsWith('✓') ? '#DCFCE7' : '#FEF2F2', color: forgotMsg.startsWith('✓') ? '#166534' : '#B91C1C' }}>{forgotMsg}</div>}
-            <button className="md-whats" onClick={() => window.open('https://wa.me/242060000000?text=Urgence%20mot%20de%20passe%20Mayinvest', '_blank')}>
+            <button className="md-whats" onClick={() => window.open('https://wa.me/24265313187?text=Urgence%20mot%20de%20passe%20Mayinvest', '_blank')}>
               💬 Urgence : WhatsApp conseiller
             </button>
           </div>
