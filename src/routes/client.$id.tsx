@@ -201,6 +201,8 @@ function ClientPortal() {
   const [codeError, setCodeError] = useState('')
   const [codeLoading, setCodeLoading] = useState(false)
   const [loginMode, setLoginMode] = useState<'password' | 'code'>('password')
+  const [identifierType, setIdentifierType] = useState<'phone' | 'email'>('phone')
+  const [identifierInput, setIdentifierInput] = useState('')
   const [passwordInput, setPasswordInput] = useState('')
   const [recoveryStep, setRecoveryStep] = useState<'' | 'ask' | 'sent'>('')
   const [recoveryEmail, setRecoveryEmail] = useState('')
@@ -253,17 +255,26 @@ function ClientPortal() {
     loadMessages()
   }
 
-  async function openWithPassword(password: string, silent = false) {
+  async function openWithPassword(password: string, silent = false, identifier?: string, idType?: 'phone'|'email') {
     if (!silent) setCodeLoading(true)
     setCodeError('')
     const { data, error } = await supabase.rpc('get_lead_by_password', { p_id: id, p_password: password })
     if (!silent) setCodeLoading(false)
     if (error || !data || (Array.isArray(data) && data.length === 0)) {
       if (silent) { setStage('needsCode'); return }
-      setCodeError("Mot de passe incorrect. Vérifiez vos 6 chiffres.")
+      setCodeError("Mot de passe incorrect.")
       return
     }
     const leadRow = Array.isArray(data) ? data[0] : data
+    // Vérification supplémentaire : l'identifiant (phone/email) doit correspondre au dossier
+    if (identifier && idType) {
+      const expected = idType === 'phone' ? (leadRow.identite?.tel || '') : (leadRow.identite?.email || '').toLowerCase()
+      const given = idType === 'phone' ? identifier.replace(/\D/g,'') : identifier.toLowerCase().trim()
+      if (expected !== given) {
+        setCodeError(idType === 'phone' ? "Téléphone ne correspond pas au dossier" : "Email ne correspond pas au dossier")
+        return
+      }
+    }
     setLead(leadRow)
     try { localStorage.setItem(`mayinvest_pwd_${id}`, password) } catch {}
     setStage('portal')
@@ -575,6 +586,9 @@ function ClientPortal() {
         .c-gate-icon { width: 72px; height: 72px; border-radius: 20px; background: #EEF4FF; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; }
         .c-gate-h { font-size: 24px; font-weight: 800; margin: 0 0 10px; color: #0D1B3E; }
         .c-gate-sub { font-size: 14px; color: #666; margin: 0 0 24px; line-height: 1.5; }
+        .c-gate-subtabs { display: flex; gap: 6px; background: #F0F2F5; border-radius: 12px; padding: 4px; margin-bottom: 12px; }
+        .c-gate-subtab { flex: 1; background: transparent; border: none; padding: 9px 10px; border-radius: 9px; font-weight: 700; font-size: 12px; color: #666; cursor: pointer; transition: all 0.2s; font-family: inherit; }
+        .c-gate-subtab.on { background: #fff; color: #0D1B3E; box-shadow: 0 2px 6px rgba(13,27,62,0.08); }
         .c-gate-field { background: #F8FAFC; border: 1.5px solid #E5E7EB; border-radius: 14px; padding: 14px 18px; margin-bottom: 14px; text-align: left; }
         .c-gate-field label { display: block; font-size: 11px; font-weight: 700; color: #888; margin-bottom: 4px; }
         .c-gate-field input { width: 100%; border: none; padding: 0; font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; font-weight: 800; letter-spacing: 0.08em; color: #111; background: transparent; outline: none; font-size: 18px !important; }
@@ -820,6 +834,35 @@ function ClientPortal() {
             </div>
 
             {loginMode === 'password' ? <>
+              {/* Sous-tabs : identifiant téléphone ou email */}
+              <div className="c-gate-subtabs">
+                <button className={`c-gate-subtab ${identifierType === 'phone' ? 'on' : ''}`} onClick={() => { setIdentifierType('phone'); setIdentifierInput('') }}>📱 Téléphone</button>
+                <button className={`c-gate-subtab ${identifierType === 'email' ? 'on' : ''}`} onClick={() => { setIdentifierType('email'); setIdentifierInput('') }}>✉️ Email</button>
+              </div>
+
+              {identifierType === 'phone' ? (
+                <div className="c-gate-field">
+                  <label>Téléphone (9 chiffres)</label>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    placeholder="06 123 4567"
+                    maxLength={11}
+                    value={identifierInput}
+                    onChange={e => setIdentifierInput(e.target.value.replace(/\D/g, '').slice(0, 9))}
+                  />
+                </div>
+              ) : (
+                <div className="c-gate-field">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    placeholder="votre@email.com"
+                    value={identifierInput}
+                    onChange={e => setIdentifierInput(e.target.value)}
+                  />
+                </div>
+              )}
               <div className="c-gate-field">
                 <label>Mot de passe</label>
                 <input
@@ -827,11 +870,18 @@ function ClientPortal() {
                   placeholder="Votre mot de passe"
                   value={passwordInput}
                   onChange={e => setPasswordInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && passwordInput.length >= 8 && openWithPassword(passwordInput)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && passwordInput.length >= 8 && identifierInput)
+                      openWithPassword(passwordInput, false, identifierInput, identifierType)
+                  }}
                   autoComplete="current-password"
                 />
               </div>
-              <button className="c-btn-main" disabled={codeLoading || passwordInput.length < 8} onClick={() => openWithPassword(passwordInput)}>
+              <button
+                className="c-btn-main"
+                disabled={codeLoading || passwordInput.length < 8 || !identifierInput || (identifierType === 'phone' && identifierInput.length !== 9) || (identifierType === 'email' && !identifierInput.includes('@'))}
+                onClick={() => openWithPassword(passwordInput, false, identifierInput, identifierType)}
+              >
                 {codeLoading ? 'Vérification…' : 'Déverrouiller'}
                 {!codeLoading && <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
               </button>
