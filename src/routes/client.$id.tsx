@@ -375,24 +375,34 @@ function ClientPortal() {
         .c-gate-help a { color: #1A6BFF; text-decoration: none; font-weight: 700; }
 
         /* ----- Portal : grand header unique mobile-first ----- */
-        .c-portal-head { background: linear-gradient(135deg, #0D1B3E 0%, #1A3380 100%); color: #fff; border-radius: 24px; padding: 24px 20px; box-shadow: 0 20px 40px rgba(13,27,62,0.2); margin-bottom: 20px; position: relative; overflow: hidden; }
+        .c-portal-head { background: linear-gradient(135deg, #0D1B3E 0%, #1A3380 100%); color: #fff; border-radius: 20px; padding: 18px 16px 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.2); margin-bottom: 16px; position: relative; overflow: hidden; }
+        @media (min-width: 640px) { .c-portal-head { padding: 24px 22px 20px; border-radius: 24px; margin-bottom: 20px; } }
         .c-portal-head::before { content: ''; position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(26,107,255,0.35), transparent 65%); pointer-events: none; }
         .c-head-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; position: relative; z-index: 1; }
         .c-head-identity { min-width: 0; flex: 1; }
-        .c-head-name { font-size: 24px; font-weight: 800; margin: 0 0 4px; letter-spacing: -0.5px; line-height: 1.15; word-break: break-word; }
-        @media (min-width: 640px) { .c-head-name { font-size: 28px; } }
+        .c-head-name { font-size: 20px; font-weight: 800; margin: 0 0 3px; letter-spacing: -0.5px; line-height: 1.15; word-break: break-word; }
+        @media (min-width: 640px) { .c-head-name { font-size: 26px; } }
         .c-head-ref { font-size: 10px; color: rgba(255,255,255,0.55); font-family: monospace; word-break: break-all; }
         .c-head-score { background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.2); border-radius: 16px; padding: 10px 14px; text-align: center; min-width: 70px; flex-shrink: 0; }
         .c-head-score-v { font-size: 24px; font-weight: 800; line-height: 1; }
         .c-head-score-l { font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 2px; font-weight: 600; }
         .c-head-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; position: relative; z-index: 1; }
-        .c-chip { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); border-radius: 100px; padding: 6px 12px; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.95); }
+        .c-chip { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); border-radius: 100px; padding: 5px 11px; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.95); white-space: nowrap; }
         .c-chip-statut { font-weight: 800; }
-        .c-head-actions { display: flex; gap: 8px; flex-wrap: wrap; position: relative; z-index: 1; }
-        .c-btn-logout { flex: 1; min-width: 140px; background: #000; border: 1.5px solid #000; color: #fff; font-size: 13px; font-weight: 700; padding: 11px 14px; border-radius: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        .c-btn-logout:hover { background: #1a1a1a; }
-        .c-btn-chat-head { flex: 1; min-width: 140px; background: #25D366; border: none; color: #fff; font-size: 13px; font-weight: 700; padding: 11px 14px; border-radius: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        /* ACTIONS : stack vertical sur petit mobile, horizontal dès 420px */
+        .c-head-actions { display: flex; flex-direction: column; gap: 8px; position: relative; z-index: 1; }
+        @media (min-width: 420px) { .c-head-actions { flex-direction: row; } }
+        .c-btn-chat-head, .c-btn-logout {
+          width: 100%; font-size: 13px; font-weight: 700; padding: 12px 16px;
+          border-radius: 100px; cursor: pointer; display: flex;
+          align-items: center; justify-content: center; gap: 7px;
+          white-space: nowrap;
+        }
+        @media (min-width: 420px) { .c-btn-chat-head, .c-btn-logout { flex: 1; } }
+        .c-btn-chat-head { background: #25D366; border: none; color: #fff; }
         .c-btn-chat-head:hover { background: #1EB354; }
+        .c-btn-logout { background: #000; color: #fff; border: 1.5px solid #000; }
+        .c-btn-logout:hover { background: #1a1a1a; }
 
         /* ----- Tabs ----- */
         .c-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; background: #EEF2F7; padding: 5px; border-radius: 14px; margin-bottom: 16px; position: sticky; top: 10px; z-index: 10; }
@@ -436,20 +446,43 @@ function ClientPortal() {
         .c-contact-sub { font-size: 12px; color: #166534; line-height: 1.5; margin-bottom: 12px; }
         .c-btn-wa { width: 100%; background: #25D366; color: #fff; border: none; padding: 13px 20px; border-radius: 100px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-        /* ----- Chat ----- */
-        .c-chat-wrap { display: flex; flex-direction: column; height: 60vh; min-height: 400px; max-height: 600px; }
-        .c-chat-scroll { flex: 1; overflow-y: auto; padding: 4px 0; display: flex; flex-direction: column; gap: 10px; }
-        .c-chat-empty { color: #999; text-align: center; padding: 60px 20px; font-size: 13px; line-height: 1.6; }
-        .c-msg { max-width: 85%; padding: 11px 14px; border-radius: 18px; font-size: 14px; line-height: 1.4; word-break: break-word; }
-        .c-msg.client { align-self: flex-end; background: #1A6BFF; color: #fff; border-bottom-right-radius: 6px; }
-        .c-msg.admin { align-self: flex-start; background: #F0F3F8; color: #111; border-bottom-left-radius: 6px; }
-        .c-msg-meta { font-size: 10px; margin-top: 3px; opacity: 0.65; }
+        /* ----- Chat type WhatsApp / Messenger ----- */
+        .c-messenger { background: #fff; border-radius: 20px; box-shadow: 0 4px 14px rgba(13,27,62,0.05); overflow: hidden; display: flex; flex-direction: column; height: calc(100vh - 260px); min-height: 420px; }
+        @media (max-width: 640px) {
+          /* Mode plein écran sur mobile */
+          .c-messenger { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; height: 100dvh; border-radius: 0; box-shadow: none; }
+          /* Masquer wrap du dessus pour éviter double scroll */
+          body:has(.c-messenger-fs-active) { overflow: hidden; }
+        }
+        .c-msg-head { background: linear-gradient(135deg, #0D1B3E 0%, #1A3380 100%); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
+        .c-msg-head-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
+        @media (max-width: 640px) { .c-msg-head-back { display: flex; } }
+        .c-msg-head-avatar { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
+        .c-msg-head-dot { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #34D058; border: 2.5px solid #0D1B3E; }
+        .c-msg-head-info { flex: 1; min-width: 0; }
+        .c-msg-head-name { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; }
+        .c-msg-head-sub { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; display: flex; align-items: center; gap: 5px; font-weight: 500; }
+        .c-msg-head-sub::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34D058; }
+
+        .c-msg-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: linear-gradient(180deg, #F8FAFC 0%, #EEF2F7 100%); }
+        .c-msg-empty { color: #999; text-align: center; padding: 60px 20px; font-size: 13px; line-height: 1.6; margin: auto; }
+        .c-msg-empty svg { margin: 0 auto 14px; display: block; }
+        .c-msg-date-sep { align-self: center; background: rgba(13,27,62,0.08); color: #666; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 100px; margin: 10px 0 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+        .c-msg { max-width: 85%; padding: 10px 14px; border-radius: 18px; font-size: 14px; line-height: 1.4; word-break: break-word; box-shadow: 0 1px 2px rgba(13,27,62,0.08); animation: msg-in 0.2s ease-out; }
+        @keyframes msg-in { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
+        .c-msg.client { align-self: flex-end; background: #1A6BFF; color: #fff; border-bottom-right-radius: 4px; }
+        .c-msg.admin { align-self: flex-start; background: #fff; color: #111; border-bottom-left-radius: 4px; }
+        .c-msg-meta { font-size: 10px; margin-top: 2px; opacity: 0.7; }
         .c-msg.client .c-msg-meta { text-align: right; }
-        .c-chat-input { display: flex; gap: 8px; padding: 10px 10px 10px 14px; border: 1.5px solid #E5E7EB; border-radius: 16px; background: #fff; margin-top: 12px; }
-        .c-chat-input:focus-within { border-color: #1A6BFF; box-shadow: 0 4px 12px rgba(26,107,255,0.1); }
-        .c-chat-input textarea { flex: 1; border: none; outline: none; resize: none; min-height: 24px; max-height: 100px; padding: 4px 0; }
-        .c-chat-send { background: #1A6BFF; color: #fff; border: none; width: 42px; height: 42px; border-radius: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .c-chat-send:disabled { background: #C7D0DB; }
+        .c-msg-check { display: inline-block; margin-left: 3px; }
+
+        .c-msg-input-bar { background: #fff; border-top: 1px solid #E5E7EB; padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; align-items: flex-end; }
+        .c-msg-input-field { flex: 1; display: flex; align-items: center; background: #F0F3F8; border: 1.5px solid transparent; border-radius: 22px; padding: 10px 16px; min-height: 44px; }
+        .c-msg-input-field:focus-within { border-color: #1A6BFF; background: #fff; box-shadow: 0 4px 12px rgba(26,107,255,0.08); }
+        .c-msg-input-field textarea { flex: 1; border: none; outline: none; resize: none; background: transparent; min-height: 20px; max-height: 120px; padding: 0; line-height: 1.4; }
+        .c-msg-send { background: #1A6BFF; color: #fff; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+        .c-msg-send:hover:not(:disabled) { background: #1560E0; transform: scale(1.05); }
+        .c-msg-send:disabled { background: #C7D0DB; cursor: not-allowed; }
       `}</style>
     </>
   )
@@ -529,7 +562,7 @@ function ClientPortal() {
           <div className="c-head-actions">
             <button className="c-btn-chat-head" onClick={() => setActiveTab('chat')}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
-              Discuter avec mon conseiller
+              Mon conseiller
               {unreadMsgs > 0 && <span style={{ background: '#fff', color: '#25D366', fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 100, marginLeft: 4 }}>{unreadMsgs}</span>}
             </button>
             <button className="c-btn-logout" onClick={deconnecter}>
@@ -589,27 +622,83 @@ function ClientPortal() {
           </div>
         </>}
 
-        {/* ----- CHAT ----- */}
+        {/* ----- CHAT type messenger ----- */}
         {activeTab === 'chat' && (
-          <div className="c-card">
-            <div className="c-card-h">Discussion avec votre conseiller</div>
-            <div className="c-chat-wrap">
-              <div className="c-chat-scroll">
-                {messages.length === 0 && <div className="c-chat-empty">Aucun message pour le moment.<br/>Démarrez la conversation en écrivant ci-dessous.</div>}
-                {messages.map(m => (
-                  <div key={m.id} className={`c-msg ${m.sender === 'client' ? 'client' : 'admin'}`}>
-                    <div>{m.content}</div>
-                    <div className="c-msg-meta">{new Date(m.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
+          <div className="c-messenger c-messenger-fs-active">
+            {/* Header messagerie type WhatsApp */}
+            <div className="c-msg-head">
+              <button className="c-msg-head-back" onClick={() => setActiveTab('suivi')} aria-label="Retour">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <div className="c-msg-head-avatar">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="8" r="4" fill="#1A6BFF"/>
+                  <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="#1A6BFF"/>
+                </svg>
+                <span className="c-msg-head-dot"/>
+              </div>
+              <div className="c-msg-head-info">
+                <div className="c-msg-head-name">Conseiller Mayinvest</div>
+                <div className="c-msg-head-sub">En ligne · Répond sous 24h</div>
+              </div>
+            </div>
+
+            {/* Zone messages */}
+            <div className="c-msg-scroll">
+              {messages.length === 0 && (
+                <div className="c-msg-empty">
+                  <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+                    <circle cx="28" cy="28" r="26" fill="#EEF4FF"/>
+                    <path d="M18 24a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-4l-6 6v-6h-6a2 2 0 01-2-2V24z" fill="#1A6BFF"/>
+                  </svg>
+                  Aucun message pour le moment.<br/>
+                  Écrivez votre premier message à votre conseiller !
+                </div>
+              )}
+              {messages.map((m, i) => {
+                // Afficher la date si c'est le premier message ou si la date change
+                const prevDate = i > 0 ? new Date(messages[i-1].created_at).toDateString() : null
+                const currDate = new Date(m.created_at).toDateString()
+                const showDate = !prevDate || prevDate !== currDate
+                const dateLabel = currDate === new Date().toDateString() ? "Aujourd'hui"
+                  : currDate === new Date(Date.now() - 86400000).toDateString() ? 'Hier'
+                  : new Date(m.created_at).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })
+                return (
+                  <div key={m.id} style={{ display: 'contents' }}>
+                    {showDate && <div className="c-msg-date-sep">{dateLabel}</div>}
+                    <div className={`c-msg ${m.sender === 'client' ? 'client' : 'admin'}`}>
+                      <div>{m.content}</div>
+                      <div className="c-msg-meta">
+                        {new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                        {m.sender === 'client' && (
+                          <svg className="c-msg-check" width="14" height="10" viewBox="0 0 14 10" fill="none">
+                            <path d={m.read_at ? "M1 5l2 2 4-4M6 5l2 2 4-4" : "M1 5l2 2 4-4"} stroke={m.read_at ? '#86EFAC' : '#fff'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.8"/>
+                          </svg>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                ))}
-                <div ref={chatEnd}/>
+                )
+              })}
+              <div ref={chatEnd}/>
+            </div>
+
+            {/* Barre de saisie type WhatsApp */}
+            <div className="c-msg-input-bar">
+              <div className="c-msg-input-field">
+                <textarea
+                  placeholder="Écrire un message…"
+                  value={newMsg}
+                  onChange={e => setNewMsg(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); envoyer() } }}
+                  rows={1}
+                />
               </div>
-              <div className="c-chat-input">
-                <textarea placeholder="Votre message…" value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); envoyer() } }} rows={1}/>
-                <button className="c-chat-send" onClick={envoyer} disabled={!newMsg.trim() || sending} aria-label="Envoyer">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11l17-7-7 17-3-7-7-3z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
-                </button>
-              </div>
+              <button className="c-msg-send" onClick={envoyer} disabled={!newMsg.trim() || sending} aria-label="Envoyer">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 11l18-8-8 18-3-8-7-2z" fill="#fff"/>
+                </svg>
+              </button>
             </div>
           </div>
         )}
