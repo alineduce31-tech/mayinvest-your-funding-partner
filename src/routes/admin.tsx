@@ -348,30 +348,53 @@ function Admin({ session }: { session: any }) {
           .sidebar.open { transform: translateX(0); }
           .sidebar-overlay { position: fixed; inset: 0; background: rgba(13,27,62,0.6); z-index: 99; backdrop-filter: blur(4px); }
         }
-        .sb-logo { padding: 0 24px 24px; border-bottom: 1px solid rgba(255,255,255,0.08);
-          margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
-        .sb-logo svg path, .sb-logo svg g { fill: #fff !important; }
-        .sb-nav { flex: 1; padding: 0 12px; display: flex; flex-direction: column; gap: 3px; }
-        .sb-link { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 12px;
-          background: transparent; border: none; color: rgba(255,255,255,0.65);
+        .sb-logo { padding: 0 20px 22px; border-bottom: 1px solid rgba(255,255,255,0.08);
+          margin-bottom: 18px; display: flex; align-items: center; gap: 12px; }
+        .sb-logo svg, .sb-logo img { display: none !important; }
+        .sb-logo::before {
+          content: 'M'; width: 42px; height: 42px; border-radius: 11px;
+          background: linear-gradient(135deg, #1A6BFF 0%, #0051D4 100%);
+          display: flex; align-items: center; justify-content: center;
+          font-weight: 800; font-size: 20px; color: #fff;
+          box-shadow: 0 10px 24px rgba(26,107,255,0.5), inset 0 1px 0 rgba(255,255,255,0.3);
+          letter-spacing: -0.02em;
+        }
+        .sb-logo::after {
+          content: 'Mayinvest';
+          font-weight: 800; font-size: 16px; letter-spacing: -0.02em; color: #fff;
+        }
+
+        .sb-section-label { padding: 0 14px 8px; font-size: 10px; font-weight: 700;
+          color: rgba(255,255,255,0.35); letter-spacing: 0.14em; text-transform: uppercase;
+          margin-top: 4px; }
+        .sb-nav { flex: 1; padding: 0 12px; display: flex; flex-direction: column; gap: 2px; }
+        .sb-link { display: flex; align-items: center; gap: 12px; padding: 11px 14px; border-radius: 10px;
+          background: transparent; border: none; color: rgba(255,255,255,0.7);
           font-size: 14px; font-weight: 600; cursor: pointer; text-align: left; width: 100%;
-          transition: all 0.15s; font-family: inherit; }
+          transition: all 0.15s; font-family: inherit; position: relative; }
         .sb-link:hover { background: rgba(255,255,255,0.06); color: #fff; }
-        .sb-link.on { background: var(--blue); color: #fff; box-shadow: 0 8px 20px rgba(26,107,255,0.3); }
-        .sb-link svg { flex-shrink: 0; }
+        .sb-link.on { background: linear-gradient(90deg, rgba(26,107,255,0.25), rgba(26,107,255,0.05));
+          color: #fff; }
+        .sb-link.on::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+          width: 3px; height: 20px; background: #1A6BFF; border-radius: 0 3px 3px 0;
+          box-shadow: 0 0 12px rgba(26,107,255,0.8); }
+        .sb-link svg { flex-shrink: 0; opacity: 0.75; }
+        .sb-link.on svg { opacity: 1; color: #4D8CFF; }
         .sb-footer { padding: 16px 14px 4px; border-top: 1px solid rgba(255,255,255,0.08); }
         .sb-user { font-size: 11.5px; color: rgba(255,255,255,0.5);
-          padding: 0 4px 10px; word-break: break-all; font-weight: 500; }
-        .sb-logout { width: 100%; background: transparent; border: 1px solid rgba(255,255,255,0.15);
-          color: rgba(255,255,255,0.75); font-size: 13px; font-weight: 600; padding: 11px;
-          border-radius: 10px; cursor: pointer; font-family: inherit;
-          transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 7px; }
-        .sb-logout::before {
-          content: ''; display: inline-block; width: 14px; height: 14px;
-          background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none'><path d='M8 15l5-5-5-5M13 10H3' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/><path d='M9 3h7v14H9' stroke='white' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round' opacity='0.5'/></svg>");
-          background-repeat: no-repeat; background-size: contain; opacity: 0.7;
+          padding: 0 4px 12px; word-break: break-all; font-weight: 500;
+          display: flex; align-items: center; gap: 7px; }
+        .sb-user::before {
+          content: ''; width: 7px; height: 7px; border-radius: 50%; background: #22C55E;
+          box-shadow: 0 0 10px rgba(34,197,94,0.6); flex-shrink: 0;
+          animation: pulse-sb 2s ease-in-out infinite;
         }
-        .sb-logout:hover { background: rgba(220,38,38,0.1); border-color: rgba(220,38,38,0.3); color: #FCA5A5; }
+        @keyframes pulse-sb { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        .sb-logout { width: 100%; background: transparent; border: 1px solid rgba(255,255,255,0.15);
+          color: rgba(255,255,255,0.85); font-size: 13px; font-weight: 700; padding: 12px;
+          border-radius: 10px; cursor: pointer; font-family: inherit;
+          transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .sb-logout:hover { background: rgba(220,38,38,0.12); border-color: rgba(220,38,38,0.4); color: #FCA5A5; }
 
         /* ============ MAIN ============ */
         .main { padding: 24px 32px 60px; min-width: 0; }
@@ -393,32 +416,55 @@ function Admin({ session }: { session: any }) {
         /* ============ KPI GRID ============ */
         .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           gap: 14px; margin-bottom: 24px; }
-        .kpi { background: var(--card); border-radius: 18px; padding: 22px 24px;
+        .kpi { background: var(--card); border-radius: 16px; padding: 20px 22px;
           border: 1px solid var(--border); position: relative; overflow: hidden;
-          transition: all 0.2s; cursor: default; }
-        .kpi:hover { border-color: var(--blue); box-shadow: 0 12px 30px rgba(26,107,255,0.08); transform: translateY(-2px); }
-        .kpi-icon { width: 36px; height: 36px; border-radius: 10px; background: var(--blue-soft);
-          color: var(--blue); display: flex; align-items: center; justify-content: center; margin-bottom: 14px; }
-        .kpi-l { font-size: 11px; color: var(--ink-dim); font-weight: 700;
+          transition: all 0.2s; cursor: default;
+          box-shadow: 0 1px 3px rgba(13,27,62,0.04);
+          display: flex; flex-direction: column; }
+        .kpi:hover { border-color: var(--blue); box-shadow: 0 10px 30px rgba(26,107,255,0.1); transform: translateY(-2px); }
+        .kpi::after {
+          content: ''; position: absolute; top: 0; right: 0; width: 80px; height: 80px;
+          background: radial-gradient(circle at top right, rgba(26,107,255,0.06), transparent 70%);
+          pointer-events: none;
+        }
+        .kpi-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 18px; }
+        .kpi-icon { width: 38px; height: 38px; border-radius: 10px; background: var(--blue);
+          color: #fff; display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 6px 14px rgba(26,107,255,0.3); }
+        .kpi-trend { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 100px;
+          background: var(--green-soft); color: var(--green); display: flex; align-items: center; gap: 3px; }
+        .kpi-l { font-size: 11.5px; color: var(--ink-dim); font-weight: 700;
           text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
-        .kpi-v { font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -0.03em;
-          color: var(--ink); line-height: 1.1; font-variant-numeric: tabular-nums; }
-        .kpi-s { font-size: 12px; color: var(--ink-dim); margin-top: 6px; font-weight: 500; }
+        .kpi-v { font-size: 36px; font-weight: 800; margin: 0; letter-spacing: -0.03em;
+          color: var(--ink); line-height: 1; font-variant-numeric: tabular-nums; }
+        .kpi-s { font-size: 12px; color: var(--ink-dim); margin-top: 8px; font-weight: 600;
+          padding-top: 8px; border-top: 1px solid var(--border-2); }
 
         /* ============ FUNNEL / CARDS ============ */
-        .funnel, .card { background: var(--card); border-radius: 18px; padding: 24px 26px;
-          border: 1px solid var(--border); margin-bottom: 18px; }
-        .funnel-h, .card-h { font-size: 16px; font-weight: 700; color: var(--ink); margin: 0 0 20px;
-          display: flex; align-items: center; gap: 10px; letter-spacing: -0.01em; }
+        .funnel, .card { background: var(--card); border-radius: 16px; padding: 24px 26px;
+          border: 1px solid var(--border); margin-bottom: 18px;
+          box-shadow: 0 1px 3px rgba(13,27,62,0.04); }
+        .funnel-h, .card-h { font-size: 17px; font-weight: 800; color: var(--ink); margin: 0 0 22px;
+          display: flex; align-items: center; gap: 10px; letter-spacing: -0.02em; }
         .funnel-h svg, .card-h svg { color: var(--blue); flex-shrink: 0; }
-        .funnel-row { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; padding: 4px 0; }
-        .funnel-l { font-size: 13px; font-weight: 600; width: 150px; flex-shrink: 0; color: var(--ink-2); }
-        .funnel-bar { flex: 1; height: 12px; border-radius: 100px; position: relative;
+
+        .funnel-row { display: grid; grid-template-columns: 140px 1fr 60px; align-items: center;
+          gap: 16px; margin-bottom: 12px; padding: 10px 0; border-bottom: 1px solid var(--border-2); }
+        .funnel-row:last-child { border-bottom: none; }
+        .funnel-l { font-size: 14px; font-weight: 700; color: var(--ink);
+          display: flex; align-items: center; gap: 8px; }
+        .funnel-l::before { content: ''; width: 10px; height: 10px; border-radius: 3px;
+          background: currentColor; flex-shrink: 0; opacity: 0.7; }
+        .funnel-bar { height: 28px; border-radius: 8px; position: relative;
           background: var(--bg-2); overflow: hidden; }
-        .funnel-fill { height: 100%; border-radius: 100px; display: flex; align-items: center;
-          justify-content: flex-end; padding: 0 10px; font-size: 10px; font-weight: 800; color: #fff;
-          min-width: 32px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
-          font-variant-numeric: tabular-nums; }
+        .funnel-fill { height: 100%; border-radius: 8px;
+          display: flex; align-items: center; justify-content: flex-start;
+          padding-left: 14px; font-size: 12px; font-weight: 800; color: #fff;
+          min-width: 48px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1);
+          font-variant-numeric: tabular-nums;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,0.2); }
+        .funnel-count { font-size: 20px; font-weight: 800; color: var(--ink); text-align: right;
+          font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
 
         /* ============ TOOLBAR ============ */
         .toolbar { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; align-items: center; }
@@ -575,7 +621,14 @@ function Admin({ session }: { session: any }) {
           </nav>
           <div className="sb-footer">
             <div className="sb-user">{session.email}</div>
-            <button className="sb-logout" onClick={logout}>Déconnexion</button>
+            <button className="sb-logout" onClick={logout}>
+              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
+                <path d="M8 15l5-5-5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M13 10H3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+                <path d="M9 3h7v14H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.6"/>
+              </svg>
+              Déconnexion
+            </button>
           </div>
         </aside>
 
@@ -641,31 +694,41 @@ function DashboardView({ kpi, funnel, total }: any) {
     <>
       <div className="kpi-grid">
         <div className="kpi">
-          <div className="kpi-icon">{KPI_ICONS.today}</div>
+          <div className="kpi-head">
+            <div className="kpi-icon">{KPI_ICONS.today}</div>
+          </div>
           <div className="kpi-l">Aujourd'hui</div>
           <div className="kpi-v">{kpi.jj}</div>
           <div className="kpi-s">nouveaux leads</div>
         </div>
         <div className="kpi">
-          <div className="kpi-icon">{KPI_ICONS.week}</div>
+          <div className="kpi-head">
+            <div className="kpi-icon">{KPI_ICONS.week}</div>
+          </div>
           <div className="kpi-l">7 jours</div>
           <div className="kpi-v">{kpi.j7}</div>
           <div className="kpi-s">leads cumulés</div>
         </div>
         <div className="kpi">
-          <div className="kpi-icon">{KPI_ICONS.month}</div>
+          <div className="kpi-head">
+            <div className="kpi-icon">{KPI_ICONS.month}</div>
+          </div>
           <div className="kpi-l">30 jours</div>
           <div className="kpi-v">{kpi.j30}</div>
           <div className="kpi-s">leads cumulés</div>
         </div>
         <div className="kpi">
-          <div className="kpi-icon">{KPI_ICONS.total}</div>
+          <div className="kpi-head">
+            <div className="kpi-icon" style={{ background: '#0D1B3E' }}>{KPI_ICONS.total}</div>
+          </div>
           <div className="kpi-l">Total</div>
           <div className="kpi-v">{total}</div>
           <div className="kpi-s">tous dossiers</div>
         </div>
         <div className="kpi">
-          <div className="kpi-icon" style={{ background: '#DCFCE7', color: '#16A34A' }}>{KPI_ICONS.check}</div>
+          <div className="kpi-head">
+            <div className="kpi-icon" style={{ background: '#16A34A' }}>{KPI_ICONS.check}</div>
+          </div>
           <div className="kpi-l">Financés</div>
           <div className="kpi-v" style={{ color: '#16A34A' }}>{kpi.finances}</div>
           <div className="kpi-s">conversion {kpi.conv}%</div>
@@ -678,10 +741,13 @@ function DashboardView({ kpi, funnel, total }: any) {
           const pct = total ? (f.count / total) * 100 : 0
           return (
             <div key={f.statut} className="funnel-row">
-              <div className="funnel-l">{f.statut}</div>
+              <div className="funnel-l" style={{ color: f.color.fg }}>{f.statut}</div>
               <div className="funnel-bar">
-                <div className="funnel-fill" style={{ width: `${Math.max(pct, 2)}%`, background: f.color.fg }}>{f.count}</div>
+                <div className="funnel-fill" style={{ width: `${Math.max(pct, 3)}%`, background: f.color.fg }}>
+                  {pct > 8 ? `${Math.round(pct)}%` : ''}
+                </div>
               </div>
+              <div className="funnel-count">{f.count}</div>
             </div>
           )
         })}
