@@ -31,6 +31,7 @@ function MonDossier() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [showPwd, setShowPwd] = useState(false)
 
   // Reset email forgotten password
   const [showForgot, setShowForgot] = useState(false)
@@ -118,6 +119,9 @@ function MonDossier() {
         .md-tab.on { background: #fff; color: #1A6BFF; box-shadow: 0 2px 6px rgba(13,27,62,0.08); }
         .md-field { background: #F8FAFC; border: 1.5px solid #E5E7EB; border-radius: 14px; padding: 12px 16px; margin-bottom: 10px; }
         .md-field:focus-within { border-color: #1A6BFF; background: #fff; }
+        .md-field.has-eye { position: relative; padding-right: 48px; }
+        .md-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; padding: 8px; color: #888; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+        .md-eye:hover { background: #EEF4FF; color: #1A6BFF; }
         .md-field label { display: block; font-size: 10px; font-weight: 700; color: #888; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.05em; }
         .md-field input { width: 100%; border: none; background: transparent; outline: none; font-weight: 600; padding: 0; color: #111; }
         .md-btn { width: 100%; background: linear-gradient(135deg, #1A6BFF 0%, #0051D4 100%); color: #fff; border: none; padding: 14px; border-radius: 100px; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 12px; box-shadow: 0 10px 25px rgba(26,107,255,0.3); display: flex; align-items: center; justify-content: center; gap: 8px; }
@@ -168,12 +172,19 @@ function MonDossier() {
             </div>
           )}
 
-          <div className="md-field">
+          <div className="md-field has-eye">
             <label>Mot de passe</label>
-            <input type="password" placeholder="Votre mot de passe" value={password}
+            <input type={showPwd ? 'text' : 'password'} placeholder="Votre mot de passe" value={password}
               onChange={e => setPassword(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && password && tryLogin()}
               autoComplete="current-password"/>
+            <button type="button" className="md-eye" onClick={() => setShowPwd(v => !v)} aria-label={showPwd ? 'Masquer' : 'Afficher'}>
+              {showPwd ? (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+              )}
+            </button>
           </div>
 
           <button className="md-btn" disabled={loading || !password || (tab === 'phone' ? phone.length !== 9 : !email.includes('@'))} onClick={tryLogin}>
