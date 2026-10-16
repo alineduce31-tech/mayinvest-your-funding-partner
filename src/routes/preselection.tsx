@@ -489,7 +489,7 @@ function Simulation() {
   function onFieldBlur(key: string) {
     // Mode guidage détaillé actif uniquement si Haki a été accepté ET mode auto activé
     if (!hakiAccepted || !autoMode) return
-    const result = validateField(key, form[key] || '', isP)
+    const result = validateField(key, form[key] || '', type === 'physique')
     setFieldFeedback({ ...result, field: key })
     setMascotOpen(true)
     // Succès → auto-ferme après 2.5s pour ne pas bloquer
