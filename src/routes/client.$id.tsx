@@ -581,12 +581,14 @@ function ClientPortal() {
         .c-msg.client .c-msg-meta { text-align: right; }
         .c-msg-check { display: inline-block; margin-left: 3px; }
 
-        .c-msg-input-bar { background: #fff; border-top: 1px solid #E5E7EB; padding: 10px 12px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; align-items: flex-end; position: relative; }
-        /* Bouton + attach (gauche de l'input) */
+        .c-msg-input-bar { background: #fff; border-top: 1px solid #E5E7EB; padding: 10px 10px; padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px)); display: flex; gap: 6px; align-items: flex-end; position: relative; }
+        /* Bouton Haki œil (gauche de l'input) */
         .c-msg-attach-wrap { position: relative; flex-shrink: 0; }
-        .c-msg-attach-btn { background: #1A6BFF; color: #fff; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.15s; padding: 0; }
-        .c-msg-attach-btn.on { background: #0D4FD1; }
-        .c-msg-attach-btn:hover:not(:disabled) { background: #1560E0; }
+        .c-msg-attach-btn { background: #fff; border: 2px solid #1A6BFF; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; position: relative; transition: all 0.15s; overflow: visible; }
+        .c-msg-attach-btn.on { background: #EEF4FF; border-color: #0D4FD1; transform: scale(0.95); }
+        .c-msg-attach-btn:hover:not(:disabled) { box-shadow: 0 4px 10px rgba(26,107,255,0.3); }
+        .c-msg-attach-eye { display: flex; width: 36px; height: 36px; border-radius: 50%; overflow: hidden; }
+        .c-msg-attach-dot { position: absolute; top: -2px; right: -2px; width: 10px; height: 10px; border-radius: 50%; background: #34D058; border: 2px solid #fff; }
         .c-attach-menu { position: absolute; bottom: calc(100% + 8px); left: 0; width: 260px; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.15); padding: 8px; animation: c-fade 0.15s ease-out; z-index: 20; }
         .c-attach-opt { width: 100%; background: transparent; border: none; padding: 10px 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-radius: 10px; text-align: left; font-family: inherit; }
         .c-attach-opt:hover { background: #F8FAFC; }
@@ -613,10 +615,10 @@ function ClientPortal() {
         .c-doc-upload-btn:hover { background: #1560E0; }
         .c-doc-row.ok .c-doc-upload-btn { background: transparent; color: #166534; border: 1.5px solid #86EFAC; }
         .c-doc-row.ok .c-doc-upload-btn:hover { background: #86EFAC; color: #fff; }
-        .c-msg-input-field { flex: 1; display: flex; align-items: center; background: #F0F3F8; border: 1.5px solid transparent; border-radius: 22px; padding: 10px 16px; min-height: 44px; }
+        .c-msg-input-field { flex: 1 1 0; min-width: 0; display: flex; align-items: center; background: #F0F3F8; border: 1.5px solid transparent; border-radius: 22px; padding: 10px 14px; min-height: 44px; }
         .c-msg-input-field:focus-within { border-color: #1A6BFF; background: #fff; box-shadow: 0 4px 12px rgba(26,107,255,0.08); }
         .c-msg-input-field textarea { flex: 1; border: none; outline: none; resize: none; background: transparent; min-height: 20px; max-height: 120px; padding: 0; line-height: 1.4; }
-        .c-msg-send { background: #1A6BFF; color: #fff; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; }
+        .c-msg-send { background: #1A6BFF; color: #fff; border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s; padding: 0; }
         .c-msg-send:hover:not(:disabled) { background: #1560E0; transform: scale(1.05); }
         .c-msg-send:disabled { background: #C7D0DB; cursor: not-allowed; }
       `}</style>
@@ -821,12 +823,11 @@ function ClientPortal() {
 
             {/* Barre de saisie type WhatsApp avec bouton + à gauche */}
             <div className="c-msg-input-bar">
-              {/* Bouton + : ouvre menu attach */}
+              {/* Bouton Haki : ouvre menu options */}
               <div className="c-msg-attach-wrap">
-                <button className={`c-msg-attach-btn ${attachMenu ? 'on' : ''}`} onClick={() => setAttachMenu(a => !a)} aria-label="Options" disabled={uploading}>
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style={{ transform: attachMenu ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s' }}>
-                    <path d="M12 5v14M5 12h14" stroke="#fff" strokeWidth="2.5" strokeLinecap="round"/>
-                  </svg>
+                <button className={`c-msg-attach-btn ${attachMenu ? 'on' : ''}`} onClick={() => setAttachMenu(a => !a)} aria-label="Options Haki" disabled={uploading}>
+                  <span className="c-msg-attach-eye">{hakiAvatar(36)}</span>
+                  <span className="c-msg-attach-dot"/>
                 </button>
                 {attachMenu && (
                   <div className="c-attach-menu">
