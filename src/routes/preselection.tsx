@@ -458,6 +458,51 @@ function AncienneteChips({ value, onChange }: { value: string; onChange: (v: str
   )
 }
 
+/* ---------- Confettis (step 4 si score >= 70) ---------- */
+function Confetti() {
+  const pieces = Array.from({ length: 60 }, (_, i) => i)
+  const colors = ['#1A6BFF', '#34D058', '#FFB020', '#FF6B6B', '#A855F7', '#F59E0B', '#06B6D4']
+  return (
+    <div className="confetti-wrap" aria-hidden="true">
+      {pieces.map(i => (
+        <span
+          key={i}
+          className="confetti-piece"
+          style={{
+            left: `${Math.random() * 100}%`,
+            background: colors[i % colors.length],
+            animationDelay: `${Math.random() * 2}s`,
+            animationDuration: `${2.5 + Math.random() * 2}s`,
+            width: `${6 + Math.random() * 6}px`,
+            height: `${10 + Math.random() * 8}px`,
+            transform: `rotate(${Math.random() * 360}deg)`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+/* ---------- Badge d'éligibilité (Gold / Silver / Bronze) ---------- */
+function EligibilityBadge({ score }: { score: number }) {
+  const level = score >= 85 ? 'gold' : score >= 65 ? 'silver' : score >= 45 ? 'bronze' : 'base'
+  const label = level === 'gold' ? 'Dossier Premium' : level === 'silver' ? 'Dossier Argent' : level === 'bronze' ? 'Dossier Bronze' : 'Dossier Standard'
+  const colors = {
+    gold:   { bg: 'linear-gradient(135deg,#FFD700,#FFA500)', shadow: '0 8px 20px rgba(255,180,0,0.5)', fg: '#5c3a00' },
+    silver: { bg: 'linear-gradient(135deg,#E8E8E8,#A8A8A8)', shadow: '0 8px 20px rgba(180,180,180,0.4)', fg: '#333' },
+    bronze: { bg: 'linear-gradient(135deg,#CD7F32,#8B4513)', shadow: '0 8px 20px rgba(139,69,19,0.4)', fg: '#fff' },
+    base:   { bg: 'linear-gradient(135deg,#64748B,#334155)', shadow: '0 8px 20px rgba(51,65,85,0.4)', fg: '#fff' },
+  }[level]
+  return (
+    <div className="elig-badge" style={{ background: colors.bg, boxShadow: colors.shadow, color: colors.fg }}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 2l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6z" fill="currentColor"/>
+      </svg>
+      <span>{label}</span>
+    </div>
+  )
+}
+
 /* ---------- Component ---------- */
 function Simulation() {
   const navigate = useNavigate()
@@ -995,6 +1040,21 @@ function Simulation() {
         .verdict { font-size: 20px; font-weight: 800; margin-bottom: 6px; position: relative; z-index: 1; }
         .score-sub { font-size: 14px; color: rgba(255,255,255,0.65); line-height: 1.5; margin: 8px 0 24px; position: relative; z-index: 1; }
         .ref { background: rgba(255,255,255,0.06); border-radius: 12px; padding: 12px 16px; font-family: monospace; font-size: 11px; margin-bottom: 20px; color: rgba(255,255,255,0.7); position: relative; z-index: 1; word-break: break-all; }
+
+        /* Confettis */
+        .confetti-wrap { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 2; }
+        .confetti-piece { position: absolute; top: -20px; border-radius: 2px; animation: confetti-fall linear infinite; opacity: 0.9; }
+        @keyframes confetti-fall {
+          0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
+        }
+
+        /* Badge d'éligibilité */
+        .elig-badge { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 100px; font-size: 13px; font-weight: 800; margin-bottom: 18px; position: relative; z-index: 1; letter-spacing: 0.02em; }
+
+        /* Bouton partage */
+        .btn-share { width: 100%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; padding: 14px 20px; border-radius: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; position: relative; z-index: 1; transition: all 0.15s; }
+        .btn-share:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.35); }
         .code-box { background: linear-gradient(145deg, #1A6BFF, #0D4FD1); border-radius: 18px; padding: 20px; margin-bottom: 20px; position: relative; z-index: 1; box-shadow: 0 12px 28px rgba(26,107,255,0.4); border: 2px solid rgba(255,255,255,0.15); }
         .code-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .code-value { font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; font-size: 28px; font-weight: 800; color: #fff; letter-spacing: 0.08em; margin-bottom: 12px; }
@@ -1326,10 +1386,15 @@ function Simulation() {
         </>}
 
         {step === 4 && <div className="score-final">
+          {score >= 70 && <Confetti/>}
           <div className="score-badge">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6l2 2 4-4" stroke="#34D058" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             Dossier reçu · Score crédit
           </div>
+
+          {/* Badge d'éligibilité (Gold / Silver / Bronze) */}
+          <EligibilityBadge score={score} />
+
           <CreditScoreMeter score={score} />
           <div className="verdict" style={{ color: score>=70?'#34D058':score>=50?'#FFB020':'#FF6B6B' }}>
             {score >= 70 ? 'Dossier excellent' : score >= 50 ? 'Dossier éligible' : 'Dossier à renforcer'}
@@ -1355,6 +1420,16 @@ function Simulation() {
           </div>
 
           <div className="ref">Réf. {leadId}</div>
+
+          {/* Bouton partage WhatsApp (envoyer le code à un proche / soi-même) */}
+          <button className="btn-share" onClick={() => {
+            const text = `Mon dossier Mayinvest : code d'accès ${accessCode} · Score ${score}/100. Suivre : ${window.location.origin}/client/${leadId}`
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+          }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8a3 3 0 10-2.83-4H9.83A3 3 0 106 8a3 3 0 00-3 3v5h2v6h4v-6h2v6h4v-6h2v-5a3 3 0 00-3-3z" opacity="0.3"/><path d="M12 2l3 3h-2v4h-2V5H9l3-3zm-6 10v5l-3 3h18l-3-3v-5h-3v3h-6v-3H6z"/></svg>
+            Partager mon code avec un proche
+          </button>
+
           <button className="btn-wa" style={{ background: '#1A6BFF', marginBottom: 10 }} onClick={() => navigate({ to: '/client/$id', params: { id: leadId } })}>
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" stroke="#fff" strokeWidth="1.8"/></svg>
             Accéder à mon dossier
