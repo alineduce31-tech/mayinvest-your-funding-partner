@@ -633,11 +633,42 @@ function RapportsView({ leads, exportCSV }: any) {
  * DRAWER DÉTAIL + CHAT
  * ============================================================ */
 function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead }: any) {
-  const [tab, setTab] = useState<'infos' | 'chat'>('infos')
+  const [tab, setTab] = useState<'infos' | 'chat' | 'docs'>('infos')
   const [messages, setMessages] = useState<any[]>([])
   const [newMsg, setNewMsg] = useState('')
   const [sending, setSending] = useState(false)
+  const [documents, setDocuments] = useState<any[]>([])
+  const [docsLoading, setDocsLoading] = useState(false)
   const chatEnd = useRef<HTMLDivElement>(null)
+
+  async function loadDocuments() {
+    setDocsLoading(true)
+    const { data } = await supabase.rpc('get_lead_documents', { p_id: lead.id })
+    if (data) setDocuments(data)
+    setDocsLoading(false)
+  }
+
+  async function validateDocument(docId: string) {
+    await supabase.from('documents').update({ status: 'validated', admin_note: null }).eq('id', docId)
+    loadDocuments()
+  }
+  async function rejectDocument(docId: string) {
+    const note = prompt('Raison du rejet (visible par le client) :')
+    if (!note) return
+    await supabase.from('documents').update({ status: 'rejected', admin_note: note }).eq('id', docId)
+    loadDocuments()
+  }
+  async function requestDocument() {
+    const label = prompt('Nom du document à demander :')
+    if (!label) return
+    await supabase.from('documents').insert({
+      lead_id: lead.id,
+      doc_type: 'autre',
+      doc_label: label,
+      status: 'pending',
+    })
+    loadDocuments()
+  }
 
   const isP = lead.type === 'physique' || lead.type === 'Personne physique'
   const nom = isP ? `${lead.identite?.prenom || ''} ${lead.identite?.nom || ''}`.trim() : (lead.situation?.raison_sociale || lead.identite?.raison_sociale || '—')
@@ -654,9 +685,12 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead }: any)
 
   useEffect(() => {
     loadMessages()
+    loadDocuments()
     const chan = supabase.channel(`drawer-${lead.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `lead_id=eq.${lead.id}` },
         (payload) => setMessages(p => [...p, payload.new]))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents', filter: `lead_id=eq.${lead.id}` },
+        () => loadDocuments())
       .subscribe()
     return () => { supabase.removeChannel(chan) }
   }, [lead.id])
@@ -692,9 +726,12 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead }: any)
         </div>
 
         <div className="dr-tabs">
-          <button className={`dr-tab ${tab === 'infos' ? 'on' : ''}`} onClick={() => setTab('infos')}>Infos dossier</button>
+          <button className={`dr-tab ${tab === 'infos' ? 'on' : ''}`} onClick={() => setTab('infos')}>Infos</button>
           <button className={`dr-tab ${tab === 'chat' ? 'on' : ''}`} onClick={() => setTab('chat')}>
             Discussion {messages.filter(m => m.sender === 'client' && !m.read_at).length > 0 && <span className="msg-badge" style={{ marginLeft: 4 }}>{messages.filter(m => m.sender === 'client' && !m.read_at).length}</span>}
+          </button>
+          <button className={`dr-tab ${tab === 'docs' ? 'on' : ''}`} onClick={() => setTab('docs')}>
+            Documents {documents.filter(d => d.status === 'uploaded').length > 0 && <span className="msg-badge" style={{ marginLeft: 4, background: '#FFB020' }}>{documents.filter(d => d.status === 'uploaded').length}</span>}
           </button>
         </div>
 
@@ -762,6 +799,70 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead }: any)
               </div>
             </div>
           </>}
+
+          {tab === 'docs' && (
+            <div>
+              <div style={{ fontSize: 11, color: '#666', marginBottom: 10 }}>
+                {documents.filter(d => d.status === 'validated').length} validés · {documents.filter(d => d.status === 'uploaded').length} à valider · {documents.filter(d => d.status === 'pending').length} en attente
+              </div>
+              {docsLoading && <div style={{ color: '#999', textAlign: 'center', padding: 20 }}>Chargement…</div>}
+              {!docsLoading && documents.length === 0 && <div style={{ color: '#999', textAlign: 'center', padding: 20 }}>Aucun document.</div>}
+              {documents.map(d => {
+                const isUploaded = d.status === 'uploaded'
+                const isValidated = d.status === 'validated'
+                const isRejected = d.status === 'rejected'
+                const isPending = d.status === 'pending'
+                const isImage = d.mime_type?.startsWith('image/')
+                const isPdf = d.mime_type === 'application/pdf'
+                const statusColor = isValidated ? '#166534' : isUploaded ? '#B45309' : isRejected ? '#991B1B' : '#6B7280'
+                const statusBg = isValidated ? '#DCFCE7' : isUploaded ? '#FFF4E5' : isRejected ? '#FEE2E2' : '#F3F4F6'
+                return (
+                  <div key={d.id} style={{ background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, padding: 14, marginBottom: 10 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: '#0D1B3E', marginBottom: 4 }}>{d.doc_label}</div>
+                        <span style={{ display: 'inline-block', background: statusBg, color: statusColor, fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 100 }}>
+                          {isValidated ? '✓ Validé' : isUploaded ? '📄 À valider' : isRejected ? '✗ Rejeté' : '⌛ En attente'}
+                        </span>
+                        {d.admin_note && <div style={{ fontSize: 11, color: '#991B1B', marginTop: 6, fontStyle: 'italic' }}>Note : {d.admin_note}</div>}
+                      </div>
+                    </div>
+                    {d.file_url && (
+                      <div style={{ marginBottom: 10 }}>
+                        {isImage ? (
+                          <a href={d.file_url} target="_blank" rel="noopener">
+                            <img src={d.file_url} alt={d.file_name} style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, cursor: 'zoom-in', display: 'block' }}/>
+                          </a>
+                        ) : (
+                          <a href={d.file_url} target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 10, textDecoration: 'none', color: '#0D1B3E' }}>
+                            <div style={{ width: 36, height: 36, borderRadius: 8, background: isPdf ? '#DC2626' : '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm0 7V3.5L18.5 9H14z"/></svg>
+                            </div>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.file_name}</div>
+                              <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>{d.file_size ? (d.file_size/1024).toFixed(0) + ' Ko' : ''} · Cliquez pour ouvrir</div>
+                            </div>
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {isUploaded && <>
+                        <button onClick={() => validateDocument(d.id)} style={{ background: '#166534', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>✓ Valider</button>
+                        <button onClick={() => rejectDocument(d.id)} style={{ background: '#DC2626', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>✗ Rejeter</button>
+                      </>}
+                      {isValidated && <button onClick={() => rejectDocument(d.id)} style={{ background: 'transparent', color: '#DC2626', border: '1.5px solid #DC2626', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>Rejeter</button>}
+                      {isRejected && <button onClick={() => validateDocument(d.id)} style={{ background: '#166534', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>Finalement valider</button>}
+                      {isPending && <span style={{ color: '#999', fontSize: 12, fontStyle: 'italic' }}>En attente de l'upload du client</span>}
+                    </div>
+                  </div>
+                )
+              })}
+              <button onClick={requestDocument} style={{ background: '#1A6BFF', color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, padding: '10px 16px', borderRadius: 100, cursor: 'pointer', width: '100%', marginTop: 6 }}>
+                + Demander un document supplémentaire
+              </button>
+            </div>
+          )}
 
           {tab === 'chat' && <div className="chat-wrap">
             <div className="chat-scroll">
