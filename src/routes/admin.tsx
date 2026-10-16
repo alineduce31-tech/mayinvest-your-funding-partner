@@ -208,8 +208,7 @@ function ClientPortal() {
   const chatEnd = useRef<HTMLDivElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const [attachOpen, setAttachOpen] = useState(false)
-  const [showQuickReplies, setShowQuickReplies] = useState(false)
-  function closeAttach() { setAttachOpen(false); setShowQuickReplies(false) }
+  function closeAttach() { setAttachOpen(false) }
   const [uploading, setUploading] = useState(false)
   const [documents, setDocuments] = useState<any[]>([])
   const docInput = useRef<HTMLInputElement>(null)
@@ -529,6 +528,17 @@ function ClientPortal() {
         /* ----- Portal : grand header unique mobile-first ----- */
         .c-portal-head { background: linear-gradient(135deg, #0D1B3E 0%, #1A3380 100%); color: #fff; border-radius: 20px; padding: 18px 16px 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.2); margin-bottom: 16px; position: relative; overflow: hidden; }
         @media (min-width: 640px) { .c-portal-head { padding: 24px 22px 20px; border-radius: 24px; margin-bottom: 20px; } }
+        /* PC : header en layout 2 colonnes (identité à gauche, score+actions à droite) */
+        @media (min-width: 900px) {
+          .c-wrap { max-width: 1000px; }
+          .c-portal-head { padding: 28px 32px; display: grid; grid-template-columns: 1fr auto; gap: 28px; align-items: center; }
+          .c-head-top { margin-bottom: 0; display: flex; flex-direction: column; align-items: flex-start; }
+          .c-head-identity { order: 1; }
+          .c-head-score { order: 2; margin-top: 12px; align-self: flex-start; }
+          .c-head-right { display: flex; flex-direction: column; gap: 12px; align-items: stretch; min-width: 220px; }
+          .c-head-meta { margin-bottom: 0; }
+          .c-head-actions { flex-direction: column !important; gap: 8px !important; width: 100%; }
+        }
         .c-portal-head::before { content: ''; position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(26,107,255,0.35), transparent 65%); pointer-events: none; }
         .c-head-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; position: relative; z-index: 1; }
         .c-head-identity { min-width: 0; flex: 1; }
@@ -598,19 +608,30 @@ function ClientPortal() {
         .c-contact-sub { font-size: 12px; color: #166534; line-height: 1.5; margin-bottom: 12px; }
         .c-btn-wa { width: 100%; background: #25D366; color: #fff; border: none; padding: 13px 20px; border-radius: 100px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
-        /* ----- Chat type WhatsApp / Messenger ----- */
-        .c-messenger { background: #fff; border-radius: 20px; box-shadow: 0 4px 14px rgba(13,27,62,0.05); overflow: hidden; display: flex; flex-direction: column; height: calc(100vh - 260px); min-height: 420px; }
-        /* Haki fab global masqué en mode chat (desktop + mobile) : l'œil dans la barre le remplace */
+        /* ----- Chat PLEIN ÉCRAN (mobile + PC) type Messenger ----- */
+        .c-messenger { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; height: 100dvh; background: #fff; display: flex; flex-direction: column; overflow: hidden; }
+        body:has(.c-messenger-fs-active) { overflow: hidden; }
         body:has(.c-messenger-fs-active) .c-haki-fab,
         body:has(.c-messenger-fs-active) .c-haki-panel { display: none !important; }
-        @media (max-width: 640px) {
-          /* Mode plein écran sur mobile */
-          .c-messenger { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; height: 100dvh; border-radius: 0; box-shadow: none; }
-          body:has(.c-messenger-fs-active) { overflow: hidden; }
+        /* Sur PC : centré en fenêtre avec max-width + fond flouté */
+        @media (min-width: 900px) {
+          .c-messenger {
+            top: 24px; bottom: 24px; left: 50%; right: auto;
+            transform: translateX(-50%);
+            width: calc(100% - 48px); max-width: 820px;
+            height: auto;
+            border-radius: 22px;
+            box-shadow: 0 30px 70px rgba(13,27,62,0.3), 0 10px 24px rgba(13,27,62,0.1);
+          }
+          body:has(.c-messenger-fs-active)::before {
+            content: ''; position: fixed; inset: 0; background: rgba(13,27,62,0.35); backdrop-filter: blur(8px); z-index: 49;
+            animation: c-fade 0.2s ease-out;
+          }
         }
         .c-msg-head { background: linear-gradient(135deg, #0D1B3E 0%, #1A3380 100%); color: #fff; padding: 14px 16px; display: flex; align-items: center; gap: 12px; }
-        .c-msg-head-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
-        @media (max-width: 640px) { .c-msg-head-back { display: flex; } }
+        @media (min-width: 900px) { .c-msg-head { padding: 18px 24px; border-radius: 22px 22px 0 0; } }
+        .c-msg-head-back { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); color: #fff; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; flex-shrink: 0; }
+        .c-msg-head-back:hover { background: rgba(255,255,255,0.2); }
         .c-msg-head-avatar { width: 42px; height: 42px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
         .c-msg-head-dot { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; background: #34D058; border: 2.5px solid #0D1B3E; }
         .c-msg-head-info { flex: 1; min-width: 0; }
@@ -752,7 +773,7 @@ function ClientPortal() {
       {commonStyle}
 
       <div className="c-wrap">
-        {/* ----- HEADER UNIQUE (le navy card = seul header) ----- */}
+        {/* ----- HEADER UNIQUE (2 cols sur PC, stacké sur mobile) ----- */}
         <div className="c-portal-head">
           <div className="c-head-top">
             <div className="c-head-identity">
@@ -763,22 +784,24 @@ function ClientPortal() {
               <div className="c-head-score-v">{lead?.score || 0}</div>
               <div className="c-head-score-l">/ 100</div>
             </div>
+            <div className="c-head-meta" style={{ marginTop: 12 }}>
+              <span className="c-chip c-chip-statut" style={{ background: col.bg, color: col.fg }}>● {lead?.statut}</span>
+              <span className="c-chip">{isP ? 'Particulier' : 'PME'}{lead?.activite ? ' · ' + lead.activite : ''}</span>
+              {lead?.ville && <span className="c-chip">📍 {lead.ville}</span>}
+            </div>
           </div>
-          <div className="c-head-meta">
-            <span className="c-chip c-chip-statut" style={{ background: col.bg, color: col.fg }}>● {lead?.statut}</span>
-            <span className="c-chip">{isP ? 'Particulier' : 'PME'}{lead?.activite ? ' · ' + lead.activite : ''}</span>
-            {lead?.ville && <span className="c-chip">📍 {lead.ville}</span>}
-          </div>
-          <div className="c-head-actions">
-            <button className="c-btn-chat-head" onClick={() => setActiveTab('chat')}>
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
-              Mon conseiller
-              {unreadMsgs > 0 && <span style={{ background: '#fff', color: '#25D366', fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 100, marginLeft: 4 }}>{unreadMsgs}</span>}
-            </button>
-            <button className="c-btn-logout" onClick={deconnecter}>
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 1h3v12H9M5 10l-3-3 3-3M2 7h8" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              Déconnexion
-            </button>
+          <div className="c-head-right">
+            <div className="c-head-actions">
+              <button className="c-btn-chat-head" onClick={() => setActiveTab('chat')}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
+                Mon conseiller
+                {unreadMsgs > 0 && <span style={{ background: '#fff', color: '#25D366', fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 100, marginLeft: 4 }}>{unreadMsgs}</span>}
+              </button>
+              <button className="c-btn-logout" onClick={deconnecter}>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 1h3v12H9M5 10l-3-3 3-3M2 7h8" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                Déconnexion
+              </button>
+            </div>
           </div>
         </div>
 
@@ -897,15 +920,15 @@ function ClientPortal() {
             <div className="c-msg-input-bar">
               {/* Bouton Haki : ouvre menu options */}
               <div className="c-msg-attach-wrap">
-                <button className={`c-msg-attach-btn ${attachOpen ? 'on' : ''}`} onClick={() => { if (attachOpen) closeAttach(); else { setAttachOpen(true); setShowQuickReplies(false) } }} aria-label="Options Haki" disabled={uploading}>
+                <button className={`c-msg-attach-btn ${attachOpen ? 'on' : ''}`} onClick={() => setAttachOpen(a => !a)} aria-label="Partager un fichier" disabled={uploading}>
                   <span className="c-msg-attach-eye">{hakiAvatar(36)}</span>
                   <span className="c-msg-attach-dot"/>
                 </button>
-                {attachOpen && !showQuickReplies && (
+                {attachOpen && (
                   <div className="c-attach-menu">
                     <div className="c-attach-head">
                       <span className="c-attach-haki-ic">{hakiAvatar(22)}</span>
-                      <span>Haki · Comment puis-je vous aider ?</span>
+                      <span>Haki · Partager un fichier</span>
                     </div>
                     <button className="c-attach-opt" onClick={() => { fileInput.current?.click() }}>
                       <span className="c-attach-ic" style={{ background: '#DCFCE7', color: '#166534' }}>
@@ -916,51 +939,6 @@ function ClientPortal() {
                         <div className="c-attach-sub">Photo, PDF, Word… (max 10 Mo)</div>
                       </div>
                     </button>
-                    <button className="c-attach-opt" onClick={() => setShowQuickReplies(true)}>
-                      <span className="c-attach-ic" style={{ background: '#EEF4FF', color: '#1A6BFF' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 4v-4z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/></svg>
-                      </span>
-                      <div>
-                        <div className="c-attach-ttl">Messages prêts</div>
-                        <div className="c-attach-sub">Suggestions adaptées à votre statut</div>
-                      </div>
-                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ marginLeft: 'auto', color: '#999' }}><path d="M5 3l4 4-4 4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                    </button>
-                  </div>
-                )}
-                {attachOpen && showQuickReplies && (
-                  <div className="c-attach-menu">
-                    <div className="c-attach-head">
-                      <button className="c-attach-back" onClick={() => setShowQuickReplies(false)} aria-label="Retour">
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </button>
-                      <span className="c-attach-haki-ic">{hakiAvatar(22)}</span>
-                      <span>Choisissez un message</span>
-                    </div>
-                    {(() => {
-                      const statut = lead?.statut || 'Nouveau'
-                      const quickReplies: string[] = (() => {
-                        if (statut === 'Nouveau') return ['Bonjour, pouvez-vous me rappeler quand mon dossier sera traité ?', 'Quelles sont les prochaines étapes ?', 'Je dois modifier une information de mon dossier']
-                        if (statut === 'Contacté') return ['Quels documents dois-je préparer ?', "Pouvez-vous me rappeler s'il vous plaît ?", 'Je suis disponible pour un rendez-vous']
-                        if (statut === 'RDV') return ['Pouvez-vous me confirmer la date du RDV ?', 'Quels documents dois-je apporter ?', 'Je souhaite reporter le rendez-vous']
-                        if (statut === 'Dossier Déposé') return ["Où en est l'analyse de mon dossier ?", 'Dans combien de temps aurai-je une réponse ?', "Avez-vous besoin d'autres documents ?"]
-                        if (statut === 'Éligible') return ['Quelles sont les conditions proposées ?', 'Quand les fonds seront-ils débloqués ?', 'Je souhaite finaliser le dossier']
-                        return ["Bonjour, j'ai une question sur mon dossier", 'Pouvez-vous me donner des nouvelles ?', 'Je souhaite discuter avec un conseiller']
-                      })()
-                      return quickReplies.map((q, i) => (
-                        <button key={i} className="c-attach-reply" onClick={() => {
-                          setNewMsg(q)
-                          closeAttach()
-                          setTimeout(() => {
-                            const ta = document.querySelector('.c-msg-input-field textarea') as HTMLTextAreaElement
-                            if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length) }
-                          }, 100)
-                        }}>
-                          <span className="c-attach-reply-ic">💬</span>
-                          <span>{q}</span>
-                        </button>
-                      ))
-                    })()}
                   </div>
                 )}
               </div>
