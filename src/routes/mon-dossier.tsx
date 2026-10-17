@@ -553,11 +553,11 @@ function MonDossier() {
           : !identifierOk ? 'start'
           : !password ? 'pwd'
           : 'ready'
-        const stepLabel = step === 'start' ? 'ÉTAPE 1 SUR 3 — IDENTIFICATION'
-          : step === 'id-focus' ? '💡 ASTUCE — IDENTIFIANT'
-          : step === 'pwd-focus' ? '💡 ASTUCE — MOT DE PASSE'
-          : step === 'pwd' ? 'ÉTAPE 2 SUR 3 — SÉCURITÉ'
-          : step === 'ready' ? 'ÉTAPE 3 SUR 3 — CONNEXION'
+        const stepLabel = step === 'start' ? 'ÉTAPE 1 SUR 3 · IDENTIFICATION'
+          : step === 'id-focus' ? '💡 ASTUCE · IDENTIFIANT'
+          : step === 'pwd-focus' ? '💡 ASTUCE · MOT DE PASSE'
+          : step === 'pwd' ? 'ÉTAPE 2 SUR 3 · SÉCURITÉ'
+          : step === 'ready' ? 'ÉTAPE 3 SUR 3 · CONNEXION'
           : 'OUPS, UNE ERREUR'
         return (
           <div className="hk-panel">
@@ -617,11 +617,11 @@ function MonDossier() {
                 {step === 'start' && demoStage === 'idle' && <>
                   <button className="hk-btn primary" onClick={() => runDemo('phone')}>
                     <IconPhone />
-                    <span>Voir une démo — Téléphone</span>
+                    <span>Voir une démo · Téléphone</span>
                   </button>
                   <button className="hk-btn outline" onClick={() => runDemo('email')}>
                     <IconMail />
-                    <span>Voir une démo — Email</span>
+                    <span>Voir une démo · Email</span>
                   </button>
                   <div className="hk-ex">
                     💡 Je vais vous montrer comment faire avant de vous laisser essayer
