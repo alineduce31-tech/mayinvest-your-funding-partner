@@ -223,26 +223,40 @@ function MonDossier() {
         .hk-fab:hover { transform: scale(1.08); }
         .hk-fab::after { content: ''; position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; background: #34D058; border: 2.5px solid #fff; border-radius: 50%; animation: hk-pulse 2.2s infinite; }
         @keyframes hk-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(52,208,88,0.5); } 50% { box-shadow: 0 0 0 6px rgba(52,208,88,0); } }
-        .hk-panel { position: fixed; bottom: 96px; right: 24px; z-index: 1000; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(13,27,62,0.25); width: 320px; max-width: calc(100vw - 32px); overflow: hidden; }
-        .hk-head { padding: 16px 48px 16px 16px; display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #0D1B3E 0%, #1A2F5F 100%); color: #fff; position: relative; }
+        .hk-panel { position: fixed; bottom: 96px; right: 24px; z-index: 1000; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(13,27,62,0.25); width: 360px; max-width: calc(100vw - 32px); overflow: hidden; }
+        .hk-head { padding: 16px 52px 16px 16px; display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #0D1B3E 0%, #1A2F5F 100%); color: #fff; position: relative; }
         .hk-ava-wrap { position: relative; flex-shrink: 0; }
-        .hk-ava { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #fff; border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; }
-        .hk-ava svg { width: 40px; height: 40px; display: block; }
-        .hk-name { font-weight: 800; font-size: 14px; line-height: 1.2; }
+        .hk-ava { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+        .hk-ava svg { width: 36px; height: 36px; display: block; }
+        .hk-status { position: absolute; bottom: -1px; right: -1px; width: 12px; height: 12px; border-radius: 50%; background: #34D058; border: 2px solid #0D1B3E; box-shadow: 0 0 8px rgba(52,208,88,0.6); }
+        .hk-name { font-weight: 800; font-size: 15px; line-height: 1.2; }
         .hk-sub { font-size: 11px; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 5px; margin-top: 3px; font-weight: 500; }
-        .hk-sub::before { content: ''; width: 7px; height: 7px; background: #34D058; border-radius: 50%; box-shadow: 0 0 8px rgba(52,208,88,0.6); flex-shrink: 0; }
+        .hk-sub::before { content: ''; width: 6px; height: 6px; background: #34D058; border-radius: 50%; flex-shrink: 0; }
         .hk-close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.12); border: none; color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
         .hk-close:hover { background: rgba(255,255,255,0.22); }
         .hk-close svg { display: block; margin: 0 auto; }
-        .hk-body { padding: 18px; }
-        .hk-msg { background: #EEF4FF; border: 1px solid rgba(26,107,255,0.2); border-radius: 14px; padding: 14px 16px; font-size: 13px; color: #0D1B3E; line-height: 1.55; }
-        .hk-msg-title { font-weight: 800; font-size: 13.5px; color: #1A6BFF; margin-bottom: 6px; }
-        .hk-msg strong { color: #1A6BFF; font-weight: 700; }
-        .hk-sep { text-align: center; font-size: 10px; font-weight: 700; color: #94A3B8; letter-spacing: 0.15em; margin: 14px 0; position: relative; }
-        .hk-sep::before, .hk-sep::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: #E5E7EB; }
+
+        .hk-body { padding: 16px; max-height: 60vh; overflow-y: auto; }
+        .hk-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; }
+        .hk-mini-ava { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: #fff; border: 1px solid #E5E7EB; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .hk-mini-ava svg { width: 28px; height: 28px; display: block; }
+        .hk-bubble { flex: 1; background: #F0F5FF; border: 1px solid rgba(26,107,255,0.15); border-radius: 14px; border-top-left-radius: 4px; padding: 12px 14px; font-size: 13px; color: #0D1B3E; line-height: 1.5; }
+        .hk-bubble strong { color: #1A6BFF; font-weight: 700; }
+        .hk-step { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; color: #1A6BFF; margin-bottom: 6px; }
+
+        .hk-actions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+        .hk-btn { padding: 11px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; width: 100%; transition: all 0.15s; border: 1.5px solid transparent; }
+        .hk-btn.primary { background: #1A6BFF; color: #fff; box-shadow: 0 4px 12px rgba(26,107,255,0.3); }
+        .hk-btn.primary:hover { background: #0051D4; transform: translateY(-1px); }
+        .hk-btn.outline { background: #fff; color: #0D1B3E; border-color: #E5E7EB; }
+        .hk-btn.outline:hover { border-color: #1A6BFF; color: #1A6BFF; background: #F0F5FF; }
+        .hk-ex { font-size: 11px; color: #64748B; text-align: center; margin-top: 4px; font-style: italic; }
+
+        .hk-sep { text-align: center; font-size: 10px; font-weight: 700; color: #94A3B8; letter-spacing: 0.12em; margin: 14px 0 10px; position: relative; }
+        .hk-sep::before, .hk-sep::after { content: ''; position: absolute; top: 50%; width: 20%; height: 1px; background: #E5E7EB; }
         .hk-sep::before { left: 0; }
         .hk-sep::after { right: 0; }
-        .hk-btn-wa { background: #25D366; color: #fff; border: none; padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: inherit; width: 100%; justify-content: center; transition: all 0.15s; }
+        .hk-btn-wa { background: #25D366; color: #fff; border: none; padding: 11px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: inherit; width: 100%; justify-content: center; transition: all 0.15s; }
         .hk-btn-wa:hover { background: #1EB558; transform: translateY(-1px); }
 
         /* Animation du regard Haki : 6 directions, 12s, fluide, sans clignement */
@@ -278,9 +292,14 @@ function MonDossier() {
           <div className="md-title">
             <div className={'md-title-icon ' + (canSubmit ? 'ok' : identifierOk ? 'half' : '')}>
               {canSubmit ? (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                /* Checkmark : tout prêt */
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              ) : identifierOk ? (
+                /* Cadenas ouvert : identifiant OK, mdp manquant */
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 017.5-2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="16" r="1.5" fill="#fff"/></svg>
               ) : (
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#fff" strokeWidth="2"/></svg>
+                /* Cadenas fermé : état initial */
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#fff" strokeWidth="2"/><circle cx="12" cy="16" r="1.5" fill="#fff"/></svg>
               )}
             </div>
             <h1>Accédez à votre dossier</h1>
@@ -354,65 +373,107 @@ function MonDossier() {
         </div>
       </div>
 
-      {/* HAKI FLOATING WIDGET — assistant contextuel */}
-      {hakiOpen && (
-        <div className="hk-panel">
-          <div className="hk-head">
-            <div className="hk-ava-wrap">
-              <div className="hk-ava">{hakiAvatar(40)}</div>
+      {/* HAKI FLOATING WIDGET — assistant interactif contextuel */}
+      {hakiOpen && (() => {
+        const step = error ? 'error' : !identifierOk ? 'start' : !password ? 'pwd' : 'ready'
+        const stepLabel = step === 'start' ? 'ÉTAPE 1 SUR 3 — IDENTIFICATION'
+          : step === 'pwd' ? 'ÉTAPE 2 SUR 3 — SÉCURITÉ'
+          : step === 'ready' ? 'ÉTAPE 3 SUR 3 — CONNEXION'
+          : 'OUPS, UNE ERREUR'
+        return (
+          <div className="hk-panel">
+            <div className="hk-head">
+              <div className="hk-ava-wrap">
+                <div className="hk-ava">{hakiAvatar(36)}</div>
+                <span className="hk-status"/>
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="hk-name">Haki</div>
+                <div className="hk-sub">En ligne · Assistante Mayinvest</div>
+              </div>
+              <button className="hk-close" onClick={() => setHakiOpen(false)} aria-label="Fermer">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
             </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="hk-name">Haki</div>
-              <div className="hk-sub">En ligne · Assistante Mayinvest</div>
-            </div>
-            <button className="hk-close" onClick={() => setHakiOpen(false)} aria-label="Fermer">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
-            </button>
-          </div>
-          <div className="hk-body">
-            {/* Message contextuel qui s'adapte à l'état du formulaire */}
-            {(() => {
-              if (error) {
-                return (
-                  <div className="hk-msg">
-                    <div className="hk-msg-title">Pas de panique 💪</div>
-                    <div>Vérifiez votre {tab === 'phone' ? 'numéro (9 chiffres sans espace)' : 'email'} et votre mot de passe. Si vous l'avez oublié, cliquez sur <strong>Réinitialiser par email</strong> en bas du formulaire.</div>
-                  </div>
-                )
-              }
-              if (!identifierOk) {
-                return (
-                  <div className="hk-msg">
-                    <div className="hk-msg-title">Bienvenue ! 👋</div>
-                    <div>Pour accéder à votre dossier, choisissez <strong>{tab === 'phone' ? 'Téléphone' : 'Email'}</strong> puis entrez votre {tab === 'phone' ? 'numéro à 9 chiffres' : 'adresse email'}.</div>
-                  </div>
-                )
-              }
-              if (!password) {
-                return (
-                  <div className="hk-msg">
-                    <div className="hk-msg-title">Dernière étape 🔐</div>
-                    <div>Entrez maintenant votre <strong>mot de passe</strong> (celui que vous avez choisi lors de l'inscription).</div>
-                  </div>
-                )
-              }
-              return (
-                <div className="hk-msg">
-                  <div className="hk-msg-title">Prêt à vous connecter ✓</div>
-                  <div>Tout est bon ! Cliquez sur <strong>Accéder à mon dossier</strong> pour continuer.</div>
+            <div className="hk-body">
+              {/* Mini avatar + bulle contextuelle */}
+              <div className="hk-row">
+                <div className="hk-mini-ava">{hakiAvatar(28)}</div>
+                <div className="hk-bubble">
+                  <div className="hk-step">{stepLabel}</div>
+                  {step === 'start' && <>
+                    <div><strong>Bienvenue sur Mayinvest ! 👋</strong></div>
+                    <div style={{ marginTop: 6 }}>Comment préférez-vous vous connecter ?</div>
+                  </>}
+                  {step === 'pwd' && <>
+                    <div><strong>Super ! {tab === 'phone' ? '📱 ' + phone : '✉️ ' + email}</strong></div>
+                    <div style={{ marginTop: 6 }}>Entrez maintenant votre mot de passe. Si vous l'avez oublié, pas de souci, je peux vous aider.</div>
+                  </>}
+                  {step === 'ready' && <>
+                    <div><strong>Parfait, tout est prêt ! ✓</strong></div>
+                    <div style={{ marginTop: 6 }}>Je peux vous connecter maintenant.</div>
+                  </>}
+                  {step === 'error' && <>
+                    <div><strong>Oups 💪</strong></div>
+                    <div style={{ marginTop: 6 }}>{error}. Essayons autre chose :</div>
+                  </>}
                 </div>
-              )
-            })()}
+              </div>
 
-            <div className="hk-sep">OU</div>
+              {/* Boutons d'action contextuels */}
+              <div className="hk-actions">
+                {step === 'start' && <>
+                  <button className={'hk-btn ' + (tab === 'phone' ? 'primary' : 'outline')} onClick={() => { setTab('phone'); setError('') }}>
+                    <IconPhone />
+                    <span>Par téléphone (9 chiffres)</span>
+                  </button>
+                  <button className={'hk-btn ' + (tab === 'email' ? 'primary' : 'outline')} onClick={() => { setTab('email'); setError('') }}>
+                    <IconMail />
+                    <span>Par email</span>
+                  </button>
+                  <div className="hk-ex">
+                    Exemple : {tab === 'phone' ? '06 53 13 187' : 'jean.pierre@gmail.com'}
+                  </div>
+                </>}
 
-            <button className="hk-btn-wa" onClick={openExpertWA}>
-              <IconWA />
-              Parler à un conseiller
-            </button>
+                {step === 'pwd' && <>
+                  <button className="hk-btn primary" onClick={() => { setShowForgot(true); setHakiOpen(false) }}>
+                    🔑 J'ai oublié mon mot de passe
+                  </button>
+                  <button className="hk-btn outline" onClick={() => { setTab(tab === 'phone' ? 'email' : 'phone'); setError('') }}>
+                    {tab === 'phone' ? <><IconMail /><span>Me connecter avec email</span></> : <><IconPhone /><span>Me connecter avec téléphone</span></>}
+                  </button>
+                </>}
+
+                {step === 'ready' && <>
+                  <button className="hk-btn primary" onClick={() => { setHakiOpen(false); tryLogin() }}>
+                    ✓ Me connecter maintenant
+                  </button>
+                </>}
+
+                {step === 'error' && <>
+                  <button className="hk-btn primary" onClick={() => { setError(''); setPassword('') }}>
+                    🔄 Je réessaie mon mot de passe
+                  </button>
+                  <button className="hk-btn outline" onClick={() => { setShowForgot(true); setHakiOpen(false); setError('') }}>
+                    🔑 Mot de passe oublié
+                  </button>
+                  <button className="hk-btn outline" onClick={() => { setTab(tab === 'phone' ? 'email' : 'phone'); setError(''); setPassword('') }}>
+                    {tab === 'phone' ? <><IconMail /><span>Essayer avec email</span></> : <><IconPhone /><span>Essayer avec téléphone</span></>}
+                  </button>
+                </>}
+              </div>
+
+              <div className="hk-sep">OU EN DERNIER RECOURS</div>
+
+              <button className="hk-btn-wa" onClick={openExpertWA}>
+                <IconWA />
+                Parler à un conseiller
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
       <button className="hk-fab" onClick={() => setHakiOpen(!hakiOpen)} aria-label="Haki">
         {hakiAvatar(44)}
       </button>
