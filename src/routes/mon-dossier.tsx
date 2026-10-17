@@ -92,7 +92,7 @@ function MonDossier() {
   const [iconIdx, setIconIdx] = useState(0)
   const [activeField, setActiveField] = useState<'none' | 'identifier' | 'password'>('none')
   const [autoMode, setAutoMode] = useState<boolean>(() => {
-    try { return localStorage.getItem('mayinvest_haki_auto_login') !== '0' } catch { return true }
+    try { return localStorage.getItem('mayinvest_haki_auto_global') !== '0' } catch { return true }
   })
   const [hakiDeclined, setHakiDeclined] = useState<boolean>(() => {
     try { return localStorage.getItem('mayinvest_haki_declined_login') === '1' } catch { return false }
@@ -178,7 +178,7 @@ function MonDossier() {
   function toggleAutoMode() {
     const next = !autoMode
     setAutoMode(next)
-    try { localStorage.setItem('mayinvest_haki_auto_login', next ? '1' : '0') } catch {}
+    try { localStorage.setItem('mayinvest_haki_auto_global', next ? '1' : '0') } catch {}
   }
 
   function declineHaki() {
