@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Logo } from '@/components/Logo'
+import { trackHaki } from '@/lib/haki-tracking'
+const PAGE = '/index'
 
 /* Avatar Haki */
 function hakiEye(size: number) {
@@ -64,8 +66,9 @@ function Index() {
 
   // Haki s'ouvre automatiquement 2s après le chargement si auto activé ET pas décliné
   useEffect(() => {
+    trackHaki(PAGE, 'page_view')
     if (!hakiAuto || hakiDeclined) return
-    const t = setTimeout(() => setHakiOpen(true), 2000)
+    const t = setTimeout(() => { setHakiOpen(true); trackHaki(PAGE, 'haki_open', { trigger: 'auto' }) }, 2000)
     return () => clearTimeout(t)
   }, [])  // eslint-disable-line
 
@@ -73,18 +76,22 @@ function Index() {
     setHakiDeclined(true)
     setHakiOpen(false)
     try { localStorage.setItem('mayinvest_haki_declined_home', '1') } catch {}
+    trackHaki(PAGE, 'haki_declined')
   }
   function toggleHakiHome() {
     if (!hakiOpen && hakiDeclined) {
       setHakiDeclined(false)
       try { localStorage.setItem('mayinvest_haki_declined_home', '0') } catch {}
     }
-    setHakiOpen(!hakiOpen)
+    const next = !hakiOpen
+    setHakiOpen(next)
+    trackHaki(PAGE, next ? 'haki_open' : 'haki_close', { trigger: 'manual' })
   }
   function toggleHakiAuto() {
     const next = !hakiAuto
     setHakiAuto(next)
     try { localStorage.setItem('mayinvest_haki_auto_global', next ? '1' : '0') } catch {}
+    trackHaki(PAGE, 'auto_mode_toggle', { enabled: next })
   }
   function resetHaki() {
     setHakiStage('welcome')
@@ -93,14 +100,17 @@ function Index() {
   function pickProfile(p: 'p' | 'm') {
     setProfile(p)
     setHakiStage(p === 'p' ? 'need-p' : 'need-m')
+    trackHaki(PAGE, 'option_click', { label: p === 'p' ? 'Particulier' : 'PME', step: 'profile' })
   }
   function pickNeed(n: string, amt?: string) {
     setNeed(n)
     if (amt) setAmount(amt)
     setHakiStage('result')
+    trackHaki(PAGE, 'option_click', { label: n, step: 'need', profile })
   }
   function hakiGoPreselection() {
     setHakiOpen(false)
+    trackHaki(PAGE, 'cta_click', { label: 'Démarrer ma présélection', target: '/preselection', profile, need })
     if (profile === 'p') gotoP()
     else if (profile === 'm') gotoM()
     else goto()
@@ -503,7 +513,7 @@ function Index() {
                 <div className="ix-row">
                   <div className="ix-mini-ava">{hakiEye(32)}</div>
                   <div className="ix-bubble">
-                    <div className="ix-step">ÉTAPE 1 SUR 2 — VOTRE PROFIL</div>
+                    <div className="ix-step">ÉTAPE 1 SUR 2 · VOTRE PROFIL</div>
                     <div>Pour vous orienter vers la bonne offre, dites-moi : vous demandez le financement à titre <strong>personnel</strong> ou pour votre <strong>entreprise</strong> ?</div>
                   </div>
                 </div>
@@ -527,7 +537,7 @@ function Index() {
                 <div className="ix-row">
                   <div className="ix-mini-ava">{hakiEye(32)}</div>
                   <div className="ix-bubble">
-                    <div className="ix-step">ÉTAPE 2 SUR 2 — VOTRE BESOIN</div>
+                    <div className="ix-step">ÉTAPE 2 SUR 2 · VOTRE BESOIN</div>
                     <div><strong>Super ! 👤 Particulier.</strong></div>
                     <div style={{ marginTop: 4 }}>Quel est votre projet de financement ?</div>
                   </div>
@@ -550,7 +560,7 @@ function Index() {
                 <div className="ix-row">
                   <div className="ix-mini-ava">{hakiEye(32)}</div>
                   <div className="ix-bubble">
-                    <div className="ix-step">ÉTAPE 2 SUR 2 — VOTRE BESOIN</div>
+                    <div className="ix-step">ÉTAPE 2 SUR 2 · VOTRE BESOIN</div>
                     <div><strong>Super ! 🏢 Entreprise.</strong></div>
                     <div style={{ marginTop: 4 }}>Pour quel usage avez-vous besoin de ce financement ?</div>
                   </div>
@@ -581,7 +591,7 @@ function Index() {
                 <div className="ix-result">
                   <strong>📊 Ce que je peux faire pour vous :</strong>
                   <div style={{ marginTop: 6, fontSize: 12.5 }}>
-                    En 2 minutes, je calcule votre <strong>score d'éligibilité</strong> sur 100 selon les critères des banques partenaires. Vous saurez immédiatement si votre dossier a toutes ses chances — ou ce qu'il faut améliorer avant.
+                    En 2 minutes, je calcule votre <strong>score d'éligibilité</strong> sur 100 selon les critères des banques partenaires. Vous saurez immédiatement si votre dossier a toutes ses chances, ou ce qu'il faut améliorer avant.
                   </div>
                   <div className="ix-stat-row">
                     <div className="ix-stat"><div className="ix-stat-v">87%</div><div className="ix-stat-l">Taux d'accord</div></div>
@@ -604,7 +614,7 @@ function Index() {
             <div className="ix-auto-row">
               <div>
                 <div className="ix-auto-label">Mode automatique</div>
-                <div className="ix-auto-state">{hakiAuto ? 'Activé — Haki vous accompagne partout' : 'Désactivé — Haki reste disponible via l\'œil'}</div>
+                <div className="ix-auto-state">{hakiAuto ? 'Activé · Haki vous accompagne partout' : 'Désactivé · Haki reste disponible via l\'œil'}</div>
               </div>
               <button className={'ix-switch ' + (hakiAuto ? 'on' : '')} onClick={toggleHakiAuto} aria-label="Mode automatique">
                 <span className="ix-switch-knob"/>
