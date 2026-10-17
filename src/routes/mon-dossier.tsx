@@ -214,9 +214,10 @@ function MonDossier() {
         .md-msg-sub::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34D058; }
         .md-info { background: linear-gradient(135deg, #EEF4FF 0%, #DBE8FF 100%); border: 1.5px solid rgba(26,107,255,0.2); border-radius: 14px; padding: 12px 14px; font-size: 12.5px; color: #0D1B3E; line-height: 1.5; margin-bottom: 14px; }
 
-        .hk-fab { position: fixed; bottom: 24px; right: 24px; z-index: 1000; width: 60px; height: 60px; border-radius: 50%; background: #fff; border: 2px solid #0D1B3E; box-shadow: 0 12px 32px rgba(13,27,62,0.25); cursor: pointer; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .hk-fab { position: fixed; bottom: 24px; right: 24px; z-index: 1000; width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 3px solid #fff; box-shadow: 0 14px 32px rgba(13,27,62,0.25), 0 4px 10px rgba(13,27,62,0.08); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
         .hk-fab:hover { transform: scale(1.08); }
-        .hk-fab::after { content: ''; position: absolute; top: 3px; right: 3px; width: 14px; height: 14px; background: #34D058; border: 2px solid #fff; border-radius: 50%; }
+        .hk-fab::after { content: ''; position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; background: #34D058; border: 2.5px solid #fff; border-radius: 50%; animation: hk-pulse 2.2s infinite; }
+        @keyframes hk-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(52,208,88,0.5); } 50% { box-shadow: 0 0 0 6px rgba(52,208,88,0); } }
         .hk-panel { position: fixed; bottom: 96px; right: 24px; z-index: 1000; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(13,27,62,0.25); width: 320px; max-width: calc(100vw - 32px); overflow: hidden; }
         .hk-head { padding: 18px 20px; display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #0D1B3E 0%, #1A2F5F 100%); color: #fff; position: relative; }
         .hk-ava { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0; }
@@ -344,7 +345,7 @@ function MonDossier() {
         </div>
       )}
       <button className="hk-fab" onClick={() => setHakiOpen(!hakiOpen)} aria-label="Haki">
-        {hakiAvatar(56)}
+        {hakiAvatar(44)}
       </button>
 
       {showForgot && (
