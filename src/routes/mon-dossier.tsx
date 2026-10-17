@@ -187,6 +187,16 @@ function MonDossier() {
     try { localStorage.setItem('mayinvest_haki_declined_login', '1') } catch {}
   }
 
+  // Clic manuel sur l'œil : si l'utilisateur veut Haki, on réactive l'auto-ouverture aussi
+  function toggleHakiManually() {
+    if (!hakiOpen && hakiDeclined) {
+      // Il a changé d'avis, on réactive Haki
+      setHakiDeclined(false)
+      try { localStorage.setItem('mayinvest_haki_declined_login', '0') } catch {}
+    }
+    setHakiOpen(!hakiOpen)
+  }
+
   function openExpertWA() {
     const msg = encodeURIComponent("Bonjour, j'aimerais parler à un conseiller Mayinvest.")
     window.open('https://wa.me/24265313187?text=' + msg, '_blank')
@@ -533,7 +543,7 @@ function MonDossier() {
       </div>
 
       {/* HAKI FLOATING WIDGET — assistant interactif contextuel */}
-      {hakiOpen && !hakiDeclined && (() => {
+      {hakiOpen && (() => {
         // Priorité : erreur > champ actif > progression du formulaire
         const step = error ? 'error'
           : activeField === 'password' ? 'pwd-focus'
@@ -728,7 +738,7 @@ function MonDossier() {
           </div>
         )
       })()}
-      <button className="hk-fab" onClick={() => setHakiOpen(!hakiOpen)} aria-label="Haki">
+      <button className="hk-fab" onClick={toggleHakiManually} aria-label="Haki">
         {hakiAvatar(44)}
       </button>
 
