@@ -323,11 +323,13 @@ function MonDossier() {
         .md-forgot { text-align: center; margin-top: 16px; font-size: 13px; color: #666; }
         .md-forgot a { color: #1A6BFF; font-weight: 700; cursor: pointer; }
         .md-modal { position: fixed; inset: 0; background: rgba(13,27,62,0.6); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
-        .md-modal-card { background: #fff; border-radius: 20px; padding: 28px 24px; max-width: 400px; width: 100%; }
-        .md-modal-close { background: #F0F2F5; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: 700; font-size: 16px; }
+        .md-modal-card { background: #fff; border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; }
+        .md-modal-close { background: #F0F2F5; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #64748B; padding: 0; }
+        .md-modal-close:hover { background: #E5E7EB; color: #0D1B3E; }
         .md-whats { background: #25D366; color: #fff; border: none; padding: 12px; border-radius: 100px; font-weight: 700; font-size: 13px; cursor: pointer; width: 100%; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; }
         .md-msg-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #F0F2F5; }
-        .md-msg-ava { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; border: 2px solid #EEF4FF; flex-shrink: 0; }
+        .md-msg-ava { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: transparent; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .md-msg-ava svg { width: 44px; height: 44px; display: block; }
         .md-msg-name { font-size: 14px; font-weight: 800; color: #0D1B3E; }
         .md-msg-sub { font-size: 11px; color: #666; display: flex; align-items: center; gap: 5px; margin-top: 2px; }
         .md-msg-sub::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34D058; }
@@ -745,9 +747,11 @@ function MonDossier() {
       {showForgot && (
         <div className="md-modal" onClick={() => setShowForgot(false)}>
           <div className="md-modal-card" onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 18, color: '#0D1B3E' }}>Réinitialiser</h3>
-              <button className="md-modal-close" onClick={() => setShowForgot(false)}>x</button>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800, color: '#0D1B3E', letterSpacing: '-0.02em' }}>Réinitialiser</h3>
+              <button className="md-modal-close" onClick={() => setShowForgot(false)} aria-label="Fermer">
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+              </button>
             </div>
             <div className="md-msg-head">
               <div className="md-msg-ava">{hakiAvatar(44)}</div>
