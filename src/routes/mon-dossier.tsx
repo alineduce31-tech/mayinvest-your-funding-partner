@@ -188,9 +188,10 @@ function MonDossier() {
         .md-wrap { max-width: 440px; margin: 48px auto; padding: 0 20px; }
         .md-card { background: #fff; border-radius: 24px; padding: 36px 28px; box-shadow: 0 20px 50px rgba(13,27,62,0.08); border: 1px solid #F0F2F5; }
         .md-title { text-align: center; margin-bottom: 28px; }
-        .md-title-icon { width: 56px; height: 56px; border-radius: 16px; background: #0D1B3E; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 10px 24px rgba(13,27,62,0.2); transition: all 0.3s; }
+        .md-title-icon { width: 56px; height: 56px; border-radius: 16px; background: #0D1B3E; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 10px 24px rgba(13,27,62,0.2); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
         .md-title-icon.half { background: linear-gradient(135deg, #1A6BFF 0%, #0051D4 100%); box-shadow: 0 10px 24px rgba(26,107,255,0.3); }
-        .md-title-icon.ok { background: #16A34A; box-shadow: 0 10px 24px rgba(22,163,74,0.3); transform: scale(1.05); }
+        .md-title-icon.folder { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); box-shadow: 0 10px 24px rgba(245,158,11,0.35); }
+        .md-title-icon.ok { background: #16A34A; box-shadow: 0 10px 24px rgba(22,163,74,0.35); transform: scale(1.08); }
         .md-title h1 { font-size: 24px; font-weight: 800; color: #0D1B3E; margin: 0 0 8px; letter-spacing: -0.02em; }
         .md-title p { font-size: 13px; color: #666; margin: 0; }
         .md-tabs { display: flex; gap: 6px; background: #F0F2F5; border-radius: 12px; padding: 4px; margin-bottom: 14px; }
@@ -226,8 +227,8 @@ function MonDossier() {
         .hk-panel { position: fixed; bottom: 96px; right: 24px; z-index: 1000; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(13,27,62,0.25); width: 360px; max-width: calc(100vw - 32px); overflow: hidden; }
         .hk-head { padding: 16px 52px 16px 16px; display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #0D1B3E 0%, #1A2F5F 100%); color: #fff; position: relative; }
         .hk-ava-wrap { position: relative; flex-shrink: 0; }
-        .hk-ava { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #fff; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
-        .hk-ava svg { width: 36px; height: 36px; display: block; }
+        .hk-ava { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: transparent; display: flex; align-items: center; justify-content: center; }
+        .hk-ava svg { width: 44px; height: 44px; display: block; }
         .hk-status { position: absolute; bottom: -1px; right: -1px; width: 12px; height: 12px; border-radius: 50%; background: #34D058; border: 2px solid #0D1B3E; box-shadow: 0 0 8px rgba(52,208,88,0.6); }
         .hk-name { font-weight: 800; font-size: 15px; line-height: 1.2; }
         .hk-sub { font-size: 11px; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 5px; margin-top: 3px; font-weight: 500; }
@@ -238,8 +239,8 @@ function MonDossier() {
 
         .hk-body { padding: 16px; max-height: 60vh; overflow-y: auto; }
         .hk-row { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 14px; }
-        .hk-mini-ava { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: #fff; border: 1px solid #E5E7EB; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-        .hk-mini-ava svg { width: 28px; height: 28px; display: block; }
+        .hk-mini-ava { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; background: transparent; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+        .hk-mini-ava svg { width: 32px; height: 32px; display: block; }
         .hk-bubble { flex: 1; background: #F0F5FF; border: 1px solid rgba(26,107,255,0.15); border-radius: 14px; border-top-left-radius: 4px; padding: 12px 14px; font-size: 13px; color: #0D1B3E; line-height: 1.5; }
         .hk-bubble strong { color: #1A6BFF; font-weight: 700; }
         .hk-step { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; color: #1A6BFF; margin-bottom: 6px; }
@@ -290,10 +291,13 @@ function MonDossier() {
       <div className="md-wrap">
         <div className="md-card">
           <div className="md-title">
-            <div className={'md-title-icon ' + (canSubmit ? 'ok' : identifierOk ? 'half' : '')}>
+            <div className={'md-title-icon ' + (canSubmit ? 'ok' : password ? 'folder' : identifierOk ? 'half' : '')}>
               {canSubmit ? (
-                /* Checkmark : tout prêt */
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                /* Dossier OUVERT avec coche : prêt à entrer */
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/><path d="M9 14l2 2 4-4" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              ) : password ? (
+                /* Dossier simple : mdp en cours de saisie */
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
               ) : identifierOk ? (
                 /* Cadenas ouvert : identifiant OK, mdp manquant */
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 017.5-2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="16" r="1.5" fill="#fff"/></svg>
