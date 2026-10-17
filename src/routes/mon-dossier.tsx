@@ -34,13 +34,15 @@ function hakiAvatar(size: number) {
       <circle cx="100" cy="100" r="95" fill="none" stroke="#000" strokeWidth="4"/>
       <path d="M15 120 Q 40 115, 55 125" stroke="#f0a0a0" strokeWidth="1.2" fill="none" opacity="0.5"/>
       <path d="M185 90 Q 165 100, 150 90" stroke="#f0a0a0" strokeWidth="1.2" fill="none" opacity="0.5"/>
-      <circle cx="100" cy="100" r="55" fill="url(#md-iris)"/>
-      <circle cx="100" cy="100" r="55" fill="none" stroke="#1a0d04" strokeWidth="2.5" opacity="0.6"/>
-      <circle cx="100" cy="100" r="40" fill="none" stroke="#2a1a0a" strokeWidth="1.5" opacity="0.4"/>
-      <circle cx="100" cy="100" r="22" fill="#000"/>
-      <ellipse cx="112" cy="85" rx="10" ry="8" fill="#fff" opacity="0.95"/>
-      <circle cx="90" cy="110" r="4.5" fill="#fff" opacity="0.75"/>
-      <circle cx="120" cy="112" r="2.5" fill="#fff" opacity="0.6"/>
+      <g className="md-eye-ball">
+        <circle cx="100" cy="100" r="55" fill="url(#md-iris)"/>
+        <circle cx="100" cy="100" r="55" fill="none" stroke="#1a0d04" strokeWidth="2.5" opacity="0.6"/>
+        <circle cx="100" cy="100" r="40" fill="none" stroke="#2a1a0a" strokeWidth="1.5" opacity="0.4"/>
+        <circle cx="100" cy="100" r="22" fill="#000"/>
+        <ellipse cx="112" cy="85" rx="10" ry="8" fill="#fff" opacity="0.95"/>
+        <circle cx="90" cy="110" r="4.5" fill="#fff" opacity="0.75"/>
+        <circle cx="120" cy="112" r="2.5" fill="#fff" opacity="0.6"/>
+      </g>
       <ellipse cx="60" cy="45" rx="30" ry="18" fill="#fff" opacity="0.35"/>
     </svg>
   )
@@ -89,7 +91,7 @@ function MonDossier() {
   const [forgotLoading, setForgotLoading] = useState(false)
 
   function openExpertWA() {
-    const msg = encodeURIComponent("Bonjour, j'aimerais parler a un conseiller Mayinvest.")
+    const msg = encodeURIComponent("Bonjour, j'aimerais parler à un conseiller Mayinvest.")
     window.open('https://wa.me/24265313187?text=' + msg, '_blank')
   }
 
@@ -99,14 +101,14 @@ function MonDossier() {
     try {
       if (tab === 'phone') {
         if (phone.length !== 9) {
-          setError('Telephone invalide (9 chiffres)')
+          setError('Téléphone invalide (9 chiffres)')
           setLoading(false)
           return
         }
         const { data } = await supabase.rpc('verify_lead_password_by_phone', { p_phone: phone, p_password: password })
         const row: any = Array.isArray(data) && data[0] ? data[0] : null
         if (!row) {
-          setError('Telephone ou mot de passe incorrect')
+          setError('Téléphone ou mot de passe incorrect')
           setLoading(false)
           return
         }
@@ -162,7 +164,7 @@ function MonDossier() {
       if (!resp.ok) {
         setForgotMsg('Erreur envoi email. Contactez le support WhatsApp.')
       } else {
-        setForgotMsg('OK Email envoye ! Verifiez votre boite (et spams). Lien valable 1h.')
+        setForgotMsg('OK Email envoyé ! Vérifiez votre boîte (et spams). Lien valable 1h.')
       }
     } catch {
       setForgotMsg('Erreur. Contactez le support WhatsApp.')
@@ -231,6 +233,18 @@ function MonDossier() {
         .hk-phone { text-align: center; font-size: 11px; color: #666; margin-top: 12px; font-weight: 500; }
         .hk-phone strong { color: #0D1B3E; font-weight: 800; }
 
+        /* Animation du regard Haki : 6 directions, 12s, fluide, sans clignement */
+        .md-eye-ball { transform-origin: 100px 100px; animation: md-eye-look 12s ease-in-out infinite; }
+        @keyframes md-eye-look {
+          0%, 10%    { transform: translate(0, 0); }
+          16%, 26%   { transform: translate(20px, 0); }
+          32%, 42%   { transform: translate(15px, 15px); }
+          48%, 58%   { transform: translate(-15px, 15px); }
+          64%, 74%   { transform: translate(-20px, 0); }
+          80%, 90%   { transform: translate(0, -15px); }
+          100%       { transform: translate(0, 0); }
+        }
+
         @media (max-width: 640px) {
           .md-wrap { margin: 24px auto; }
           .md-head { padding: 12px 16px; }
@@ -250,14 +264,14 @@ function MonDossier() {
       <div className="md-wrap">
         <div className="md-card">
           <div className="md-title">
-            <h1>Accedez a votre dossier</h1>
-            <p>Identifiez-vous avec votre telephone ou email + mot de passe.</p>
+            <h1>Accédez à votre dossier</h1>
+            <p>Identifiez-vous avec votre téléphone ou email + mot de passe.</p>
           </div>
 
           <div className="md-tabs">
             <button className={'md-tab ' + (tab === 'phone' ? 'on' : '')} onClick={() => { setTab('phone'); setError('') }}>
               <IconPhone />
-              Telephone
+              Téléphone
             </button>
             <button className={'md-tab ' + (tab === 'email' ? 'on' : '')} onClick={() => { setTab('email'); setError('') }}>
               <IconMail />
@@ -267,7 +281,7 @@ function MonDossier() {
 
           {tab === 'phone' ? (
             <div className="md-field">
-              <label>Telephone (9 chiffres)</label>
+              <label>Téléphone (9 chiffres)</label>
               <input
                 type="tel"
                 inputMode="numeric"
@@ -305,7 +319,7 @@ function MonDossier() {
           </div>
 
           <button className="md-btn" disabled={!canSubmit} onClick={tryLogin}>
-            {loading ? 'Connexion...' : (<>Acceder a mon dossier <IconArrowRight /></>)}
+            {loading ? 'Connexion…' : (<>Accéder à mon dossier <IconArrowRight /></>)}
           </button>
 
           {error && (
@@ -316,7 +330,7 @@ function MonDossier() {
           )}
 
           <div className="md-forgot">
-            Mot de passe oublie ? <a onClick={() => setShowForgot(true)}>Reinitialiser par email</a>
+            Mot de passe oublié ? <a onClick={() => setShowForgot(true)}>Réinitialiser par email</a>
           </div>
         </div>
       </div>
@@ -328,13 +342,13 @@ function MonDossier() {
             <div className="hk-ava">{hakiAvatar(40)}</div>
             <div style={{ flex: 1 }}>
               <div className="hk-name">Haki</div>
-              <div className="hk-sub">En ligne - Assistante Mayinvest</div>
+              <div className="hk-sub">En ligne · Assistante Mayinvest</div>
             </div>
             <button className="hk-close" onClick={() => setHakiOpen(false)} aria-label="Fermer">x</button>
           </div>
           <div className="hk-body">
             <div className="hk-msg">
-              Besoin d'aide pour vous connecter ou retrouver votre dossier ? Un conseiller Mayinvest repond directement sur WhatsApp.
+              👋 Besoin d'aide pour vous connecter ou retrouver votre dossier ? Un conseiller Mayinvest répond directement sur WhatsApp.
             </div>
             <button className="hk-btn-wa" onClick={openExpertWA}>
               <IconWA />
@@ -352,25 +366,25 @@ function MonDossier() {
         <div className="md-modal" onClick={() => setShowForgot(false)}>
           <div className="md-modal-card" onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h3 style={{ margin: 0, fontSize: 18, color: '#0D1B3E' }}>Reinitialiser</h3>
+              <h3 style={{ margin: 0, fontSize: 18, color: '#0D1B3E' }}>Réinitialiser</h3>
               <button className="md-modal-close" onClick={() => setShowForgot(false)}>x</button>
             </div>
             <div className="md-msg-head">
               <div className="md-msg-ava">{hakiAvatar(44)}</div>
               <div>
                 <div className="md-msg-name">Haki vous aide</div>
-                <div className="md-msg-sub">Je vous envoie le lien</div>
+                <div className="md-msg-sub">Je vous envoie le lien par email</div>
               </div>
             </div>
             <div className="md-info">
-              Entrez l'email de votre dossier. Je vous enverrai un lien pour choisir un nouveau mot de passe (valable 1h).
+              📧 Entrez l'email de votre dossier. Je vous enverrai un lien pour choisir un nouveau mot de passe (valable 1h).
             </div>
             <div className="md-field">
               <label>Email du dossier</label>
               <input type="email" placeholder="votre@email.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} />
             </div>
             <button className="md-btn" disabled={forgotLoading || !forgotEmail.includes('@')} onClick={sendResetEmail}>
-              {forgotLoading ? 'Envoi...' : 'Envoyer le lien par email'}
+              {forgotLoading ? 'Envoi…' : 'Envoyer le lien par email'}
             </button>
             {forgotMsg && (
               <div style={{
