@@ -524,11 +524,11 @@ function Simulation() {
   const [hakiAccepted, setHakiAccepted] = useState<boolean>(() => { try { return localStorage.getItem('mayinvest_haki_accepted') === '1' } catch { return false } })
   const [hakiDeclined, setHakiDeclined] = useState<boolean>(() => { try { return localStorage.getItem('mayinvest_haki_declined') === '1' } catch { return false } })
   // Mode auto : activé par défaut, mémorisé par le navigateur
-  const [autoMode, setAutoMode] = useState<boolean>(() => { try { const v = localStorage.getItem('mayinvest_haki_auto'); return v === null ? true : v === '1' } catch { return true } })
+  const [autoMode, setAutoMode] = useState<boolean>(() => { try { const v = localStorage.getItem('mayinvest_haki_auto_global'); return v === null ? true : v === '1' } catch { return true } })
   function toggleAutoMode() {
     setAutoMode(m => {
       const next = !m
-      try { localStorage.setItem('mayinvest_haki_auto', next ? '1' : '0') } catch {}
+      try { localStorage.setItem('mayinvest_haki_auto_global', next ? '1' : '0') } catch {}
       return next
     })
   }
