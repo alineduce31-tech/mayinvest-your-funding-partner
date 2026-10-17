@@ -188,6 +188,9 @@ function MonDossier() {
         .md-wrap { max-width: 440px; margin: 48px auto; padding: 0 20px; }
         .md-card { background: #fff; border-radius: 24px; padding: 36px 28px; box-shadow: 0 20px 50px rgba(13,27,62,0.08); border: 1px solid #F0F2F5; }
         .md-title { text-align: center; margin-bottom: 28px; }
+        .md-title-icon { width: 56px; height: 56px; border-radius: 16px; background: #0D1B3E; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 10px 24px rgba(13,27,62,0.2); transition: all 0.3s; }
+        .md-title-icon.half { background: linear-gradient(135deg, #1A6BFF 0%, #0051D4 100%); box-shadow: 0 10px 24px rgba(26,107,255,0.3); }
+        .md-title-icon.ok { background: #16A34A; box-shadow: 0 10px 24px rgba(22,163,74,0.3); transform: scale(1.05); }
         .md-title h1 { font-size: 24px; font-weight: 800; color: #0D1B3E; margin: 0 0 8px; letter-spacing: -0.02em; }
         .md-title p { font-size: 13px; color: #666; margin: 0; }
         .md-tabs { display: flex; gap: 6px; background: #F0F2F5; border-radius: 12px; padding: 4px; margin-bottom: 14px; }
@@ -221,17 +224,26 @@ function MonDossier() {
         .hk-fab::after { content: ''; position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; background: #34D058; border: 2.5px solid #fff; border-radius: 50%; animation: hk-pulse 2.2s infinite; }
         @keyframes hk-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(52,208,88,0.5); } 50% { box-shadow: 0 0 0 6px rgba(52,208,88,0); } }
         .hk-panel { position: fixed; bottom: 96px; right: 24px; z-index: 1000; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(13,27,62,0.25); width: 320px; max-width: calc(100vw - 32px); overflow: hidden; }
-        .hk-head { padding: 18px 20px; display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #0D1B3E 0%, #1A2F5F 100%); color: #fff; position: relative; }
-        .hk-ava { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0; }
-        .hk-name { font-weight: 800; font-size: 14px; }
-        .hk-sub { font-size: 11px; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 5px; margin-top: 2px; }
-        .hk-sub::before { content: ''; width: 7px; height: 7px; background: #34D058; border-radius: 50%; }
-        .hk-close { position: absolute; top: 12px; right: 12px; width: 28px; height: 28px; border-radius: 50%; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .hk-head { padding: 16px 48px 16px 16px; display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #0D1B3E 0%, #1A2F5F 100%); color: #fff; position: relative; }
+        .hk-ava-wrap { position: relative; flex-shrink: 0; }
+        .hk-ava { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: #fff; border: 2px solid rgba(255,255,255,0.3); display: flex; align-items: center; justify-content: center; }
+        .hk-ava svg { width: 40px; height: 40px; display: block; }
+        .hk-name { font-weight: 800; font-size: 14px; line-height: 1.2; }
+        .hk-sub { font-size: 11px; color: rgba(255,255,255,0.7); display: flex; align-items: center; gap: 5px; margin-top: 3px; font-weight: 500; }
+        .hk-sub::before { content: ''; width: 7px; height: 7px; background: #34D058; border-radius: 50%; box-shadow: 0 0 8px rgba(52,208,88,0.6); flex-shrink: 0; }
+        .hk-close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.12); border: none; color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; line-height: 1; }
+        .hk-close:hover { background: rgba(255,255,255,0.22); }
+        .hk-close svg { display: block; margin: 0 auto; }
         .hk-body { padding: 18px; }
-        .hk-msg { background: #EEF4FF; border: 1px solid rgba(26,107,255,0.15); border-radius: 12px; padding: 12px 14px; font-size: 13px; color: #0D1B3E; line-height: 1.5; margin-bottom: 14px; }
-        .hk-btn-wa { background: #25D366; color: #fff; border: none; padding: 12px 16px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: inherit; width: 100%; justify-content: center; }
-        .hk-phone { text-align: center; font-size: 11px; color: #666; margin-top: 12px; font-weight: 500; }
-        .hk-phone strong { color: #0D1B3E; font-weight: 800; }
+        .hk-msg { background: #EEF4FF; border: 1px solid rgba(26,107,255,0.2); border-radius: 14px; padding: 14px 16px; font-size: 13px; color: #0D1B3E; line-height: 1.55; }
+        .hk-msg-title { font-weight: 800; font-size: 13.5px; color: #1A6BFF; margin-bottom: 6px; }
+        .hk-msg strong { color: #1A6BFF; font-weight: 700; }
+        .hk-sep { text-align: center; font-size: 10px; font-weight: 700; color: #94A3B8; letter-spacing: 0.15em; margin: 14px 0; position: relative; }
+        .hk-sep::before, .hk-sep::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: #E5E7EB; }
+        .hk-sep::before { left: 0; }
+        .hk-sep::after { right: 0; }
+        .hk-btn-wa { background: #25D366; color: #fff; border: none; padding: 12px 16px; border-radius: 12px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: inherit; width: 100%; justify-content: center; transition: all 0.15s; }
+        .hk-btn-wa:hover { background: #1EB558; transform: translateY(-1px); }
 
         /* Animation du regard Haki : 6 directions, 12s, fluide, sans clignement */
         .md-eye-ball { transform-origin: 100px 100px; animation: md-eye-look 12s ease-in-out infinite; }
@@ -264,6 +276,13 @@ function MonDossier() {
       <div className="md-wrap">
         <div className="md-card">
           <div className="md-title">
+            <div className={'md-title-icon ' + (canSubmit ? 'ok' : identifierOk ? 'half' : '')}>
+              {canSubmit ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#fff" strokeWidth="2"/></svg>
+              )}
+            </div>
             <h1>Accédez à votre dossier</h1>
             <p>Identifiez-vous avec votre téléphone ou email + mot de passe.</p>
           </div>
@@ -285,7 +304,7 @@ function MonDossier() {
               <input
                 type="tel"
                 inputMode="numeric"
-                placeholder="06 123 4567"
+                placeholder="Ex : 06 53 13 187"
                 maxLength={11}
                 value={phone}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
@@ -296,7 +315,7 @@ function MonDossier() {
               <label>Email</label>
               <input
                 type="email"
-                placeholder="votre@email.com"
+                placeholder="Ex : jean.pierre@gmail.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -307,7 +326,7 @@ function MonDossier() {
             <label>Mot de passe</label>
             <input
               type={showPwd ? 'text' : 'password'}
-              placeholder="Votre mot de passe"
+              placeholder="Ex : Mayinvest2026"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && canSubmit) tryLogin() }}
@@ -335,26 +354,62 @@ function MonDossier() {
         </div>
       </div>
 
-      {/* HAKI FLOATING WIDGET */}
+      {/* HAKI FLOATING WIDGET — assistant contextuel */}
       {hakiOpen && (
         <div className="hk-panel">
           <div className="hk-head">
-            <div className="hk-ava">{hakiAvatar(40)}</div>
-            <div style={{ flex: 1 }}>
+            <div className="hk-ava-wrap">
+              <div className="hk-ava">{hakiAvatar(40)}</div>
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div className="hk-name">Haki</div>
               <div className="hk-sub">En ligne · Assistante Mayinvest</div>
             </div>
-            <button className="hk-close" onClick={() => setHakiOpen(false)} aria-label="Fermer">x</button>
+            <button className="hk-close" onClick={() => setHakiOpen(false)} aria-label="Fermer">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            </button>
           </div>
           <div className="hk-body">
-            <div className="hk-msg">
-              👋 Besoin d'aide pour vous connecter ou retrouver votre dossier ? Un conseiller Mayinvest répond directement sur WhatsApp.
-            </div>
+            {/* Message contextuel qui s'adapte à l'état du formulaire */}
+            {(() => {
+              if (error) {
+                return (
+                  <div className="hk-msg">
+                    <div className="hk-msg-title">Pas de panique 💪</div>
+                    <div>Vérifiez votre {tab === 'phone' ? 'numéro (9 chiffres sans espace)' : 'email'} et votre mot de passe. Si vous l'avez oublié, cliquez sur <strong>Réinitialiser par email</strong> en bas du formulaire.</div>
+                  </div>
+                )
+              }
+              if (!identifierOk) {
+                return (
+                  <div className="hk-msg">
+                    <div className="hk-msg-title">Bienvenue ! 👋</div>
+                    <div>Pour accéder à votre dossier, choisissez <strong>{tab === 'phone' ? 'Téléphone' : 'Email'}</strong> puis entrez votre {tab === 'phone' ? 'numéro à 9 chiffres' : 'adresse email'}.</div>
+                  </div>
+                )
+              }
+              if (!password) {
+                return (
+                  <div className="hk-msg">
+                    <div className="hk-msg-title">Dernière étape 🔐</div>
+                    <div>Entrez maintenant votre <strong>mot de passe</strong> (celui que vous avez choisi lors de l'inscription).</div>
+                  </div>
+                )
+              }
+              return (
+                <div className="hk-msg">
+                  <div className="hk-msg-title">Prêt à vous connecter ✓</div>
+                  <div>Tout est bon ! Cliquez sur <strong>Accéder à mon dossier</strong> pour continuer.</div>
+                </div>
+              )
+            })()}
+
+            <div className="hk-sep">OU</div>
+
             <button className="hk-btn-wa" onClick={openExpertWA}>
               <IconWA />
-              Discuter sur WhatsApp
+              Parler à un conseiller
             </button>
-            <div className="hk-phone">Expert : <strong>+242 06 53 13 187</strong></div>
           </div>
         </div>
       )}
@@ -381,7 +436,7 @@ function MonDossier() {
             </div>
             <div className="md-field">
               <label>Email du dossier</label>
-              <input type="email" placeholder="votre@email.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} />
+              <input type="email" placeholder="Ex : jean.pierre@gmail.com" value={forgotEmail} onChange={(e) => setForgotEmail(e.target.value)} />
             </div>
             <button className="md-btn" disabled={forgotLoading || !forgotEmail.includes('@')} onClick={sendResetEmail}>
               {forgotLoading ? 'Envoi…' : 'Envoyer le lien par email'}
