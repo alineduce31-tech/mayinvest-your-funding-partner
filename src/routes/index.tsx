@@ -53,16 +53,21 @@ function Index() {
   const [profile, setProfile] = useState<'p' | 'm' | null>(null)
   const [need, setNeed] = useState<string | null>(null)
   const [amount, setAmount] = useState<string | null>(null)
+  // Mode automatique GLOBAL (partagé entre toutes les pages)
+  const [hakiAuto, setHakiAuto] = useState<boolean>(() => {
+    try { return localStorage.getItem('mayinvest_haki_auto_global') !== '0' } catch { return true }
+  })
   const [hakiDeclined, setHakiDeclined] = useState<boolean>(() => {
     try { return localStorage.getItem('mayinvest_haki_declined_home') === '1' } catch { return false }
   })
+  const [showAutoHelp, setShowAutoHelp] = useState(false)
 
-  // Haki s'ouvre automatiquement 2s après le chargement si pas décliné
+  // Haki s'ouvre automatiquement 2s après le chargement si auto activé ET pas décliné
   useEffect(() => {
-    if (hakiDeclined) return
+    if (!hakiAuto || hakiDeclined) return
     const t = setTimeout(() => setHakiOpen(true), 2000)
     return () => clearTimeout(t)
-  }, [hakiDeclined])
+  }, [])  // eslint-disable-line
 
   function declineHakiHome() {
     setHakiDeclined(true)
@@ -75,6 +80,11 @@ function Index() {
       try { localStorage.setItem('mayinvest_haki_declined_home', '0') } catch {}
     }
     setHakiOpen(!hakiOpen)
+  }
+  function toggleHakiAuto() {
+    const next = !hakiAuto
+    setHakiAuto(next)
+    try { localStorage.setItem('mayinvest_haki_auto_global', next ? '1' : '0') } catch {}
   }
   function resetHaki() {
     setHakiStage('welcome')
@@ -228,7 +238,14 @@ function Index() {
         .ix-bubble strong { color: #1A6BFF; font-weight: 700; }
         .ix-step { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; color: #1A6BFF; margin-bottom: 6px; }
 
-        .ix-expertise { background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; padding: 8px 12px; font-size: 11.5px; color: #78350F; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+        /* ===== BADGE EXPERTISE PREMIUM ===== */
+        .ix-expertise { background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border: 1px solid rgba(245,158,11,0.35); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; position: relative; box-shadow: 0 2px 8px rgba(245,158,11,0.08); }
+        .ix-exp-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(245,158,11,0.4); }
+        .ix-exp-text { flex: 1; min-width: 0; }
+        .ix-exp-title { font-size: 12.5px; font-weight: 800; color: #78350F; line-height: 1.2; }
+        .ix-exp-sub { font-size: 10.5px; color: #92400E; font-weight: 600; margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; opacity: 0.85; }
+        .ix-exp-dot { width: 3px; height: 3px; border-radius: 50%; background: #92400E; opacity: 0.5; }
+        .ix-exp-badge { background: #0D1B3E; color: #FACC15; font-size: 9px; font-weight: 900; letter-spacing: 0.1em; padding: 4px 7px; border-radius: 6px; flex-shrink: 0; }
 
         .ix-options { display: flex; flex-direction: column; gap: 8px; }
         .ix-option { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 12px 14px; cursor: pointer; text-align: left; font-family: inherit; transition: all 0.15s; }
@@ -247,6 +264,22 @@ function Index() {
         .ix-cta:hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(26,107,255,0.45); }
         .ix-back { background: transparent; color: #64748B; border: none; font-size: 12px; cursor: pointer; margin-top: 4px; font-family: inherit; text-decoration: underline; text-align: center; }
         .ix-decline { background: transparent; border: none; color: #94A3B8; font-size: 11px; cursor: pointer; margin-top: 8px; width: 100%; text-align: center; font-family: inherit; text-decoration: underline; }
+
+        /* MODE AUTOMATIQUE (identique à /mon-dossier) */
+        .ix-settings { padding: 12px 16px 14px; border-top: 1px solid #F0F2F5; background: #FAFBFD; flex-shrink: 0; }
+        .ix-auto-row { display: flex; align-items: center; gap: 10px; }
+        .ix-auto-label { font-size: 12px; font-weight: 700; color: #0D1B3E; }
+        .ix-auto-state { font-size: 10px; color: #64748B; font-weight: 600; margin-top: 1px; }
+        .ix-switch { width: 36px; height: 20px; border-radius: 100px; background: #D1D5DB; border: none; position: relative; cursor: pointer; transition: all 0.2s; flex-shrink: 0; margin-left: auto; padding: 0; }
+        .ix-switch.on { background: #1A6BFF; }
+        .ix-switch-knob { position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: all 0.2s; }
+        .ix-switch.on .ix-switch-knob { left: 18px; }
+        .ix-help-btn { width: 20px; height: 20px; border-radius: 50%; background: #E5E7EB; color: #64748B; border: none; font-size: 11px; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; font-family: inherit; }
+        .ix-help-btn:hover { background: #CBD5E1; color: #0D1B3E; }
+        .ix-help-box { position: relative; margin-top: 10px; background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; padding: 12px 28px 12px 12px; font-size: 11.5px; color: #334155; line-height: 1.5; }
+        .ix-help-title { font-weight: 800; color: #0D1B3E; margin-bottom: 4px; font-size: 12px; }
+        .ix-help-text strong { color: #1A6BFF; }
+        .ix-help-close { position: absolute; top: 6px; right: 6px; background: transparent; border: none; cursor: pointer; color: #94A3B8; padding: 4px; }
       `}</style>
 
       <nav className="nav">
@@ -422,7 +455,7 @@ function Index() {
             <div className="ix-ava">{hakiEye(46)}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div className="ix-name">Haki</div>
-              <div className="ix-sub">Conseillère finance · Mayinvest</div>
+              <div className="ix-sub">En ligne · Assistante Mayinvest</div>
             </div>
             <button className="ix-close" onClick={() => setHakiOpen(false)} aria-label="Fermer">
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
@@ -431,8 +464,18 @@ function Index() {
 
           <div className="ix-body">
             <div className="ix-expertise">
-              <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.5 5 5.5.8-4 3.9.9 5.5L10 14.6l-4.9 2.6.9-5.5-4-3.9 5.5-.8L10 2z" fill="#F59E0B"/></svg>
-              Experte en financement bancaire · +500 dossiers accompagnés
+              <div className="ix-exp-icon">
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.5 5 5.5.8-4 3.9.9 5.5L10 14.6l-4.9 2.6.9-5.5-4-3.9 5.5-.8L10 2z" fill="currentColor"/></svg>
+              </div>
+              <div className="ix-exp-text">
+                <div className="ix-exp-title">Experte en financement bancaire</div>
+                <div className="ix-exp-sub">
+                  <span>+500 dossiers accompagnés</span>
+                  <span className="ix-exp-dot"/>
+                  <span>Brazzaville · Congo</span>
+                </div>
+              </div>
+              <div className="ix-exp-badge">PRO</div>
             </div>
 
             {/* ÉTAPE : WELCOME */}
@@ -553,6 +596,32 @@ function Index() {
                 </button>
                 <button className="ix-back" onClick={resetHaki}>↺ Recommencer avec Haki</button>
               </>
+            )}
+          </div>
+
+          {/* Mode automatique GLOBAL (partagé avec /mon-dossier) */}
+          <div className="ix-settings">
+            <div className="ix-auto-row">
+              <div>
+                <div className="ix-auto-label">Mode automatique</div>
+                <div className="ix-auto-state">{hakiAuto ? 'Activé — Haki vous accompagne partout' : 'Désactivé — Haki reste disponible via l\'œil'}</div>
+              </div>
+              <button className={'ix-switch ' + (hakiAuto ? 'on' : '')} onClick={toggleHakiAuto} aria-label="Mode automatique">
+                <span className="ix-switch-knob"/>
+              </button>
+              <button className="ix-help-btn" onClick={() => setShowAutoHelp(h => !h)} aria-label="Aide">?</button>
+            </div>
+            {showAutoHelp && (
+              <div className="ix-help-box">
+                <button className="ix-help-close" onClick={() => setShowAutoHelp(false)} aria-label="Fermer">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2l6 6M8 2l-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                </button>
+                <div className="ix-help-title">À quoi sert ce bouton ?</div>
+                <div className="ix-help-text">
+                  <strong>Activé</strong> : je m'ouvre automatiquement sur toutes les pages (accueil, connexion, présélection) pour vous accompagner.<br/><br/>
+                  <strong>Désactivé</strong> : je reste discrète partout. Vous me rouvrez en cliquant sur l'œil quand vous avez besoin de moi.
+                </div>
+              </div>
             )}
           </div>
         </div>
