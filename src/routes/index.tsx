@@ -1,5 +1,37 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useState, useEffect } from 'react'
 import { Logo } from '@/components/Logo'
+
+/* Avatar Haki */
+function hakiEye(size: number) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 200 200" fill="none" shapeRendering="geometricPrecision">
+      <defs>
+        <radialGradient id="ix-eyeball" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="#ffffff"/>
+          <stop offset="55%" stopColor="#f5f5f5"/>
+          <stop offset="85%" stopColor="#d8d8d8"/>
+          <stop offset="100%" stopColor="#a8a8a8"/>
+        </radialGradient>
+        <radialGradient id="ix-iris" cx="40%" cy="38%" r="65%">
+          <stop offset="0%" stopColor="#c88a4a"/>
+          <stop offset="35%" stopColor="#8b5a2b"/>
+          <stop offset="75%" stopColor="#4a2d14"/>
+          <stop offset="100%" stopColor="#1a0d04"/>
+        </radialGradient>
+      </defs>
+      <circle cx="100" cy="100" r="95" fill="url(#ix-eyeball)"/>
+      <circle cx="100" cy="100" r="95" fill="none" stroke="#000" strokeWidth="4"/>
+      <g className="ix-eye-ball">
+        <circle cx="100" cy="100" r="55" fill="url(#ix-iris)"/>
+        <circle cx="100" cy="100" r="22" fill="#000"/>
+        <ellipse cx="112" cy="85" rx="10" ry="8" fill="#fff" opacity="0.95"/>
+        <circle cx="90" cy="110" r="4.5" fill="#fff" opacity="0.75"/>
+      </g>
+      <ellipse cx="60" cy="45" rx="30" ry="18" fill="#fff" opacity="0.35"/>
+    </svg>
+  )
+}
 
 export const Route = createFileRoute('/')({
   component: Index,
@@ -14,6 +46,68 @@ function Index() {
   const goto = () => navigate({ to: '/preselection' })
   const gotoP = () => navigate({ to: '/preselection', search: { type: 'physique' } as never })
   const gotoM = () => navigate({ to: '/preselection', search: { type: 'morale' } as never })
+
+  // ===== HAKI CONSEILLÈRE FINANCE =====
+  const [hakiOpen, setHakiOpen] = useState(false)
+  const [hakiStage, setHakiStage] = useState<'welcome' | 'profile' | 'need-p' | 'need-m' | 'result'>('welcome')
+  const [profile, setProfile] = useState<'p' | 'm' | null>(null)
+  const [need, setNeed] = useState<string | null>(null)
+  const [amount, setAmount] = useState<string | null>(null)
+  const [hakiDeclined, setHakiDeclined] = useState<boolean>(() => {
+    try { return localStorage.getItem('mayinvest_haki_declined_home') === '1' } catch { return false }
+  })
+
+  // Haki s'ouvre automatiquement 2s après le chargement si pas décliné
+  useEffect(() => {
+    if (hakiDeclined) return
+    const t = setTimeout(() => setHakiOpen(true), 2000)
+    return () => clearTimeout(t)
+  }, [hakiDeclined])
+
+  function declineHakiHome() {
+    setHakiDeclined(true)
+    setHakiOpen(false)
+    try { localStorage.setItem('mayinvest_haki_declined_home', '1') } catch {}
+  }
+  function toggleHakiHome() {
+    if (!hakiOpen && hakiDeclined) {
+      setHakiDeclined(false)
+      try { localStorage.setItem('mayinvest_haki_declined_home', '0') } catch {}
+    }
+    setHakiOpen(!hakiOpen)
+  }
+  function resetHaki() {
+    setHakiStage('welcome')
+    setProfile(null); setNeed(null); setAmount(null)
+  }
+  function pickProfile(p: 'p' | 'm') {
+    setProfile(p)
+    setHakiStage(p === 'p' ? 'need-p' : 'need-m')
+  }
+  function pickNeed(n: string, amt?: string) {
+    setNeed(n)
+    if (amt) setAmount(amt)
+    setHakiStage('result')
+  }
+  function hakiGoPreselection() {
+    setHakiOpen(false)
+    if (profile === 'p') gotoP()
+    else if (profile === 'm') gotoM()
+    else goto()
+  }
+
+  const needsP = [
+    { k: 'conso', label: 'Crédit consommation', ex: 'TV, meubles, voyage, imprévu…' },
+    { k: 'vehicule', label: 'Achat véhicule', ex: 'Voiture neuve ou occasion' },
+    { k: 'immo', label: 'Projet immobilier', ex: 'Construction, achat terrain' },
+    { k: 'autre', label: 'Autre besoin', ex: 'Rachat de crédit, études…' },
+  ]
+  const needsM = [
+    { k: 'invest', label: 'Investissement productif', ex: 'Matériel, machines, local' },
+    { k: 'fr', label: 'Fonds de roulement', ex: 'Trésorerie, stock, charges' },
+    { k: 'marche', label: 'Financement de marché', ex: 'Appel d\'offre, contrat' },
+    { k: 'autre', label: 'Autre besoin', ex: 'Expansion, création…' },
+  ]
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#FFFFFF', color: '#111111', minHeight: '100vh', WebkitFontSmoothing: 'antialiased' }}>
       <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
@@ -91,6 +185,68 @@ function Index() {
         .cta-blue { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 32px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         .cta-dark { background: #111; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 32px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 10px; }
         @media (max-width: 640px) { .cta-blue, .cta-dark { width: 100%; justify-content: center; } }
+
+        /* ========== HAKI CONSEILLÈRE FINANCE ========== */
+        .ix-fab { position: fixed; bottom: 24px; right: 24px; z-index: 1000; width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 3px solid #fff; box-shadow: 0 14px 32px rgba(13,27,62,0.25), 0 4px 10px rgba(13,27,62,0.08); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; animation: ix-pop 0.5s cubic-bezier(0.34,1.56,0.64,1) 1.5s backwards; }
+        .ix-fab:hover { transform: scale(1.08); }
+        .ix-fab::after { content: ''; position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; background: #34D058; border: 2.5px solid #fff; border-radius: 50%; animation: ix-pulse 2s ease-in-out infinite; }
+        @keyframes ix-pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        @keyframes ix-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .ix-eye-ball { transform-origin: 100px 100px; animation: ix-look 12s ease-in-out infinite; }
+        @keyframes ix-look {
+          0%, 10%    { transform: translate(0, 0); }
+          16%, 26%   { transform: translate(20px, 0); }
+          32%, 42%   { transform: translate(15px, 15px); }
+          48%, 58%   { transform: translate(-15px, 15px); }
+          64%, 74%   { transform: translate(-20px, 0); }
+          80%, 90%   { transform: translate(0, -15px); }
+          100%       { transform: translate(0, 0); }
+        }
+        .ix-fab-tag { position: absolute; right: 74px; top: 50%; transform: translateY(-50%); background: #0D1B3E; color: #fff; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 700; white-space: nowrap; box-shadow: 0 6px 16px rgba(13,27,62,0.25); animation: ix-tag-in 0.4s ease 2s backwards; pointer-events: none; }
+        .ix-fab-tag::after { content: ''; position: absolute; right: -5px; top: 50%; transform: translateY(-50%) rotate(45deg); width: 10px; height: 10px; background: #0D1B3E; }
+        @keyframes ix-tag-in { from { opacity: 0; transform: translateY(-50%) translateX(8px); } to { opacity: 1; transform: translateY(-50%) translateX(0); } }
+        @media (max-width: 640px) { .ix-fab { bottom: 16px; right: 16px; } .ix-fab-tag { display: none; } }
+
+        .ix-panel { position: fixed; bottom: 100px; right: 24px; z-index: 1000; background: #fff; border-radius: 20px; box-shadow: 0 24px 60px rgba(13,27,62,0.3); width: 380px; max-width: calc(100vw - 32px); max-height: calc(100vh - 140px); display: flex; flex-direction: column; overflow: hidden; animation: ix-panel-in 0.3s cubic-bezier(0.34,1.56,0.64,1); }
+        @keyframes ix-panel-in { from { opacity: 0; transform: translateY(16px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @media (max-width: 640px) { .ix-panel { bottom: 90px; right: 16px; left: 16px; width: auto; max-width: none; } }
+
+        .ix-head { padding: 18px 54px 18px 18px; display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #0D1B3E 0%, #1A2F5F 100%); color: #fff; position: relative; flex-shrink: 0; }
+        .ix-ava { width: 46px; height: 46px; border-radius: 50%; overflow: hidden; background: transparent; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .ix-ava svg { width: 46px; height: 46px; display: block; }
+        .ix-name { font-weight: 800; font-size: 15px; }
+        .ix-sub { font-size: 11px; color: rgba(255,255,255,0.75); margin-top: 3px; display: flex; align-items: center; gap: 5px; }
+        .ix-sub::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34D058; }
+        .ix-close { position: absolute; top: 14px; right: 14px; width: 30px; height: 30px; border-radius: 50%; background: rgba(255,255,255,0.12); border: none; color: #fff; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
+        .ix-close:hover { background: rgba(255,255,255,0.22); }
+
+        .ix-body { padding: 18px; overflow-y: auto; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+        .ix-row { display: flex; gap: 10px; align-items: flex-start; }
+        .ix-mini-ava { width: 32px; height: 32px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+        .ix-mini-ava svg { width: 32px; height: 32px; display: block; }
+        .ix-bubble { flex: 1; background: #F0F5FF; border: 1px solid rgba(26,107,255,0.15); border-radius: 14px; border-top-left-radius: 4px; padding: 12px 14px; font-size: 13px; color: #0D1B3E; line-height: 1.55; }
+        .ix-bubble strong { color: #1A6BFF; font-weight: 700; }
+        .ix-step { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; color: #1A6BFF; margin-bottom: 6px; }
+
+        .ix-expertise { background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); border: 1px solid rgba(245,158,11,0.3); border-radius: 10px; padding: 8px 12px; font-size: 11.5px; color: #78350F; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+
+        .ix-options { display: flex; flex-direction: column; gap: 8px; }
+        .ix-option { background: #fff; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 12px 14px; cursor: pointer; text-align: left; font-family: inherit; transition: all 0.15s; }
+        .ix-option:hover { border-color: #1A6BFF; background: #F0F5FF; transform: translateX(2px); }
+        .ix-option-title { font-size: 13px; font-weight: 800; color: #0D1B3E; display: flex; align-items: center; gap: 8px; }
+        .ix-option-ex { font-size: 11px; color: #64748B; font-weight: 500; margin-top: 3px; margin-left: 24px; }
+
+        .ix-result { background: linear-gradient(135deg, #DCFCE7 0%, #BBF7D0 100%); border: 1.5px solid rgba(22,163,74,0.3); border-radius: 14px; padding: 14px; font-size: 13px; color: #14532D; line-height: 1.55; }
+        .ix-result strong { color: #166534; font-weight: 800; }
+        .ix-stat-row { display: flex; gap: 10px; margin-top: 10px; }
+        .ix-stat { flex: 1; background: #fff; border-radius: 10px; padding: 8px 10px; text-align: center; border: 1px solid rgba(22,163,74,0.15); }
+        .ix-stat-v { font-size: 16px; font-weight: 800; color: #166534; }
+        .ix-stat-l { font-size: 9.5px; color: #166534; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 2px; opacity: 0.75; }
+
+        .ix-cta { background: linear-gradient(135deg, #1A6BFF 0%, #0051D4 100%); color: #fff; border: none; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; box-shadow: 0 10px 24px rgba(26,107,255,0.35); margin-top: 4px; }
+        .ix-cta:hover { transform: translateY(-1px); box-shadow: 0 14px 28px rgba(26,107,255,0.45); }
+        .ix-back { background: transparent; color: #64748B; border: none; font-size: 12px; cursor: pointer; margin-top: 4px; font-family: inherit; text-decoration: underline; text-align: center; }
+        .ix-decline { background: transparent; border: none; color: #94A3B8; font-size: 11px; cursor: pointer; margin-top: 8px; width: 100%; text-align: center; font-family: inherit; text-decoration: underline; }
       `}</style>
 
       <nav className="nav">
@@ -258,6 +414,153 @@ function Index() {
         <LogoSVG height={48} tone="light" />
         <div style={{ fontSize: 13, color: '#AAAAAA' }}>© 2026 Mayinvest · Brazzaville, Congo</div>
       </footer>
+
+      {/* ========== HAKI CONSEILLÈRE FINANCE ========== */}
+      {hakiOpen && (
+        <div className="ix-panel">
+          <div className="ix-head">
+            <div className="ix-ava">{hakiEye(46)}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="ix-name">Haki</div>
+              <div className="ix-sub">Conseillère finance · Mayinvest</div>
+            </div>
+            <button className="ix-close" onClick={() => setHakiOpen(false)} aria-label="Fermer">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/></svg>
+            </button>
+          </div>
+
+          <div className="ix-body">
+            <div className="ix-expertise">
+              <svg width="13" height="13" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.5 5 5.5.8-4 3.9.9 5.5L10 14.6l-4.9 2.6.9-5.5-4-3.9 5.5-.8L10 2z" fill="#F59E0B"/></svg>
+              Experte en financement bancaire · +500 dossiers accompagnés
+            </div>
+
+            {/* ÉTAPE : WELCOME */}
+            {hakiStage === 'welcome' && (
+              <>
+                <div className="ix-row">
+                  <div className="ix-mini-ava">{hakiEye(32)}</div>
+                  <div className="ix-bubble">
+                    <div className="ix-step">👋 BONJOUR</div>
+                    <div><strong>Je suis Haki, votre conseillère Mayinvest.</strong></div>
+                    <div style={{ marginTop: 6 }}>En <strong>2 minutes</strong>, je peux évaluer votre éligibilité à un financement <strong>avant même d'aller voir la banque</strong>. Prêt·e à voir si votre projet passe ?</div>
+                  </div>
+                </div>
+                <button className="ix-cta" onClick={() => setHakiStage('profile')}>
+                  🚀 Oui, évaluons mon projet
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                <button className="ix-decline" onClick={declineHakiHome}>Non merci, je navigue seul</button>
+              </>
+            )}
+
+            {/* ÉTAPE : CHOIX PROFIL */}
+            {hakiStage === 'profile' && (
+              <>
+                <div className="ix-row">
+                  <div className="ix-mini-ava">{hakiEye(32)}</div>
+                  <div className="ix-bubble">
+                    <div className="ix-step">ÉTAPE 1 SUR 2 — VOTRE PROFIL</div>
+                    <div>Pour vous orienter vers la bonne offre, dites-moi : vous demandez le financement à titre <strong>personnel</strong> ou pour votre <strong>entreprise</strong> ?</div>
+                  </div>
+                </div>
+                <div className="ix-options">
+                  <button className="ix-option" onClick={() => pickProfile('p')}>
+                    <div className="ix-option-title">👤 À titre personnel</div>
+                    <div className="ix-option-ex">Fonctionnaire, salarié, commerçant, artisan…</div>
+                  </button>
+                  <button className="ix-option" onClick={() => pickProfile('m')}>
+                    <div className="ix-option-title">🏢 Pour mon entreprise / PME</div>
+                    <div className="ix-option-ex">Société, coopérative, groupement, entreprise individuelle</div>
+                  </button>
+                </div>
+                <button className="ix-back" onClick={resetHaki}>← Revenir au début</button>
+              </>
+            )}
+
+            {/* ÉTAPE : BESOIN PARTICULIER */}
+            {hakiStage === 'need-p' && (
+              <>
+                <div className="ix-row">
+                  <div className="ix-mini-ava">{hakiEye(32)}</div>
+                  <div className="ix-bubble">
+                    <div className="ix-step">ÉTAPE 2 SUR 2 — VOTRE BESOIN</div>
+                    <div><strong>Super ! 👤 Particulier.</strong></div>
+                    <div style={{ marginTop: 4 }}>Quel est votre projet de financement ?</div>
+                  </div>
+                </div>
+                <div className="ix-options">
+                  {needsP.map(n => (
+                    <button key={n.k} className="ix-option" onClick={() => pickNeed(n.label)}>
+                      <div className="ix-option-title">💰 {n.label}</div>
+                      <div className="ix-option-ex">{n.ex}</div>
+                    </button>
+                  ))}
+                </div>
+                <button className="ix-back" onClick={() => setHakiStage('profile')}>← Changer de profil</button>
+              </>
+            )}
+
+            {/* ÉTAPE : BESOIN PME */}
+            {hakiStage === 'need-m' && (
+              <>
+                <div className="ix-row">
+                  <div className="ix-mini-ava">{hakiEye(32)}</div>
+                  <div className="ix-bubble">
+                    <div className="ix-step">ÉTAPE 2 SUR 2 — VOTRE BESOIN</div>
+                    <div><strong>Super ! 🏢 Entreprise.</strong></div>
+                    <div style={{ marginTop: 4 }}>Pour quel usage avez-vous besoin de ce financement ?</div>
+                  </div>
+                </div>
+                <div className="ix-options">
+                  {needsM.map(n => (
+                    <button key={n.k} className="ix-option" onClick={() => pickNeed(n.label)}>
+                      <div className="ix-option-title">📈 {n.label}</div>
+                      <div className="ix-option-ex">{n.ex}</div>
+                    </button>
+                  ))}
+                </div>
+                <button className="ix-back" onClick={() => setHakiStage('profile')}>← Changer de profil</button>
+              </>
+            )}
+
+            {/* ÉTAPE : RÉSULTAT + CTA */}
+            {hakiStage === 'result' && (
+              <>
+                <div className="ix-row">
+                  <div className="ix-mini-ava">{hakiEye(32)}</div>
+                  <div className="ix-bubble">
+                    <div className="ix-step">✓ ANALYSE PRÉLIMINAIRE</div>
+                    <div><strong>Excellent choix !</strong> {profile === 'p' ? 'Un financement personnel' : 'Un financement entreprise'} pour <strong>{need}</strong> est tout à fait réalisable au Congo.</div>
+                  </div>
+                </div>
+
+                <div className="ix-result">
+                  <strong>📊 Ce que je peux faire pour vous :</strong>
+                  <div style={{ marginTop: 6, fontSize: 12.5 }}>
+                    En 2 minutes, je calcule votre <strong>score d'éligibilité</strong> sur 100 selon les critères des banques partenaires. Vous saurez immédiatement si votre dossier a toutes ses chances — ou ce qu'il faut améliorer avant.
+                  </div>
+                  <div className="ix-stat-row">
+                    <div className="ix-stat"><div className="ix-stat-v">87%</div><div className="ix-stat-l">Taux d'accord</div></div>
+                    <div className="ix-stat"><div className="ix-stat-v">24h</div><div className="ix-stat-l">Rappel conseiller</div></div>
+                    <div className="ix-stat"><div className="ix-stat-v">100%</div><div className="ix-stat-l">Gratuit</div></div>
+                  </div>
+                </div>
+
+                <button className="ix-cta" onClick={hakiGoPreselection}>
+                  🎯 Démarrer ma présélection gratuite
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                </button>
+                <button className="ix-back" onClick={resetHaki}>↺ Recommencer avec Haki</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+      <button className="ix-fab" onClick={toggleHakiHome} aria-label="Haki">
+        {hakiEye(46)}
+        {!hakiOpen && !hakiDeclined && <span className="ix-fab-tag">💬 Besoin d'aide ?</span>}
+      </button>
     </div>
   )
 }
