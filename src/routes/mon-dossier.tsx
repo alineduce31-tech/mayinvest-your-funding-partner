@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { Logo } from '@/components/Logo'
 
 export const Route = createFileRoute('/mon-dossier')({
   component: MonDossier,
@@ -165,9 +166,9 @@ function MonDossier() {
         * { box-sizing: border-box; }
         input { font-size: 16px !important; font-family: inherit; }
         .md-head { background: #fff; border-bottom: 1px solid #E5E7EB; padding: 14px 24px; display: flex; justify-content: space-between; align-items: center; }
-        .md-logo { font-weight: 800; color: #0D1B3E; font-size: 16px; }
-        .md-back { background: transparent; color: #0D1B3E; border: 1px solid #E5E7EB; padding: 8px 14px; border-radius: 100px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit; }
-        .md-back:hover { background: #F0F2F5; }
+        .md-logo { display: flex; align-items: center; }
+        .md-back { background: #0D1B3E; color: #fff; border: none; padding: 10px 18px; border-radius: 100px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit; transition: all 0.15s; }
+        .md-back:hover { background: #000; }
         .md-wrap { max-width: 440px; margin: 48px auto; padding: 0 20px; }
         .md-card { background: #fff; border-radius: 24px; padding: 36px 28px; box-shadow: 0 20px 50px rgba(13,27,62,0.08); border: 1px solid #F0F2F5; }
         .md-title { text-align: center; margin-bottom: 28px; }
@@ -224,7 +225,7 @@ function MonDossier() {
       `}</style>
 
       <div className="md-head">
-        <div className="md-logo">Mayinvest</div>
+        <div className="md-logo"><Logo height={44} tone="light" /></div>
         <button className="md-back" onClick={() => navigate({ to: '/' })}>
           <IconArrowLeft />
           Accueil
