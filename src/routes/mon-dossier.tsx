@@ -227,7 +227,8 @@ function MonDossier() {
 
           {error && <div className="md-err">
             <svg width="14" height="14" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M10 6v5M10 14h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            {error}}
+            {error}
+          </div>}}
 
           <div className="md-forgot">
             Mot de passe oublié ? <a onClick={() => setShowForgot(true)}>Réinitialiser par email</a>
