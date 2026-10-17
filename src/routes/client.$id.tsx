@@ -226,8 +226,8 @@ function ClientPortal() {
 
   // Haki
   const [hakiOpen, setHakiOpen] = useState(false)
-  const [autoMode, setAutoMode] = useState<boolean>(() => { try { const v = localStorage.getItem('mayinvest_haki_auto'); return v === null ? true : v === '1' } catch { return true } })
-  function toggleAuto() { setAutoMode(m => { const n = !m; try { localStorage.setItem('mayinvest_haki_auto', n ? '1' : '0') } catch {}; return n }) }
+  const [autoMode, setAutoMode] = useState<boolean>(() => { try { const v = localStorage.getItem('mayinvest_haki_auto_global'); return v === null ? true : v === '1' } catch { return true } })
+  function toggleAuto() { setAutoMode(m => { const n = !m; try { localStorage.setItem('mayinvest_haki_auto_global', n ? '1' : '0') } catch {}; return n }) }
 
   useEffect(() => {
     try {
