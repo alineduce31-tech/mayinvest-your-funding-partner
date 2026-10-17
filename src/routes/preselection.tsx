@@ -210,11 +210,11 @@ const TIPS: Record<string, { title: string; body: string }> = {
   'step2-m': { title: 'Votre secteur', body: "Sélectionnez le secteur d'activité principal de votre entreprise." },
   'identite-p': { title: 'Identité', body: 'Nom, prénom, téléphone sont obligatoires. Email facultatif mais recommandé.' },
   'identite-m': { title: 'Identité société', body: 'Raison sociale et dirigeant obligatoires. Email facultatif.' },
-  'situation-p': { title: 'Situation pro', body: "Employeur, type de contrat et ancienneté — ces infos déterminent les plafonds de prêt possibles." },
+  'situation-p': { title: 'Situation pro', body: "Employeur, type de contrat et ancienneté. Ces infos déterminent les plafonds de prêt possibles." },
   'situation-m': { title: 'Infos société', body: "L'ancienneté de l'entreprise rassure la banque. Soyez précis." },
   'besoin': { title: 'Votre besoin', body: 'Montant et objet du prêt. Soyez réaliste, on étudiera la faisabilité ensemble.' },
   'eligibilite-p': { title: 'Éligibilité', body: 'La domiciliation du salaire est un critère majeur. Précisez depuis quand le compte est ouvert.' },
-  'eligibilite-m': { title: 'Éligibilité PME', body: 'Compte mouvementé, antécédents bancaires, garanties — soyez honnête.' },
+  'eligibilite-m': { title: 'Éligibilité PME', body: 'Compte mouvementé, antécédents bancaires, garanties. Soyez honnête.' },
   'step4': { title: 'Félicitations 🎉', body: "Notez votre code d'accès ! Il vous permet de retrouver votre dossier à tout moment." },
 }
 
