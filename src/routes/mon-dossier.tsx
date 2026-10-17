@@ -7,27 +7,41 @@ export const Route = createFileRoute('/mon-dossier')({
   component: MonDossier,
 })
 
-/* Avatar Haki */
+/* Avatar Haki — version haute résolution identique à /preselection */
 function hakiAvatar(size: number) {
   return (
-    <svg width={size} height={size} viewBox="0 0 200 200" fill="none">
+    <svg width={size} height={size} viewBox="0 0 200 200" fill="none" shapeRendering="geometricPrecision">
       <defs>
-        <radialGradient id="md-eye" cx="35%" cy="30%" r="75%">
-          <stop offset="0" stopColor="#fff"/>
-          <stop offset="0.55" stopColor="#f5f5f5"/>
-          <stop offset="1" stopColor="#a8a8a8"/>
+        <radialGradient id="md-eyeball" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stopColor="#ffffff"/>
+          <stop offset="55%" stopColor="#f5f5f5"/>
+          <stop offset="85%" stopColor="#d8d8d8"/>
+          <stop offset="100%" stopColor="#a8a8a8"/>
         </radialGradient>
         <radialGradient id="md-iris" cx="40%" cy="38%" r="65%">
-          <stop offset="0" stopColor="#c88a4a"/>
-          <stop offset="0.5" stopColor="#7a4a22"/>
-          <stop offset="1" stopColor="#1a0d04"/>
+          <stop offset="0%" stopColor="#c88a4a"/>
+          <stop offset="35%" stopColor="#8b5a2b"/>
+          <stop offset="75%" stopColor="#4a2d14"/>
+          <stop offset="100%" stopColor="#1a0d04"/>
+        </radialGradient>
+        <radialGradient id="md-innershadow" cx="50%" cy="50%" r="50%">
+          <stop offset="75%" stopColor="rgba(0,0,0,0)"/>
+          <stop offset="100%" stopColor="rgba(0,0,0,0.35)"/>
         </radialGradient>
       </defs>
-      <circle cx="100" cy="100" r="95" fill="url(#md-eye)"/>
+      <circle cx="100" cy="100" r="95" fill="url(#md-eyeball)"/>
+      <circle cx="100" cy="100" r="95" fill="url(#md-innershadow)"/>
       <circle cx="100" cy="100" r="95" fill="none" stroke="#000" strokeWidth="4"/>
+      <path d="M15 120 Q 40 115, 55 125" stroke="#f0a0a0" strokeWidth="1.2" fill="none" opacity="0.5"/>
+      <path d="M185 90 Q 165 100, 150 90" stroke="#f0a0a0" strokeWidth="1.2" fill="none" opacity="0.5"/>
       <circle cx="100" cy="100" r="55" fill="url(#md-iris)"/>
+      <circle cx="100" cy="100" r="55" fill="none" stroke="#1a0d04" strokeWidth="2.5" opacity="0.6"/>
+      <circle cx="100" cy="100" r="40" fill="none" stroke="#2a1a0a" strokeWidth="1.5" opacity="0.4"/>
       <circle cx="100" cy="100" r="22" fill="#000"/>
-      <ellipse cx="112" cy="85" rx="10" ry="8" fill="#fff"/>
+      <ellipse cx="112" cy="85" rx="10" ry="8" fill="#fff" opacity="0.95"/>
+      <circle cx="90" cy="110" r="4.5" fill="#fff" opacity="0.75"/>
+      <circle cx="120" cy="112" r="2.5" fill="#fff" opacity="0.6"/>
+      <ellipse cx="60" cy="45" rx="30" ry="18" fill="#fff" opacity="0.35"/>
     </svg>
   )
 }
