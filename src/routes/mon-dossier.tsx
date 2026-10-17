@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 
@@ -89,6 +89,13 @@ function MonDossier() {
   const [forgotEmail, setForgotEmail] = useState('')
   const [forgotMsg, setForgotMsg] = useState('')
   const [forgotLoading, setForgotLoading] = useState(false)
+  const [iconIdx, setIconIdx] = useState(0)
+
+  // Carrousel d'icônes : tourne toutes les 2s tant que l'utilisateur n'a rien rempli
+  useEffect(() => {
+    const t = setInterval(() => setIconIdx(i => (i + 1) % 4), 2000)
+    return () => clearInterval(t)
+  }, [])
 
   function openExpertWA() {
     const msg = encodeURIComponent("Bonjour, j'aimerais parler à un conseiller Mayinvest.")
@@ -188,10 +195,16 @@ function MonDossier() {
         .md-wrap { max-width: 440px; margin: 48px auto; padding: 0 20px; }
         .md-card { background: #fff; border-radius: 24px; padding: 36px 28px; box-shadow: 0 20px 50px rgba(13,27,62,0.08); border: 1px solid #F0F2F5; }
         .md-title { text-align: center; margin-bottom: 28px; }
-        .md-title-icon { width: 56px; height: 56px; border-radius: 16px; background: #0D1B3E; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 10px 24px rgba(13,27,62,0.2); transition: all 0.3s cubic-bezier(0.4,0,0.2,1); }
+        .md-title-icon { width: 56px; height: 56px; border-radius: 16px; background: #0D1B3E; display: inline-flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 10px 24px rgba(13,27,62,0.2); transition: background 0.5s ease, box-shadow 0.5s ease, transform 0.5s ease; overflow: hidden; }
         .md-title-icon.half { background: linear-gradient(135deg, #1A6BFF 0%, #0051D4 100%); box-shadow: 0 10px 24px rgba(26,107,255,0.3); }
         .md-title-icon.folder { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); box-shadow: 0 10px 24px rgba(245,158,11,0.35); }
         .md-title-icon.ok { background: #16A34A; box-shadow: 0 10px 24px rgba(22,163,74,0.35); transform: scale(1.08); }
+        .md-title-icon-inner { display: flex; align-items: center; justify-content: center; animation: md-icon-pop 0.5s cubic-bezier(0.34,1.56,0.64,1); }
+        @keyframes md-icon-pop {
+          0%   { transform: translateY(14px) scale(0.6); opacity: 0; }
+          60%  { transform: translateY(-2px) scale(1.1); opacity: 1; }
+          100% { transform: translateY(0) scale(1); opacity: 1; }
+        }
         .md-title h1 { font-size: 24px; font-weight: 800; color: #0D1B3E; margin: 0 0 8px; letter-spacing: -0.02em; }
         .md-title p { font-size: 13px; color: #666; margin: 0; }
         .md-tabs { display: flex; gap: 6px; background: #F0F2F5; border-radius: 12px; padding: 4px; margin-bottom: 14px; }
@@ -291,21 +304,29 @@ function MonDossier() {
       <div className="md-wrap">
         <div className="md-card">
           <div className="md-title">
-            <div className={'md-title-icon ' + (canSubmit ? 'ok' : password ? 'folder' : identifierOk ? 'half' : '')}>
-              {canSubmit ? (
-                /* Dossier OUVERT avec coche : prêt à entrer */
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/><path d="M9 14l2 2 4-4" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              ) : password ? (
-                /* Dossier simple : mdp en cours de saisie */
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
-              ) : identifierOk ? (
-                /* Cadenas ouvert : identifiant OK, mdp manquant */
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 017.5-2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="16" r="1.5" fill="#fff"/></svg>
-              ) : (
-                /* Cadenas fermé : état initial */
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#fff" strokeWidth="2"/><circle cx="12" cy="16" r="1.5" fill="#fff"/></svg>
-              )}
-            </div>
+            {(() => {
+              // Si l'utilisateur a rempli quelque chose → l'icône suit son progrès
+              // Sinon → carrousel automatique qui cycle entre les 4 icônes
+              const idx = canSubmit ? 3 : password ? 2 : identifierOk ? 1 : iconIdx
+              const states = ['', 'half', 'folder', 'ok']
+              const icons = [
+                /* 0. Cadenas fermé */
+                <svg key="0" width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#fff" strokeWidth="2"/><circle cx="12" cy="16" r="1.5" fill="#fff"/></svg>,
+                /* 1. Cadenas ouvert */
+                <svg key="1" width="26" height="26" viewBox="0 0 24 24" fill="none"><rect x="4" y="11" width="16" height="10" rx="2" stroke="#fff" strokeWidth="2"/><path d="M8 11V7a4 4 0 017.5-2" stroke="#fff" strokeWidth="2" strokeLinecap="round"/><circle cx="12" cy="16" r="1.5" fill="#fff"/></svg>,
+                /* 2. Dossier */
+                <svg key="2" width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>,
+                /* 3. Dossier avec coche */
+                <svg key="3" width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/><path d="M9 14l2 2 4-4" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+              ]
+              return (
+                <div className={'md-title-icon ' + states[idx]}>
+                  <div key={idx} className="md-title-icon-inner">
+                    {icons[idx]}
+                  </div>
+                </div>
+              )
+            })()}
             <h1>Accédez à votre dossier</h1>
             <p>Identifiez-vous avec votre téléphone ou email + mot de passe.</p>
           </div>
