@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 
@@ -98,6 +98,59 @@ function MonDossier() {
     try { return localStorage.getItem('mayinvest_haki_declined_login') === '1' } catch { return false }
   })
   const [showAutoHelp, setShowAutoHelp] = useState(false)
+
+  // Démo interactive de Haki : étapes = 'idle' | 'mockup' | 'typing' | 'done'
+  const [demoStage, setDemoStage] = useState<'idle' | 'mockup' | 'typing' | 'done'>('idle')
+  const [demoId, setDemoId] = useState('')
+  const [demoPwd, setDemoPwd] = useState('')
+  const [demoChannel, setDemoChannel] = useState<'phone' | 'email'>('phone')
+
+  // Refs pour cibler les vrais champs quand on clique "À votre tour"
+  const phoneRef = useRef<HTMLInputElement>(null)
+  const emailRef = useRef<HTMLInputElement>(null)
+  const passwordRef = useRef<HTMLInputElement>(null)
+
+  // Simulation animée : tape caractère par caractère
+  async function runDemo(channel: 'phone' | 'email') {
+    setDemoChannel(channel)
+    setDemoStage('mockup')
+    setDemoId('')
+    setDemoPwd('')
+    const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+
+    await sleep(900)
+    setDemoStage('typing')
+
+    const idExample = channel === 'phone' ? '065313187' : 'jean.pierre@gmail.com'
+    for (let i = 1; i <= idExample.length; i++) {
+      setDemoId(idExample.slice(0, i))
+      await sleep(channel === 'phone' ? 80 : 50)
+    }
+
+    await sleep(500)
+    const pwdExample = 'Mayinvest2026'
+    for (let i = 1; i <= pwdExample.length; i++) {
+      setDemoPwd(pwdExample.slice(0, i))
+      await sleep(70)
+    }
+
+    await sleep(600)
+    setDemoStage('done')
+  }
+
+  // Transfert vers le vrai formulaire + focus
+  function jumpToRealForm() {
+    setTab(demoChannel)
+    setDemoStage('idle')
+    setDemoId(''); setDemoPwd('')
+    // laisser le temps au tab de switch
+    setTimeout(() => {
+      if (demoChannel === 'phone') phoneRef.current?.focus()
+      else emailRef.current?.focus()
+      // scroll la carte au centre
+      document.querySelector('.md-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
+  }
 
   // Carrousel d'icônes : tourne toutes les 2s tant que l'utilisateur n'a rien rempli
   useEffect(() => {
@@ -305,6 +358,19 @@ function MonDossier() {
         .hk-btn.outline:hover { border-color: #1A6BFF; color: #1A6BFF; background: #F0F5FF; }
         .hk-ex { font-size: 11px; color: #64748B; text-align: center; margin-top: 4px; font-style: italic; }
 
+        /* MAQUETTE DÉMO interactive */
+        .hk-demo { display: flex; flex-direction: column; gap: 10px; animation: hk-demo-in 0.3s ease; }
+        @keyframes hk-demo-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .hk-demo-head { font-size: 11.5px; font-weight: 800; color: #1A6BFF; text-align: center; letter-spacing: 0.04em; padding: 6px 0; }
+        .hk-demo-card { background: linear-gradient(180deg, #F8FAFC 0%, #EEF4FF 100%); border: 2px dashed #1A6BFF; border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; position: relative; }
+        .hk-demo-field { background: #fff; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; }
+        .hk-demo-label { font-size: 9px; font-weight: 800; color: #94A3B8; letter-spacing: 0.08em; margin-bottom: 4px; }
+        .hk-demo-value { font-size: 15px; font-weight: 700; color: #0D1B3E; min-height: 20px; font-family: 'JetBrains Mono', monospace, inherit; }
+        .hk-demo-placeholder { color: #CBD5E1; font-weight: 500; font-family: inherit; }
+        .hk-caret { display: inline-block; width: 2px; height: 16px; background: #1A6BFF; margin-left: 2px; vertical-align: middle; animation: hk-blink 0.6s step-end infinite; }
+        @keyframes hk-blink { 50% { opacity: 0; } }
+        .hk-demo-badge { background: #DCFCE7; color: #166534; border-radius: 100px; padding: 6px 12px; font-size: 11px; font-weight: 800; text-align: center; margin-top: 2px; }
+
         .hk-sep { text-align: center; font-size: 10px; font-weight: 700; color: #94A3B8; letter-spacing: 0.12em; margin: 14px 0 10px; position: relative; }
         .hk-sep::before, .hk-sep::after { content: ''; position: absolute; top: 50%; width: 20%; height: 1px; background: #E5E7EB; }
         .hk-sep::before { left: 0; }
@@ -405,6 +471,7 @@ function MonDossier() {
             <div className="md-field">
               <label>Téléphone (9 chiffres)</label>
               <input
+                ref={phoneRef}
                 type="tel"
                 inputMode="numeric"
                 placeholder="Ex : 06 53 13 187"
@@ -419,6 +486,7 @@ function MonDossier() {
             <div className="md-field">
               <label>Email</label>
               <input
+                ref={emailRef}
                 type="email"
                 placeholder="Ex : jean.pierre@gmail.com"
                 value={email}
@@ -432,6 +500,7 @@ function MonDossier() {
           <div className="md-field has-eye">
             <label>Mot de passe</label>
             <input
+              ref={passwordRef}
               type={showPwd ? 'text' : 'password'}
               placeholder="Ex : Mayinvest2026"
               value={password}
@@ -533,19 +602,64 @@ function MonDossier() {
                     💡 {step === 'pwd-focus' ? 'Exemples : Mayinvest2026, MonProjet123, Credit2025' : (tab === 'phone' ? 'Format : 06 ou 05 + 7 chiffres' : 'Format : nom.prenom@domaine.com')}
                   </div>
                 )}
-                {step === 'start' && <>
-                  <button className={'hk-btn ' + (tab === 'phone' ? 'primary' : 'outline')} onClick={() => { setTab('phone'); setError('') }}>
+                {step === 'start' && demoStage === 'idle' && <>
+                  <button className="hk-btn primary" onClick={() => runDemo('phone')}>
                     <IconPhone />
-                    <span>Par téléphone (9 chiffres)</span>
+                    <span>Voir une démo — Téléphone</span>
                   </button>
-                  <button className={'hk-btn ' + (tab === 'email' ? 'primary' : 'outline')} onClick={() => { setTab('email'); setError('') }}>
+                  <button className="hk-btn outline" onClick={() => runDemo('email')}>
                     <IconMail />
-                    <span>Par email</span>
+                    <span>Voir une démo — Email</span>
                   </button>
                   <div className="hk-ex">
-                    Exemple : {tab === 'phone' ? '06 53 13 187' : 'jean.pierre@gmail.com'}
+                    💡 Je vais vous montrer comment faire avant de vous laisser essayer
                   </div>
                 </>}
+
+                {/* MAQUETTE DE DÉMO INTERACTIVE */}
+                {demoStage !== 'idle' && (
+                  <div className="hk-demo">
+                    <div className="hk-demo-head">
+                      {demoStage === 'mockup' && '👀 Regardez bien l\'exemple…'}
+                      {demoStage === 'typing' && '⌨️ Simulation en cours…'}
+                      {demoStage === 'done' && '✓ Voilà ! C\'est à votre tour'}
+                    </div>
+                    <div className="hk-demo-card">
+                      <div className="hk-demo-field">
+                        <div className="hk-demo-label">{demoChannel === 'phone' ? 'TÉLÉPHONE (9 CHIFFRES)' : 'EMAIL'}</div>
+                        <div className="hk-demo-value">
+                          {demoId || <span className="hk-demo-placeholder">{demoChannel === 'phone' ? 'Ex : 06 53 13 187' : 'Ex : jean.pierre@gmail.com'}</span>}
+                          {demoStage === 'typing' && !demoPwd && <span className="hk-caret"/>}
+                        </div>
+                      </div>
+                      <div className="hk-demo-field">
+                        <div className="hk-demo-label">MOT DE PASSE</div>
+                        <div className="hk-demo-value">
+                          {demoPwd ? '•'.repeat(demoPwd.length) : <span className="hk-demo-placeholder">Ex : Mayinvest2026</span>}
+                          {demoStage === 'typing' && demoId && demoPwd && demoPwd.length < 13 && <span className="hk-caret"/>}
+                        </div>
+                      </div>
+                      {demoStage === 'done' && (
+                        <div className="hk-demo-badge">✓ Formulaire rempli correctement</div>
+                      )}
+                    </div>
+
+                    {demoStage === 'done' ? (
+                      <>
+                        <button className="hk-btn primary" onClick={jumpToRealForm}>
+                          🚀 C'est à votre tour !
+                        </button>
+                        <button className="hk-btn outline" onClick={() => setDemoStage('idle')}>
+                          Revoir une autre démo
+                        </button>
+                      </>
+                    ) : (
+                      <button className="hk-btn outline" onClick={() => { setDemoStage('idle'); setDemoId(''); setDemoPwd('') }}>
+                        Annuler la démo
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {step === 'pwd' && <>
                   <button className="hk-btn primary" onClick={() => { setShowForgot(true); setHakiOpen(false) }}>
