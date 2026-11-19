@@ -100,6 +100,52 @@
 }
 
 /* ============================================================
+   SÉLECTEUR DE PÉRIODE (segmented control 7j / 30j / 90j / YTD)
+   ============================================================ */
+.sd-seg {
+  display: inline-flex;
+  background: var(--mi-hairline);
+  border: 1px solid var(--mi-border);
+  border-radius: 999px;
+  padding: 3px;
+  gap: 2px;
+}
+.sd-seg button {
+  padding: 6px 14px;
+  background: transparent; color: var(--mi-muted);
+  border: none; border-radius: 999px;
+  font-family: inherit; font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+  box-shadow: none !important;
+}
+.sd-seg button:hover:not(.active) { color: var(--mi-text); }
+.sd-seg button.active {
+  background: var(--mi-card); color: var(--mi-text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06) !important;
+  font-weight: 600;
+}
+
+/* ============================================================
+   CHIP ACTION (bouton "Proposer…" dans colonne Action Bloc 2)
+   ============================================================ */
+.sd-chip-action {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px;
+  background: var(--mi-primary-soft);
+  color: var(--mi-primary);
+  border: none;
+  border-radius: 999px;
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: background .15s ease;
+  box-shadow: none !important;
+}
+.sd-chip-action:hover { background: #D5E8DD; }
+.sd-chip-action svg { transition: transform .15s ease; }
+.sd-chip-action:hover svg { transform: translate(1px, -1px); }
+
+/* ============================================================
    KPI CARDS (icône discrète + chiffre dominant)
    ============================================================ */
 .sd-grid {
