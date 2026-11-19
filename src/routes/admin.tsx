@@ -1,9 +1,26 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect, useState, useRef, useMemo } from 'react'
+import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
+import { useSuspenseQuery } from '@tanstack/react-query'
+import { ArrowUpRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 
+// Estimates: Pack Formalisation = 500 000 XAF; dual credit/impact threshold = 5 000 000 XAF.
+// See admin-dashboard.ts for cohort, date and financed-status proxies.
 export const Route = createFileRoute('/admin')({
+  validateSearch: (search: Record<string, unknown>): { view?: 'crm' | undefined; priority?: PriorityFilter | undefined } => ({
+    view: search['view'] === 'crm' ? 'crm' : undefined,
+    priority: ['ready', 'impact', 'followup'].includes(String(search['priority'])) ? search['priority'] as PriorityFilter : undefined,
+  }),
+  head: () => ({ meta: [
+    { title: 'Dashboard stratégique · Mayinvest PréSelect' },
+    { name: 'description', content: 'Pilotage commercial et impact des dossiers Mayinvest PréSelect.' },
+    { property: 'og:title', content: 'Dashboard stratégique · Mayinvest PréSelect' },
+    { property: 'og:description', content: 'Pilotage commercial et impact des dossiers Mayinvest PréSelect.' },
+    { property: 'og:type', content: 'website' }, { name: 'twitter:card', content: 'summary' },
+  ] }),
   component: AdminGate,
 })
 
@@ -161,7 +178,9 @@ type Page = 'general' | 'crm' | 'segments' | 'bancarisation' | 'non-eligibles' |
 
 function Admin({ session }: { session: any }) {
   const navigate = useNavigate()
-  const [page, setPage] = useState<Page>('general')
+  const dashboardSearch = Route.useSearch()
+  const [page, setPage] = useState<Page>(dashboardSearch.view === 'crm' ? 'crm' : 'general')
+  useEffect(() => { if (dashboardSearch.view === 'crm') setPage('crm') }, [dashboardSearch.view, dashboardSearch.priority])
   const [leads, setLeads] = useState<any[]>([])
   const [msgCounts, setMsgCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
@@ -184,7 +203,7 @@ function Admin({ session }: { session: any }) {
   }
 
   useEffect(() => {
-    loadLeads()
+    if (page !== 'general') loadLeads()
     // Realtime : nouveaux leads + nouveaux messages
     const leadsChan = supabase.channel('admin-leads')
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads' }, (payload) => {
@@ -212,6 +231,8 @@ function Admin({ session }: { session: any }) {
     return () => { supabase.removeChannel(leadsChan); supabase.removeChannel(msgChan) }
   }, [])
 
+  useEffect(() => { if (page !== 'general') loadLeads() }, [page])
+
   async function updateStatut(id: string, statut: string) {
     const { error } = await supabase.from('leads').update({ statut, updated_at: new Date().toISOString() }).eq('id', id)
     if (!error) setLeads(prev => prev.map(l => l.id === id ? { ...l, statut } : l))
@@ -225,6 +246,7 @@ function Admin({ session }: { session: any }) {
   // Filtering
   const filtered = useMemo(() => {
     return leads.filter(l => {
+      if (page === 'crm' && !matchesPriority(l, dashboardSearch.priority || '', Date.now())) return false
       if (filterStatut && l.statut !== filterStatut) return false
       if (filterType && l.type !== filterType) return false
       if (search) {
@@ -238,23 +260,7 @@ function Admin({ session }: { session: any }) {
       }
       return true
     })
-  }, [leads, search, filterStatut, filterType])
-
-  // KPIs J/J-7/J-30
-  const kpi = useMemo(() => {
-    const now = Date.now()
-    const jj = leads.filter(l => daysBetween(l.created_at) === 0).length
-    const j7 = leads.filter(l => daysBetween(l.created_at) <= 7).length
-    const j30 = leads.filter(l => daysBetween(l.created_at) <= 30).length
-    const finances = leads.filter(l => l.statut === 'Financé').length
-    const conv = leads.length ? Math.round((finances / leads.length) * 100) : 0
-    return { jj, j7, j30, conv, total: leads.length, finances }
-  }, [leads])
-
-  // Funnel
-  const funnel = useMemo(() => {
-    return STATUSES.map(s => ({ statut: s, count: leads.filter(l => l.statut === s).length, color: STATUS_COLORS[s] }))
-  }, [leads])
+  }, [leads, search, filterStatut, filterType, page, dashboardSearch.priority])
 
   function exportCSV() {
     const headers = ['Date', 'Type', 'Activité', 'Nom', 'Prénom/Dirigeant', 'Téléphone', 'Email', 'Ville', 'Montant', 'Objet', 'Banque', 'Contrat', 'Durée restante', 'Ancienneté', 'Revenu/CA', 'Score', 'Statut', 'Code', 'Ref']
@@ -639,17 +645,18 @@ function Admin({ session }: { session: any }) {
             <button className="burger" onClick={() => setSidebarOpen(true)} aria-label="Menu">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="#111" strokeWidth="2" strokeLinecap="round"/></svg>
             </button>
-            <h1 className="page-title">{NAV.find(n => n.k === page)?.label}</h1>
+            {page !== 'general' && <h1 className="page-title">{NAV.find(n => n.k === page)?.label}</h1>}
           </div>
 
-          {loading ? <div className="empty">Chargement…</div> : <>
-            {page === 'general' && <DashboardView kpi={kpi} funnel={funnel} total={leads.length}/>}
+          {page === 'general' && <DashboardView onOpen={setSelectedLead}/>}
+          {page !== 'general' && (loading ? <div className="empty">Chargement…</div> : <>
+            {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
             {page === 'crm' && <CRMView leads={filtered} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} onOpen={setSelectedLead} updateStatut={updateStatut} exportCSV={exportCSV}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead}/>}
             {page === 'rapports' && <RapportsView leads={leads} exportCSV={exportCSV}/>}
-          </>}
+          </>)}
         </main>
       </div>
 
@@ -682,79 +689,88 @@ function Admin({ session }: { session: any }) {
  * SUB-VIEWS
  * ============================================================ */
 
-function DashboardView({ kpi, funnel, total }: any) {
-  const KPI_ICONS = {
-    today: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="4" width="15" height="13" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M2.5 8h15M7 2v3M13 2v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><circle cx="10" cy="12.5" r="1.5" fill="currentColor"/></svg>,
-    week: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="4" width="15" height="13" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M2.5 8h15M7 2v3M13 2v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><path d="M6 11h2M9 11h2M12 11h2M6 14h2M9 14h2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
-    month: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="4" width="15" height="13" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M2.5 8h15M7 2v3M13 2v3" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><path d="M6 11.5h8M6 14h5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
-    total: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="3" y="3" width="14" height="14" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
-    check: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M7 10l2 2 4-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-    funnel: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M2.5 3.5h15l-5.5 7v6l-4 1.5v-7.5l-5.5-7z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>,
-  }
-  return (
-    <>
-      <div className="kpi-grid">
-        <div className="kpi">
-          <div className="kpi-head">
-            <div className="kpi-icon">{KPI_ICONS.today}</div>
-          </div>
-          <div className="kpi-l">Aujourd'hui</div>
-          <div className="kpi-v">{kpi.jj}</div>
-          <div className="kpi-s">nouveaux leads</div>
-        </div>
-        <div className="kpi">
-          <div className="kpi-head">
-            <div className="kpi-icon">{KPI_ICONS.week}</div>
-          </div>
-          <div className="kpi-l">7 jours</div>
-          <div className="kpi-v">{kpi.j7}</div>
-          <div className="kpi-s">leads cumulés</div>
-        </div>
-        <div className="kpi">
-          <div className="kpi-head">
-            <div className="kpi-icon">{KPI_ICONS.month}</div>
-          </div>
-          <div className="kpi-l">30 jours</div>
-          <div className="kpi-v">{kpi.j30}</div>
-          <div className="kpi-s">leads cumulés</div>
-        </div>
-        <div className="kpi">
-          <div className="kpi-head">
-            <div className="kpi-icon" style={{ background: '#0D1B3E' }}>{KPI_ICONS.total}</div>
-          </div>
-          <div className="kpi-l">Total</div>
-          <div className="kpi-v">{total}</div>
-          <div className="kpi-s">tous dossiers</div>
-        </div>
-        <div className="kpi">
-          <div className="kpi-head">
-            <div className="kpi-icon" style={{ background: '#16A34A' }}>{KPI_ICONS.check}</div>
-          </div>
-          <div className="kpi-l">Financés</div>
-          <div className="kpi-v" style={{ color: '#16A34A' }}>{kpi.finances}</div>
-          <div className="kpi-s">conversion {kpi.conv}%</div>
-        </div>
+function DashboardView({ onOpen }: { onOpen: (lead: DashboardLead) => void }) {
+  const [period, setPeriod] = useState<DashboardPeriod>('30j')
+  const [now] = useState(() => Date.now())
+  return <section className="strategic-dashboard">
+    <header className="sd-header">
+      <div><h1>Dashboard stratégique</h1><p>Pilotage commercial et impact</p></div>
+      <div className="sd-period" role="group" aria-label="Période">
+        {(['7j', '30j', '90j', 'YTD'] as const).map(p => <Button key={p} variant="ghost" aria-pressed={p === period} onClick={() => setPeriod(p)}>{p}</Button>)}
       </div>
+    </header>
+    <Suspense fallback={<DashboardSkeleton />}><DashboardContent period={period} now={now} onOpen={onOpen}/></Suspense>
+  </section>
+}
 
-      <div className="funnel">
-        <h3 className="funnel-h">{KPI_ICONS.funnel} Entonnoir de conversion</h3>
-        {funnel.map((f: any) => {
-          const pct = total ? (f.count / total) * 100 : 0
-          return (
-            <div key={f.statut} className="funnel-row">
-              <div className="funnel-l" style={{ color: f.color.fg }}>{f.statut}</div>
-              <div className="funnel-bar">
-                <div className="funnel-fill" style={{ width: `${Math.max(pct, 3)}%`, background: f.color.fg }}>
-                  {pct > 8 ? `${Math.round(pct)}%` : ''}
-                </div>
-              </div>
-              <div className="funnel-count">{f.count}</div>
-            </div>
-          )
-        })}
-      </div>
-    </>
-  )
+function DashboardSkeleton() {
+  return <div className="sd-grid" aria-label="Chargement du dashboard" role="status">{Array.from({ length: 8 }, (_, i) => <div className="sd-skeleton" key={i}/>)}</div>
+}
+
+function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; now: number; onOpen: (lead: DashboardLead) => void }) {
+  const navigate = useNavigate()
+  const bounds = periodBounds(period, now)
+  const { data: rows } = useSuspenseQuery({
+    queryKey: ['admin-strategic-dashboard', period, now],
+    queryFn: async () => {
+      // One SELECT covers N and N-1, allowing comparison without an extra request.
+      const { data, error } = await supabase.from('leads').select('*')
+        .gte('created_at', new Date(bounds.previousStart).toISOString())
+        .lte('created_at', new Date(bounds.end).toISOString())
+        .order('created_at', { ascending: false }).limit(10000)
+      if (error) throw new Error('Impossible de charger les dossiers. Vérifiez votre connexion et vos droits d’accès.')
+      return (data ?? []) as DashboardLead[]
+    },
+    staleTime: 60000,
+  })
+  const m = useMemo(() => dashboardMetrics(rows, period, now), [rows, period, now])
+  const number = (n: number) => new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(n)
+  const showCRM = (filter: PriorityFilter) => navigate({ to: '/admin', search: { view: 'crm', priority: filter } })
+  const commercial = [
+    { icon: '💼', label: 'Dossiers déposés', value: number(m.deposits), detail: m.variation === null ? (m.previousDeposits === 0 && m.deposits > 0 ? 'Aucun dépôt en période précédente' : 'Pas de variation calculable') : `${m.variation >= 0 ? '↗' : '↘'} ${number(Math.abs(m.variation))} % vs période précédente`, trend: m.variation === null ? '' : m.variation >= 0 ? 'positive' : 'negative' },
+    { icon: '📋', label: 'Pipeline en cours', value: number(m.pipeline), detail: xaf(m.pipelineAmount) + ' demandés' },
+    { icon: '🏦', label: 'Financés', value: number(m.financed), detail: m.financedAmountKnown ? xaf(m.financedAmount) + ' financés' : 'Montant financé non renseigné' },
+    { icon: '🎯', label: 'Conversion lead → dépôt', value: number(m.conversion) + ' %', detail: `Cycle moyen : ${m.cycle === null ? 'non disponible' : number(m.cycle) + ' jours'} · estimé` },
+  ]
+  const impact = [
+    { icon: '🚫', label: 'Non-bancarisés détectés', value: number(m.unbanked), detail: 'Sans banque actuelle' },
+    { icon: '📄', label: 'Pack Formalisation proposé', value: number(m.packs), detail: 'PME sans RCCM · estimation' },
+    { icon: '🔄', label: 'Transformations en cours', value: number(m.transformed), detail: 'Contactés ou plus' },
+    { icon: '💰', label: 'Taux transformation impact', value: number(m.impactRate) + ' %', detail: 'CA potentiel : ' + xaf(m.potentialRevenue) },
+  ]
+  return <>
+    {m.current.length === 0 && <div className="sd-empty">Aucun lead sur la période</div>}
+    <section className="sd-pole commercial"><h2>💼 PERFORMANCE COMMERCIALE <span>· Dossiers déposés et pipeline</span></h2><div className="sd-grid">{commercial.map(card => <StrategicKPI key={card.label} {...card}/>)}</div></section>
+    <section className="sd-pole impact"><h2>💡 PERFORMANCE D'IMPACT <span>· Transformer les 70% non-bancarisés</span></h2><div className="sd-grid">{impact.map(card => <StrategicKPI key={card.label} {...card}/>)}</div></section>
+    <section className="sd-section"><h2>Deux pipelines parallèles</h2><div className="sd-double">
+      <StrategicFunnel title="CRÉDIT" tone="commercial" rows={m.creditFunnel}/>
+      <StrategicFunnel title="IMPACT" tone="impact" rows={m.impactFunnel}/>
+    </div></section>
+    <section className="sd-section"><h2>Actions prioritaires</h2><div className="sd-alerts">
+      {[
+        { title: '🔥 Dossiers prêts sans contact 48h', value: number(m.ready), filter: 'ready' as const, tone: 'danger', detail: 'Score ≥ 80 · Nouveau' },
+        { title: '🚨 Non-bancarisés sans action cette semaine', value: number(m.inactiveImpact), filter: 'impact' as const, tone: 'warning', detail: 'Détectés depuis 7 jours · Nouveau' },
+        { title: '💼 Pipeline à relancer', value: xaf(m.followupAmount), filter: 'followup' as const, tone: 'info', detail: 'RDV sans mise à jour depuis plus de 7 jours' },
+      ].map(a => <article key={a.filter} className={`sd-alert ${a.tone}`}><h3>{a.title}</h3><strong>{a.value}</strong><p>{a.detail}</p><Button variant="outline" onClick={() => showCRM(a.filter)} aria-label={`Voir ${a.title}`}>Voir <ArrowUpRight size={14}/></Button></article>)}
+    </div></section>
+    <section className="sd-section"><h2>Derniers leads · opportunités détectées</h2><div className="sd-table-wrap"><table className="sd-table"><thead><tr>{['Nom', 'Type', 'Activité', 'Score', 'Statut', 'Opportunité', 'Montant XAF', 'Créé'].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>
+      {m.latest.map(l => {
+        const name = isCompany(l) ? String(l.situation?.['raison_sociale'] || l.identite?.['raison_sociale'] || l.identite?.['nom'] || 'Non renseigné') : [l.identite?.['prenom'], l.identite?.['nom']].filter(Boolean).join(' ') || 'Non renseigné'
+        const op = opportunity(l)
+        const color = STATUS_COLORS[l.statut]
+        return <tr key={l.id}><td><Button variant="link" className="sd-name" onClick={() => onOpen(l)}>{name}</Button></td><td><span className="sd-badge type">{isCompany(l) ? 'Morale' : 'Physique'}</span></td><td>{l.activite || 'Non renseignée'}</td><td className="sd-score">{l.score ?? 0}<small>/100</small></td><td><span className="sd-badge" style={color ? { background: color.bg, color: color.fg } : undefined}>{l.statut}</span></td><td><span className={`sd-badge ${op === 'Crédit + Impact' ? 'dual' : op === 'Impact' ? 'impact' : 'commercial'}`}>{op || 'À qualifier'}</span></td><td>{xaf(amount(l.montant_demande))}</td><td>{new Date(l.created_at).toLocaleDateString('fr-FR')}</td></tr>
+      })}
+      {m.latest.length === 0 && <tr><td colSpan={8} className="sd-empty">Aucun lead sur la période</td></tr>}
+    </tbody></table></div></section>
+  </>
+}
+
+function StrategicKPI({ icon, label, value, detail, trend = '' }: { icon: string; label: string; value: string; detail: string; trend?: string }) {
+  return <article className="sd-kpi"><span className="sd-kpi-icon" aria-hidden="true">{icon}</span><h3>{label}</h3><strong>{value}</strong><p className={trend}>{detail}</p></article>
+}
+function StrategicFunnel({ title, tone, rows }: { title: string; tone: string; rows: { label: string; count: number }[] }) {
+  const max = Math.max(...rows.map(r => r.count), 1)
+  return <article className={`sd-funnel ${tone}`}><h3>{title}</h3>{rows.map(row => <div className="sd-funnel-row" key={row.label}><div><span>{row.label}</span><strong>{row.count}</strong></div><progress max={max} value={row.count} aria-label={row.label}/></div>)}</article>
 }
 
 function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, onOpen, updateStatut, exportCSV }: any) {
