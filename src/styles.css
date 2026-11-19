@@ -1,155 +1,62 @@
 /* ============================================================
-   Mayinvest PréSelect - Styles CRM Actions
+   Mayinvest PréSelect - Badge Score
    À AJOUTER À LA FIN du fichier src/styles.css
    ============================================================ */
 
-.lead-actions-panel {
-  margin-top: 24px;
-  padding-top: 20px;
-  border-top: 2px solid #E2E8F0;
-}
-
-.lap-title {
-  font: 700 15px/1.4 'Plus Jakarta Sans', sans-serif;
-  color: #0D1B3E;
-  margin: 0 0 16px;
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.lap-subtitle {
-  font-size: 12px;
-  font-weight: 500;
-  color: #64748B;
-}
-
-.lap-warning {
-  background: #FEF3C7;
-  border: 1px solid #FBBF24;
-  color: #92400E;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  margin-bottom: 14px;
-}
-
-.lap-actions-grid {
-  display: grid;
-  gap: 12px;
-}
-
-.lap-action-card {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-left: 4px solid #CBD5E1;
-  border-radius: 10px;
-  padding: 14px 16px;
-  transition: box-shadow 0.15s ease;
-}
-.lap-action-card:hover {
-  box-shadow: 0 2px 6px rgb(13 27 62 / 8%);
-}
-
-.lap-action-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 10px;
-}
-.lap-icon {
-  width: 32px;
-  height: 32px;
+.lead-score-badge {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  background: #F1F5F9;
-  border-radius: 8px;
-  font-size: 16px;
-  flex-shrink: 0;
-}
-.lap-action-info {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-.lap-action-info strong {
-  font-size: 14px;
-  font-weight: 700;
-  color: #0D1B3E;
-}
-.lap-price {
-  font-size: 12px;
-  color: #64748B;
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-}
-
-.lap-action-buttons {
-  display: flex;
   gap: 6px;
-  flex-wrap: wrap;
-}
-.lap-btn {
-  flex: 1;
-  min-width: 90px;
-  padding: 8px 10px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 700;
   font-size: 12px;
-  font-weight: 600;
-  border-radius: 8px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-family: inherit;
-}
-.lap-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.lap-btn.primary {
-  color: #FFFFFF;
-  background: #1E40AF;
-}
-.lap-btn.primary:hover:not(:disabled) {
-  filter: brightness(1.1);
-}
-.lap-btn.secondary {
-  background: #F1F5F9;
-  color: #0D1B3E;
-  border-color: #CBD5E1;
-}
-.lap-btn.secondary:hover:not(:disabled) {
-  background: #E2E8F0;
-}
-.lap-btn.ghost {
-  background: transparent;
-  color: #64748B;
-  border-color: #CBD5E1;
-}
-.lap-btn.ghost:hover:not(:disabled) {
-  color: #0D1B3E;
-  background: #F8FAFC;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
-.lap-preview {
-  margin-top: 12px;
-  padding: 12px 14px;
-  background: #F8FAFC;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-}
-.lap-preview pre {
-  margin: 0;
-  font: 400 12px/1.6 'Plus Jakarta Sans', sans-serif;
-  color: #0D1B3E;
-  white-space: pre-wrap;
-  word-wrap: break-word;
+.lead-score-badge .lsb-num {
+  font-size: 13px;
 }
 
-@media (min-width: 700px) {
-  .lap-actions-grid { grid-template-columns: repeat(2, 1fr); }
+.lead-score-badge .lsb-sep {
+  opacity: 0.4;
+  font-weight: 400;
 }
+
+.lead-score-badge.hot {
+  background: #D1FAE5;
+  color: #047857;
+}
+
+.lead-score-badge.warm {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.lead-score-badge.cold {
+  background: #FED7AA;
+  color: #C2410C;
+}
+
+.lead-score-badge.non-eligible {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+
+/* Variant large pour la fiche détail */
+.lead-score-badge-lg {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+.lead-score-badge-lg .lsb-num { font-size: 22px; }
+.lead-score-badge-lg.hot { background: #D1FAE5; color: #047857; }
+.lead-score-badge-lg.warm { background: #FEF3C7; color: #B45309; }
+.lead-score-badge-lg.cold { background: #FED7AA; color: #C2410C; }
+.lead-score-badge-lg.non-eligible { background: #FEE2E2; color: #B91C1C; }
