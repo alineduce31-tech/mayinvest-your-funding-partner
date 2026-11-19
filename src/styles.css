@@ -243,75 +243,53 @@
 }
 
 /* ============================================================
-   ALERTES "Actions prioritaires"
-   Juste un liseré 3px en haut, pas de bordure complète colorée
+   ALERTES "Actions prioritaires" (option A — ligne horizontale)
+   Icône couleur à gauche, titre+sous-titre, lien "Voir" à droite
    ============================================================ */
 .sd-alerts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 10px;
 }
-.sd-alert {
-  position: relative;
+.sd-alert-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px;
   background: var(--mi-card);
   border: 1px solid var(--mi-border);
-  border-radius: 14px;
-  padding: 20px 18px 16px;
+  border-radius: 12px;
   box-shadow: var(--mi-shadow-sm);
-  overflow: hidden;
 }
-.sd-alert::before {
-  content: ''; position: absolute; top: 0; left: 0; right: 0;
-  height: 3px; background: var(--mi-muted);
+.sd-alert-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  flex-shrink: 0;
 }
-.sd-alert.danger::before { background: var(--mi-red); }
-.sd-alert.warning::before { background: var(--mi-gold); }
-.sd-alert.info::before { background: var(--mi-blue); }
+.sd-alert-row.r .sd-alert-icon { background: var(--mi-red-soft); color: var(--mi-red); }
+.sd-alert-row.g .sd-alert-icon { background: var(--mi-gold-soft); color: var(--mi-gold-dark); }
+.sd-alert-row.b .sd-alert-icon { background: var(--mi-blue-soft); color: var(--mi-blue); }
 
-.sd-alert-head {
-  display: flex; align-items: center; gap: 8px;
-  color: var(--mi-text-2); margin-bottom: 8px;
+.sd-alert-body { flex: 1; min-width: 0; }
+.sd-alert-title {
+  font-size: 13px; font-weight: 600; color: var(--mi-text);
+  margin-bottom: 2px;
 }
-.sd-alert.danger .sd-alert-head { color: var(--mi-red); }
-.sd-alert.warning .sd-alert-head { color: var(--mi-gold-dark); }
-.sd-alert.info .sd-alert-head { color: var(--mi-blue); }
-
-.sd-alert h3 {
-  font-size: 13px; font-weight: 600; color: inherit;
-  margin: 0; letter-spacing: 0;
-}
-.sd-alert strong {
-  display: block; font-size: 11px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  color: var(--mi-muted); margin-bottom: 4px;
-}
-.sd-alert p {
-  font-size: 13px; color: var(--mi-text-2);
-  margin: 0 0 16px;
+.sd-alert-sub {
+  font-size: 12px; color: var(--mi-muted);
 }
 
-/* Bouton d'alerte "Voir" : plat, flèche INLINE (pas au coin) */
-.sd-alert-btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 14px;
-  background: var(--mi-card);
-  color: var(--mi-text);
-  border: 1px solid var(--mi-border-strong);
-  border-radius: 999px;
-  font-family: inherit;
-  font-size: 12px; font-weight: 500;
-  cursor: pointer;
-  transition: background .15s ease, border-color .15s ease;
+.sd-alert-link {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 0;
+  background: none; border: none;
+  color: var(--mi-primary);
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer; flex-shrink: 0;
+  box-shadow: none !important;
 }
-.sd-alert-btn:hover {
-  background: var(--mi-hairline);
-  border-color: var(--mi-text);
-}
-.sd-alert-btn svg {
-  width: 13px; height: 13px;
-  transition: transform .15s ease;
-}
-.sd-alert-btn:hover svg { transform: translate(1px, -1px); }
+.sd-alert-link:hover { color: var(--mi-primary-dark); }
+.sd-alert-link svg { transition: transform .15s ease; }
+.sd-alert-link:hover svg { transform: translate(1px, -1px); }
 
 /* ============================================================
    SEGMENTS (par banque, par secteur)
