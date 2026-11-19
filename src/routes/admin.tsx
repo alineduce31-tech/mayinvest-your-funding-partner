@@ -868,7 +868,7 @@ function Admin({ session }: { session: any }) {
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead}/>}
-            {page === 'rapports' && <RapportsView leads={leads} exportCSV={exportCSV}/>}
+            {page === 'rapports' && <RapportsView leads={leads} exportCSV={exportCSV} exportExcel={exportExcel} exportPDF={exportPDF}/>}
           </>)}
         </main>
       </div>
@@ -1395,41 +1395,76 @@ function NonEligiblesView({ leads, onOpen }: any) {
   )
 }
 
-function RapportsView({ leads, exportCSV }: any) {
+function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
   const totalMontant = leads.reduce((s: number, l: any) => s + (l.montant_demande || 0), 0)
-  const avg = leads.length ? Math.round(totalMontant / leads.length) : 0
+  const avgMontant = leads.length ? Math.round(totalMontant / leads.length) : 0
   const scoreAvg = leads.length ? Math.round(leads.reduce((s: number, l: any) => s + (l.score || 0), 0) / leads.length) : 0
-  const RICONS = {
-    total: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 17V7l7-4 7 4v10M3 17h14M8 10h4M8 13h4M8 17v-4h4v4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-    avg: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M6.5 10h7M10 6.5v7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
-    score: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.5 5 5.5.8-4 3.9.9 5.5-4.9-2.6-4.9 2.6.9-5.5-4-3.9 5.5-.8L10 2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>,
-    down: <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 7l4 4 4-4M2 13h10" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+  const eligibles = leads.filter((l: any) => !(l.eligibilite?.non_eligible === true || l.statut === 'Non Éligible')).length
+  const tauxEligibilite = leads.length ? Math.round((eligibles / leads.length) * 100) : 0
+
+  // Résumé par statut
+  const byStatut = useMemo(() => {
+    const m: Record<string, { n: number; montant: number; score: number }> = {}
+    leads.forEach((l: any) => {
+      const k = l.statut || 'Non défini'
+      if (!m[k]) m[k] = { n: 0, montant: 0, score: 0 }
+      m[k].n += 1
+      m[k].montant += l.montant_demande || 0
+      m[k].score += l.score || 0
+    })
+    return Object.entries(m)
+      .map(([k, v]) => ({ statut: k, n: v.n, montant: v.montant, scoreAvg: Math.round(v.score / v.n) }))
+      .sort((a, b) => b.n - a.n)
+  }, [leads])
+
+  const ICO = {
+    money: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+    avg: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><path d="M8 12h8M12 8v8"/></svg>,
+    score: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><polygon points="12 2 15 8 22 9 17 14 18 21 12 18 6 21 7 14 2 9 9 8 12 2"/></svg>,
+    elig: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>,
+    download: <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>,
+    empty: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>,
   }
+
   return <>
-    <div className="kpi-grid">
-      <div className="kpi">
-        <div className="kpi-head"><div className="kpi-icon">{RICONS.total}</div></div>
-        <div className="kpi-l">Total demandé</div>
-        <div className="kpi-v" style={{ fontSize: 22 }}>{leads.length ? formatXAF(totalMontant) : '—'}</div>
-        <div className="kpi-s">sur {leads.length} dossier(s)</div>
-      </div>
-      <div className="kpi">
-        <div className="kpi-head"><div className="kpi-icon" style={{ background: '#0D1B3E' }}>{RICONS.avg}</div></div>
-        <div className="kpi-l">Panier moyen</div>
-        <div className="kpi-v" style={{ fontSize: 22 }}>{leads.length ? formatXAF(avg) : '—'}</div>
-        <div className="kpi-s">par dossier</div>
-      </div>
-      <div className="kpi">
-        <div className="kpi-head"><div className="kpi-icon" style={{ background: '#F59E0B' }}>{RICONS.score}</div></div>
-        <div className="kpi-l">Score moyen</div>
-        <div className="kpi-v">{scoreAvg}</div>
-        <div className="kpi-s">/ 100</div>
-      </div>
+    <div className="rap-grid">
+      <div className="rap-kpi"><div className="rap-kpi-lbl">Total demandé</div><div className="rap-kpi-val">{leads.length ? xaf(totalMontant) : '—'}</div><div className="rap-kpi-sub">sur {leads.length} dossier{leads.length > 1 ? 's' : ''}</div></div>
+      <div className="rap-kpi"><div className="rap-kpi-lbl">Panier moyen</div><div className="rap-kpi-val">{leads.length ? xaf(avgMontant) : '—'}</div><div className="rap-kpi-sub">par dossier</div></div>
+      <div className="rap-kpi"><div className="rap-kpi-lbl">Score moyen</div><div className="rap-kpi-val">{scoreAvg}<span className="rap-kpi-unit">/100</span></div><div className="rap-kpi-sub">tous dossiers</div></div>
+      <div className="rap-kpi"><div className="rap-kpi-lbl">Taux éligibilité</div><div className="rap-kpi-val">{leads.length ? tauxEligibilite + '%' : '—'}</div><div className="rap-kpi-sub">{eligibles} dossier{eligibles > 1 ? 's' : ''} éligible{eligibles > 1 ? 's' : ''}</div></div>
     </div>
-    <button className="btn-export" onClick={exportCSV} style={{ padding: '14px 24px', fontSize: 14 }}>
-      {RICONS.down}
-      Exporter tous les leads en CSV
-    </button>
+
+    <div className="rap-pan">
+      <div className="rap-pan-head">
+        <div className="rap-pan-t">Résumé par statut <span>· {leads.length} dossier{leads.length > 1 ? 's' : ''}</span></div>
+        <div className="rap-pan-exp" role="group" aria-label="Exporter">
+          <button type="button" onClick={exportCSV} title="Exporter en CSV">{ICO.download}CSV</button>
+          <button type="button" onClick={exportExcel} title="Exporter en Excel (.xlsx)">{ICO.download}Excel</button>
+          <button type="button" onClick={exportPDF} title="Exporter en PDF">{ICO.download}PDF</button>
+        </div>
+      </div>
+      {byStatut.length === 0 ? (
+        <div className="rap-empty">
+          <div className="rap-empty-ico" aria-hidden="true">{ICO.empty}</div>
+          <div className="rap-empty-t">Aucun dossier à inclure dans le rapport</div>
+          <div className="rap-empty-s">Le résumé apparaîtra ici dès le premier dépôt.</div>
+        </div>
+      ) : (
+        <table className="rap-tbl">
+          <thead><tr><th>Statut</th><th>Dossiers</th><th>Montant total</th><th>Score moyen</th></tr></thead>
+          <tbody>
+            {byStatut.map(r => (
+              <tr key={r.statut}>
+                <td><strong>{r.statut}</strong></td>
+                <td>{r.n}</td>
+                <td>{xaf(r.montant)}</td>
+                <td>{r.scoreAvg}/100</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
   </>
 }
 
