@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase } from '@/integrations/supabase/client'
@@ -838,8 +838,8 @@ function Admin({ session }: { session: any }) {
           </nav>
           <div className="sb-footer">
             <div className="sb-user">{session.email}</div>
-            <div style={{ fontSize: 10, color: isDirector ? '#D4A24C' : '#60A5FA', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 4px 10px' }}>
-              {isDirector ? '⭐ Directeur' : '👤 Commercial'}
+            <div style={{ fontSize: 10, color: isDirector ? '#B45309' : '#0F766E', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 4px 10px', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              {isDirector ? <><Crown size={13} strokeWidth={1.75}/> Directeur</> : <><User size={13} strokeWidth={1.75}/> Commercial</>}
             </div>
             <button className="sb-logout" onClick={logout}>
               <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
@@ -946,21 +946,21 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
 
   // BLOC 1 · KPI GÉNÉRAUX avec Commission 2%
   const bloc1Cards = [
-    { icon: '👥', label: 'Total Leads', value: number(m.bloc1.total), detail: 'Sur la période' },
-    { icon: '✅', label: 'Éligibles Banque', value: number(m.bloc1.eligibles), detail: pct(m.bloc1.pctEligibles), tone: 'positive' },
-    { icon: '⚠️', label: 'Non Éligibles', value: number(m.bloc1.nonEligibles), detail: pct(m.bloc1.pctNonEligibles), tone: 'warning' },
-    { icon: '📄', label: 'Dossiers Déposés', value: number(m.bloc1.deposes), detail: 'Statut Dossier Déposé' },
-    { icon: '🏦', label: 'Financés + Comm. 2%', value: number(m.bloc1.finances), detail: `${xaf(m.bloc1.caCommissionCredit)} · Taux : ${pct(m.bloc1.tauxTransfo)}`, tone: 'positive' },
-    { icon: '💰', label: 'CA Total Mayinvest', value: xaf(m.bloc1.caTotal), detail: `Impact : ${xaf(m.bloc1.caImpactPotentiel)} · Crédit : ${xaf(m.bloc1.caCommissionCredit)}`, tone: 'positive' },
+    { icon: <Users size={18} strokeWidth={1.75}/>, label: 'Total Leads', value: number(m.bloc1.total), detail: 'Sur la période' },
+    { icon: <CheckCircle2 size={18} strokeWidth={1.75}/>, label: 'Éligibles Banque', value: number(m.bloc1.eligibles), detail: pct(m.bloc1.pctEligibles), tone: 'positive' },
+    { icon: <AlertTriangle size={18} strokeWidth={1.75}/>, label: 'Non Éligibles', value: number(m.bloc1.nonEligibles), detail: pct(m.bloc1.pctNonEligibles), tone: 'warning' },
+    { icon: <FileText size={18} strokeWidth={1.75}/>, label: 'Dossiers Déposés', value: number(m.bloc1.deposes), detail: 'Statut Dossier Déposé' },
+    { icon: <Landmark size={18} strokeWidth={1.75}/>, label: 'Financés + Comm. 2%', value: number(m.bloc1.finances), detail: `${xaf(m.bloc1.caCommissionCredit)} · Taux : ${pct(m.bloc1.tauxTransfo)}`, tone: 'positive' },
+    { icon: <Wallet size={18} strokeWidth={1.75}/>, label: 'CA Total Mayinvest', value: xaf(m.bloc1.caTotal), detail: `Impact : ${xaf(m.bloc1.caImpactPotentiel)} · Crédit : ${xaf(m.bloc1.caCommissionCredit)}`, tone: 'positive' },
   ]
 
   return <>
-    {isEmpty && <div className="sd-empty-banner">Aucun lead sur la période sélectionnée · les métriques affichent 0</div>}
-    <section className="sd-pole bloc1"><h2>📊 BLOC 1 · KPI GÉNÉRAUX <span>· Impact + Commission 2% sur crédits</span></h2>
+    {isEmpty && <div className="sd-empty-banner"><span className="sd-empty-dot" aria-hidden="true"/>Aucun lead sur la période sélectionnée · les métriques affichent 0</div>}
+    <section className="sd-pole bloc1"><h2>Bloc 1 · KPI généraux <span>· Impact + Commission 2% sur crédits</span></h2>
       <div className="sd-grid">{bloc1Cards.map(card => <StrategicKPI key={card.label} {...card}/>)}</div>
     </section>
 
-    <section className="sd-pole bloc2"><h2>💰 BLOC 2 · ANALYSE DES NON-ÉLIGIBLES · TON OR <span>· Monétiser le Pack Formalisation</span></h2>
+    <section className="sd-pole bloc2"><h2>Bloc 2 · Analyse des non-éligibles <span>· Monétiser le Pack Formalisation</span></h2>
       <div className="sd-table-wrap"><table className="sd-table"><thead><tr><th>Raison</th><th>Nb Leads</th><th>%</th><th>Potentiel CA</th><th>Action</th></tr></thead><tbody>
         {m.bloc2.map(row => <tr key={row.key}>
           <td><strong>{row.raison}</strong></td>
@@ -974,9 +974,9 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
     </section>
 
     <section className="sd-section"><h2>Actions prioritaires</h2><div className="sd-alerts">
-      <article className="sd-alert danger"><h3>🔥 Dossiers prêts sans contact 48h</h3><strong>Score ≥ 80</strong><p>À contacter en priorité</p><Button variant="outline" onClick={() => showCRM('ready')}>Voir <ArrowUpRight size={14}/></Button></article>
-      <article className="sd-alert warning"><h3>🚨 Non-bancarisés cette semaine</h3><strong>Vendre Pack</strong><p>Opportunité Pack Formalisation</p><Button variant="outline" onClick={() => showCRM('impact')}>Voir <ArrowUpRight size={14}/></Button></article>
-      <article className="sd-alert info"><h3>💼 Pipeline à relancer</h3><strong>{'RDV > 7j'}</strong><p>Relancer les dossiers en attente</p><Button variant="outline" onClick={() => showCRM('followup')}>Voir <ArrowUpRight size={14}/></Button></article>
+      <article className="sd-alert danger"><div className="sd-alert-head"><Flame size={16} strokeWidth={1.75}/><h3>Dossiers prêts sans contact 48h</h3></div><strong>Score ≥ 80</strong><p>À contacter en priorité</p><button type="button" className="sd-alert-btn" onClick={() => showCRM('ready')}>Voir<ArrowUpRight size={14}/></button></article>
+      <article className="sd-alert warning"><div className="sd-alert-head"><AlertOctagon size={16} strokeWidth={1.75}/><h3>Non-bancarisés cette semaine</h3></div><strong>Vendre Pack</strong><p>Opportunité Pack Formalisation</p><button type="button" className="sd-alert-btn" onClick={() => showCRM('impact')}>Voir<ArrowUpRight size={14}/></button></article>
+      <article className="sd-alert info"><div className="sd-alert-head"><Briefcase size={16} strokeWidth={1.75}/><h3>Pipeline à relancer</h3></div><strong>{'RDV > 7j'}</strong><p>Relancer les dossiers en attente</p><button type="button" className="sd-alert-btn" onClick={() => showCRM('followup')}>Voir<ArrowUpRight size={14}/></button></article>
     </div></section>
 
     <section className="sd-section"><h2>Performance par segment</h2><div className="sd-double">
@@ -1005,7 +1005,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
   </>
 }
 
-function StrategicKPI({ icon, label, value, detail, trend = '' }: { icon: string; label: string; value: string; detail: string; trend?: string }) {
+function StrategicKPI({ icon, label, value, detail, trend = '' }: { icon: React.ReactNode; label: string; value: string; detail: string; trend?: string }) {
   return <article className="sd-kpi"><span className="sd-kpi-icon" aria-hidden="true">{icon}</span><h3>{label}</h3><strong>{value}</strong><p className={trend}>{detail}</p></article>
 }
 function StrategicFunnel({ title, tone, rows }: { title: string; tone: string; rows: { label: string; count: number }[] }) {
@@ -1023,7 +1023,7 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
   return (
     <>
       <div className="toolbar toolbar-advanced">
-        <input placeholder="🔍 Rechercher nom, téléphone, code…" value={search} onChange={e => setSearch(e.target.value)}/>
+        <input placeholder="Rechercher nom, téléphone, code…" value={search} onChange={e => setSearch(e.target.value)}/>
         <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)}>
           <option value="">Tous statuts</option>
           {STATUSES.map((s: string) => <option key={s} value={s}>{s}</option>)}
@@ -1040,9 +1040,9 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
         {isDirector && (
           <select value={filterAgent} onChange={e => setFilterAgent(e.target.value)}>
             <option value="">Tous agents</option>
-            <option value="none">⚠️ Non assigné</option>
+            <option value="none">Non assigné</option>
             {teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => (
-              <option key={m.id} value={m.id}>👤 {m.email.split('@')[0]}</option>
+              <option key={m.id} value={m.id}>{m.email.split('@')[0]}</option>
             ))}
           </select>
         )}
@@ -1075,7 +1075,7 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
 
       <div className="crm-stats">
         {leads.length} lead{leads.length > 1 ? 's' : ''} affiché{leads.length > 1 ? 's' : ''} {activeFiltersCount > 0 && `· ${activeFiltersCount} filtre${activeFiltersCount > 1 ? 's' : ''} actif${activeFiltersCount > 1 ? 's' : ''}`}
-        {!isDirector && <span style={{ marginLeft: 8, color: '#D97706', fontWeight: 700 }}>· 👤 Mes leads uniquement</span>}
+        {!isDirector && <span style={{ marginLeft: 8, color: '#B45309', fontWeight: 600 }}>· Mes leads uniquement</span>}
       </div>
 
       {leads.length === 0 ? <div className="empty">Aucun lead trouvé avec ces filtres.</div> : (
@@ -1099,9 +1099,9 @@ function LeadRow({ lead, msgCount, onOpen, updateStatut, agentName }: any) {
           <span>{nom || '—'}</span>
           <span className="lead-badge" style={{ background: c.bg, color: c.fg }}>{lead.statut}</span>
           {agentName ? (
-            <span className="lead-agent">👤 {agentName}</span>
+            <span className="lead-agent">{agentName}</span>
           ) : (
-            <span className="lead-agent lead-agent-none">⚠️ Non assigné</span>
+            <span className="lead-agent lead-agent-none">Non assigné</span>
           )}
           {msgCount > 0 && <span className="msg-badge">{msgCount}</span>}
         </div>
@@ -1339,14 +1339,14 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
                 style={{ background: lead.agent_commercial_id ? '#DCFCE7' : '#FEF3C7', color: lead.agent_commercial_id ? '#047857' : '#B45309', border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
                 title="Assigner ce lead à un commercial"
               >
-                <option value="">⚠️ Non assigné</option>
+                <option value="">Non assigné</option>
                 {teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => (
-                  <option key={m.id} value={m.id}>👤 {m.email.split('@')[0]}</option>
+                  <option key={m.id} value={m.id}>{m.email.split('@')[0]}</option>
                 ))}
               </select>
             )}
             {!isDirector && lead.agent_commercial_id && (
-              <span style={{ background: '#DCFCE7', color: '#047857', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>👤 Assigné à moi</span>
+              <span style={{ background: '#ECFDF5', color: '#047857', padding: '6px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: '1px solid #BBF7D0' }}>Assigné à moi</span>
             )}
             {waPhone && <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener" className="dr-wa">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
@@ -1412,7 +1412,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
                 {isP ? <>
                   <div className="dr-field"><div className="dr-k">Salaire domicilié</div><div className="dr-v">{lead.eligibilite?.salaire_domic || '—'}</div></div>
                   {lead.eligibilite?.anciennete_compte_tranche && <div className="dr-field"><div className="dr-k">Compte ouvert depuis</div><div className="dr-v">{TRANCHE_LABELS[lead.eligibilite.anciennete_compte_tranche]}</div></div>}
-                  <div className="dr-field"><div className="dr-k">Non éligible</div><div className="dr-v" style={{ color: lead.eligibilite?.non_eligible ? '#B91C1C' : '#166534' }}>{lead.eligibilite?.non_eligible ? 'Oui ⚠' : 'Non ✓'}</div></div>
+                  <div className="dr-field"><div className="dr-k">Non éligible</div><div className="dr-v" style={{ color: lead.eligibilite?.non_eligible ? '#B91C1C' : '#166534' }}>{lead.eligibilite?.non_eligible ? 'Oui' : 'Non'}</div></div>
                 </> : <>
                   <div className="dr-field"><div className="dr-k">Compte mouvementé</div><div className="dr-v">{lead.eligibilite?.compte_mouvemente || '—'}</div></div>
                   <div className="dr-field"><div className="dr-k">Refus bancaire antérieur</div><div className="dr-v">{lead.eligibilite?.refus_bancaire || '—'}</div></div>
@@ -1454,7 +1454,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: '#0D1B3E', marginBottom: 4 }}>{d.doc_label}</div>
                         <span style={{ display: 'inline-block', background: statusBg, color: statusColor, fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 100 }}>
-                          {isValidated ? '✓ Validé' : isUploaded ? '📄 À valider' : isRejected ? '✗ Rejeté' : '⌛ En attente'}
+                          {isValidated ? 'Validé' : isUploaded ? 'À valider' : isRejected ? 'Rejeté' : 'En attente'}
                         </span>
                         {d.admin_note && <div style={{ fontSize: 11, color: '#991B1B', marginTop: 6, fontStyle: 'italic' }}>Note : {d.admin_note}</div>}
                       </div>
@@ -1558,13 +1558,13 @@ function LeadActionsPanel({ lead }: { lead: any }) {
   return (
     <div className="lead-actions-panel">
       <h3 className="lap-title">
-        🎯 Actions commerciales
+        <Target size={16} strokeWidth={1.75}/> Actions commerciales
         <span className="lap-subtitle">4 relances WhatsApp disponibles</span>
       </h3>
 
       {!telephone && (
         <div className="lap-warning">
-          ⚠️ Aucun numéro de téléphone enregistré pour ce lead. Les scripts peuvent être copiés mais pas envoyés automatiquement.
+          <AlertTriangle size={14} strokeWidth={1.75}/> Aucun numéro de téléphone enregistré pour ce lead. Les scripts peuvent être copiés mais pas envoyés automatiquement.
         </div>
       )}
 
@@ -1573,9 +1573,8 @@ function LeadActionsPanel({ lead }: { lead: any }) {
           const isOpen = openDrawer === action.key
           const filled = fillTemplate(action.template, vars)
           return (
-            <div key={action.key} className="lap-action-card" style={{ borderLeftColor: action.color }}>
+            <div key={action.key} className="lap-action-card">
               <div className="lap-action-head">
-                <span className="lap-icon" aria-hidden="true">{action.icon}</span>
                 <div className="lap-action-info">
                   <strong>{action.short}</strong>
                   <span className="lap-price">
@@ -1590,23 +1589,22 @@ function LeadActionsPanel({ lead }: { lead: any }) {
                   onClick={() => openWhatsapp(action.template)}
                   disabled={!telephone}
                   title={!telephone ? 'Numéro manquant' : 'Ouvrir WhatsApp avec le script pré-rempli'}
-                  style={{ background: action.color }}
                 >
-                  📱 WhatsApp
+                  <MessageCircle size={14} strokeWidth={1.75}/> WhatsApp
                 </button>
                 <button
                   type="button"
                   className="lap-btn secondary"
                   onClick={() => copyToClipboard(filled, action.key)}
                 >
-                  {copiedKey === action.key ? '✓ Copié' : '📋 Copier'}
+                  {copiedKey === action.key ? <><Check size={14} strokeWidth={1.75}/> Copié</> : <><Copy size={14} strokeWidth={1.75}/> Copier</>}
                 </button>
                 <button
                   type="button"
                   className="lap-btn ghost"
                   onClick={() => setOpenDrawer(isOpen ? null : action.key)}
                 >
-                  {isOpen ? '▲ Masquer' : '▼ Aperçu'}
+                  {isOpen ? <><ChevronUp size={14} strokeWidth={1.75}/> Masquer</> : <><ChevronDown size={14} strokeWidth={1.75}/> Aperçu</>}
                 </button>
               </div>
               {isOpen && (
