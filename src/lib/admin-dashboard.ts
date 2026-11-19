@@ -1,34 +1,323 @@
-// Dashboard estimates: a formalisation pack represents 500,000 XAF potential revenue;
-// an impact opportunity also targets credit when the requested amount is at least 5,000,000 XAF.
-export const PACK_PRICE_XAF = 500_000
-export const CREDIT_OPPORTUNITY_THRESHOLD_XAF = 5_000_000
+// ============================================================
+// Mayinvest PréSelect - Dashboard stratégique v2
+// 4 blocs du cahier des charges officiel
+// Fichier: src/lib/admin-dashboard.ts (REMPLACEMENT COMPLET)
+// ============================================================
+
+// Prix officiels validés par le cahier des charges Mayinvest
+export const PRIX_OUVERTURE_COMPTE = 30_000       // XAF
+export const PRIX_PACK_FORMALISATION = 50_000     // XAF
+export const PRIX_COUVEUSE_3MOIS = 0              // XAF (service gratuit)
+export const PRIX_RESTRUCTURATION = 50_000        // XAF
+
 const DAY = 86_400_000
+const MOIS_3 = 90 * DAY
+
 export type DashboardPeriod = '7j' | '30j' | '90j' | 'YTD'
+export type RaisonNonEligible = 'pas_compte' | 'pas_rccm' | 'flux_faible' | 'refus'
 export type PriorityFilter = '' | 'ready' | 'impact' | 'followup'
+
 export type DashboardLead = {
-  id: string; created_at: string; updated_at?: string | null; statut: string
-  type?: string; type_client?: string; banque_actuelle?: string | null; rccm?: string | null
-  montant_demande?: number | string | null; montant_finance?: number | string | null
-  score?: number; activite?: string | null
-  identite?: Record<string, unknown>; situation?: Record<string, unknown>
+  id: string
+  created_at: string
+  updated_at?: string | null
+  statut: string
+  type?: string
+  type_client?: string
+  banque_actuelle?: string | null
+  rccm?: string | null
+  flux_mensuel?: number | null
+  motif_refus?: string | null
+  montant_demande?: number | string | null
+  montant_finance?: number | string | null
+  score?: number
+  activite?: string | null
+  identite?: Record<string, unknown>
+  situation?: Record<string, unknown>
 }
-const normalise = (value: unknown) => String(value ?? '').trim().toLowerCase()
-export const isUnbanked = (lead: DashboardLead) => ['', 'aucune', 'non', 'aucun'].includes(normalise(lead.banque_actuelle))
-export const isCompany = (lead: DashboardLead) => ['morale', 'personne morale', 'pme'].includes(normalise(lead.type_client ?? lead.type))
-export const rccmValue = (lead: DashboardLead) => normalise(lead.rccm ?? lead.situation?.['rccm'])
-export const needsPack = (lead: DashboardLead) => isCompany(lead) && rccmValue(lead) === 'non'
-export const amount = (value: unknown) => Number.isFinite(Number(value)) ? Number(value) : 0
-export const xaf = (value: number) => new Intl.NumberFormat('fr-FR').format(value) + ' XAF'
-export function opportunity(lead: DashboardLead): 'Crédit' | 'Impact' | 'Crédit + Impact' | null {
-  if (isUnbanked(lead) || rccmValue(lead) === 'non') {
-    return amount(lead.montant_demande) >= CREDIT_OPPORTUNITY_THRESHOLD_XAF ? 'Crédit + Impact' : 'Impact'
-  }
-  return !isCompany(lead) || rccmValue(lead) === 'oui' ? 'Crédit' : null
+
+const normalise = (v: unknown) => String(v ?? '').trim().toLowerCase()
+
+export const isUnbanked = (l: DashboardLead) =>
+  ['', 'aucune', 'non', 'aucun'].includes(normalise(l.banque_actuelle))
+
+export const isCompany = (l: DashboardLead) =>
+  ['morale', 'personne morale', 'pme'].includes(normalise(l.type_client ?? l.type))
+
+export const rccmValue = (l: DashboardLead) =>
+  normalise(l.rccm ?? l.situation?.['rccm'])
+
+export const needsPack = (l: DashboardLead) =>
+  isCompany(l) && rccmValue(l) === 'non'
+
+export const hasFluxFaible = (l: DashboardLead) => {
+  if (l.flux_mensuel != null) return Number(l.flux_mensuel) < 1_000_000
+  return false
 }
+
+export const hasRefus = (l: DashboardLead) => {
+  if (l.motif_refus) return /refus/i.test(l.motif_refus)
+  return l.statut === 'Non Éligible'
+}
+
+export const amount = (v: unknown) =>
+  Number.isFinite(Number(v)) ? Number(v) : 0
+
+export const xaf = (v: number) =>
+  new Intl.NumberFormat('fr-FR').format(v) + ' XAF'
+
+export const pct = (v: number) =>
+  new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(v) + ' %'
+
+// Identifier la ou les raisons de non-eligibilite
+export function raisonsNonEligibilite(l: DashboardLead): RaisonNonEligible[] {
+  const raisons: RaisonNonEligible[] = []
+  if (isUnbanked(l)) raisons.push('pas_compte')
+  if (needsPack(l)) raisons.push('pas_rccm')
+  if (hasFluxFaible(l)) raisons.push('flux_faible')
+  if (hasRefus(l) && !isUnbanked(l) && !needsPack(l) && !hasFluxFaible(l)) raisons.push('refus')
+  return raisons
+}
+
+export const isNonEligible = (l: DashboardLead) => raisonsNonEligibilite(l).length > 0
+export const isEligible = (l: DashboardLead) => !isNonEligible(l)
+
 export function periodBounds(period: DashboardPeriod, now: number) {
-  const start = period === 'YTD' ? Date.UTC(new Date(now).getUTCFullYear(), 0, 1) : now - Number(period.slice(0, -1)) * DAY
+  const start = period === 'YTD'
+    ? Date.UTC(new Date(now).getUTCFullYear(), 0, 1)
+    : now - Number(period.slice(0, -1)) * DAY
   return { start, end: now, previousStart: start - (now - start) }
 }
+
+// Tranches de montant (cahier des charges)
+export const TRANCHES = [
+  { label: '< 10M', min: 0, max: 10_000_000 },
+  { label: '10M - 30M', min: 10_000_000, max: 30_000_000 },
+  { label: '30M - 100M', min: 30_000_000, max: 100_000_000 },
+  { label: '100M - 500M', min: 100_000_000, max: 500_000_000 },
+  { label: '> 500M', min: 500_000_000, max: Infinity },
+] as const
+
+const STATUTS_BANCARISE = new Set(['Compte Ouvert', 'Bancarisé', 'Financé', 'Dossier Déposé', 'RDV'])
+const STATUTS_FORMALISE = new Set(['Formalisé', 'Financé', 'Bancarisé', 'Dossier Déposé'])
+
+// ============================================================
+// BLOC 1 - KPI GENERAUX
+// ============================================================
+export function bloc1KPIs(leads: DashboardLead[]) {
+  const total = leads.length
+  const eligibles = leads.filter(isEligible).length
+  const nonEligibles = leads.filter(isNonEligible).length
+  const deposes = leads.filter(l => l.statut === 'Dossier Déposé').length
+  const finances = leads.filter(l => l.statut === 'Financé').length
+  const tauxTransfo = eligibles ? finances / eligibles * 100 : 0
+
+  // CA Genere = somme des potentiels des 4 categories x prix
+  const pasCompte = leads.filter(l => isUnbanked(l) && isNonEligible(l)).length
+  const pasRccm = leads.filter(l => needsPack(l) && isNonEligible(l)).length
+  const fluxFaible = leads.filter(l =>
+    hasFluxFaible(l) && isNonEligible(l) && !isUnbanked(l) && !needsPack(l)
+  ).length
+  const refus = leads.filter(l =>
+    hasRefus(l) && isNonEligible(l) && !isUnbanked(l) && !needsPack(l) && !hasFluxFaible(l)
+  ).length
+
+  const caGenere =
+    pasCompte * PRIX_OUVERTURE_COMPTE +
+    pasRccm * PRIX_PACK_FORMALISATION +
+    fluxFaible * PRIX_COUVEUSE_3MOIS +
+    refus * PRIX_RESTRUCTURATION
+
+  return {
+    total, eligibles, nonEligibles, deposes, finances,
+    pctEligibles: total ? eligibles / total * 100 : 0,
+    pctNonEligibles: total ? nonEligibles / total * 100 : 0,
+    tauxTransfo, caGenere,
+  }
+}
+
+// ============================================================
+// BLOC 2 - ANALYSE DES NON-ELIGIBLES (TON OR)
+// ============================================================
+export function bloc2NonEligibles(leads: DashboardLead[]) {
+  const nonElig = leads.filter(isNonEligible)
+  const total = nonElig.length
+
+  // Chaque lead est classe dans UNE SEULE categorie (priorite: compte > rccm > flux > refus)
+  const pasCompte = nonElig.filter(isUnbanked)
+  const pasRccm = nonElig.filter(l => !isUnbanked(l) && needsPack(l))
+  const fluxFaible = nonElig.filter(l => !isUnbanked(l) && !needsPack(l) && hasFluxFaible(l))
+  const refus = nonElig.filter(l => !isUnbanked(l) && !needsPack(l) && !hasFluxFaible(l) && hasRefus(l))
+
+  return [
+    {
+      key: 'pas_compte' as const,
+      raison: 'Pas de compte bancaire',
+      nb: pasCompte.length,
+      pct: total ? pasCompte.length / total * 100 : 0,
+      potentiel: pasCompte.length * PRIX_OUVERTURE_COMPTE,
+      action: 'Proposer Ouverture Compte',
+      prix: PRIX_OUVERTURE_COMPTE,
+    },
+    {
+      key: 'pas_rccm' as const,
+      raison: 'Pas de RCCM',
+      nb: pasRccm.length,
+      pct: total ? pasRccm.length / total * 100 : 0,
+      potentiel: pasRccm.length * PRIX_PACK_FORMALISATION,
+      action: 'Proposer Pack Formalisation',
+      prix: PRIX_PACK_FORMALISATION,
+    },
+    {
+      key: 'flux_faible' as const,
+      raison: 'Flux < 1M/mois',
+      nb: fluxFaible.length,
+      pct: total ? fluxFaible.length / total * 100 : 0,
+      potentiel: fluxFaible.length * PRIX_COUVEUSE_3MOIS,
+      action: 'Mettre en couveuse 3 mois',
+      prix: PRIX_COUVEUSE_3MOIS,
+    },
+    {
+      key: 'refus' as const,
+      raison: 'Refus bancaire',
+      nb: refus.length,
+      pct: total ? refus.length / total * 100 : 0,
+      potentiel: refus.length * PRIX_RESTRUCTURATION,
+      action: 'Proposer Restructuration',
+      prix: PRIX_RESTRUCTURATION,
+    },
+  ]
+}
+
+// ============================================================
+// BLOC 3 - PERFORMANCE DE BANCARISATION (IMPACT MAYINVEST)
+// ============================================================
+export function bloc3Impact(leads: DashboardLead[], now: number) {
+  const pasCompte = leads.filter(isUnbanked)
+  const pasRccm = leads.filter(needsPack)
+
+  // AVANT MAYINVEST = situation initiale (tous les leads)
+  const pctBancariseAvant = leads.length
+    ? (leads.length - pasCompte.length) / leads.length * 100
+    : 0
+  const pctRccmAvant = leads.length
+    ? (leads.length - pasRccm.length) / leads.length * 100
+    : 0
+
+  // APRES 3 MOIS MAYINVEST = sur les leads de + de 90 jours
+  const matures = leads.filter(l => now - Date.parse(l.created_at) >= MOIS_3)
+
+  if (matures.length < 5) {
+    return {
+      enough: false,
+      pctBancariseAvant, pctRccmAvant,
+      pctBancariseApres: 0, pctRccmApres: 0,
+      deltaBancarise: 0, deltaRccm: 0,
+      totalSansCompte: pasCompte.length,
+      sansCompteParStatut: {} as Record<string, number>,
+    }
+  }
+
+  const matureBancarises = matures.filter(l => STATUTS_BANCARISE.has(l.statut)).length
+  const matureFormalises = matures.filter(l => STATUTS_FORMALISE.has(l.statut)).length
+
+  const pctBancariseApres = matures.length ? matureBancarises / matures.length * 100 : 0
+  const pctRccmApres = matures.length ? matureFormalises / matures.length * 100 : 0
+
+  // Repartition des Sans Compte par statut actuel
+  const sansCompteParStatut: Record<string, number> = {}
+  for (const l of pasCompte) {
+    sansCompteParStatut[l.statut] = (sansCompteParStatut[l.statut] || 0) + 1
+  }
+
+  return {
+    enough: true,
+    pctBancariseAvant, pctBancariseApres,
+    deltaBancarise: pctBancariseApres - pctBancariseAvant,
+    pctRccmAvant, pctRccmApres,
+    deltaRccm: pctRccmApres - pctRccmAvant,
+    totalSansCompte: pasCompte.length,
+    sansCompteParStatut,
+  }
+}
+
+// ============================================================
+// BLOC 4 - PERFORMANCE PAR SEGMENT
+// ============================================================
+export function bloc4Segments(leads: DashboardLead[]) {
+  // Par secteur (activite)
+  const bySecteur: Record<string, { total: number; eligibles: number }> = {}
+  for (const l of leads) {
+    const s = l.activite || 'Non renseigné'
+    if (!bySecteur[s]) bySecteur[s] = { total: 0, eligibles: 0 }
+    bySecteur[s].total++
+    if (isEligible(l)) bySecteur[s].eligibles++
+  }
+  const secteurs = Object.entries(bySecteur)
+    .map(([k, v]) => ({
+      label: k,
+      total: v.total,
+      eligibles: v.eligibles,
+      pct: v.total ? v.eligibles / v.total * 100 : 0,
+    }))
+    .sort((a, b) => b.pct - a.pct)
+
+  // Par tranche de montant
+  const tranches = TRANCHES.map(t => {
+    const leadsDuTranche = leads.filter(l => {
+      const m = amount(l.montant_demande)
+      return m >= t.min && m < t.max
+    })
+    const finances = leadsDuTranche.filter(l => l.statut === 'Financé').length
+    return {
+      label: t.label,
+      total: leadsDuTranche.length,
+      finances,
+      tauxTransfo: leadsDuTranche.length ? finances / leadsDuTranche.length * 100 : 0,
+    }
+  })
+
+  // Par banque actuelle
+  const byBanque: Record<string, { total: number; acceptes: number }> = {}
+  for (const l of leads) {
+    if (!l.banque_actuelle || isUnbanked(l)) continue
+    const b = String(l.banque_actuelle).trim()
+    if (!byBanque[b]) byBanque[b] = { total: 0, acceptes: 0 }
+    byBanque[b].total++
+    if (l.statut === 'Financé') byBanque[b].acceptes++
+  }
+  const banques = Object.entries(byBanque)
+    .map(([k, v]) => ({
+      label: k,
+      total: v.total,
+      acceptes: v.acceptes,
+      taux: v.total ? v.acceptes / v.total * 100 : 0,
+    }))
+    .sort((a, b) => b.taux - a.taux)
+
+  return { secteurs, tranches, banques }
+}
+
+// ============================================================
+// Agregateur principal
+// ============================================================
+export function dashboardMetrics(leads: DashboardLead[], period: DashboardPeriod, now: number) {
+  const { start, end, previousStart } = periodBounds(period, now)
+  const current = leads.filter(l =>
+    Date.parse(l.created_at) >= start && Date.parse(l.created_at) <= end
+  )
+  return {
+    bloc1: bloc1KPIs(current),
+    bloc2: bloc2NonEligibles(current),
+    bloc3: bloc3Impact(current, now),
+    bloc4: bloc4Segments(current),
+    period, start, end, previousStart, current,
+  }
+}
+
+// ============================================================
+// Priorites CRM (alertes actionnables)
+// ============================================================
 export function matchesPriority(lead: DashboardLead, filter: PriorityFilter, now: number): boolean {
   const created = Date.parse(lead.created_at)
   if (filter === 'ready') return (lead.score ?? 0) >= 80 && lead.statut === 'Nouveau' && created < now - 2 * DAY
@@ -36,43 +325,14 @@ export function matchesPriority(lead: DashboardLead, filter: PriorityFilter, now
   if (filter === 'followup') return lead.statut === 'RDV' && Date.parse(lead.updated_at || lead.created_at) < now - 7 * DAY
   return true
 }
-export function dashboardMetrics(leads: DashboardLead[], period: DashboardPeriod, now: number) {
-  const { start, end, previousStart } = periodBounds(period, now)
-  // Cohorts use created_at. updated_at is only an approximate deposit date, not a status history.
-  const current = leads.filter(l => Date.parse(l.created_at) >= start && Date.parse(l.created_at) <= end)
-  const previous = leads.filter(l => Date.parse(l.created_at) >= previousStart && Date.parse(l.created_at) < start)
-  const deposits = current.filter(l => l.statut === 'Dossier Déposé')
-  const previousDeposits = previous.filter(l => l.statut === 'Dossier Déposé').length
-  const pipeline = current.filter(l => ['RDV', 'Dossier Déposé'].includes(l.statut))
-  const financed = current.filter(l => l.statut === 'Financé')
-  const unbanked = current.filter(isUnbanked)
-  const packs = current.filter(needsPack)
-  // Exclude lost/rejected leads: they are not active transformations.
-  const transformed = unbanked.filter(l => ['Contacté', 'RDV', 'Dossier Déposé', 'Éligible', 'Pack Formalisation Vendu', 'Bancarisé', 'Financé'].includes(l.statut))
-  const cycles = deposits.map(l => Math.max(0, (Date.parse(l.updated_at || l.created_at) - Date.parse(l.created_at)) / DAY))
-  const fundedAmounts = financed.filter(l => l.montant_finance != null)
-  return {
-    current, deposits: deposits.length, previousDeposits,
-    variation: previousDeposits ? (deposits.length - previousDeposits) / previousDeposits * 100 : null,
-    pipeline: pipeline.length, pipelineAmount: pipeline.reduce((s, l) => s + amount(l.montant_demande), 0),
-    financed: financed.length, financedAmount: fundedAmounts.reduce((s, l) => s + amount(l.montant_finance), 0),
-    financedAmountKnown: fundedAmounts.length === financed.length,
-    conversion: current.length ? deposits.length / current.length * 100 : 0,
-    cycle: cycles.length ? cycles.reduce((s, v) => s + v, 0) / cycles.length : null,
-    unbanked: unbanked.length, packs: packs.length, transformed: transformed.length,
-    impactRate: unbanked.length ? transformed.length / unbanked.length * 100 : 0,
-    potentialRevenue: packs.length * PACK_PRICE_XAF,
-    creditFunnel: ['Nouveau', 'Contacté', 'RDV', 'Dossier Déposé', 'Financé'].map(label => ({ label, count: current.filter(l => l.statut === label).length })),
-    // Requested proxies, pending dedicated pack-sale and bank-account history RPCs.
-    impactFunnel: [
-      { label: 'Non-bancarisé détecté', count: unbanked.length },
-      { label: 'Pack Formalisation proposé', count: packs.length },
-      { label: 'Pack vendu', count: packs.filter(l => l.statut === 'Financé').length },
-      { label: 'Bancarisation réalisée', count: unbanked.filter(l => l.statut === 'Financé').length },
-    ],
-    ready: leads.filter(l => matchesPriority(l, 'ready', now)).length,
-    inactiveImpact: leads.filter(l => matchesPriority(l, 'impact', now)).length,
-    followupAmount: leads.filter(l => matchesPriority(l, 'followup', now)).reduce((s, l) => s + amount(l.montant_demande), 0),
-    latest: [...current].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 10),
+
+// ============================================================
+// Opportunite (badge table leads)
+// ============================================================
+export function opportunity(lead: DashboardLead): 'Crédit' | 'Impact' | 'Crédit + Impact' | null {
+  const nonElig = isNonEligible(lead)
+  if (nonElig) {
+    return amount(lead.montant_demande) >= 5_000_000 ? 'Crédit + Impact' : 'Impact'
   }
+  return 'Crédit'
 }
