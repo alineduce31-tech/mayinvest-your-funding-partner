@@ -686,6 +686,7 @@ function Admin({ session }: { session: any }) {
         .btn-export.btn-pdf:hover { background: #B91C1C; box-shadow: 0 8px 20px rgba(220,38,38,0.3); }
         .btn-export.btn-xlsx { background: #15803D; }
         .btn-export.btn-xlsx:hover { background: #166534; box-shadow: 0 8px 20px rgba(21,128,61,0.3); }
+        .sd-empty-banner { background: linear-gradient(90deg, #FEF3C7, #FDE68A); color: #92400E; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 20px; border-left: 4px solid #F59E0B; }
         .export-group { display: flex; gap: 8px; }
 
         /* Filtres avancés */
@@ -941,9 +942,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
   const number = (n: number) => new Intl.NumberFormat('fr-FR').format(n)
   const showCRM = (filter: PriorityFilter) => navigate({ to: '/admin', search: { view: 'crm', priority: filter } })
 
-  if (m.current.length === 0) {
-    return <div className="sd-empty">Aucun lead sur la période sélectionnée</div>
-  }
+  const isEmpty = m.current.length === 0
 
   // BLOC 1 · KPI GÉNÉRAUX avec Commission 2%
   const bloc1Cards = [
@@ -956,6 +955,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
   ]
 
   return <>
+    {isEmpty && <div className="sd-empty-banner">Aucun lead sur la période sélectionnée · les métriques affichent 0</div>}
     <section className="sd-pole bloc1"><h2>📊 BLOC 1 · KPI GÉNÉRAUX <span>· Impact + Commission 2% sur crédits</span></h2>
       <div className="sd-grid">{bloc1Cards.map(card => <StrategicKPI key={card.label} {...card}/>)}</div>
     </section>
