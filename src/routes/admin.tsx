@@ -992,9 +992,30 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
     </section>
 
     <section className="sd-section"><h2>Actions prioritaires</h2><div className="sd-alerts">
-      <article className="sd-alert danger"><div className="sd-alert-head"><Flame size={16} strokeWidth={1.75}/><h3>Dossiers prêts sans contact 48h</h3></div><strong>Score ≥ 80</strong><p>À contacter en priorité</p><button type="button" className="sd-alert-btn" onClick={() => showCRM('ready')}>Voir<ArrowUpRight size={14}/></button></article>
-      <article className="sd-alert warning"><div className="sd-alert-head"><AlertOctagon size={16} strokeWidth={1.75}/><h3>Non-bancarisés cette semaine</h3></div><strong>Vendre Pack</strong><p>Opportunité Pack Formalisation</p><button type="button" className="sd-alert-btn" onClick={() => showCRM('impact')}>Voir<ArrowUpRight size={14}/></button></article>
-      <article className="sd-alert info"><div className="sd-alert-head"><Briefcase size={16} strokeWidth={1.75}/><h3>Pipeline à relancer</h3></div><strong>{'RDV > 7j'}</strong><p>Relancer les dossiers en attente</p><button type="button" className="sd-alert-btn" onClick={() => showCRM('followup')}>Voir<ArrowUpRight size={14}/></button></article>
+      <article className="sd-alert-row r">
+        <div className="sd-alert-icon"><Flame size={18} strokeWidth={1.75}/></div>
+        <div className="sd-alert-body">
+          <div className="sd-alert-title">Dossiers prêts sans contact 48h</div>
+          <div className="sd-alert-sub">Score ≥ 80 · à contacter en priorité</div>
+        </div>
+        <button type="button" className="sd-alert-link" onClick={() => showCRM('ready')}>Voir<ArrowUpRight size={12} strokeWidth={2.3}/></button>
+      </article>
+      <article className="sd-alert-row g">
+        <div className="sd-alert-icon"><AlertOctagon size={18} strokeWidth={1.75}/></div>
+        <div className="sd-alert-body">
+          <div className="sd-alert-title">Non-bancarisés cette semaine</div>
+          <div className="sd-alert-sub">Vendre Pack Formalisation</div>
+        </div>
+        <button type="button" className="sd-alert-link" onClick={() => showCRM('impact')}>Voir<ArrowUpRight size={12} strokeWidth={2.3}/></button>
+      </article>
+      <article className="sd-alert-row b">
+        <div className="sd-alert-icon"><Briefcase size={18} strokeWidth={1.75}/></div>
+        <div className="sd-alert-body">
+          <div className="sd-alert-title">Pipeline à relancer</div>
+          <div className="sd-alert-sub">{'RDV > 7j · relancer les dossiers en attente'}</div>
+        </div>
+        <button type="button" className="sd-alert-link" onClick={() => showCRM('followup')}>Voir<ArrowUpRight size={12} strokeWidth={2.3}/></button>
+      </article>
     </div></section>
 
     <section className="sd-section"><h2>Performance par segment</h2><div className="sd-double">
