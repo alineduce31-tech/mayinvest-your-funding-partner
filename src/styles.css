@@ -292,20 +292,100 @@
 .sd-alert-link:hover svg { transform: translate(1px, -1px); }
 
 /* ============================================================
-   SEGMENTS (par banque, par secteur)
+   SEGMENTS (par banque, par secteur) — leaderboard à barres
    ============================================================ */
 .sd-double {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
   gap: 16px;
 }
-.sd-segment { padding: 16px 0 4px; }
-.sd-segment h3 {
-  font-size: 12px; font-weight: 600;
-  color: var(--mi-text-2);
-  padding: 0 18px 12px;
-  margin: 0;
+.sd-seg-panel {
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--mi-shadow-sm);
 }
+.sd-seg-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--mi-hairline);
+}
+.sd-seg-title {
+  font-size: 13px; font-weight: 600; color: var(--mi-text);
+}
+.sd-seg-sub {
+  font-size: 11px; color: var(--mi-faint);
+}
+
+/* Lignes de données */
+.sd-seg-rows { padding: 12px 18px 16px; }
+.sd-seg-row {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--mi-hairline);
+}
+.sd-seg-row:last-child { border-bottom: none; }
+.sd-seg-row-top {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 8px;
+  font-size: 12px;
+}
+.sd-seg-row-label { font-weight: 500; color: var(--mi-text); }
+.sd-seg-row-val {
+  color: var(--mi-muted); font-variant-numeric: tabular-nums;
+}
+.sd-seg-row-val b { color: var(--mi-text); font-weight: 600; margin-left: 6px; }
+
+.sd-seg-bar {
+  height: 4px; background: var(--mi-hairline);
+  border-radius: 2px; overflow: hidden;
+}
+.sd-seg-bar > span {
+  display: block; height: 100%;
+  background: var(--mi-primary);
+  border-radius: 2px;
+  transition: width .3s ease;
+}
+
+/* Squelettes (empty state) */
+.sd-seg-skeleton { padding: 20px 18px; }
+.sd-seg-sk-row { display: flex; flex-direction: column; gap: 6px; padding: 10px 0; }
+.sd-seg-sk-row + .sd-seg-sk-row { border-top: 1px solid var(--mi-hairline); }
+.sd-seg-sk-top { display: flex; justify-content: space-between; align-items: baseline; }
+.sd-seg-sk-label { height: 11px; background: var(--mi-hairline); border-radius: 4px; }
+.sd-seg-sk-val { height: 11px; width: 40px; background: var(--mi-hairline); border-radius: 4px; }
+.sd-seg-sk-bar { height: 4px; background: var(--mi-hairline); border-radius: 2px; opacity: 0.5; }
+.sd-seg-skf {
+  margin-top: 14px; padding-top: 14px;
+  border-top: 1px solid var(--mi-hairline);
+  font-size: 12px; color: var(--mi-muted); text-align: center;
+}
+
+/* ============================================================
+   DERNIERS LEADS — Empty state
+   ============================================================ */
+.sd-leads-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 48px 20px;
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border);
+  border-radius: 14px;
+  box-shadow: var(--mi-shadow-sm);
+  text-align: center;
+}
+.sd-leads-empty-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px;
+  background: var(--mi-primary-soft); color: var(--mi-primary);
+  border-radius: 14px;
+}
+.sd-leads-empty-title {
+  font-size: 14px; font-weight: 600; color: var(--mi-text);
+}
+.sd-leads-empty-sub {
+  font-size: 12px; color: var(--mi-muted); max-width: 360px;
+}
+
 .sd-empty { color: var(--mi-faint); text-align: center; padding: 20px; font-size: 12px; }
 
 /* ============================================================
