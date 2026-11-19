@@ -842,11 +842,7 @@ function Admin({ session }: { session: any }) {
               {isDirector ? <><Crown size={13} strokeWidth={1.75}/> Directeur</> : <><User size={13} strokeWidth={1.75}/> Commercial</>}
             </div>
             <button className="sb-logout" onClick={logout}>
-              <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
-                <path d="M8 15l5-5-5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M13 10H3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
-                <path d="M9 3h7v14H9" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" opacity="0.6"/>
-              </svg>
+              <User size={16} strokeWidth={2}/>
               Déconnexion
             </button>
           </div>
