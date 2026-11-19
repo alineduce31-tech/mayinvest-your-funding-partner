@@ -12,8 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as MonDossierRouteImport } from './routes/mon-dossier'
 import { Route as MonEspaceRouteImport } from './routes/mon-espace'
 import { Route as PreselectionRouteImport } from './routes/preselection'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ClientIdRouteImport } from './routes/client.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -31,6 +33,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MonDossierRoute = MonDossierRouteImport.update({
+  id: '/mon-dossier',
+  path: '/mon-dossier',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MonEspaceRoute = MonEspaceRouteImport.update({
   id: '/mon-espace',
   path: '/mon-espace',
@@ -39,6 +46,11 @@ const MonEspaceRoute = MonEspaceRouteImport.update({
 const PreselectionRoute = PreselectionRouteImport.update({
   id: '/preselection',
   path: '/preselection',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientIdRoute = ClientIdRouteImport.update({
@@ -51,16 +63,20 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
   '/preselection': typeof PreselectionRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/client/$id': typeof ClientIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
   '/preselection': typeof PreselectionRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/client/$id': typeof ClientIdRoute
 }
 export interface FileRoutesById {
@@ -68,23 +84,42 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/auth': typeof AuthRoute
+  '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
   '/preselection': typeof PreselectionRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/client/$id': typeof ClientIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/admin' | '/auth' | '/mon-espace' | '/preselection' | '/client/$id'
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/mon-dossier'
+    | '/mon-espace'
+    | '/preselection'
+    | '/reset-password'
+    | '/client/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/admin' | '/auth' | '/mon-espace' | '/preselection' | '/client/$id'
+  to:
+    | '/'
+    | '/admin'
+    | '/auth'
+    | '/mon-dossier'
+    | '/mon-espace'
+    | '/preselection'
+    | '/reset-password'
+    | '/client/$id'
   id:
     | '__root__'
     | '/'
     | '/admin'
     | '/auth'
+    | '/mon-dossier'
     | '/mon-espace'
     | '/preselection'
+    | '/reset-password'
     | '/client/$id'
   fileRoutesById: FileRoutesById
 }
@@ -92,8 +127,10 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   AuthRoute: typeof AuthRoute
+  MonDossierRoute: typeof MonDossierRoute
   MonEspaceRoute: typeof MonEspaceRoute
   PreselectionRoute: typeof PreselectionRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ClientIdRoute: typeof ClientIdRoute
 }
 
@@ -120,6 +157,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mon-dossier': {
+      id: '/mon-dossier'
+      path: '/mon-dossier'
+      fullPath: '/mon-dossier'
+      preLoaderRoute: typeof MonDossierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mon-espace': {
       id: '/mon-espace'
       path: '/mon-espace'
@@ -132,6 +176,13 @@ declare module '@tanstack/react-router' {
       path: '/preselection'
       fullPath: '/preselection'
       preLoaderRoute: typeof PreselectionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client/$id': {
@@ -148,8 +199,10 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   AuthRoute: AuthRoute,
+  MonDossierRoute: MonDossierRoute,
   MonEspaceRoute: MonEspaceRoute,
   PreselectionRoute: PreselectionRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ClientIdRoute: ClientIdRoute,
 }
 export const routeTree = rootRouteImport
