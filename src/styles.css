@@ -442,6 +442,111 @@
 }
 
 /* ============================================================
+   PAGE RAPPORTS — 4 KPIs + table résumé par statut
+   ============================================================ */
+.rap-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.rap-kpi {
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+  box-shadow: var(--mi-shadow-sm);
+}
+.rap-kpi-lbl {
+  font-size: 10px; font-weight: 600;
+  color: var(--mi-muted);
+  text-transform: uppercase; letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.rap-kpi-val {
+  font-size: 22px; font-weight: 700; color: var(--mi-text);
+  font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.rap-kpi-unit {
+  font-size: 13px; color: var(--mi-muted); font-weight: 500; margin-left: 2px;
+}
+.rap-kpi-sub {
+  font-size: 11px; color: var(--mi-faint);
+  margin-top: 4px; font-weight: 500;
+}
+
+.rap-pan {
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--mi-shadow-sm);
+}
+.rap-pan-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--mi-hairline);
+}
+.rap-pan-t { font-size: 13px; font-weight: 600; color: var(--mi-text); }
+.rap-pan-t span { color: var(--mi-muted); font-weight: 500; margin-left: 4px; font-size: 12px; }
+
+.rap-pan-exp {
+  display: inline-flex;
+  background: var(--mi-hairline);
+  border: 1px solid var(--mi-border);
+  border-radius: 6px;
+  padding: 2px; gap: 2px;
+}
+.rap-pan-exp button {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 5px 10px;
+  background: transparent; color: var(--mi-text-2);
+  border: none; border-radius: 4px;
+  font-family: inherit; font-size: 11px; font-weight: 500;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+.rap-pan-exp button:hover { background: var(--mi-card); color: var(--mi-text); }
+.rap-pan-exp svg { color: var(--mi-muted); }
+.rap-pan-exp button:hover svg { color: var(--mi-primary); }
+
+.rap-tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
+.rap-tbl thead th {
+  text-align: left; padding: 10px 18px;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--mi-muted);
+  background: var(--mi-hairline);
+  border-bottom: 1px solid var(--mi-border);
+}
+.rap-tbl thead th:nth-child(n+2), .rap-tbl tbody td:nth-child(n+2) { text-align: right; }
+.rap-tbl tbody td {
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--mi-hairline);
+  color: var(--mi-text-2);
+  font-variant-numeric: tabular-nums;
+}
+.rap-tbl tbody tr:last-child td { border-bottom: none; }
+.rap-tbl tbody tr:hover { background: #FAFAF8; }
+.rap-tbl tbody td strong { color: var(--mi-text); font-weight: 600; }
+
+.rap-empty {
+  padding: 48px 20px;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  text-align: center;
+}
+.rap-empty-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 48px; height: 48px;
+  background: var(--mi-primary-soft); color: var(--mi-primary);
+  border-radius: 12px;
+  margin-bottom: 4px;
+}
+.rap-empty-t { font-size: 14px; font-weight: 600; color: var(--mi-text); }
+.rap-empty-s { font-size: 12px; color: var(--mi-muted); }
+
+/* ============================================================
    LISTE DÉDIÉE (Bancarisation, Non Éligibles) — carte + empty A
    ============================================================ */
 .lc-card {
