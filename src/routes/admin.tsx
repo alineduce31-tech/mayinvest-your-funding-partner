@@ -482,7 +482,7 @@ function Admin({ session }: { session: any }) {
       <script>window.onload = () => { setTimeout(() => window.print(), 300) }</script>
       </body></html>`
     const w = window.open('', '_blank')
-    if (!w) { alert('Impossible d\\'ouvrir la fenêtre. Autorise les popups.'); return }
+    if (!w) { alert("Impossible d'ouvrir la fenêtre. Autorise les popups."); return }
     w.document.write(html); w.document.close()
   }
 
