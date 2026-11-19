@@ -442,6 +442,57 @@
 }
 
 /* ============================================================
+   LISTE DÉDIÉE (Bancarisation, Non Éligibles) — carte + empty A
+   ============================================================ */
+.lc-card {
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--mi-shadow-sm);
+}
+.lc-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--mi-hairline);
+}
+.lc-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px;
+  background: var(--mi-primary-soft); color: var(--mi-primary);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.lc-head-body {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+}
+.lc-title { font-size: 14px; font-weight: 600; color: var(--mi-text); }
+.lc-subtitle { font-size: 12px; color: var(--mi-muted); }
+.lc-badge {
+  margin-left: auto;
+  background: var(--mi-primary-soft); color: var(--mi-primary);
+  padding: 3px 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+
+.lc-body { padding: 16px 18px; }
+
+.lc-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 48px 20px; text-align: center;
+}
+.lc-empty-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px;
+  background: var(--mi-primary-soft); color: var(--mi-primary);
+  border-radius: 14px;
+}
+.lc-empty-t { font-size: 14px; font-weight: 600; color: var(--mi-text); }
+.lc-empty-s { font-size: 12px; color: var(--mi-muted); max-width: 400px; line-height: 1.5; }
+
+/* ============================================================
    DERNIERS LEADS — Empty state
    ============================================================ */
 .sd-leads-empty {
