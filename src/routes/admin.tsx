@@ -948,6 +948,50 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
 
   const isEmpty = m.current.length === 0
 
+  // BLOC 3 · IMPACT MAYINVEST (Avant / Après)
+  const bloc3 = useMemo(() => {
+    const total = m.current.length
+    if (!total) return null
+    const hasBank = (l: any) => l.banque_actuelle && l.banque_actuelle !== 'Aucune' && l.banque_actuelle !== ''
+    const avantBanked = m.current.filter(hasBank).length
+    const nowBanked = m.current.filter((l: any) => hasBank(l) || l.statut === 'Bancarisé').length
+    const pmes = m.current.filter((l: any) => isCompany(l))
+    const avantRccm = pmes.filter((l: any) => l.situation?.['rccm'] === 'Oui').length
+    const nowRccm = pmes.filter((l: any) => l.situation?.['rccm'] === 'Oui' || l.statut === 'Pack Formalisation Vendu').length
+    const sansCompte = m.current.filter((l: any) => !hasBank(l))
+    const avantPct = total ? Math.round((avantBanked / total) * 100) : 0
+    const apresPct = total ? Math.round((nowBanked / total) * 100) : 0
+    const rccmAvantPct = pmes.length ? Math.round((avantRccm / pmes.length) * 100) : 0
+    const rccmApresPct = pmes.length ? Math.round((nowRccm / pmes.length) * 100) : 0
+    return {
+      bancarisation: { avant: avantPct, apres: apresPct, delta: apresPct - avantPct, baseCount: total },
+      rccm: { avant: rccmAvantPct, apres: rccmApresPct, delta: rccmApresPct - rccmAvantPct, baseCount: pmes.length },
+      funnel: {
+        detectes: sansCompte.length,
+        contactes: sansCompte.filter((l: any) => l.statut !== 'Nouveau').length,
+        rdv: sansCompte.filter((l: any) => l.statut === 'RDV').length,
+        bancarises: sansCompte.filter((l: any) => l.statut === 'Bancarisé').length,
+      },
+    }
+  }, [m.current])
+
+  // BLOC 4 · Par Montant (taux de transformation par tranche)
+  const bloc4Montants = useMemo(() => {
+    const tranches = [
+      { k: '< 1M', min: 0, max: 1_000_000 },
+      { k: '1M–10M', min: 1_000_000, max: 10_000_000 },
+      { k: '10M–30M', min: 10_000_000, max: 30_000_000 },
+      { k: '30M–100M', min: 30_000_000, max: 100_000_000 },
+      { k: '100M+', min: 100_000_000, max: Infinity },
+    ]
+    return tranches.map(t => {
+      const list = m.current.filter((l: any) => (l.montant_demande || 0) >= t.min && (l.montant_demande || 0) < t.max)
+      const deposes = list.filter((l: any) => l.statut === 'Dossier Déposé' || l.statut === 'Financé').length
+      const finances = list.filter((l: any) => l.statut === 'Financé').length
+      return { label: t.k, total: list.length, deposes, finances, taux: deposes ? finances / deposes : 0 }
+    }).filter(t => t.total > 0)
+  }, [m.current])
+
   // BLOC 1 · KPI GÉNÉRAUX avec Commission 2%
   const bloc1Cards = [
     { icon: <Users size={18} strokeWidth={1.75}/>, label: 'Total Leads', value: number(m.bloc1.total), detail: 'Sur la période' },
@@ -1014,6 +1058,84 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
       </article>
     </div></section>
 
+    <section className="sd-pole bloc3"><h2>Bloc 3 · Impact Mayinvest <span>· Avant / Après</span></h2>
+      <div className="sd-impact-grid">
+        <article className="sd-impact-card">
+          <div className="sd-impact-head">
+            <span className="sd-impact-ico"><Landmark size={16} strokeWidth={1.75}/></span>
+            <div className="sd-impact-head-body"><h3>Taux de bancarisation</h3><span>sur {bloc3?.bancarisation.baseCount || 0} lead{(bloc3?.bancarisation.baseCount || 0) > 1 ? 's' : ''}</span></div>
+          </div>
+          {bloc3 && bloc3.bancarisation.baseCount > 0 ? (
+            <div className="sd-impact-body">
+              <div className="sd-impact-row">
+                <div className="sd-impact-row-top"><span className="sd-impact-lbl">Avant</span><span className="sd-impact-val sd-impact-val-avant">{bloc3.bancarisation.avant}%</span></div>
+                <div className="sd-impact-bar"><span className="avant" style={{ width: `${bloc3.bancarisation.avant}%` }}/></div>
+              </div>
+              <div className="sd-impact-row">
+                <div className="sd-impact-row-top"><span className="sd-impact-lbl">Après</span><span className="sd-impact-val sd-impact-val-apres">{bloc3.bancarisation.apres}%</span></div>
+                <div className="sd-impact-bar"><span className="apres" style={{ width: `${bloc3.bancarisation.apres}%` }}/></div>
+              </div>
+              <div className={`sd-impact-delta ${bloc3.bancarisation.delta >= 0 ? 'up' : 'down'}`}>
+                {bloc3.bancarisation.delta >= 0 ? '+' : ''}{bloc3.bancarisation.delta} pts
+                {bloc3.bancarisation.delta >= 0 && <ArrowUpRight size={12} strokeWidth={2.3}/>}
+              </div>
+            </div>
+          ) : <div className="sd-impact-empty">En attente des premiers leads</div>}
+        </article>
+
+        <article className="sd-impact-card">
+          <div className="sd-impact-head">
+            <span className="sd-impact-ico"><FileText size={16} strokeWidth={1.75}/></span>
+            <div className="sd-impact-head-body"><h3>Taux de RCCM (PME)</h3><span>sur {bloc3?.rccm.baseCount || 0} PME{(bloc3?.rccm.baseCount || 0) > 1 ? 's' : ''}</span></div>
+          </div>
+          {bloc3 && bloc3.rccm.baseCount > 0 ? (
+            <div className="sd-impact-body">
+              <div className="sd-impact-row">
+                <div className="sd-impact-row-top"><span className="sd-impact-lbl">Avant</span><span className="sd-impact-val sd-impact-val-avant">{bloc3.rccm.avant}%</span></div>
+                <div className="sd-impact-bar"><span className="avant" style={{ width: `${bloc3.rccm.avant}%` }}/></div>
+              </div>
+              <div className="sd-impact-row">
+                <div className="sd-impact-row-top"><span className="sd-impact-lbl">Après</span><span className="sd-impact-val sd-impact-val-apres">{bloc3.rccm.apres}%</span></div>
+                <div className="sd-impact-bar"><span className="apres" style={{ width: `${bloc3.rccm.apres}%` }}/></div>
+              </div>
+              <div className={`sd-impact-delta ${bloc3.rccm.delta >= 0 ? 'up' : 'down'}`}>
+                {bloc3.rccm.delta >= 0 ? '+' : ''}{bloc3.rccm.delta} pts
+                {bloc3.rccm.delta >= 0 && <ArrowUpRight size={12} strokeWidth={2.3}/>}
+              </div>
+            </div>
+          ) : <div className="sd-impact-empty">Aucune PME sur la période</div>}
+        </article>
+
+        <article className="sd-impact-card sd-impact-wide">
+          <div className="sd-impact-head">
+            <span className="sd-impact-ico"><Target size={16} strokeWidth={1.75}/></span>
+            <div className="sd-impact-head-body"><h3>Conversion « Sans compte »</h3><span>Pipeline de bancarisation</span></div>
+          </div>
+          {bloc3 && bloc3.funnel.detectes > 0 ? (
+            <div className="sd-impact-fn-rows">
+              {([
+                { lbl: 'Détectés', val: bloc3.funnel.detectes },
+                { lbl: 'Contactés', val: bloc3.funnel.contactes },
+                { lbl: 'RDV Banque', val: bloc3.funnel.rdv },
+                { lbl: 'Bancarisés', val: bloc3.funnel.bancarises },
+              ]).map(r => {
+                const p = bloc3.funnel.detectes ? Math.round((r.val / bloc3.funnel.detectes) * 100) : 0
+                return (
+                  <div className="sd-impact-fn-row" key={r.lbl}>
+                    <div className="sd-impact-fn-top">
+                      <span className="sd-impact-fn-lbl">{r.lbl}</span>
+                      <span className="sd-impact-fn-val"><b>{r.val}</b><span className="sd-impact-fn-pct">· {p}%</span></span>
+                    </div>
+                    <div className="sd-impact-fn-bar"><span style={{ width: `${p}%` }}/></div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : <div className="sd-impact-empty">Aucun lead sans compte sur la période</div>}
+        </article>
+      </div>
+    </section>
+
     <section className="sd-section"><h2>Performance par segment</h2><div className="sd-double">
       <article className="sd-seg-panel">
         <div className="sd-seg-head"><span className="sd-seg-title">Par Banque</span><span className="sd-seg-sub">Top acceptations</span></div>
@@ -1063,6 +1185,33 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
                   <span className="sd-seg-row-val">{s.eligibles}/{s.total} · <b>{pct(s.pct)}</b></span>
                 </div>
                 <div className="sd-seg-bar"><span style={{ width: `${Math.round((s.pct || 0) * 100)}%` }}/></div>
+              </div>
+            ))}
+          </div>
+        )}
+      </article>
+
+      <article className="sd-seg-panel">
+        <div className="sd-seg-head"><span className="sd-seg-title">Par Montant</span><span className="sd-seg-sub">Taux de transformation</span></div>
+        {bloc4Montants.length === 0 ? (
+          <div className="sd-seg-skeleton">
+            {[0,1,2].map(i => (
+              <div className="sd-seg-sk-row" key={i}>
+                <div className="sd-seg-sk-top"><div className="sd-seg-sk-label" style={{ width: `${55 - i*10}%` }}/><div className="sd-seg-sk-val"/></div>
+                <div className="sd-seg-sk-bar"/>
+              </div>
+            ))}
+            <div className="sd-seg-skf">En attente des premiers dossiers déposés</div>
+          </div>
+        ) : (
+          <div className="sd-seg-rows">
+            {bloc4Montants.map(t => (
+              <div className="sd-seg-row" key={t.label}>
+                <div className="sd-seg-row-top">
+                  <span className="sd-seg-row-label">{t.label}</span>
+                  <span className="sd-seg-row-val">{t.finances}/{t.deposes} · <b>{pct(t.taux)}</b></span>
+                </div>
+                <div className="sd-seg-bar"><span style={{ width: `${Math.round((t.taux || 0) * 100)}%` }}/></div>
               </div>
             ))}
           </div>
