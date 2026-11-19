@@ -336,12 +336,14 @@ function ClientPortal() {
       const t = setTimeout(() => setHakiOpen(true), 800)
       return () => clearTimeout(t)
     }
+    return undefined
   }, [stage, autoMode])
   useEffect(() => {
     if (stage === 'portal' && autoMode) {
       const t = setTimeout(() => setHakiOpen(true), 500)
       return () => clearTimeout(t)
     }
+    return undefined
   }, [activeTab, stage, autoMode])
 
   async function envoyer() {

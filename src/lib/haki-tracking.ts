@@ -63,5 +63,5 @@ export function trackHaki(
     p_event_data: event_data,
     p_lead_id: lead || null,
     p_user_agent: ua,
-  }).then(() => {}).catch(() => {})
+  }).then(() => {}, () => {})
 }

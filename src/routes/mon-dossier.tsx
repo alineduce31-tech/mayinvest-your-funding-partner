@@ -164,6 +164,7 @@ function MonDossier() {
       const t = setTimeout(() => setHakiOpen(true), 600)
       return () => clearTimeout(t)
     }
+    return undefined
   }, []) // eslint-disable-line
 
   // En mode auto : Haki s'ouvre quand on clique sur un champ ou en cas d'erreur

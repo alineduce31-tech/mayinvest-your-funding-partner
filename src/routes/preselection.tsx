@@ -548,6 +548,7 @@ function Simulation() {
       }, 2500)
       return () => clearTimeout(t)
     }
+    return undefined
   }
   const [activeSection, setActiveSection] = useState<'identite'|'situation'|'besoin'|'eligibilite'>('identite')
   const sectionRefs = {
@@ -573,6 +574,7 @@ function Simulation() {
       const t = setTimeout(() => setMascotOpen(true), 900)
       return () => clearTimeout(t)
     }
+    return undefined
   }, []) // ← [] = s'exécute une fois au chargement de la page
 
   // Si acceptée ET mode auto activé : s'ouvre à chaque changement d'étape pour guider
@@ -581,6 +583,7 @@ function Simulation() {
       const t = setTimeout(() => setMascotOpen(true), 400)
       return () => clearTimeout(t)
     }
+    return undefined
   }, [step, activeSection, hakiAccepted, autoMode])
 
   function acceptHaki() {
@@ -644,6 +647,7 @@ function Simulation() {
       }
     }
     prevForm.current = { ...form }
+    return undefined
   }, [form, hakiAccepted, autoMode, step, isP])
 
   // Message de Haki selon l'état

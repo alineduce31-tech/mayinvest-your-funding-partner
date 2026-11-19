@@ -658,7 +658,7 @@ function Admin({ session }: { session: any }) {
         <LeadDrawer
           lead={selectedLead}
           onClose={() => { setSelectedLead(null); loadLeads() }}
-          onStatutChange={(s) => { updateStatut(selectedLead.id, s); setSelectedLead({ ...selectedLead, statut: s }) }}
+          onStatutChange={(s: string) => { updateStatut(selectedLead.id, s); setSelectedLead({ ...selectedLead, statut: s }) }}
           msgCount={msgCounts[selectedLead.id] || 0}
           onMsgRead={() => setMsgCounts(c => ({ ...c, [selectedLead.id]: 0 }))}
         />
@@ -787,7 +787,7 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
 }
 
 function LeadRow({ lead, msgCount, onOpen, updateStatut }: any) {
-  const c = STATUS_COLORS[lead.statut] || STATUS_COLORS['Nouveau']
+  const c = STATUS_COLORS[lead.statut] || { bg: '#F1F5F9', fg: '#475569' }
   const isP = lead.type === 'physique' || lead.type === 'Personne physique'
   const nom = isP ? `${lead.identite?.prenom || ''} ${lead.identite?.nom || ''}`.trim() : (lead.situation?.raison_sociale || lead.identite?.raison_sociale || '—')
   const scoreCls = lead.score >= 70 ? 'hi' : lead.score < 40 ? 'lo' : ''
