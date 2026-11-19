@@ -1136,7 +1136,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
       </div>
     </section>
 
-    <section className="sd-section"><h2>Performance par segment</h2><div className="sd-double">
+    <section className="sd-pole bloc4"><h2>Bloc 4 · Performance par segment <span>· Par Banque · Par Secteur · Par Montant</span></h2><div className="sd-double">
       <article className="sd-seg-panel">
         <div className="sd-seg-head"><span className="sd-seg-title">Par Banque</span><span className="sd-seg-sub">Top acceptations</span></div>
         {m.bloc4.banques.length === 0 ? (
