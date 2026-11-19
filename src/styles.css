@@ -1024,20 +1024,34 @@ button:active, .lap-btn:active {
 .lead-score-badge-lg.non-eligible { background: var(--mi-red-soft); color: var(--mi-red); }
 
 /* ============================================================
-   SIDEBAR (restes de l'ancien marine)
+   SIDEBAR (fond marine qu'on garde — bouton Déconnexion ghost
+   + hover rouge doux pour signaler "sortie")
    ============================================================ */
-.sb-footer { padding: 10px 14px; border-top: 1px solid var(--mi-border); }
-.sb-user { font-size: 12px; font-weight: 500; color: var(--mi-text); margin-bottom: 6px; }
-.sb-logout {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 7px 12px;
-  background: var(--mi-card);
-  color: var(--mi-text-2);
-  border: 1px solid var(--mi-border-strong);
-  border-radius: 999px;
-  font-size: 12px; font-weight: 500; cursor: pointer;
+.sb-footer { padding: 10px 14px; border-top: 1px solid rgba(255,255,255,0.08); }
+.sb-user {
+  font-size: 12px; font-weight: 500;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 6px;
 }
-.sb-logout:hover { background: var(--mi-hairline); color: var(--mi-text); }
+.sb-logout {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%;
+  padding: 10px 14px;
+  background: transparent !important;
+  color: rgba(255,255,255,0.8) !important;
+  border: 1px solid rgba(255,255,255,0.15) !important;
+  border-radius: 999px !important;
+  font-family: inherit;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  box-shadow: none !important;
+  transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+.sb-logout:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+  color: #FCA5A5 !important;
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
 
 /* ============================================================
    EMPTY STATE GÉNÉRIQUE
