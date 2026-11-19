@@ -911,8 +911,16 @@ function DashboardView({ onOpen }: { onOpen: (lead: DashboardLead) => void }) {
   return <section className="strategic-dashboard">
     <header className="sd-header">
       <div><h1>Dashboard stratégique</h1><p>Pilotage commercial et impact</p></div>
-      <div className="sd-period" role="group" aria-label="Période">
-        {(['7j', '30j', '90j', 'YTD'] as const).map(p => <Button key={p} variant="ghost" aria-pressed={p === period} onClick={() => setPeriod(p)}>{p}</Button>)}
+      <div className="sd-seg" role="group" aria-label="Période">
+        {(['7j', '30j', '90j', 'YTD'] as const).map(p => (
+          <button
+            key={p}
+            type="button"
+            className={p === period ? 'active' : ''}
+            aria-pressed={p === period}
+            onClick={() => setPeriod(p)}
+          >{p}</button>
+        ))}
       </div>
     </header>
     <Suspense fallback={<DashboardSkeleton />}><DashboardContent period={period} now={now} onOpen={onOpen}/></Suspense>
@@ -967,7 +975,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
           <td>{row.nb}</td>
           <td>{pct(row.pct)}</td>
           <td>{xaf(row.potentiel)}</td>
-          <td><Button variant="outline" onClick={() => navigate({ to: '/admin', search: { view: 'crm', priority: 'impact' as PriorityFilter } })}>{row.action} <ArrowUpRight size={14}/></Button></td>
+          <td><button type="button" className="sd-chip-action" onClick={() => navigate({ to: '/admin', search: { view: 'crm', priority: 'impact' as PriorityFilter } })}>{row.action}<ArrowUpRight size={12} strokeWidth={2.3}/></button></td>
         </tr>)}
       </tbody></table></div>
       <p className="sd-hint"><em>Pack Formalisation = 50 000 XAF · Potentiel = Nb × Prix</em></p>
