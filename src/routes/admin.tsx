@@ -1330,30 +1330,68 @@ function Donut({ items, capLabel }: { items: { label: string; value: number }[];
   )
 }
 
-function BancarisationView({ leads, onOpen }: any) {
-  const list = leads.filter((l: any) => l.eligibilite?.salaire_domic === 'Non' || l.banque_actuelle === 'Aucune')
-  const bankIcon = <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M2.5 8L10 3l7.5 5v1h-15V8z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M4.5 9v7M8 9v7M12 9v7M15.5 9v7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><path d="M2 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+function ListCard({ icon, title, subtitle, emptyIcon, emptyTitle, emptySub, list, onOpen }: {
+  icon: React.ReactNode; title: string; subtitle?: string;
+  emptyIcon: React.ReactNode; emptyTitle: string; emptySub: string;
+  list: any[]; onOpen: (l: any) => void;
+}) {
   return (
-    <div className="card">
-      <h3 className="card-h">{bankIcon}Prospects à bancariser · <span style={{ color: '#1A6BFF', marginLeft: 4 }}>{list.length}</span></h3>
-      {list.length === 0 ? <div className="empty">Aucun prospect à bancariser.</div> : (
-        <div className="lead-grid">{list.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={0} onOpen={onOpen} updateStatut={() => {}}/>)}</div>
+    <div className="lc-card">
+      <div className="lc-head">
+        <span className="lc-ico" aria-hidden="true">{icon}</span>
+        <div className="lc-head-body">
+          <span className="lc-title">{title}</span>
+          {subtitle && <span className="lc-subtitle">{subtitle}</span>}
+        </div>
+        <span className="lc-badge">{list.length}</span>
+      </div>
+      {list.length === 0 ? (
+        <div className="lc-empty">
+          <div className="lc-empty-ico" aria-hidden="true">{emptyIcon}</div>
+          <div className="lc-empty-t">{emptyTitle}</div>
+          <div className="lc-empty-s">{emptySub}</div>
+        </div>
+      ) : (
+        <div className="lc-body">
+          <div className="lead-grid">{list.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={0} onOpen={onOpen} updateStatut={() => {}}/>)}</div>
+        </div>
       )}
     </div>
   )
 }
 
+function BancarisationView({ leads, onOpen }: any) {
+  const list = leads.filter((l: any) => l.eligibilite?.salaire_domic === 'Non' || l.banque_actuelle === 'Aucune')
+  const ICO = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+  const EMPTY_ICO = <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+  return (
+    <ListCard
+      icon={ICO}
+      title="Prospects à bancariser"
+      emptyIcon={EMPTY_ICO}
+      emptyTitle="Aucun prospect à bancariser"
+      emptySub="Les leads sans banque ou sans salaire domicilié apparaîtront ici. C'est là que tu vendras le service Ouverture Compte."
+      list={list}
+      onOpen={onOpen}
+    />
+  )
+}
+
 function NonEligiblesView({ leads, onOpen }: any) {
   const list = leads.filter((l: any) => l.eligibilite?.non_eligible === true || l.statut === 'Non Éligible' || l.situation?.rccm === 'Non')
-  const icon = <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M4.5 4.5l11 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+  const ICO = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+  const EMPTY_ICO = <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
   return (
-    <div className="card">
-      <h3 className="card-h">{icon}Dossiers non éligibles · <span style={{ color: '#1A6BFF', marginLeft: 4 }}>{list.length}</span></h3>
-      <p style={{ color: '#64748B', fontSize: 13, margin: '-12px 0 18px', fontWeight: 500 }}>Pack formalisation · up-sell · reconversion</p>
-      {list.length === 0 ? <div className="empty">Aucun dossier non éligible.</div> : (
-        <div className="lead-grid">{list.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={0} onOpen={onOpen} updateStatut={() => {}}/>)}</div>
-      )}
-    </div>
+    <ListCard
+      icon={ICO}
+      title="Dossiers non éligibles"
+      subtitle="Pack formalisation · up-sell · reconversion"
+      emptyIcon={EMPTY_ICO}
+      emptyTitle="Aucun dossier non éligible"
+      emptySub="Les leads marqués non éligibles (pas de RCCM, flux insuffisants, refus bancaire) atterriront ici avec le script de relance Pack Formalisation."
+      list={list}
+      onOpen={onOpen}
+    />
   )
 }
 
