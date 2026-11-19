@@ -17,7 +17,6 @@ function MonEspaceAdmin() {
   const [time, setTime] = useState('')
   const [showPwd, setShowPwd] = useState(false)
 
-  // Horloge temps réel
   useEffect(() => {
     const update = () => {
       const d = new Date()
@@ -28,7 +27,6 @@ function MonEspaceAdmin() {
     return () => clearInterval(t)
   }, [])
 
-  // Si déjà connecté → redirige vers /admin
   useEffect(() => {
     try {
       const raw = localStorage.getItem(ADMIN_SESSION_KEY)
@@ -51,7 +49,13 @@ function MonEspaceAdmin() {
         setLoading(false)
         return
       }
-      const session = { email: row.email, expiresAt: Date.now() + 8 * 60 * 60 * 1000 }
+      // NOUVEAU : on stocke id + role en plus de email pour les filtres role-based
+      const session = {
+        id: row.id,
+        email: row.email,
+        role: row.role || 'director',
+        expiresAt: Date.now() + 8 * 60 * 60 * 1000,
+      }
       localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session))
       navigate({ to: '/admin' })
     } catch {
@@ -85,167 +89,55 @@ function MonEspaceAdmin() {
         html, body { height: 100%; }
         input { font-size: 16px !important; font-family: inherit; -webkit-text-fill-color: var(--ink); }
 
-        .me-root {
-          font-family: 'Inter', -apple-system, system-ui, sans-serif;
-          background: var(--bg-0);
-          color: var(--ink);
-          min-height: 100vh;
-          min-height: 100dvh;
-          display: grid;
-          grid-template-columns: 1.1fr 1fr;
-          position: relative;
-          overflow: hidden;
-        }
-        /* Grain + glow background */
-        .me-root::before {
-          content: '';
-          position: absolute; inset: 0;
-          background:
-            radial-gradient(ellipse 60% 50% at 20% 30%, rgba(26,107,255,0.15), transparent 60%),
-            radial-gradient(ellipse 50% 50% at 80% 70%, rgba(212,162,76,0.1), transparent 60%),
-            linear-gradient(135deg, var(--bg-0) 0%, var(--bg-1) 50%, var(--bg-0) 100%);
-          z-index: 0;
-        }
+        .me-root { font-family: 'Inter', -apple-system, system-ui, sans-serif; background: var(--bg-0); color: var(--ink); min-height: 100vh; min-height: 100dvh; display: grid; grid-template-columns: 1.1fr 1fr; position: relative; overflow: hidden; }
+        .me-root::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 50% at 20% 30%, rgba(26,107,255,0.15), transparent 60%), radial-gradient(ellipse 50% 50% at 80% 70%, rgba(212,162,76,0.1), transparent 60%), linear-gradient(135deg, var(--bg-0) 0%, var(--bg-1) 50%, var(--bg-0) 100%); z-index: 0; }
 
-        /* === LEFT PANEL === */
-        .me-left {
-          position: relative; z-index: 1;
-          padding: 48px 56px;
-          display: flex; flex-direction: column; justify-content: space-between;
-          border-right: 1px solid var(--border);
-        }
+        .me-left { position: relative; z-index: 1; padding: 48px 56px; display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid var(--border); }
         .me-brand { display: flex; align-items: center; gap: 12px; }
-        .me-brand-mark {
-          width: 36px; height: 36px; border-radius: 10px;
-          background: linear-gradient(135deg, var(--accent) 0%, #B88937 100%);
-          display: flex; align-items: center; justify-content: center;
-          font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--bg-0); font-size: 18px;
-          box-shadow: 0 10px 30px var(--accent-glow);
-        }
+        .me-brand-mark { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, var(--accent) 0%, #B88937 100%); display: flex; align-items: center; justify-content: center; font-family: 'Space Grotesk', sans-serif; font-weight: 700; color: var(--bg-0); font-size: 18px; box-shadow: 0 10px 30px var(--accent-glow); }
         .me-brand-txt { font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 17px; letter-spacing: -0.01em; }
         .me-brand-sub { font-size: 10px; color: var(--ink-muted); letter-spacing: 0.18em; text-transform: uppercase; margin-top: 2px; }
 
-        .me-hero {
-          display: flex; flex-direction: column; gap: 24px;
-          max-width: 460px;
-        }
-        .me-eyebrow {
-          display: inline-flex; align-items: center; gap: 8px;
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 11px; color: var(--accent);
-          letter-spacing: 0.12em; text-transform: uppercase;
-        }
-        .me-eyebrow::before {
-          content: ''; width: 20px; height: 1px; background: var(--accent);
-        }
-        .me-title {
-          font-family: 'Space Grotesk', sans-serif;
-          font-weight: 500;
-          font-size: clamp(32px, 4vw, 46px);
-          line-height: 1.05;
-          letter-spacing: -0.025em;
-          color: var(--ink);
-        }
-        .me-title em {
-          font-style: normal;
-          color: var(--accent);
-          font-family: 'Space Grotesk', sans-serif;
-          font-weight: 600;
-        }
-        .me-tagline {
-          font-size: 15px; color: var(--ink-dim); line-height: 1.6;
-          max-width: 400px;
-        }
+        .me-hero { display: flex; flex-direction: column; gap: 24px; max-width: 460px; }
+        .me-eyebrow { display: inline-flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; }
+        .me-eyebrow::before { content: ''; width: 20px; height: 1px; background: var(--accent); }
+        .me-title { font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: clamp(32px, 4vw, 46px); line-height: 1.05; letter-spacing: -0.025em; color: var(--ink); }
+        .me-title em { font-style: normal; color: var(--accent); font-family: 'Space Grotesk', sans-serif; font-weight: 600; }
+        .me-tagline { font-size: 15px; color: var(--ink-dim); line-height: 1.6; max-width: 400px; }
 
-        .me-meta {
-          display: grid; grid-template-columns: auto auto auto; gap: 24px;
-          padding-top: 24px; border-top: 1px solid var(--border);
-          max-width: 460px;
-        }
-        .me-meta-item { }
+        .me-meta { display: grid; grid-template-columns: auto auto auto; gap: 24px; padding-top: 24px; border-top: 1px solid var(--border); max-width: 460px; }
         .me-meta-label { font-size: 10px; color: var(--ink-muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 6px; }
         .me-meta-value { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink); font-weight: 500; }
         .me-dot-live { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #34D058; margin-right: 6px; box-shadow: 0 0 10px rgba(52,208,88,0.6); animation: me-pulse 2s ease-in-out infinite; }
         @keyframes me-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        /* === RIGHT PANEL === */
-        .me-right {
-          position: relative; z-index: 1;
-          padding: 48px;
-          display: flex; align-items: center; justify-content: center;
-        }
-        .me-form-wrap {
-          width: 100%; max-width: 400px;
-        }
-        .me-form-head {
-          margin-bottom: 32px;
-        }
-        .me-form-badge {
-          display: inline-flex; align-items: center; gap: 7px;
-          padding: 6px 12px; border-radius: 100px;
-          background: rgba(212,162,76,0.08); border: 1px solid rgba(212,162,76,0.25);
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 10px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase;
-          margin-bottom: 20px;
-        }
+        .me-right { position: relative; z-index: 1; padding: 48px; display: flex; align-items: center; justify-content: center; }
+        .me-form-wrap { width: 100%; max-width: 400px; }
+        .me-form-head { margin-bottom: 32px; }
+        .me-form-badge { display: inline-flex; align-items: center; gap: 7px; padding: 6px 12px; border-radius: 100px; background: rgba(212,162,76,0.08); border: 1px solid rgba(212,162,76,0.25); font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 20px; }
         .me-form-badge svg { width: 11px; height: 11px; }
-        .me-form-title {
-          font-family: 'Space Grotesk', sans-serif;
-          font-size: 26px; font-weight: 600; letter-spacing: -0.02em;
-          margin-bottom: 8px;
-        }
+        .me-form-title { font-family: 'Space Grotesk', sans-serif; font-size: 26px; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px; }
         .me-form-sub { font-size: 13.5px; color: var(--ink-dim); line-height: 1.5; }
 
         .me-field { position: relative; margin-bottom: 14px; }
-        .me-field label {
-          position: absolute; top: 10px; left: 16px;
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 10px; color: var(--ink-muted);
-          letter-spacing: 0.1em; text-transform: uppercase;
-          pointer-events: none;
-        }
-        .me-field input {
-          width: 100%; background: var(--surface); border: 1px solid var(--border);
-          border-radius: 10px; padding: 28px 16px 12px; color: var(--ink);
-          font-family: inherit; font-weight: 500; outline: none;
-          transition: all 0.2s;
-        }
+        .me-field label { position: absolute; top: 10px; left: 16px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-muted); letter-spacing: 0.1em; text-transform: uppercase; pointer-events: none; }
+        .me-field input { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 28px 16px 12px; color: var(--ink); font-family: inherit; font-weight: 500; outline: none; transition: all 0.2s; }
         .me-field input::placeholder { color: var(--ink-muted); }
         .me-field input:focus { border-color: var(--accent); background: var(--surface-2); box-shadow: 0 0 0 3px rgba(212,162,76,0.1); }
         .me-eye { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; padding: 8px; color: var(--ink-dim); display: flex; align-items: center; justify-content: center; border-radius: 8px; transition: all 0.2s; }
         .me-eye:hover { background: var(--surface-2); color: var(--accent); }
         .me-field.has-eye input { padding-right: 46px; }
 
-        .me-btn {
-          width: 100%; margin-top: 8px;
-          background: var(--ink); color: var(--bg-0);
-          border: none; padding: 15px; border-radius: 10px;
-          font-family: 'Space Grotesk', sans-serif;
-          font-weight: 600; font-size: 14px; letter-spacing: 0.01em;
-          cursor: pointer; transition: all 0.2s;
-          display: flex; align-items: center; justify-content: center; gap: 8px;
-        }
+        .me-btn { width: 100%; margin-top: 8px; background: var(--ink); color: var(--bg-0); border: none; padding: 15px; border-radius: 10px; font-family: 'Space Grotesk', sans-serif; font-weight: 600; font-size: 14px; letter-spacing: 0.01em; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
         .me-btn:hover:not(:disabled) { background: var(--accent); transform: translateY(-1px); box-shadow: 0 15px 40px var(--accent-glow); }
         .me-btn:disabled { background: rgba(255,255,255,0.1); color: var(--ink-muted); cursor: not-allowed; }
         .me-btn svg { transition: transform 0.2s; }
         .me-btn:hover:not(:disabled) svg { transform: translateX(3px); }
 
-        .me-err {
-          margin-top: 14px; padding: 11px 14px;
-          background: rgba(224,92,92,0.08); border: 1px solid rgba(224,92,92,0.25);
-          border-radius: 10px;
-          font-size: 12.5px; color: var(--danger); font-weight: 500;
-          display: flex; align-items: center; gap: 8px;
-        }
+        .me-err { margin-top: 14px; padding: 11px 14px; background: rgba(224,92,92,0.08); border: 1px solid rgba(224,92,92,0.25); border-radius: 10px; font-size: 12.5px; color: var(--danger); font-weight: 500; display: flex; align-items: center; gap: 8px; }
 
-        .me-foot {
-          margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border);
-          display: flex; justify-content: space-between; align-items: center;
-          font-family: 'JetBrains Mono', monospace;
-          font-size: 10px; color: var(--ink-muted); letter-spacing: 0.1em;
-        }
+        .me-foot { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink-muted); letter-spacing: 0.1em; }
 
-        /* === RESPONSIVE === */
         @media (max-width: 900px) {
           .me-root { grid-template-columns: 1fr; }
           .me-left { padding: 32px 24px; border-right: none; border-bottom: 1px solid var(--border); }
@@ -257,7 +149,6 @@ function MonEspaceAdmin() {
         }
       `}</style>
 
-      {/* LEFT : brand + hero */}
       <div className="me-left">
         <div className="me-brand">
           <div className="me-brand-mark">M</div>
@@ -297,7 +188,6 @@ function MonEspaceAdmin() {
         </div>
       </div>
 
-      {/* RIGHT : login */}
       <div className="me-right">
         <div className="me-form-wrap">
           <div className="me-form-head">
