@@ -441,15 +441,109 @@
   outline: none;
   transition: border-color .15s ease;
 }
+
+/* Les selects : chevron propre AVEC marge à droite (plus collé au bord) */
+.toolbar select, .toolbar-advanced select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding-right: 32px;         /* air pour le chevron */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+}
+
 .toolbar input:focus, .toolbar select:focus, .toolbar-advanced input:focus, .toolbar-advanced select:focus {
   border-color: var(--mi-primary);
 }
 .toolbar input { min-width: 240px; flex: 1; }
 
-.crm-stats {
-  font-size: 12px; color: var(--mi-muted);
-  padding: 8px 4px 14px;
+/* ============================================================
+   EXPORT SEGMENTED GROUP (CSV / Excel / PDF unifiés)
+   ============================================================ */
+.sd-export-seg {
+  display: inline-flex;
+  margin-left: auto;
+  background: var(--mi-hairline);
+  border: 1px solid var(--mi-border);
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
 }
+.sd-export-seg button {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  background: transparent; color: var(--mi-text-2);
+  border: none; border-radius: 6px;
+  font-family: inherit; font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+  box-shadow: none !important;
+}
+.sd-export-seg button:hover {
+  background: var(--mi-card); color: var(--mi-text);
+}
+.sd-export-seg svg { color: var(--mi-muted); }
+.sd-export-seg button:hover svg { color: var(--mi-primary); }
+
+/* Bouton "Réinitialiser" (remplace l'ancien btn-reset) */
+.btn-reset {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 12px;
+  background: var(--mi-card); color: var(--mi-text-2);
+  border: 1px solid var(--mi-border-strong);
+  border-radius: 999px;
+  font-family: inherit; font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+.btn-reset:hover { background: var(--mi-hairline); color: var(--mi-text); border-color: var(--mi-text); }
+
+/* ============================================================
+   CRM STATUS + EMPTY STATE
+   ============================================================ */
+.crm-status {
+  display: inline-flex; align-items: center; gap: 8px;
+  margin: 10px 0 12px;
+  padding: 4px 2px;
+  font-size: 12px; color: var(--mi-muted);
+}
+.crm-status-dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--mi-primary);
+  flex-shrink: 0;
+}
+.crm-status-me { color: var(--mi-gold-dark); font-weight: 600; margin-left: 4px; }
+
+.crm-empty {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 48px 20px;
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border);
+  border-radius: 14px;
+  box-shadow: var(--mi-shadow-sm);
+  text-align: center;
+}
+.crm-empty-icon {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 56px; height: 56px;
+  background: var(--mi-gold-soft); color: var(--mi-gold-dark);
+  border-radius: 14px;
+}
+.crm-empty-title { font-size: 14px; font-weight: 600; color: var(--mi-text); }
+.crm-empty-sub { font-size: 12px; color: var(--mi-muted); max-width: 360px; }
+.crm-empty-cta {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; margin-top: 6px;
+  background: var(--mi-card); color: var(--mi-text);
+  border: 1px solid var(--mi-border-strong);
+  border-radius: 999px;
+  font-family: inherit; font-size: 12px; font-weight: 500;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+.crm-empty-cta:hover { background: var(--mi-hairline); border-color: var(--mi-text); }
 
 .date-range {
   display: inline-flex; align-items: center; gap: 6px;
