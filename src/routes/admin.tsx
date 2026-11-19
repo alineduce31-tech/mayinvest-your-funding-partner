@@ -1019,28 +1019,81 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
     </div></section>
 
     <section className="sd-section"><h2>Performance par segment</h2><div className="sd-double">
-      <article className="sd-segment"><h3>Par Banque (Top acceptations)</h3>
-        <table className="sd-segment-table"><thead><tr><th>Banque</th><th>Demandes</th><th>Financés</th><th>Taux</th></tr></thead><tbody>
-          {m.bloc4.banques.slice(0, 6).map(b => <tr key={b.label}><td>{b.label}</td><td>{b.total}</td><td>{b.acceptes}</td><td><strong>{pct(b.taux)}</strong></td></tr>)}
-          {m.bloc4.banques.length === 0 && <tr><td colSpan={4} className="sd-empty">Aucune donnée</td></tr>}
-        </tbody></table>
+      <article className="sd-seg-panel">
+        <div className="sd-seg-head"><span className="sd-seg-title">Par Banque</span><span className="sd-seg-sub">Top acceptations</span></div>
+        {m.bloc4.banques.length === 0 ? (
+          <div className="sd-seg-skeleton">
+            {[0,1,2].map(i => (
+              <div className="sd-seg-sk-row" key={i}>
+                <div className="sd-seg-sk-top"><div className="sd-seg-sk-label" style={{ width: `${55 - i*10}%` }}/><div className="sd-seg-sk-val"/></div>
+                <div className="sd-seg-sk-bar"/>
+              </div>
+            ))}
+            <div className="sd-seg-skf">En attente du premier financement</div>
+          </div>
+        ) : (
+          <div className="sd-seg-rows">
+            {m.bloc4.banques.slice(0, 6).map(b => (
+              <div className="sd-seg-row" key={b.label}>
+                <div className="sd-seg-row-top">
+                  <span className="sd-seg-row-label">{b.label}</span>
+                  <span className="sd-seg-row-val">{b.acceptes}/{b.total} · <b>{pct(b.taux)}</b></span>
+                </div>
+                <div className="sd-seg-bar"><span style={{ width: `${Math.round((b.taux || 0) * 100)}%` }}/></div>
+              </div>
+            ))}
+          </div>
+        )}
       </article>
-      <article className="sd-segment"><h3>Par Secteur (% éligibles)</h3>
-        <table className="sd-segment-table"><thead><tr><th>Secteur</th><th>Total</th><th>Éligibles</th><th>% Élig.</th></tr></thead><tbody>
-          {m.bloc4.secteurs.slice(0, 6).map(s => <tr key={s.label}><td>{s.label}</td><td>{s.total}</td><td>{s.eligibles}</td><td><strong>{pct(s.pct)}</strong></td></tr>)}
-          {m.bloc4.secteurs.length === 0 && <tr><td colSpan={4} className="sd-empty">Aucune donnée</td></tr>}
-        </tbody></table>
+
+      <article className="sd-seg-panel">
+        <div className="sd-seg-head"><span className="sd-seg-title">Par Secteur</span><span className="sd-seg-sub">% éligibles</span></div>
+        {m.bloc4.secteurs.length === 0 ? (
+          <div className="sd-seg-skeleton">
+            {[0,1,2].map(i => (
+              <div className="sd-seg-sk-row" key={i}>
+                <div className="sd-seg-sk-top"><div className="sd-seg-sk-label" style={{ width: `${55 - i*10}%` }}/><div className="sd-seg-sk-val"/></div>
+                <div className="sd-seg-sk-bar"/>
+              </div>
+            ))}
+            <div className="sd-seg-skf">En attente des premiers dépôts</div>
+          </div>
+        ) : (
+          <div className="sd-seg-rows">
+            {m.bloc4.secteurs.slice(0, 6).map(s => (
+              <div className="sd-seg-row" key={s.label}>
+                <div className="sd-seg-row-top">
+                  <span className="sd-seg-row-label">{s.label}</span>
+                  <span className="sd-seg-row-val">{s.eligibles}/{s.total} · <b>{pct(s.pct)}</b></span>
+                </div>
+                <div className="sd-seg-bar"><span style={{ width: `${Math.round((s.pct || 0) * 100)}%` }}/></div>
+              </div>
+            ))}
+          </div>
+        )}
       </article>
     </div></section>
 
-    <section className="sd-section"><h2>Derniers leads</h2><div className="sd-table-wrap"><table className="sd-table"><thead><tr>{['Nom', 'Type', 'Activité', 'Score', 'Statut', 'Opportunité', 'Montant XAF', 'Créé'].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>
-      {[...m.current].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 10).map(l => {
-        const name = isCompany(l) ? String(l.situation?.['raison_sociale'] || l.identite?.['raison_sociale'] || l.identite?.['nom'] || 'Non renseigné') : [l.identite?.['prenom'], l.identite?.['nom']].filter(Boolean).join(' ') || 'Non renseigné'
-        const op = opportunity(l)
-        const color = STATUS_COLORS[l.statut]
-        return <tr key={l.id}><td><Button variant="link" className="sd-name" onClick={() => onOpen(l)}>{name}</Button></td><td><span className="sd-badge type">{isCompany(l) ? 'Morale' : 'Physique'}</span></td><td>{l.activite || 'Non renseignée'}</td><td className="sd-score">{l.score ?? 0}<small>/100</small></td><td><span className="sd-badge" style={color ? { background: color.bg, color: color.fg } : undefined}>{l.statut}</span></td><td><span className={`sd-badge ${op === 'Crédit + Impact' ? 'dual' : op === 'Impact' ? 'impact' : 'commercial'}`}>{op || 'À qualifier'}</span></td><td>{xaf(amount(l.montant_demande))}</td><td>{new Date(l.created_at).toLocaleDateString('fr-FR')}</td></tr>
-      })}
-    </tbody></table></div></section>
+    <section className="sd-section"><h2>Derniers leads</h2>
+      {m.current.length === 0 ? (
+        <div className="sd-leads-empty">
+          <div className="sd-leads-empty-icon">
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div className="sd-leads-empty-title">Aucun lead pour l'instant</div>
+          <div className="sd-leads-empty-sub">Les leads déposés via le formulaire de préselection apparaîtront ici en temps réel.</div>
+        </div>
+      ) : (
+        <div className="sd-table-wrap"><table className="sd-table"><thead><tr>{['Nom', 'Type', 'Activité', 'Score', 'Statut', 'Opportunité', 'Montant XAF', 'Créé'].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>
+          {[...m.current].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 10).map(l => {
+            const name = isCompany(l) ? String(l.situation?.['raison_sociale'] || l.identite?.['raison_sociale'] || l.identite?.['nom'] || 'Non renseigné') : [l.identite?.['prenom'], l.identite?.['nom']].filter(Boolean).join(' ') || 'Non renseigné'
+            const op = opportunity(l)
+            const color = STATUS_COLORS[l.statut]
+            return <tr key={l.id}><td><Button variant="link" className="sd-name" onClick={() => onOpen(l)}>{name}</Button></td><td><span className="sd-badge type">{isCompany(l) ? 'Morale' : 'Physique'}</span></td><td>{l.activite || 'Non renseignée'}</td><td className="sd-score">{l.score ?? 0}<small>/100</small></td><td><span className="sd-badge" style={color ? { background: color.bg, color: color.fg } : undefined}>{l.statut}</span></td><td><span className={`sd-badge ${op === 'Crédit + Impact' ? 'dual' : op === 'Impact' ? 'impact' : 'commercial'}`}>{op || 'À qualifier'}</span></td><td>{xaf(amount(l.montant_demande))}</td><td>{new Date(l.created_at).toLocaleDateString('fr-FR')}</td></tr>
+          })}
+        </tbody></table></div>
+      )}
+    </section>
   </>
 }
 
