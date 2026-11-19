@@ -180,6 +180,9 @@ function Admin({ session }: { session: any }) {
   const [search, setSearch] = useState('')
   const [filterStatut, setFilterStatut] = useState<string>('')
   const [filterType, setFilterType] = useState<string>('')
+  const [filterActivite, setFilterActivite] = useState<string>('')
+  const [dateFrom, setDateFrom] = useState<string>('')
+  const [dateTo, setDateTo] = useState<string>('')
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [toast, setToast] = useState<{ msg: string; score: number } | null>(null)
@@ -236,12 +239,24 @@ function Admin({ session }: { session: any }) {
     navigate({ to: '/mon-espace' })
   }
 
-  // Filtering
+  // Liste unique des activités pour le filtre
+  const activitesList = useMemo(() => {
+    const set = new Set<string>()
+    leads.forEach(l => { if (l.activite) set.add(l.activite) })
+    return Array.from(set).sort()
+  }, [leads])
+
+  // Filtering avec date range + activité + statut + type
   const filtered = useMemo(() => {
+    const dFrom = dateFrom ? new Date(dateFrom).getTime() : 0
+    const dTo = dateTo ? new Date(dateTo).getTime() + 86400000 : Infinity
     return leads.filter(l => {
       if (page === 'crm' && !matchesPriority(l, dashboardSearch.priority || '', Date.now())) return false
       if (filterStatut && l.statut !== filterStatut) return false
       if (filterType && l.type !== filterType) return false
+      if (filterActivite && l.activite !== filterActivite) return false
+      const created = Date.parse(l.created_at)
+      if (created < dFrom || created > dTo) return false
       if (search) {
         const s = search.toLowerCase()
         const nom = (l.identite?.nom || l.situation?.raison_sociale || '').toLowerCase()
@@ -253,7 +268,11 @@ function Admin({ session }: { session: any }) {
       }
       return true
     })
-  }, [leads, search, filterStatut, filterType, page, dashboardSearch.priority])
+  }, [leads, search, filterStatut, filterType, filterActivite, dateFrom, dateTo, page, dashboardSearch.priority])
+
+  function resetFilters() {
+    setSearch(''); setFilterStatut(''); setFilterType(''); setFilterActivite(''); setDateFrom(''); setDateTo('')
+  }
 
   function exportCSV() {
     const headers = ['Date', 'Type', 'Activité', 'Nom', 'Prénom/Dirigeant', 'Téléphone', 'Email', 'Ville', 'Montant', 'Objet', 'Banque', 'Contrat', 'Durée restante', 'Ancienneté', 'Revenu/CA', 'Score', 'Statut', 'Code', 'Ref']
@@ -286,6 +305,80 @@ function Admin({ session }: { session: any }) {
     a.download = `mayinvest-leads-${new Date().toISOString().slice(0, 10)}.csv`
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  // Export PDF via nouvelle fenêtre + impression navigateur (pas besoin de lib externe)
+  function exportPDF() {
+    const activeFilters: string[] = []
+    if (filterStatut) activeFilters.push(`Statut: ${filterStatut}`)
+    if (filterType) activeFilters.push(`Type: ${filterType}`)
+    if (filterActivite) activeFilters.push(`Activité: ${filterActivite}`)
+    if (dateFrom) activeFilters.push(`Du: ${dateFrom}`)
+    if (dateTo) activeFilters.push(`Au: ${dateTo}`)
+    if (search) activeFilters.push(`Recherche: "${search}"`)
+    const filterLabel = activeFilters.length ? activeFilters.join(' · ') : 'Tous les leads'
+    const today = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+
+    const rowsHtml = filtered.map(l => {
+      const nom = l.identite?.nom || l.situation?.raison_sociale || '—'
+      const prenom = l.identite?.prenom || l.situation?.dirigeant || ''
+      const tel = l.identite?.tel || '—'
+      const montant = l.montant_demande ? Number(l.montant_demande).toLocaleString('fr-FR') + ' XAF' : '—'
+      const color = STATUS_COLORS[l.statut] || { bg: '#F1F5F9', fg: '#475569' }
+      return `<tr>
+        <td>${new Date(l.created_at).toLocaleDateString('fr-FR')}</td>
+        <td><strong>${prenom} ${nom}</strong><br/><small>${l.type || ''}</small></td>
+        <td>${l.activite || '—'}</td>
+        <td>${l.ville || '—'}</td>
+        <td>${tel}</td>
+        <td style="text-align:right">${montant}</td>
+        <td><strong>${l.score ?? 0}/100</strong></td>
+        <td><span style="background:${color.bg};color:${color.fg};padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700">${l.statut}</span></td>
+      </tr>`
+    }).join('')
+
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Mayinvest Leads · ${today}</title>
+      <style>
+        @page { size: A4 landscape; margin: 12mm; }
+        body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #0D1B3E; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 3px solid #1A6BFF; margin-bottom: 20px; }
+        .logo { font-size: 24px; font-weight: 800; color: #1A6BFF; letter-spacing: -0.02em; }
+        .logo-sub { font-size: 12px; color: #64748B; margin-top: 4px; font-weight: 500; }
+        .date { font-size: 13px; color: #64748B; font-weight: 600; text-align: right; }
+        .meta { background: #F8FAFC; border-left: 4px solid #1A6BFF; padding: 12px 16px; margin-bottom: 16px; border-radius: 6px; font-size: 12px; color: #334155; }
+        .meta strong { color: #0D1B3E; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        th { background: #0D1B3E; color: #fff; padding: 10px 8px; text-align: left; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; font-size: 10px; }
+        th:last-child, td:last-child { text-align: center; }
+        td { padding: 10px 8px; border-bottom: 1px solid #E2E8F0; vertical-align: top; }
+        tr:nth-child(even) { background: #F8FAFC; }
+        small { color: #64748B; font-size: 10px; }
+        .footer { margin-top: 20px; padding-top: 12px; border-top: 1px solid #E2E8F0; font-size: 10px; color: #94A3B8; text-align: center; font-weight: 500; }
+        .footer strong { color: #1A6BFF; }
+      </style>
+      </head><body>
+      <div class="header">
+        <div>
+          <div class="logo">Mayinvest</div>
+          <div class="logo-sub">PréSelect · Rapport Leads</div>
+        </div>
+        <div class="date">${today}<br/><small>${filtered.length} lead${filtered.length > 1 ? 's' : ''}</small></div>
+      </div>
+      <div class="meta"><strong>Filtres actifs :</strong> ${filterLabel}</div>
+      <table>
+        <thead><tr>
+          <th>Créé le</th><th>Nom</th><th>Activité</th><th>Ville</th><th>Téléphone</th><th>Montant</th><th>Score</th><th>Statut</th>
+        </tr></thead>
+        <tbody>${rowsHtml || '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94A3B8;font-style:italic">Aucun lead correspondant aux filtres</td></tr>'}</tbody>
+      </table>
+      <div class="footer">
+        Rapport généré automatiquement par <strong>Mayinvest PréSelect</strong> · preselect.mayinvest.cg · +242 06 53 13 187
+      </div>
+      <script>window.onload = () => { setTimeout(() => window.print(), 300) }</script>
+      </body></html>`
+    const w = window.open('', '_blank')
+    if (!w) { alert('Impossible d\\'ouvrir la fenêtre. Autorise les popups.'); return }
+    w.document.write(html); w.document.close()
   }
 
   const ICON = {
@@ -484,6 +577,18 @@ function Admin({ session }: { session: any }) {
           cursor: pointer; display: flex; align-items: center; gap: 8px;
           transition: all 0.15s; font-family: inherit; }
         .btn-export:hover { background: var(--blue); box-shadow: 0 8px 20px rgba(26,107,255,0.3); }
+        .btn-export.btn-pdf { background: #DC2626; }
+        .btn-export.btn-pdf:hover { background: #B91C1C; box-shadow: 0 8px 20px rgba(220,38,38,0.3); }
+        .export-group { display: flex; gap: 8px; }
+
+        /* Filtres avancés */
+        .toolbar-advanced { background: #FFFFFF; padding: 14px; border: 1px solid var(--border); border-radius: 14px; }
+        .toolbar-advanced .date-range { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-dim); font-weight: 600; }
+        .toolbar-advanced .date-range input[type="date"] { padding: 10px 12px; font-size: 13px !important; }
+        .toolbar-advanced .date-range label { font-weight: 600; color: var(--ink-dim); }
+        .btn-reset { background: var(--red-soft); color: var(--red); border: 1px solid var(--red); padding: 10px 16px; border-radius: 100px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+        .btn-reset:hover { background: var(--red); color: #fff; }
+        .crm-stats { padding: 10px 14px; background: var(--blue-soft); color: var(--blue); border-radius: 10px; font-size: 12px; font-weight: 600; margin-bottom: 14px; }
 
         /* ============ LEAD ROWS ============ */
         .lead-grid { display: grid; gap: 10px; }
@@ -644,7 +749,7 @@ function Admin({ session }: { session: any }) {
           {page === 'general' && <DashboardView onOpen={setSelectedLead}/>}
           {page !== 'general' && (loading ? <div className="empty">Chargement…</div> : <>
             {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
-            {page === 'crm' && <CRMView leads={filtered} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} onOpen={setSelectedLead} updateStatut={updateStatut} exportCSV={exportCSV}/>}
+            {page === 'crm' && <CRMView leads={filtered} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} exportCSV={exportCSV} exportPDF={exportPDF}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead}/>}
@@ -791,27 +896,53 @@ function StrategicFunnel({ title, tone, rows }: { title: string; tone: string; r
   return <article className={`sd-funnel ${tone}`}><h3>{title}</h3>{rows.map(row => <div className="sd-funnel-row" key={row.label}><div><span>{row.label}</span><strong>{row.count}</strong></div><progress max={max} value={row.count} aria-label={row.label}/></div>)}</article>
 }
 
-function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, onOpen, updateStatut, exportCSV }: any) {
+function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, resetFilters, onOpen, updateStatut, exportCSV, exportPDF }: any) {
+  const activeFiltersCount = [filterStatut, filterType, filterActivite, dateFrom, dateTo, search].filter(Boolean).length
   return (
     <>
-      <div className="toolbar">
-        <input placeholder="Rechercher nom, téléphone, code…" value={search} onChange={e => setSearch(e.target.value)}/>
+      <div className="toolbar toolbar-advanced">
+        <input placeholder="🔍 Rechercher nom, téléphone, code…" value={search} onChange={e => setSearch(e.target.value)}/>
         <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)}>
           <option value="">Tous statuts</option>
-          {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+          {STATUSES.map((s: string) => <option key={s} value={s}>{s}</option>)}
         </select>
         <select value={filterType} onChange={e => setFilterType(e.target.value)}>
           <option value="">Tous types</option>
           <option value="physique">Particulier</option>
           <option value="morale">PME</option>
         </select>
-        <button className="btn-export" onClick={exportCSV}>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 7l4 4 4-4M2 13h10" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          Export CSV
-        </button>
+        <select value={filterActivite} onChange={e => setFilterActivite(e.target.value)}>
+          <option value="">Toutes activités</option>
+          {activitesList?.map((a: string) => <option key={a} value={a}>{a}</option>)}
+        </select>
+        <div className="date-range">
+          <label>Du</label>
+          <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}/>
+          <label>Au</label>
+          <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}/>
+        </div>
+        {activeFiltersCount > 0 && (
+          <button className="btn-reset" onClick={resetFilters} title="Réinitialiser les filtres">
+            ✕ Reset ({activeFiltersCount})
+          </button>
+        )}
+        <div className="export-group">
+          <button className="btn-export" onClick={exportCSV}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 7l4 4 4-4M2 13h10" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            CSV
+          </button>
+          <button className="btn-export btn-pdf" onClick={exportPDF}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2h7l3 3v7H2V2z" stroke="#fff" strokeWidth="1.5"/><path d="M9 2v3h3" stroke="#fff" strokeWidth="1.5"/></svg>
+            PDF
+          </button>
+        </div>
       </div>
 
-      {leads.length === 0 ? <div className="empty">Aucun lead trouvé.</div> : (
+      <div className="crm-stats">
+        {leads.length} lead{leads.length > 1 ? 's' : ''} affiché{leads.length > 1 ? 's' : ''} {activeFiltersCount > 0 && `· ${activeFiltersCount} filtre${activeFiltersCount > 1 ? 's' : ''} actif${activeFiltersCount > 1 ? 's' : ''}`}
+      </div>
+
+      {leads.length === 0 ? <div className="empty">Aucun lead trouvé avec ces filtres.</div> : (
         <div className="lead-grid">
           {leads.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={msgCounts[l.id] || 0} onOpen={onOpen} updateStatut={updateStatut}/>)}
         </div>
