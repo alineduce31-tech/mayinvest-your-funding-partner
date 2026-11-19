@@ -181,21 +181,47 @@ function Admin({ session }: { session: any }) {
   const [filterStatut, setFilterStatut] = useState<string>('')
   const [filterType, setFilterType] = useState<string>('')
   const [filterActivite, setFilterActivite] = useState<string>('')
+  const [filterAgent, setFilterAgent] = useState<string>('')
   const [dateFrom, setDateFrom] = useState<string>('')
   const [dateTo, setDateTo] = useState<string>('')
+  const [teamMembers, setTeamMembers] = useState<any[]>([])
+
+  // Role-based access : commercial ne voit que ses leads assignés
+  const isDirector = session?.role === 'director'
+  const isCommercial = session?.role === 'commercial'
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [toast, setToast] = useState<{ msg: string; score: number } | null>(null)
 
   async function loadLeads() {
-    const { data } = await supabase.from('leads').select('*').order('created_at', { ascending: false })
+    let query = supabase.from('leads').select('*').order('created_at', { ascending: false })
+    // Commercial : filtre auto les leads qui lui sont assignés
+    if (isCommercial && session?.id) {
+      query = query.eq('agent_commercial_id', session.id)
+    }
+    const { data } = await query
     if (data) setLeads(data)
-    // Compteur messages non lus par lead (de l'admin point de vue = messages client non lus)
     const { data: msgs } = await supabase.from('messages').select('lead_id').eq('sender', 'client').is('read_at', null)
     const counts: Record<string, number> = {}
     msgs?.forEach(m => { counts[m.lead_id] = (counts[m.lead_id] || 0) + 1 })
     setMsgCounts(counts)
     setLoading(false)
+  }
+
+  // Charger la liste des membres de l'équipe (pour assignation)
+  async function loadTeam() {
+    const { data } = await supabase.rpc('list_admin_users')
+    if (data) setTeamMembers(data)
+  }
+
+  useEffect(() => { loadTeam() }, [])
+
+  async function assignLead(leadId: string, agentId: string | null) {
+    const { error } = await supabase.rpc('assign_lead_agent', { p_lead_id: leadId, p_agent_id: agentId })
+    if (!error) {
+      setLeads(prev => prev.map(l => l.id === leadId ? { ...l, agent_commercial_id: agentId } : l))
+      if (selectedLead?.id === leadId) setSelectedLead({ ...selectedLead, agent_commercial_id: agentId })
+    }
   }
 
   useEffect(() => {
@@ -246,7 +272,7 @@ function Admin({ session }: { session: any }) {
     return Array.from(set).sort()
   }, [leads])
 
-  // Filtering avec date range + activité + statut + type
+  // Filtering avec date range + activité + statut + type + agent commercial
   const filtered = useMemo(() => {
     const dFrom = dateFrom ? new Date(dateFrom).getTime() : 0
     const dTo = dateTo ? new Date(dateTo).getTime() + 86400000 : Infinity
@@ -255,6 +281,10 @@ function Admin({ session }: { session: any }) {
       if (filterStatut && l.statut !== filterStatut) return false
       if (filterType && l.type !== filterType) return false
       if (filterActivite && l.activite !== filterActivite) return false
+      if (filterAgent) {
+        if (filterAgent === 'none' && l.agent_commercial_id) return false
+        if (filterAgent !== 'none' && l.agent_commercial_id !== filterAgent) return false
+      }
       const created = Date.parse(l.created_at)
       if (created < dFrom || created > dTo) return false
       if (search) {
@@ -268,10 +298,10 @@ function Admin({ session }: { session: any }) {
       }
       return true
     })
-  }, [leads, search, filterStatut, filterType, filterActivite, dateFrom, dateTo, page, dashboardSearch.priority])
+  }, [leads, search, filterStatut, filterType, filterActivite, filterAgent, dateFrom, dateTo, page, dashboardSearch.priority])
 
   function resetFilters() {
-    setSearch(''); setFilterStatut(''); setFilterType(''); setFilterActivite(''); setDateFrom(''); setDateTo('')
+    setSearch(''); setFilterStatut(''); setFilterType(''); setFilterActivite(''); setFilterAgent(''); setDateFrom(''); setDateTo('')
   }
 
   function exportCSV() {
@@ -590,6 +620,10 @@ function Admin({ session }: { session: any }) {
         .btn-reset:hover { background: var(--red); color: #fff; }
         .crm-stats { padding: 10px 14px; background: var(--blue-soft); color: var(--blue); border-radius: 10px; font-size: 12px; font-weight: 600; margin-bottom: 14px; }
 
+        /* Badge agent commercial sur lead-row */
+        .lead-agent { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; background: var(--green-soft); color: var(--green); margin-left: 4px; }
+        .lead-agent.lead-agent-none { background: var(--amber-soft); color: var(--amber); }
+
         /* ============ LEAD ROWS ============ */
         .lead-grid { display: grid; gap: 10px; }
         .lead-row { background: var(--card); border-radius: 14px; padding: 16px 20px;
@@ -726,6 +760,9 @@ function Admin({ session }: { session: any }) {
           </nav>
           <div className="sb-footer">
             <div className="sb-user">{session.email}</div>
+            <div style={{ fontSize: 10, color: isDirector ? '#D4A24C' : '#60A5FA', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 4px 10px' }}>
+              {isDirector ? '⭐ Directeur' : '👤 Commercial'}
+            </div>
             <button className="sb-logout" onClick={logout}>
               <svg width="15" height="15" viewBox="0 0 20 20" fill="none">
                 <path d="M8 15l5-5-5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -749,7 +786,7 @@ function Admin({ session }: { session: any }) {
           {page === 'general' && <DashboardView onOpen={setSelectedLead}/>}
           {page !== 'general' && (loading ? <div className="empty">Chargement…</div> : <>
             {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
-            {page === 'crm' && <CRMView leads={filtered} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} exportCSV={exportCSV} exportPDF={exportPDF}/>}
+            {page === 'crm' && <CRMView leads={filtered} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} exportCSV={exportCSV} exportPDF={exportPDF} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead}/>}
@@ -766,6 +803,9 @@ function Admin({ session }: { session: any }) {
           onStatutChange={(s: string) => { updateStatut(selectedLead.id, s); setSelectedLead({ ...selectedLead, statut: s }) }}
           msgCount={msgCounts[selectedLead.id] || 0}
           onMsgRead={() => setMsgCounts(c => ({ ...c, [selectedLead.id]: 0 }))}
+          teamMembers={teamMembers}
+          onAssignAgent={(agentId: string | null) => assignLead(selectedLead.id, agentId)}
+          isDirector={isDirector}
         />
       )}
 
@@ -896,8 +936,13 @@ function StrategicFunnel({ title, tone, rows }: { title: string; tone: string; r
   return <article className={`sd-funnel ${tone}`}><h3>{title}</h3>{rows.map(row => <div className="sd-funnel-row" key={row.label}><div><span>{row.label}</span><strong>{row.count}</strong></div><progress max={max} value={row.count} aria-label={row.label}/></div>)}</article>
 }
 
-function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, resetFilters, onOpen, updateStatut, exportCSV, exportPDF }: any) {
-  const activeFiltersCount = [filterStatut, filterType, filterActivite, dateFrom, dateTo, search].filter(Boolean).length
+function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, exportCSV, exportPDF, isDirector }: any) {
+  const activeFiltersCount = [filterStatut, filterType, filterActivite, filterAgent, dateFrom, dateTo, search].filter(Boolean).length
+  const agentEmailById = (id: string | null | undefined): string => {
+    if (!id) return ''
+    const t = teamMembers?.find((m: any) => m.id === id)
+    return t ? t.email.split('@')[0] : ''
+  }
   return (
     <>
       <div className="toolbar toolbar-advanced">
@@ -915,6 +960,15 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
           <option value="">Toutes activités</option>
           {activitesList?.map((a: string) => <option key={a} value={a}>{a}</option>)}
         </select>
+        {isDirector && (
+          <select value={filterAgent} onChange={e => setFilterAgent(e.target.value)}>
+            <option value="">Tous agents</option>
+            <option value="none">⚠️ Non assigné</option>
+            {teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => (
+              <option key={m.id} value={m.id}>👤 {m.email.split('@')[0]}</option>
+            ))}
+          </select>
+        )}
         <div className="date-range">
           <label>Du</label>
           <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}/>
@@ -940,18 +994,19 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
 
       <div className="crm-stats">
         {leads.length} lead{leads.length > 1 ? 's' : ''} affiché{leads.length > 1 ? 's' : ''} {activeFiltersCount > 0 && `· ${activeFiltersCount} filtre${activeFiltersCount > 1 ? 's' : ''} actif${activeFiltersCount > 1 ? 's' : ''}`}
+        {!isDirector && <span style={{ marginLeft: 8, color: '#D97706', fontWeight: 700 }}>· 👤 Mes leads uniquement</span>}
       </div>
 
       {leads.length === 0 ? <div className="empty">Aucun lead trouvé avec ces filtres.</div> : (
         <div className="lead-grid">
-          {leads.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={msgCounts[l.id] || 0} onOpen={onOpen} updateStatut={updateStatut}/>)}
+          {leads.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={msgCounts[l.id] || 0} onOpen={onOpen} updateStatut={updateStatut} agentName={agentEmailById(l.agent_commercial_id)}/>)}
         </div>
       )}
     </>
   )
 }
 
-function LeadRow({ lead, msgCount, onOpen, updateStatut }: any) {
+function LeadRow({ lead, msgCount, onOpen, updateStatut, agentName }: any) {
   const c = STATUS_COLORS[lead.statut] || { bg: '#F1F5F9', fg: '#475569' }
   const isP = lead.type === 'physique' || lead.type === 'Personne physique'
   const nom = isP ? `${lead.identite?.prenom || ''} ${lead.identite?.nom || ''}`.trim() : (lead.situation?.raison_sociale || lead.identite?.raison_sociale || '—')
@@ -962,6 +1017,11 @@ function LeadRow({ lead, msgCount, onOpen, updateStatut }: any) {
         <div className="lead-name">
           <span>{nom || '—'}</span>
           <span className="lead-badge" style={{ background: c.bg, color: c.fg }}>{lead.statut}</span>
+          {agentName ? (
+            <span className="lead-agent">👤 {agentName}</span>
+          ) : (
+            <span className="lead-agent lead-agent-none">⚠️ Non assigné</span>
+          )}
           {msgCount > 0 && <span className="msg-badge">{msgCount}</span>}
         </div>
         <div className="lead-meta">{isP ? 'Particulier' : 'PME'} · {lead.activite} · {lead.ville || '—'} · {formatXAF(lead.montant_demande)} · {new Date(lead.created_at).toLocaleDateString('fr-FR')}</div>
@@ -1105,7 +1165,7 @@ function RapportsView({ leads, exportCSV }: any) {
 /* ============================================================
  * DRAWER DÉTAIL + CHAT
  * ============================================================ */
-function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead }: any) {
+function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMembers, onAssignAgent, isDirector }: any) {
   const [tab, setTab] = useState<'infos' | 'chat' | 'docs'>('infos')
   const [messages, setMessages] = useState<any[]>([])
   const [newMsg, setNewMsg] = useState('')
@@ -1191,6 +1251,22 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead }: any)
               {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <span style={{ background: '#EEF4FF', color: '#1A6BFF', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800 }}>Score {lead.score}/100</span>
+            {isDirector && (
+              <select
+                value={lead.agent_commercial_id || ''}
+                onChange={e => onAssignAgent(e.target.value || null)}
+                style={{ background: lead.agent_commercial_id ? '#DCFCE7' : '#FEF3C7', color: lead.agent_commercial_id ? '#047857' : '#B45309', border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
+                title="Assigner ce lead à un commercial"
+              >
+                <option value="">⚠️ Non assigné</option>
+                {teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => (
+                  <option key={m.id} value={m.id}>👤 {m.email.split('@')[0]}</option>
+                ))}
+              </select>
+            )}
+            {!isDirector && lead.agent_commercial_id && (
+              <span style={{ background: '#DCFCE7', color: '#047857', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 700 }}>👤 Assigné à moi</span>
+            )}
             {waPhone && <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener" className="dr-wa">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
               WhatsApp
