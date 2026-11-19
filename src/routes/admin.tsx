@@ -976,7 +976,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
     <section className="sd-section"><h2>Actions prioritaires</h2><div className="sd-alerts">
       <article className="sd-alert danger"><h3>🔥 Dossiers prêts sans contact 48h</h3><strong>Score ≥ 80</strong><p>À contacter en priorité</p><Button variant="outline" onClick={() => showCRM('ready')}>Voir <ArrowUpRight size={14}/></Button></article>
       <article className="sd-alert warning"><h3>🚨 Non-bancarisés cette semaine</h3><strong>Vendre Pack</strong><p>Opportunité Pack Formalisation</p><Button variant="outline" onClick={() => showCRM('impact')}>Voir <ArrowUpRight size={14}/></Button></article>
-      <article className="sd-alert info"><h3>💼 Pipeline à relancer</h3><strong>RDV > 7j</strong><p>Relancer les dossiers en attente</p><Button variant="outline" onClick={() => showCRM('followup')}>Voir <ArrowUpRight size={14}/></Button></article>
+      <article className="sd-alert info"><h3>💼 Pipeline à relancer</h3><strong>{'RDV > 7j'}</strong><p>Relancer les dossiers en attente</p><Button variant="outline" onClick={() => showCRM('followup')}>Voir <ArrowUpRight size={14}/></Button></article>
     </div></section>
 
     <section className="sd-section"><h2>Performance par segment</h2><div className="sd-double">
