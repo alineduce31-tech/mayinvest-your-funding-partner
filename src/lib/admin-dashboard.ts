@@ -1,14 +1,16 @@
 // ============================================================
-// Mayinvest PréSelect - Dashboard stratégique v2
-// 4 blocs du cahier des charges officiel
+// Mayinvest PréSelect - Dashboard v3 avec Commission 2% Crédit
 // Fichier: src/lib/admin-dashboard.ts (REMPLACEMENT COMPLET)
 // ============================================================
 
-// Prix officiels validés par le cahier des charges Mayinvest
+// Prix officiels Impact (cahier des charges Mayinvest)
 export const PRIX_OUVERTURE_COMPTE = 30_000       // XAF
 export const PRIX_PACK_FORMALISATION = 50_000     // XAF
 export const PRIX_COUVEUSE_3MOIS = 0              // XAF (service gratuit)
 export const PRIX_RESTRUCTURATION = 50_000        // XAF
+
+// NOUVEAU : Taux de commission sur crédit bancaire financé
+export const TAUX_COMMISSION_CREDIT = 0.02        // 2% du montant finance
 
 const DAY = 86_400_000
 const MOIS_3 = 90 * DAY
@@ -69,7 +71,6 @@ export const xaf = (v: number) =>
 export const pct = (v: number) =>
   new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(v) + ' %'
 
-// Identifier la ou les raisons de non-eligibilite
 export function raisonsNonEligibilite(l: DashboardLead): RaisonNonEligible[] {
   const raisons: RaisonNonEligible[] = []
   if (isUnbanked(l)) raisons.push('pas_compte')
@@ -89,7 +90,6 @@ export function periodBounds(period: DashboardPeriod, now: number) {
   return { start, end: now, previousStart: start - (now - start) }
 }
 
-// Tranches de montant (cahier des charges)
 export const TRANCHES = [
   { label: '< 10M', min: 0, max: 10_000_000 },
   { label: '10M - 30M', min: 10_000_000, max: 30_000_000 },
@@ -102,17 +102,18 @@ const STATUTS_BANCARISE = new Set(['Compte Ouvert', 'Bancarisé', 'Financé', 'D
 const STATUTS_FORMALISE = new Set(['Formalisé', 'Financé', 'Bancarisé', 'Dossier Déposé'])
 
 // ============================================================
-// BLOC 1 - KPI GENERAUX
+// BLOC 1 - KPI GENERAUX (avec commission credit 2%)
 // ============================================================
 export function bloc1KPIs(leads: DashboardLead[]) {
   const total = leads.length
   const eligibles = leads.filter(isEligible).length
   const nonEligibles = leads.filter(isNonEligible).length
   const deposes = leads.filter(l => l.statut === 'Dossier Déposé').length
-  const finances = leads.filter(l => l.statut === 'Financé').length
-  const tauxTransfo = eligibles ? finances / eligibles * 100 : 0
+  const finances = leads.filter(l => l.statut === 'Financé')
+  const nbFinances = finances.length
+  const tauxTransfo = eligibles ? nbFinances / eligibles * 100 : 0
 
-  // CA Genere = somme des potentiels des 4 categories x prix
+  // CA Impact potentiel = somme des potentiels des 4 categories x prix
   const pasCompte = leads.filter(l => isUnbanked(l) && isNonEligible(l)).length
   const pasRccm = leads.filter(l => needsPack(l) && isNonEligible(l)).length
   const fluxFaible = leads.filter(l =>
@@ -122,91 +123,66 @@ export function bloc1KPIs(leads: DashboardLead[]) {
     hasRefus(l) && isNonEligible(l) && !isUnbanked(l) && !needsPack(l) && !hasFluxFaible(l)
   ).length
 
-  const caGenere =
+  const caImpactPotentiel =
     pasCompte * PRIX_OUVERTURE_COMPTE +
     pasRccm * PRIX_PACK_FORMALISATION +
     fluxFaible * PRIX_COUVEUSE_3MOIS +
     refus * PRIX_RESTRUCTURATION
 
+  // NOUVEAU : CA Credit = 2% x somme des montants finances
+  const montantTotalFinance = finances.reduce((s, l) => {
+    // Priorite : montant_finance (vraie valeur bancaire), sinon montant_demande
+    const m = amount(l.montant_finance) || amount(l.montant_demande)
+    return s + m
+  }, 0)
+  const caCommissionCredit = montantTotalFinance * TAUX_COMMISSION_CREDIT
+
+  // CA TOTAL MAYINVEST = Impact potentiel + Commission credit realisee
+  const caTotal = caImpactPotentiel + caCommissionCredit
+
   return {
-    total, eligibles, nonEligibles, deposes, finances,
+    total, eligibles, nonEligibles, deposes,
+    finances: nbFinances,
     pctEligibles: total ? eligibles / total * 100 : 0,
     pctNonEligibles: total ? nonEligibles / total * 100 : 0,
-    tauxTransfo, caGenere,
+    tauxTransfo,
+    caImpactPotentiel,
+    caCommissionCredit,
+    caTotal,
+    montantTotalFinance,
   }
 }
 
 // ============================================================
-// BLOC 2 - ANALYSE DES NON-ELIGIBLES (TON OR)
+// BLOC 2 - ANALYSE DES NON-ELIGIBLES (inchange)
 // ============================================================
 export function bloc2NonEligibles(leads: DashboardLead[]) {
   const nonElig = leads.filter(isNonEligible)
   const total = nonElig.length
 
-  // Chaque lead est classe dans UNE SEULE categorie (priorite: compte > rccm > flux > refus)
   const pasCompte = nonElig.filter(isUnbanked)
   const pasRccm = nonElig.filter(l => !isUnbanked(l) && needsPack(l))
   const fluxFaible = nonElig.filter(l => !isUnbanked(l) && !needsPack(l) && hasFluxFaible(l))
   const refus = nonElig.filter(l => !isUnbanked(l) && !needsPack(l) && !hasFluxFaible(l) && hasRefus(l))
 
   return [
-    {
-      key: 'pas_compte' as const,
-      raison: 'Pas de compte bancaire',
-      nb: pasCompte.length,
-      pct: total ? pasCompte.length / total * 100 : 0,
-      potentiel: pasCompte.length * PRIX_OUVERTURE_COMPTE,
-      action: 'Proposer Ouverture Compte',
-      prix: PRIX_OUVERTURE_COMPTE,
-    },
-    {
-      key: 'pas_rccm' as const,
-      raison: 'Pas de RCCM',
-      nb: pasRccm.length,
-      pct: total ? pasRccm.length / total * 100 : 0,
-      potentiel: pasRccm.length * PRIX_PACK_FORMALISATION,
-      action: 'Proposer Pack Formalisation',
-      prix: PRIX_PACK_FORMALISATION,
-    },
-    {
-      key: 'flux_faible' as const,
-      raison: 'Flux < 1M/mois',
-      nb: fluxFaible.length,
-      pct: total ? fluxFaible.length / total * 100 : 0,
-      potentiel: fluxFaible.length * PRIX_COUVEUSE_3MOIS,
-      action: 'Mettre en couveuse 3 mois',
-      prix: PRIX_COUVEUSE_3MOIS,
-    },
-    {
-      key: 'refus' as const,
-      raison: 'Refus bancaire',
-      nb: refus.length,
-      pct: total ? refus.length / total * 100 : 0,
-      potentiel: refus.length * PRIX_RESTRUCTURATION,
-      action: 'Proposer Restructuration',
-      prix: PRIX_RESTRUCTURATION,
-    },
+    { key: 'pas_compte' as const, raison: 'Pas de compte bancaire', nb: pasCompte.length, pct: total ? pasCompte.length / total * 100 : 0, potentiel: pasCompte.length * PRIX_OUVERTURE_COMPTE, action: 'Proposer Ouverture Compte', prix: PRIX_OUVERTURE_COMPTE },
+    { key: 'pas_rccm' as const, raison: 'Pas de RCCM', nb: pasRccm.length, pct: total ? pasRccm.length / total * 100 : 0, potentiel: pasRccm.length * PRIX_PACK_FORMALISATION, action: 'Proposer Pack Formalisation', prix: PRIX_PACK_FORMALISATION },
+    { key: 'flux_faible' as const, raison: 'Flux < 1M/mois', nb: fluxFaible.length, pct: total ? fluxFaible.length / total * 100 : 0, potentiel: fluxFaible.length * PRIX_COUVEUSE_3MOIS, action: 'Mettre en couveuse 3 mois', prix: PRIX_COUVEUSE_3MOIS },
+    { key: 'refus' as const, raison: 'Refus bancaire', nb: refus.length, pct: total ? refus.length / total * 100 : 0, potentiel: refus.length * PRIX_RESTRUCTURATION, action: 'Proposer Restructuration', prix: PRIX_RESTRUCTURATION },
   ]
 }
 
 // ============================================================
-// BLOC 3 - PERFORMANCE DE BANCARISATION (IMPACT MAYINVEST)
+// BLOC 3 - IMPACT MAYINVEST (inchange)
 // ============================================================
 export function bloc3Impact(leads: DashboardLead[], now: number) {
   const pasCompte = leads.filter(isUnbanked)
   const pasRccm = leads.filter(needsPack)
+  const pctBancariseAvant = leads.length ? (leads.length - pasCompte.length) / leads.length * 100 : 0
+  const pctRccmAvant = leads.length ? (leads.length - pasRccm.length) / leads.length * 100 : 0
 
-  // AVANT MAYINVEST = situation initiale (tous les leads)
-  const pctBancariseAvant = leads.length
-    ? (leads.length - pasCompte.length) / leads.length * 100
-    : 0
-  const pctRccmAvant = leads.length
-    ? (leads.length - pasRccm.length) / leads.length * 100
-    : 0
-
-  // APRES 3 MOIS MAYINVEST = sur les leads de + de 90 jours
   const matures = leads.filter(l => now - Date.parse(l.created_at) >= MOIS_3)
-
   if (matures.length < 5) {
     return {
       enough: false,
@@ -220,11 +196,9 @@ export function bloc3Impact(leads: DashboardLead[], now: number) {
 
   const matureBancarises = matures.filter(l => STATUTS_BANCARISE.has(l.statut)).length
   const matureFormalises = matures.filter(l => STATUTS_FORMALISE.has(l.statut)).length
-
   const pctBancariseApres = matures.length ? matureBancarises / matures.length * 100 : 0
   const pctRccmApres = matures.length ? matureFormalises / matures.length * 100 : 0
 
-  // Repartition des Sans Compte par statut actuel
   const sansCompteParStatut: Record<string, number> = {}
   for (const l of pasCompte) {
     sansCompteParStatut[l.statut] = (sansCompteParStatut[l.statut] || 0) + 1
@@ -242,10 +216,9 @@ export function bloc3Impact(leads: DashboardLead[], now: number) {
 }
 
 // ============================================================
-// BLOC 4 - PERFORMANCE PAR SEGMENT
+// BLOC 4 - PERFORMANCE PAR SEGMENT (inchange)
 // ============================================================
 export function bloc4Segments(leads: DashboardLead[]) {
-  // Par secteur (activite)
   const bySecteur: Record<string, { total: number; eligibles: number }> = {}
   for (const l of leads) {
     const s = l.activite || 'Non renseigné'
@@ -253,16 +226,11 @@ export function bloc4Segments(leads: DashboardLead[]) {
     bySecteur[s].total++
     if (isEligible(l)) bySecteur[s].eligibles++
   }
-  const secteurs = Object.entries(bySecteur)
-    .map(([k, v]) => ({
-      label: k,
-      total: v.total,
-      eligibles: v.eligibles,
-      pct: v.total ? v.eligibles / v.total * 100 : 0,
-    }))
-    .sort((a, b) => b.pct - a.pct)
+  const secteurs = Object.entries(bySecteur).map(([k, v]) => ({
+    label: k, total: v.total, eligibles: v.eligibles,
+    pct: v.total ? v.eligibles / v.total * 100 : 0,
+  })).sort((a, b) => b.pct - a.pct)
 
-  // Par tranche de montant
   const tranches = TRANCHES.map(t => {
     const leadsDuTranche = leads.filter(l => {
       const m = amount(l.montant_demande)
@@ -270,14 +238,11 @@ export function bloc4Segments(leads: DashboardLead[]) {
     })
     const finances = leadsDuTranche.filter(l => l.statut === 'Financé').length
     return {
-      label: t.label,
-      total: leadsDuTranche.length,
-      finances,
+      label: t.label, total: leadsDuTranche.length, finances,
       tauxTransfo: leadsDuTranche.length ? finances / leadsDuTranche.length * 100 : 0,
     }
   })
 
-  // Par banque actuelle
   const byBanque: Record<string, { total: number; acceptes: number }> = {}
   for (const l of leads) {
     if (!l.banque_actuelle || isUnbanked(l)) continue
@@ -286,14 +251,10 @@ export function bloc4Segments(leads: DashboardLead[]) {
     byBanque[b].total++
     if (l.statut === 'Financé') byBanque[b].acceptes++
   }
-  const banques = Object.entries(byBanque)
-    .map(([k, v]) => ({
-      label: k,
-      total: v.total,
-      acceptes: v.acceptes,
-      taux: v.total ? v.acceptes / v.total * 100 : 0,
-    }))
-    .sort((a, b) => b.taux - a.taux)
+  const banques = Object.entries(byBanque).map(([k, v]) => ({
+    label: k, total: v.total, acceptes: v.acceptes,
+    taux: v.total ? v.acceptes / v.total * 100 : 0,
+  })).sort((a, b) => b.taux - a.taux)
 
   return { secteurs, tranches, banques }
 }
@@ -315,9 +276,6 @@ export function dashboardMetrics(leads: DashboardLead[], period: DashboardPeriod
   }
 }
 
-// ============================================================
-// Priorites CRM (alertes actionnables)
-// ============================================================
 export function matchesPriority(lead: DashboardLead, filter: PriorityFilter, now: number): boolean {
   const created = Date.parse(lead.created_at)
   if (filter === 'ready') return (lead.score ?? 0) >= 80 && lead.statut === 'Nouveau' && created < now - 2 * DAY
@@ -326,9 +284,6 @@ export function matchesPriority(lead: DashboardLead, filter: PriorityFilter, now
   return true
 }
 
-// ============================================================
-// Opportunite (badge table leads)
-// ============================================================
 export function opportunity(lead: DashboardLead): 'Crédit' | 'Impact' | 'Crédit + Impact' | null {
   const nonElig = isNonEligible(lead)
   if (nonElig) {
