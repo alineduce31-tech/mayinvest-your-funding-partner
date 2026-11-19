@@ -337,6 +337,81 @@ function Admin({ session }: { session: any }) {
     URL.revokeObjectURL(url)
   }
 
+  // Export Excel natif .xlsx avec formatage (charge SheetJS depuis CDN à la volée)
+  async function exportExcel() {
+    // Charge SheetJS depuis CDN si pas déjà chargé
+    const w = window as any
+    if (!w.XLSX) {
+      await new Promise<void>((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
+        script.onload = () => resolve()
+        script.onerror = () => reject(new Error('Impossible de charger SheetJS'))
+        document.head.appendChild(script)
+      })
+    }
+    const XLSX = w.XLSX
+    if (!XLSX) { alert('Librairie Excel non disponible'); return }
+
+    // Prépare les données
+    const headers = ['Date création', 'Type', 'Activité', 'Nom', 'Prénom/Dirigeant', 'Téléphone', 'Email', 'Ville', 'Montant XAF', 'Banque', 'RCCM', 'Flux mensuel', 'Score /100', 'Statut', 'Code accès', 'Créé le']
+    const rows = filtered.map((l: any) => [
+      new Date(l.created_at),
+      l.type || '',
+      l.activite || '',
+      l.identite?.nom || l.situation?.raison_sociale || '',
+      l.identite?.prenom || l.situation?.dirigeant || '',
+      l.identite?.tel || '',
+      l.identite?.email || '',
+      l.ville || '',
+      Number(l.montant_demande) || 0,
+      l.banque_actuelle || '',
+      l.rccm || '',
+      Number(l.flux_mensuel) || 0,
+      Number(l.score) || 0,
+      l.statut || '',
+      l.access_code || '',
+      new Date(l.created_at).toLocaleString('fr-FR'),
+    ])
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
+
+    // Largeurs de colonnes
+    ws['!cols'] = [
+      { wch: 20 }, { wch: 12 }, { wch: 20 }, { wch: 18 }, { wch: 18 },
+      { wch: 14 }, { wch: 22 }, { wch: 14 }, { wch: 14 }, { wch: 14 },
+      { wch: 8 }, { wch: 14 }, { wch: 10 }, { wch: 18 }, { wch: 12 }, { wch: 18 }
+    ]
+
+    // Format en-tête : bold + fond bleu + police blanche
+    const headerStyle = {
+      font: { bold: true, color: { rgb: 'FFFFFF' } },
+      fill: { fgColor: { rgb: '1A6BFF' } },
+      alignment: { horizontal: 'left', vertical: 'center' }
+    }
+    for (let c = 0; c < headers.length; c++) {
+      const addr = XLSX.utils.encode_cell({ r: 0, c })
+      if (ws[addr]) ws[addr].s = headerStyle
+    }
+
+    // Figer la 1ère ligne + activer autofilter
+    ws['!freeze'] = { xSplit: 0, ySplit: 1 }
+    ws['!autofilter'] = { ref: `A1:P${rows.length + 1}` }
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Leads Mayinvest')
+
+    // Métadonnées
+    wb.Props = {
+      Title: 'Mayinvest PréSelect · Export Leads',
+      Author: 'Mayinvest',
+      CreatedDate: new Date(),
+    }
+
+    const filename = `mayinvest-leads-${new Date().toISOString().slice(0, 10)}.xlsx`
+    XLSX.writeFile(wb, filename)
+  }
+
   // Export PDF via nouvelle fenêtre + impression navigateur (pas besoin de lib externe)
   function exportPDF() {
     const activeFilters: string[] = []
@@ -609,6 +684,8 @@ function Admin({ session }: { session: any }) {
         .btn-export:hover { background: var(--blue); box-shadow: 0 8px 20px rgba(26,107,255,0.3); }
         .btn-export.btn-pdf { background: #DC2626; }
         .btn-export.btn-pdf:hover { background: #B91C1C; box-shadow: 0 8px 20px rgba(220,38,38,0.3); }
+        .btn-export.btn-xlsx { background: #15803D; }
+        .btn-export.btn-xlsx:hover { background: #166534; box-shadow: 0 8px 20px rgba(21,128,61,0.3); }
         .export-group { display: flex; gap: 8px; }
 
         /* Filtres avancés */
@@ -786,7 +863,7 @@ function Admin({ session }: { session: any }) {
           {page === 'general' && <DashboardView onOpen={setSelectedLead}/>}
           {page !== 'general' && (loading ? <div className="empty">Chargement…</div> : <>
             {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
-            {page === 'crm' && <CRMView leads={filtered} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} exportCSV={exportCSV} exportPDF={exportPDF} isDirector={isDirector}/>}
+            {page === 'crm' && <CRMView leads={filtered} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead}/>}
@@ -936,7 +1013,7 @@ function StrategicFunnel({ title, tone, rows }: { title: string; tone: string; r
   return <article className={`sd-funnel ${tone}`}><h3>{title}</h3>{rows.map(row => <div className="sd-funnel-row" key={row.label}><div><span>{row.label}</span><strong>{row.count}</strong></div><progress max={max} value={row.count} aria-label={row.label}/></div>)}</article>
 }
 
-function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, exportCSV, exportPDF, isDirector }: any) {
+function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, exportCSV, exportPDF, exportExcel, isDirector }: any) {
   const activeFiltersCount = [filterStatut, filterType, filterActivite, filterAgent, dateFrom, dateTo, search].filter(Boolean).length
   const agentEmailById = (id: string | null | undefined): string => {
     if (!id) return ''
@@ -984,6 +1061,10 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
           <button className="btn-export" onClick={exportCSV}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v8M3 7l4 4 4-4M2 13h10" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
             CSV
+          </button>
+          <button className="btn-export btn-xlsx" onClick={exportExcel} title="Export Excel natif .xlsx avec formatage">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="10" rx="1" stroke="#fff" strokeWidth="1.5"/><path d="M5 5l4 4M9 5l-4 4" stroke="#fff" strokeWidth="1.5"/></svg>
+            Excel
           </button>
           <button className="btn-export btn-pdf" onClick={exportPDF}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 2h7l3 3v7H2V2z" stroke="#fff" strokeWidth="1.5"/><path d="M9 2v3h3" stroke="#fff" strokeWidth="1.5"/></svg>
