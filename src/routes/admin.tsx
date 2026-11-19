@@ -963,7 +963,17 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
   ]
 
   return <>
-    {isEmpty && <div className="sd-empty-banner"><span className="sd-empty-dot" aria-hidden="true"/>Aucun lead sur la période sélectionnée · les métriques affichent 0</div>}
+    {isEmpty && (
+      <div className="sd-empty-card" role="status">
+        <div className="sd-empty-icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+        </div>
+        <div className="sd-empty-body">
+          <div className="sd-empty-title">Aucun lead sur la période sélectionnée</div>
+          <div className="sd-empty-sub">Les métriques affichent 0. Essaie une période plus large (90j ou YTD).</div>
+        </div>
+      </div>
+    )}
     <section className="sd-pole bloc1"><h2>Bloc 1 · KPI généraux <span>· Impact + Commission 2% sur crédits</span></h2>
       <div className="sd-grid">{bloc1Cards.map(card => <StrategicKPI key={card.label} {...card}/>)}</div>
     </section>
