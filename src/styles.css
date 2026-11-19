@@ -292,6 +292,114 @@
 .sd-alert-link:hover svg { transform: translate(1px, -1px); }
 
 /* ============================================================
+   BLOC 3 · IMPACT MAYINVEST (Avant / Après + funnel Sans compte)
+   ============================================================ */
+.sd-impact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 12px;
+}
+.sd-impact-wide { grid-column: span 2; }
+@media (max-width: 720px) {
+  .sd-impact-wide { grid-column: span 1; }
+}
+
+.sd-impact-card {
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: var(--mi-shadow-sm);
+  display: flex; flex-direction: column;
+}
+.sd-impact-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--mi-hairline);
+}
+.sd-impact-ico {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px;
+  background: var(--mi-primary-soft); color: var(--mi-primary);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.sd-impact-head-body { display: flex; flex-direction: column; min-width: 0; }
+.sd-impact-head-body h3 { font-size: 13px; font-weight: 600; color: var(--mi-text); margin: 0; }
+.sd-impact-head-body span { font-size: 11px; color: var(--mi-faint); }
+
+.sd-impact-body { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+
+.sd-impact-row { display: flex; flex-direction: column; gap: 6px; }
+.sd-impact-row-top {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 12px;
+}
+.sd-impact-lbl {
+  font-weight: 500; color: var(--mi-muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  font-size: 10px;
+}
+.sd-impact-val {
+  font-weight: 700; font-size: 16px; color: var(--mi-text);
+  font-variant-numeric: tabular-nums;
+}
+.sd-impact-val-avant { color: var(--mi-muted); }
+.sd-impact-val-apres { color: var(--mi-primary); }
+
+.sd-impact-bar {
+  height: 6px; background: var(--mi-hairline);
+  border-radius: 3px; overflow: hidden;
+}
+.sd-impact-bar > span {
+  display: block; height: 100%; border-radius: 3px;
+  transition: width .5s ease;
+}
+.sd-impact-bar > span.avant { background: var(--mi-faint); }
+.sd-impact-bar > span.apres { background: var(--mi-primary); }
+
+.sd-impact-delta {
+  display: inline-flex; align-items: center; gap: 4px;
+  align-self: flex-start;
+  margin-top: 2px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.sd-impact-delta.up { background: var(--mi-primary-soft); color: var(--mi-primary); }
+.sd-impact-delta.down { background: var(--mi-red-soft); color: var(--mi-red); }
+
+.sd-impact-empty {
+  padding: 32px 18px;
+  text-align: center;
+  font-size: 12px; color: var(--mi-muted);
+}
+
+/* Funnel "Sans compte" */
+.sd-impact-fn-rows { padding: 16px 18px; display: flex; flex-direction: column; gap: 10px; }
+.sd-impact-fn-row { display: flex; flex-direction: column; gap: 5px; }
+.sd-impact-fn-top {
+  display: flex; justify-content: space-between; align-items: baseline;
+  font-size: 12px;
+}
+.sd-impact-fn-lbl { color: var(--mi-text); font-weight: 500; }
+.sd-impact-fn-val { color: var(--mi-muted); font-variant-numeric: tabular-nums; font-size: 12px; }
+.sd-impact-fn-val b { color: var(--mi-text); font-weight: 700; font-size: 14px; margin-right: 2px; }
+.sd-impact-fn-pct { color: var(--mi-faint); margin-left: 4px; }
+
+.sd-impact-fn-bar {
+  height: 5px; background: var(--mi-hairline);
+  border-radius: 3px; overflow: hidden;
+}
+.sd-impact-fn-bar > span {
+  display: block; height: 100%;
+  background: linear-gradient(90deg, var(--mi-primary), var(--mi-gold));
+  border-radius: 3px;
+  transition: width .5s ease;
+}
+
+/* ============================================================
    SEGMENTS (par banque, par secteur) — leaderboard à barres
    ============================================================ */
 .sd-double {
