@@ -953,7 +953,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
     { icon: <Users size={18} strokeWidth={1.75}/>, label: 'Total Leads', value: number(m.bloc1.total), detail: 'Sur la période' },
     { icon: <CheckCircle2 size={18} strokeWidth={1.75}/>, label: 'Éligibles Banque', value: number(m.bloc1.eligibles), detail: pct(m.bloc1.pctEligibles), tone: 'positive' },
     { icon: <AlertTriangle size={18} strokeWidth={1.75}/>, label: 'Non Éligibles', value: number(m.bloc1.nonEligibles), detail: pct(m.bloc1.pctNonEligibles), tone: 'warning' },
-    { icon: <FileText size={18} strokeWidth={1.75}/>, label: 'Dossiers Déposés', value: number(m.bloc1.deposes), detail: 'Statut Dossier Déposé' },
+    { icon: <FileText size={18} strokeWidth={1.75}/>, label: 'Dossiers déposés en banque', value: number(m.bloc1.deposes), detail: 'Transmis aux banques partenaires' },
     { icon: <Landmark size={18} strokeWidth={1.75}/>, label: 'Financés + Comm. 2%', value: number(m.bloc1.finances), detail: `${xaf(m.bloc1.caCommissionCredit)} · Taux : ${pct(m.bloc1.tauxTransfo)}`, tone: 'positive' },
     { icon: <Wallet size={18} strokeWidth={1.75}/>, label: 'CA Total Mayinvest', value: xaf(m.bloc1.caTotal), detail: `Impact : ${xaf(m.bloc1.caImpactPotentiel)} · Crédit : ${xaf(m.bloc1.caCommissionCredit)}`, tone: 'positive' },
   ]
