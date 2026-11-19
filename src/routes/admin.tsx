@@ -1225,62 +1225,106 @@ function LeadRow({ lead, msgCount, onOpen, updateStatut, agentName }: any) {
   )
 }
 
+// Palette Mayinvest pour les donuts (5 segments, le 6e = "Autres" en gris)
+const DONUT_PALETTE = ['#0F6E3E', '#5FA381', '#B4871F', '#D6B672', '#1E4FA3', '#9CA3AF']
+
 function SegmentsView({ leads }: any) {
   const bySecteur = useMemo(() => {
     const m: Record<string, number> = {}
     leads.forEach((l: any) => { const k = l.activite || 'Non défini'; m[k] = (m[k] || 0) + 1 })
-    return Object.entries(m).sort((a, b) => b[1] - a[1])
+    return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: k, value: v as number }))
   }, [leads])
   const byVille = useMemo(() => {
     const m: Record<string, number> = {}
     leads.forEach((l: any) => { const k = l.ville || 'Non défini'; m[k] = (m[k] || 0) + 1 })
-    return Object.entries(m).sort((a, b) => b[1] - a[1])
+    return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: k, value: v as number }))
   }, [leads])
   const byMontant = useMemo(() => {
     const tranches = [{ k: '< 1M', min: 0, max: 1_000_000 }, { k: '1M–5M', min: 1_000_000, max: 5_000_000 }, { k: '5M–20M', min: 5_000_000, max: 20_000_000 }, { k: '20M+', min: 20_000_000, max: Infinity }]
-    return tranches.map(t => ({ k: t.k, c: leads.filter((l: any) => (l.montant_demande || 0) >= t.min && (l.montant_demande || 0) < t.max).length }))
+    return tranches.map(t => ({ label: t.k, value: leads.filter((l: any) => (l.montant_demande || 0) >= t.min && (l.montant_demande || 0) < t.max).length }))
   }, [leads])
   const SICONS = {
-    sector: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="7" width="5" height="10" rx="1" stroke="currentColor" strokeWidth="1.6"/><rect x="7.5" y="3" width="5" height="14" rx="1" stroke="currentColor" strokeWidth="1.6"/><rect x="12.5" y="10" width="5" height="7" rx="1" stroke="currentColor" strokeWidth="1.6"/></svg>,
-    city: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 2C7 2 5 4.5 5 7c0 4 5 10 5 10s5-6 5-10c0-2.5-2-5-5-5z" stroke="currentColor" strokeWidth="1.6"/><circle cx="10" cy="7" r="1.8" fill="currentColor"/></svg>,
-    amount: <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M10 5v10M12.5 7.5h-3.75a1.75 1.75 0 000 3.5h2.5a1.75 1.75 0 010 3.5H7.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
+    sector: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
+    city: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
+    amount: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
   }
-  const empty = <div style={{ padding: '30px 10px', textAlign: 'center', color: '#94A3B8', fontSize: 13, fontWeight: 500 }}>Aucune donnée</div>
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 16 }}>
-      <Panel title="Par secteur / profession" icon={SICONS.sector}>
-        {bySecteur.length ? bySecteur.map(([k, v]) => <Bar key={k} label={k} value={v} total={leads.length}/>) : empty}
-      </Panel>
-      <Panel title="Par ville" icon={SICONS.city}>
-        {byVille.length ? byVille.map(([k, v]) => <Bar key={k} label={k} value={v} total={leads.length}/>) : empty}
-      </Panel>
-      <Panel title="Par tranche de montant" icon={SICONS.amount}>
-        {byMontant.map(t => <Bar key={t.k} label={t.k} value={t.c} total={leads.length} color="#1A6BFF"/>)}
-      </Panel>
+    <div className="rep-grid">
+      <Panel title="Par secteur / profession" icon={SICONS.sector}><Donut items={bySecteur} capLabel="leads"/></Panel>
+      <Panel title="Par ville" icon={SICONS.city}><Donut items={byVille} capLabel="leads"/></Panel>
+      <Panel title="Par tranche de montant" icon={SICONS.amount}><Donut items={byMontant} capLabel="leads"/></Panel>
     </div>
   )
 }
 
-function Panel({ title, children, icon }: any) {
+function Panel({ title, children, icon }: { title: string; children: React.ReactNode; icon: React.ReactNode }) {
   return (
-    <div className="card">
-      <h3 className="card-h">{icon}{title}</h3>
+    <div className="rep-panel">
+      <div className="rep-panel-head">
+        <span className="rep-panel-ico" aria-hidden="true">{icon}</span>
+        <span className="rep-panel-title">{title}</span>
+      </div>
       {children}
     </div>
   )
 }
 
-function Bar({ label, value, total, color }: { label: string; value: number; total: number; color?: string }) {
-  const pct = total ? (value / total) * 100 : 0
-  const barColor = color || '#1A6BFF'
-  return (
-    <div style={{ marginBottom: 14, padding: '8px 0', borderBottom: '1px solid #F1F5F9' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 600, marginBottom: 7, color: '#0D1B3E' }}>
-        <span>{label}</span>
-        <span style={{ fontWeight: 800, color: barColor, fontVariantNumeric: 'tabular-nums' }}>{value}</span>
+function Donut({ items, capLabel }: { items: { label: string; value: number }[]; capLabel: string }) {
+  // Regroupe à partir du 6e en "Autres"
+  const topN = 5
+  const sliced = items.slice(0, topN)
+  const rest = items.slice(topN).reduce((s, i) => s + i.value, 0)
+  const display = rest > 0 ? [...sliced, { label: 'Autres', value: rest }] : sliced
+  const total = display.reduce((s, i) => s + i.value, 0)
+
+  if (total === 0) {
+    return (
+      <div className="rep-empty">
+        <div className="rep-empty-ring" aria-hidden="true"/>
+        <div className="rep-empty-txt">En attente des premiers dépôts</div>
       </div>
-      <div style={{ height: 10, background: '#F1F5F9', borderRadius: 100, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${Math.max(pct, 2)}%`, background: barColor, borderRadius: 100, transition: 'width 0.6s cubic-bezier(0.4,0,0.2,1)' }}/>
+    )
+  }
+
+  const C = 2 * Math.PI * 48   // circumference ~ 301.59
+  let offset = 0
+  const segments = display.map((item, i) => {
+    const frac = item.value / total
+    const len = C * frac
+    const node = (
+      <circle
+        key={item.label}
+        cx="60" cy="60" r="48" fill="none"
+        stroke={DONUT_PALETTE[i % DONUT_PALETTE.length]}
+        strokeWidth="14"
+        strokeDasharray={`${len} ${C}`}
+        strokeDashoffset={-offset}
+      />
+    )
+    offset += len
+    return node
+  })
+
+  return (
+    <div className="rep-donut-wrap">
+      <div className="rep-donut">
+        <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
+          <circle cx="60" cy="60" r="48" fill="none" stroke="var(--mi-hairline)" strokeWidth="14"/>
+          {segments}
+        </svg>
+        <div className="rep-donut-center">
+          <div className="rep-donut-num">{total}</div>
+          <div className="rep-donut-cap">{capLabel}</div>
+        </div>
+      </div>
+      <div className="rep-legend">
+        {display.map((item, i) => (
+          <div key={item.label} className="rep-legend-row">
+            <span className="rep-legend-dot" style={{ background: DONUT_PALETTE[i % DONUT_PALETTE.length] }}/>
+            <span className="rep-legend-lbl" title={item.label}>{item.label}</span>
+            <span className="rep-legend-val">{item.value}</span>
+          </div>
+        ))}
       </div>
     </div>
   )
