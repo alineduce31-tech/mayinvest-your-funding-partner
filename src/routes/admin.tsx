@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock } from 'lucide-react'
+import { ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase } from '@/integrations/supabase/client'
@@ -1988,7 +1988,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
               </div>
             </div>
 
-            <LeadActionsPanel lead={lead} />
+            <LeadActionsPanel lead={lead} onSendInternal={(msg) => { setTab('chat'); setNewMsg(msg); }} />
           </>}
 
           {tab === 'docs' && (
@@ -2082,7 +2082,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
 /* ============================================================
  * LEAD ACTIONS PANEL — 4 boutons WhatsApp (Ouverture Compte, Pack, Couveuse, Restructuration)
  * ============================================================ */
-function LeadActionsPanel({ lead }: { lead: any }) {
+function LeadActionsPanel({ lead, onSendInternal }: { lead: any; onSendInternal: (msg: string) => void }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [openDrawer, setOpenDrawer] = useState<string | null>(null)
 
@@ -2105,27 +2105,17 @@ function LeadActionsPanel({ lead }: { lead: any }) {
     }
   }
 
-  function openWhatsapp(template: string) {
-    if (!telephone) {
-      alert('Ce lead n\'a pas de numéro de téléphone enregistré.')
-      return
-    }
+  function sendInternal(template: string) {
     const filled = fillTemplate(template, vars)
-    window.open(buildWhatsappUrl(telephone, filled), '_blank', 'noopener,noreferrer')
+    onSendInternal(filled)
   }
 
   return (
     <div className="lead-actions-panel">
       <h3 className="lap-title">
         <Target size={16} strokeWidth={1.75}/> Actions commerciales
-        <span className="lap-subtitle">4 relances WhatsApp disponibles</span>
+        <span className="lap-subtitle">4 scripts de relance prêts</span>
       </h3>
-
-      {!telephone && (
-        <div className="lap-warning">
-          <AlertTriangle size={14} strokeWidth={1.75}/> Aucun numéro de téléphone enregistré pour ce lead. Les scripts peuvent être copiés mais pas envoyés automatiquement.
-        </div>
-      )}
 
       <div className="lap-actions-grid">
         {LEAD_ACTIONS.map(action => {
@@ -2145,11 +2135,10 @@ function LeadActionsPanel({ lead }: { lead: any }) {
                 <button
                   type="button"
                   className="lap-btn primary"
-                  onClick={() => openWhatsapp(action.template)}
-                  disabled={!telephone}
-                  title={!telephone ? 'Numéro manquant' : 'Ouvrir WhatsApp avec le script pré-rempli'}
+                  onClick={() => sendInternal(action.template)}
+                  title="Pré-remplir le script dans la messagerie interne"
                 >
-                  <MessageCircle size={14} strokeWidth={1.75}/> WhatsApp
+                  <Send size={14} strokeWidth={1.75}/> Envoyer
                 </button>
                 <button
                   type="button"
