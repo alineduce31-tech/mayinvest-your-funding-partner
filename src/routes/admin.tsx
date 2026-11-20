@@ -722,9 +722,17 @@ function Admin({ session }: { session: any }) {
           font-variant-numeric: tabular-nums; }
         .lead-score.hi { background: var(--green-soft); color: var(--green); }
         .lead-score.lo { background: var(--red-soft); color: var(--red); }
-        .lead-statut-sel { background: var(--card); border: 1px solid var(--border);
-          border-radius: 10px; padding: 8px 12px; font-size: 12px; font-weight: 600;
-          cursor: pointer; color: var(--ink); font-family: inherit; }
+        .lead-statut-sel {
+          appearance: none; -webkit-appearance: none;
+          background-color: var(--card);
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+          background-size: 10px;
+          border: 1px solid var(--border);
+          border-radius: 10px; padding: 8px 30px 8px 12px; font-size: 12px; font-weight: 600;
+          cursor: pointer; color: var(--ink); font-family: inherit;
+        }
         .msg-badge { background: var(--red); color: #fff;
           font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 100px;
           min-width: 20px; text-align: center; }
