@@ -1512,11 +1512,26 @@ function LeadsTable({ leads, msgCounts, onOpen, agentEmailById, isDirector, upda
                 {isDirector && (
                   <td className="lt-td" onClick={e => e.stopPropagation()}>
                     <select
-                      className="lt-agent-sel"
-                      data-assigned={l.agent_commercial_id ? 'true' : 'false'}
                       value={l.agent_commercial_id || ''}
                       onChange={e => assignLead(l.id, e.target.value || null)}
                       title="Assigner ce lead"
+                      style={{
+                        appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
+                        backgroundColor: 'transparent',
+                        border: '1px solid transparent',
+                        padding: '4px 22px 4px 8px',
+                        borderRadius: 6,
+                        fontFamily: 'inherit', fontSize: 12, fontWeight: 600,
+                        color: l.agent_commercial_id ? '#0F6E3E' : '#B45309',
+                        cursor: 'pointer',
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='9' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 6px center',
+                        backgroundSize: 9,
+                        maxWidth: 130,
+                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                        boxShadow: 'none',
+                      }}
                     >
                       <option value="">Non assigné</option>
                       {teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => (
@@ -1527,11 +1542,26 @@ function LeadsTable({ leads, msgCounts, onOpen, agentEmailById, isDirector, upda
                 )}
                 <td className="lt-td" onClick={e => e.stopPropagation()}>
                   <select
-                    className="lt-statut-sel"
                     value={l.statut}
                     onChange={e => updateStatut(l.id, e.target.value)}
-                    style={{ backgroundColor: c.bg, color: c.fg }}
                     title="Changer le statut"
+                    style={{
+                      appearance: 'none', WebkitAppearance: 'none', MozAppearance: 'none',
+                      backgroundColor: c.bg,
+                      color: c.fg,
+                      border: 'none',
+                      padding: '3px 20px 3px 10px',
+                      borderRadius: 999,
+                      fontFamily: 'inherit', fontSize: 10, fontWeight: 700,
+                      textTransform: 'uppercase', letterSpacing: '0.04em',
+                      cursor: 'pointer',
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 6px center',
+                      backgroundSize: 8,
+                      whiteSpace: 'nowrap',
+                      boxShadow: 'none',
+                    }}
                   >
                     {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
