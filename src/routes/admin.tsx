@@ -763,30 +763,44 @@ function Admin({ session }: { session: any }) {
         .dr-assign-sel[data-assigned="false"] {
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23B45309' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
         }
-        .dr-name { font-size: 22px; font-weight: 800; margin: 0 40px 6px 0;
-          letter-spacing: -0.02em; color: var(--ink); }
-        .dr-code { font-size: 11.5px; color: var(--ink-dim); letter-spacing: 0.05em;
-          text-transform: uppercase; font-weight: 600; }
+        /* HEADER A — ultra condensé */
+        .dr-name { font-size: 18px; font-weight: 700; margin: 0 40px 2px 0;
+          letter-spacing: -0.01em; color: var(--ink); }
+        .dr-code { font-size: 10px; color: var(--ink-mute); letter-spacing: 0.08em;
+          text-transform: uppercase; font-weight: 600; margin-bottom: 12px; }
         .dr-tabs { display: flex; gap: 4px; padding: 0 28px; border-bottom: 1px solid var(--border); }
         .dr-tab { padding: 14px 16px; font-size: 13px; font-weight: 700; color: var(--ink-dim);
           background: transparent; border: none; cursor: pointer; border-bottom: 2px solid transparent;
           font-family: inherit; transition: all 0.15s; }
         .dr-tab:hover { color: var(--ink); }
-        .dr-tab.on { color: var(--blue); border-color: var(--blue); }
-        .dr-body { padding: 24px 28px 40px; }
-        .dr-section { margin-bottom: 24px; }
-        .dr-s-h { font-size: 11px; color: var(--blue); font-weight: 800;
-          text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 14px;
-          display: flex; align-items: center; gap: 8px; }
-        .dr-s-h::before { content: ''; width: 4px; height: 12px; background: var(--blue); border-radius: 2px; }
-        .dr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .dr-tab.on { color: var(--primary, #0F6E3E); border-color: var(--primary, #0F6E3E); }
+        .dr-body { padding: 20px 28px 40px; }
+
+        /* BODY B — dense liste 2 colonnes clé→valeur */
+        .dr-section { padding: 14px 0; border-top: 1px solid var(--hairline, #F3F3F1); }
+        .dr-section:first-child { padding-top: 0; border-top: none; }
+        .dr-s-h {
+          font-size: 12px; font-weight: 600; color: var(--ink);
+          text-transform: none; letter-spacing: 0;
+          margin-bottom: 10px;
+          display: flex; align-items: center; gap: 8px;
+        }
+        .dr-s-h::before { display: none; }
+        .dr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; }
         @media (max-width: 500px) { .dr-grid { grid-template-columns: 1fr; } }
-        .dr-field { padding: 12px 14px; background: var(--bg); border-radius: 12px; border: 1px solid var(--border-2); }
-        .dr-k { font-size: 10.5px; color: var(--ink-mute); font-weight: 700;
-          letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
-        .dr-v { font-size: 14px; font-weight: 600; color: var(--ink); word-break: break-word; }
+        .dr-field {
+          display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+          padding: 4px 0; background: transparent; border: none; border-radius: 0;
+        }
+        .dr-k { font-size: 12px; color: var(--ink-mute, #6B7280); font-weight: 500;
+          letter-spacing: 0; text-transform: none; margin-bottom: 0; flex-shrink: 0; }
+        .dr-v { font-size: 12px; font-weight: 600; color: var(--ink);
+          text-align: right; min-width: 0;
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+
         /* Contact header : rangée d'icônes rapides (Appel / Email / Chat) */
-        .dr-contact-row { display: inline-flex; gap: 6px; margin-left: 4px; }
+        .dr-contact-row { display: inline-flex; gap: 6px; margin-left: auto; }
         .dr-contact-btn {
           display: inline-flex; align-items: center; justify-content: center;
           width: 34px; height: 34px; border-radius: 999px;
