@@ -1363,11 +1363,49 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
           )}
         </div>
       ) : (
-        <div className="lead-grid">
-          {leads.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={msgCounts[l.id] || 0} onOpen={onOpen} updateStatut={updateStatut} agentName={agentEmailById(l.agent_commercial_id)}/>)}
-        </div>
+        <LeadsCards leads={leads} msgCounts={msgCounts} onOpen={onOpen} agentEmailById={agentEmailById}/>
       )}
     </>
+  )
+}
+
+function LeadsCards({ leads, msgCounts, onOpen, agentEmailById }: any) {
+  return (
+    <div className="lcc-grid">
+      {leads.map((l: any) => {
+        const isP = l.type === 'physique' || l.type === 'Personne physique'
+        const nom = isP
+          ? `${l.identite?.prenom || ''} ${l.identite?.nom || ''}`.trim()
+          : (l.situation?.raison_sociale || l.identite?.raison_sociale || '—')
+        const c = STATUS_COLORS[l.statut] || { bg: '#F1F5F9', fg: '#475569' }
+        const scoreCls = (l.score ?? 0) >= 70 ? 'hi' : (l.score ?? 0) < 40 ? 'lo' : 'mid'
+        const agentName = agentEmailById(l.agent_commercial_id)
+        const msgN = msgCounts[l.id] || 0
+        return (
+          <div key={l.id} className="lcc-card" onClick={() => onOpen(l)}>
+            <div className="lcc-top">
+              <div className="lcc-id">
+                <h3 className="lcc-name">{nom || '—'}{msgN > 0 && <span className="lcc-msg">{msgN}</span>}</h3>
+                <div className="lcc-sub">{isP ? 'Particulier' : 'PME'} · {l.activite || '—'} · {l.ville || '—'}</div>
+              </div>
+              <span className={`lcc-score ${scoreCls}`}>{l.score ?? 0}<small>/100</small></span>
+            </div>
+            <div className="lcc-bot">
+              <div className="lcc-amt">
+                <div className="lcc-amtk">Demandé</div>
+                <div className="lcc-amtv">{xaf(Number(l.montant_demande) || 0)}</div>
+              </div>
+              <div className="lcc-right">
+                <span className="lcc-statut" style={{ background: c.bg, color: c.fg }}>{l.statut}</span>
+                <span className="lcc-date">
+                  {agentName && <>{agentName} · </>}{new Date(l.created_at).toLocaleDateString('fr-FR')}
+                </span>
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
