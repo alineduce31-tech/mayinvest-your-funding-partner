@@ -866,19 +866,33 @@ function Admin({ session }: { session: any }) {
         }
 
         /* Row des icônes contact repositionnée à droite, sur sa propre ligne */
-        .dr-contact-top { display: flex; justify-content: flex-end; }
-        .dr-contact-row { display: inline-flex; gap: 6px; }
+        .dr-contact-top {
+          display: flex !important;
+          justify-content: flex-end !important;
+          width: 100%;
+          margin-top: 2px;
+        }
+        .dr-contact-row { display: inline-flex !important; gap: 6px !important; }
         .dr-contact-btn {
-          display: inline-flex; align-items: center; justify-content: center;
-          width: 34px; height: 34px; border-radius: 999px;
-          background: #FFFFFF; border: 1px solid #D1D5DB; color: #6B7280;
-          cursor: pointer; text-decoration: none;
-          font-family: inherit; box-shadow: none;
+          display: inline-flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          width: 34px !important; height: 34px !important;
+          border-radius: 999px !important;
+          background: #FFFFFF !important;
+          border: 1px solid #D1D5DB !important;
+          color: #6B7280 !important;
+          cursor: pointer;
+          text-decoration: none !important;
+          font-family: inherit;
+          box-shadow: none !important;
+          padding: 0 !important;
           transition: color .15s ease, background .15s ease, border-color .15s ease;
         }
-        .dr-contact-btn.phone:hover { color: #0F6E3E; border-color: #0F6E3E; background: #E6F2EB; }
-        .dr-contact-btn.mail:hover { color: #1E4FA3; border-color: #1E4FA3; background: #E8EEF9; }
-        .dr-contact-btn.chat:hover { color: #8A6617; border-color: #B4871F; background: #FBF2DC; }
+        .dr-contact-btn svg { display: block; }
+        .dr-contact-btn.phone:hover { color: #0F6E3E !important; border-color: #0F6E3E !important; background: #E6F2EB !important; }
+        .dr-contact-btn.mail:hover  { color: #1E4FA3 !important; border-color: #1E4FA3 !important; background: #E8EEF9 !important; }
+        .dr-contact-btn.chat:hover  { color: #8A6617 !important; border-color: #B4871F !important; background: #FBF2DC !important; }
 
         /* ============ CHAT ============ */
         .chat-wrap { display: flex; flex-direction: column; height: 60vh; min-height: 400px; }
