@@ -1268,12 +1268,7 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
         {isDirector && (
           <MultiSelectFilter placeholder="Tous agents" title="Agent commercial" options={agentOptions} value={filterAgent} onChange={setFilterAgent}/>
         )}
-        <div className="date-range">
-          <label>Du</label>
-          <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}/>
-          <label>Au</label>
-          <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}/>
-        </div>
+        <DateRangePicker dateFrom={dateFrom} dateTo={dateTo} setDateFrom={setDateFrom} setDateTo={setDateTo}/>
         {activeFiltersCount > 0 && (
           <button className="btn-reset" onClick={resetFilters} title="Réinitialiser les filtres">
             Réinitialiser ({activeFiltersCount})
@@ -1322,6 +1317,125 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
         </div>
       )}
     </>
+  )
+}
+
+function DateRangePicker({ dateFrom, dateTo, setDateFrom, setDateTo }: {
+  dateFrom: string; dateTo: string; setDateFrom: (s: string) => void; setDateTo: (s: string) => void;
+}) {
+  const [open, setOpen] = useState(false)
+  const [viewMonth, setViewMonth] = useState<Date>(() => dateFrom ? new Date(dateFrom) : new Date())
+  const [pickingStart, setPickingStart] = useState(true)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+
+  const toISO = (d: Date) => {
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+  const fmt = (iso: string) => {
+    if (!iso) return ''
+    const d = new Date(iso + 'T00:00:00')
+    return `${d.getDate()} ${d.toLocaleString('fr-FR', { month: 'short' }).replace('.', '')} ${d.getFullYear()}`
+  }
+  const triggerLabel = !dateFrom && !dateTo ? 'Toutes les dates'
+    : dateFrom && dateTo && dateFrom === dateTo ? fmt(dateFrom)
+    : dateFrom && dateTo ? `${fmt(dateFrom)} – ${fmt(dateTo)}`
+    : dateFrom ? `Depuis ${fmt(dateFrom)}` : `Jusqu'au ${fmt(dateTo)}`
+
+  const applyPreset = (fromD: Date, toD: Date) => {
+    setDateFrom(toISO(fromD)); setDateTo(toISO(toD))
+    setViewMonth(new Date(toD.getFullYear(), toD.getMonth(), 1))
+    setPickingStart(true)
+  }
+  const clear = () => { setDateFrom(''); setDateTo(''); setPickingStart(true) }
+  const today = new Date()
+  const presets = [
+    { label: "Aujourd'hui", fn: () => applyPreset(today, today) },
+    { label: 'Hier', fn: () => { const d = new Date(); d.setDate(d.getDate() - 1); applyPreset(d, d) } },
+    { label: '7 derniers jours', fn: () => { const to = new Date(); const from = new Date(); from.setDate(from.getDate() - 6); applyPreset(from, to) } },
+    { label: '30 derniers jours', fn: () => { const to = new Date(); const from = new Date(); from.setDate(from.getDate() - 29); applyPreset(from, to) } },
+    { label: 'Ce mois', fn: () => { const t = new Date(); const from = new Date(t.getFullYear(), t.getMonth(), 1); applyPreset(from, t) } },
+    { label: 'Mois dernier', fn: () => { const t = new Date(); const from = new Date(t.getFullYear(), t.getMonth() - 1, 1); const to = new Date(t.getFullYear(), t.getMonth(), 0); applyPreset(from, to) } },
+    { label: 'Cette année', fn: () => { const t = new Date(); const from = new Date(t.getFullYear(), 0, 1); applyPreset(from, t) } },
+  ]
+
+  const onDayClick = (d: Date) => {
+    const iso = toISO(d)
+    if (pickingStart || !dateFrom || (dateFrom && dateTo)) {
+      setDateFrom(iso); setDateTo(''); setPickingStart(false)
+    } else {
+      if (iso < dateFrom) { setDateTo(dateFrom); setDateFrom(iso) } else { setDateTo(iso) }
+      setPickingStart(true)
+    }
+  }
+
+  // Build 6×7 calendar grid, Monday-first
+  const y = viewMonth.getFullYear(), mo = viewMonth.getMonth()
+  const first = new Date(y, mo, 1)
+  const dayOfWeek = (first.getDay() + 6) % 7
+  const gridStart = new Date(y, mo, 1 - dayOfWeek)
+  const grid: Date[] = []
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(gridStart); d.setDate(gridStart.getDate() + i); grid.push(d)
+  }
+  const todayISO = toISO(new Date())
+  const navMonth = (delta: number) => {
+    const d = new Date(viewMonth); d.setMonth(d.getMonth() + delta); setViewMonth(d)
+  }
+
+  return (
+    <div className="dr-wrap" ref={ref}>
+      <button type="button" className={`dr-trigger${open ? ' open' : ''}${(dateFrom || dateTo) ? ' has' : ''}`} onClick={() => setOpen(!open)}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span className="dr-trigger-txt">{triggerLabel}</span>
+        <svg className="dr-trigger-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      {open && (
+        <div className="dr-panel">
+          <div className="dr-presets">
+            {presets.map(p => <button key={p.label} type="button" onClick={p.fn}>{p.label}</button>)}
+            <div className="dr-presets-sep"/>
+            <button type="button" onClick={clear} className="dr-clear">Effacer</button>
+          </div>
+          <div className="dr-cal">
+            <div className="dr-cal-head">
+              <button type="button" className="dr-cal-nav" onClick={() => navMonth(-1)} aria-label="Mois précédent">‹</button>
+              <span className="dr-cal-title">{viewMonth.toLocaleString('fr-FR', { month: 'long', year: 'numeric' })}</span>
+              <button type="button" className="dr-cal-nav" onClick={() => navMonth(1)} aria-label="Mois suivant">›</button>
+            </div>
+            <div className="dr-cal-grid">
+              {['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d, i) => <div className="dr-cal-dow" key={i}>{d}</div>)}
+              {grid.map((d, i) => {
+                const iso = toISO(d)
+                const isOther = d.getMonth() !== mo
+                const isToday = iso === todayISO
+                const isStart = !!dateFrom && iso === dateFrom
+                const isEnd = !!dateTo && iso === dateTo
+                const inRange = !!dateFrom && !!dateTo && iso > dateFrom && iso < dateTo
+                let cls = 'dr-cal-day'
+                if (isOther) cls += ' other'
+                if (isToday) cls += ' today'
+                if (isStart) cls += ' start'
+                if (isEnd) cls += ' end'
+                if (inRange) cls += ' range'
+                return <button key={i} type="button" className={cls} onClick={() => onDayClick(d)}>{d.getDate()}</button>
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
