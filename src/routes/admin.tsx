@@ -974,7 +974,7 @@ function Admin({ session }: { session: any }) {
           {page === 'general' && <DashboardView onOpen={setSelectedLead}/>}
           {page !== 'general' && (loading ? <div className="empty">Chargement…</div> : <>
             {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
-            {page === 'crm' && <CRMView leads={filtered} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
+            {page === 'crm' && <CRMView leads={filtered} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead}/>}
@@ -1364,7 +1364,7 @@ function StrategicFunnel({ title, tone, rows }: { title: string; tone: string; r
   return <article className={`sd-funnel ${tone}`}><h3>{title}</h3>{rows.map(row => <div className="sd-funnel-row" key={row.label}><div><span>{row.label}</span><strong>{row.count}</strong></div><progress max={max} value={row.count} aria-label={row.label}/></div>)}</article>
 }
 
-function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, exportCSV, exportPDF, exportExcel, isDirector }: any) {
+function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, assignLead, exportCSV, exportPDF, exportExcel, isDirector }: any) {
   const activeFiltersCount = (filterStatut?.length || 0) + (filterType?.length || 0) + (filterActivite?.length || 0) + (filterAgent?.length || 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (search ? 1 : 0)
   const agentEmailById = (id: string | null | undefined): string => {
     if (!id) return ''
@@ -1426,13 +1426,13 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
           )}
         </div>
       ) : (
-        <LeadsTable leads={leads} msgCounts={msgCounts} onOpen={onOpen} agentEmailById={agentEmailById} isDirector={isDirector}/>
+        <LeadsTable leads={leads} msgCounts={msgCounts} onOpen={onOpen} agentEmailById={agentEmailById} isDirector={isDirector} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers}/>
       )}
     </>
   )
 }
 
-function LeadsTable({ leads, msgCounts, onOpen, agentEmailById, isDirector }: any) {
+function LeadsTable({ leads, msgCounts, onOpen, agentEmailById, isDirector, updateStatut, assignLead, teamMembers }: any) {
   const [sortKey, setSortKey] = useState<string>('created_at')
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
   const toggleSort = (k: string) => {
@@ -1509,8 +1509,33 @@ function LeadsTable({ leads, msgCounts, onOpen, agentEmailById, isDirector }: an
                 <td className="lt-td">{l.ville || '—'}</td>
                 <td className="lt-td r"><b>{xaf(Number(l.montant_demande) || 0)}</b></td>
                 <td className="lt-td r"><span className={`lt-score ${scoreCls}`}>{l.score ?? 0}</span></td>
-                {isDirector && <td className="lt-td lt-dim">{agentName || '—'}</td>}
-                <td className="lt-td"><span className="lt-statut" style={{ background: c.bg, color: c.fg }}>{l.statut}</span></td>
+                {isDirector && (
+                  <td className="lt-td" onClick={e => e.stopPropagation()}>
+                    <select
+                      className="lt-agent-sel"
+                      data-assigned={l.agent_commercial_id ? 'true' : 'false'}
+                      value={l.agent_commercial_id || ''}
+                      onChange={e => assignLead(l.id, e.target.value || null)}
+                      title="Assigner ce lead"
+                    >
+                      <option value="">Non assigné</option>
+                      {teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => (
+                        <option key={m.id} value={m.id}>{m.email.split('@')[0]}</option>
+                      ))}
+                    </select>
+                  </td>
+                )}
+                <td className="lt-td" onClick={e => e.stopPropagation()}>
+                  <select
+                    className="lt-statut-sel"
+                    value={l.statut}
+                    onChange={e => updateStatut(l.id, e.target.value)}
+                    style={{ backgroundColor: c.bg, color: c.fg }}
+                    title="Changer le statut"
+                  >
+                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </td>
                 <td className="lt-td r lt-dim">{new Date(l.created_at).toLocaleDateString('fr-FR')}</td>
               </tr>
             )
