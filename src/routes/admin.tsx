@@ -1787,6 +1787,99 @@ function MultiSelectFilter({ title, placeholder, options, value, onChange, searc
   )
 }
 
+// Statuts groupés par étape du pipeline avec sous-titre explicatif
+const STATUS_GROUPS: { group: string; items: { k: string; sub: string; dot: string }[] }[] = [
+  { group: 'Prospection', items: [
+    { k: 'Nouveau', sub: 'Lead qui vient d\'arriver', dot: '#64748B' },
+    { k: 'Contacté', sub: 'Premier contact effectué', dot: '#3B82F6' },
+    { k: 'RDV', sub: 'Rendez-vous planifié ou tenu', dot: '#6366F1' },
+  ]},
+  { group: 'Qualification', items: [
+    { k: 'Éligible', sub: 'Validé pour un financement', dot: '#14B8A6' },
+    { k: 'Non Éligible', sub: 'Opportunité upsell Pack', dot: '#F59E0B' },
+  ]},
+  { group: 'Upsell', items: [
+    { k: 'Pack Formalisation Vendu', sub: 'RCCM vendu — 50 000 XAF', dot: '#EA580C' },
+    { k: 'Bancarisé', sub: 'Compte bancaire ouvert', dot: '#059669' },
+  ]},
+  { group: 'Financement', items: [
+    { k: 'Dossier Déposé', sub: 'Transmis à la banque partenaire', dot: '#2563EB' },
+    { k: 'Financé', sub: 'Crédit accordé — commission 2%', dot: '#10B981' },
+  ]},
+  { group: 'Final', items: [
+    { k: 'Perdu', sub: 'Lead abandonné', dot: '#B91C1C' },
+  ]},
+]
+
+function StatusSelect({ value, onChange, size = 'md' }: { value: string; onChange: (v: string) => void; size?: 'sm' | 'md' }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
+  const c = STATUS_COLORS[value] || { bg: '#F1F5F9', fg: '#475569' }
+  const padBtn = size === 'sm' ? '6px 10px' : '8px 12px'
+  const fontBtn = size === 'sm' ? 11 : 12
+  return (
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+      <button type="button" onClick={e => { e.stopPropagation(); setOpen(!open) }}
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: padBtn, background: c.bg, color: c.fg,
+          border: 'none', borderRadius: 999,
+          fontFamily: 'inherit', fontSize: fontBtn, fontWeight: 700,
+          textTransform: 'uppercase', letterSpacing: '0.04em',
+          cursor: 'pointer', boxShadow: 'none', whiteSpace: 'nowrap',
+        }}>
+        {value}
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      {open && (
+        <div onClick={e => e.stopPropagation()} style={{
+          position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 100,
+          background: '#FFFFFF', border: '1px solid #ECECEA', borderRadius: 10,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.1)', padding: 4, minWidth: 300, maxHeight: 400, overflow: 'auto',
+        }}>
+          {STATUS_GROUPS.map(g => (
+            <div key={g.group}>
+              <div style={{ padding: '8px 12px 4px', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9CA3AF' }}>{g.group}</div>
+              {g.items.map(it => {
+                const sel = it.k === value
+                return (
+                  <div key={it.k}
+                    onClick={() => { onChange(it.k); setOpen(false) }}
+                    style={{
+                      display: 'flex', alignItems: 'flex-start', gap: 10,
+                      padding: '9px 12px', borderRadius: 7, cursor: 'pointer',
+                      background: sel ? '#E6F2EB' : 'transparent',
+                    }}
+                    onMouseOver={e => { if (!sel) e.currentTarget.style.background = '#F3F3F1' }}
+                    onMouseOut={e => { e.currentTarget.style.background = sel ? '#E6F2EB' : 'transparent' }}
+                  >
+                    <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: it.dot, marginTop: 5, flexShrink: 0 }}/>
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontSize: 13, fontWeight: sel ? 600 : 500, color: sel ? '#0F6E3E' : '#111827' }}>{it.k}</div>
+                      <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>{it.sub}</div>
+                    </span>
+                    {sel && (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F6E3E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 3, flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function LeadRow({ lead, msgCount, onOpen, updateStatut, agentName }: any) {
   const c = STATUS_COLORS[lead.statut] || { bg: '#F1F5F9', fg: '#475569' }
   const isP = lead.type === 'physique' || lead.type === 'Personne physique'
@@ -1809,9 +1902,9 @@ function LeadRow({ lead, msgCount, onOpen, updateStatut, agentName }: any) {
       </div>
       <div className="lead-r" onClick={e => e.stopPropagation()}>
         <div className={`lead-score ${scoreCls}`}>{lead.score}</div>
-        <select className="lead-statut-sel" value={lead.statut} onChange={e => updateStatut(lead.id, e.target.value)}>
-          {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
+        <div onClick={e => e.stopPropagation()}>
+          <StatusSelect value={lead.statut} onChange={s => updateStatut(lead.id, s)} size="sm"/>
+        </div>
       </div>
     </div>
   )
@@ -2166,9 +2259,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
           <h2 className="dr-name">{nom}</h2>
           <div className="dr-code">{lead.access_code || '—'} · {lead.id}</div>
           <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <select className="dr-statut-sel" value={lead.statut} onChange={e => onStatutChange(e.target.value)} style={{ backgroundColor: STATUS_COLORS[lead.statut]?.bg, color: STATUS_COLORS[lead.statut]?.fg, border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 12 }}>
-              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <StatusSelect value={lead.statut} onChange={s => onStatutChange(s)} size="md"/>
             <span style={{ background: '#EEF4FF', color: '#1A6BFF', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800 }}>Score {lead.score}/100</span>
             {isDirector && (
               <select
