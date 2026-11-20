@@ -1412,48 +1412,97 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
           )}
         </div>
       ) : (
-        <LeadsCards leads={leads} msgCounts={msgCounts} onOpen={onOpen} agentEmailById={agentEmailById}/>
+        <LeadsTable leads={leads} msgCounts={msgCounts} onOpen={onOpen} agentEmailById={agentEmailById} isDirector={isDirector}/>
       )}
     </>
   )
 }
 
-function LeadsCards({ leads, msgCounts, onOpen, agentEmailById }: any) {
+function LeadsTable({ leads, msgCounts, onOpen, agentEmailById, isDirector }: any) {
+  const [sortKey, setSortKey] = useState<string>('created_at')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const toggleSort = (k: string) => {
+    if (sortKey === k) setSortDir(sortDir === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(k); setSortDir('asc') }
+  }
+  const nomOf = (l: any) => {
+    const isP = l.type === 'physique' || l.type === 'Personne physique'
+    return isP
+      ? `${l.identite?.prenom || ''} ${l.identite?.nom || ''}`.trim()
+      : (l.situation?.raison_sociale || l.identite?.raison_sociale || '—')
+  }
+  const sorted = useMemo(() => {
+    const arr = [...leads]
+    arr.sort((a, b) => {
+      let av: any, bv: any
+      switch (sortKey) {
+        case 'nom': av = nomOf(a).toLowerCase(); bv = nomOf(b).toLowerCase(); break
+        case 'type': av = a.type || ''; bv = b.type || ''; break
+        case 'activite': av = a.activite || ''; bv = b.activite || ''; break
+        case 'ville': av = a.ville || ''; bv = b.ville || ''; break
+        case 'montant': av = Number(a.montant_demande) || 0; bv = Number(b.montant_demande) || 0; break
+        case 'score': av = Number(a.score) || 0; bv = Number(b.score) || 0; break
+        case 'statut': av = a.statut || ''; bv = b.statut || ''; break
+        case 'agent': av = agentEmailById(a.agent_commercial_id) || 'zzz'; bv = agentEmailById(b.agent_commercial_id) || 'zzz'; break
+        case 'created_at': default: av = Date.parse(a.created_at); bv = Date.parse(b.created_at); break
+      }
+      if (av < bv) return sortDir === 'asc' ? -1 : 1
+      if (av > bv) return sortDir === 'asc' ? 1 : -1
+      return 0
+    })
+    return arr
+  }, [leads, sortKey, sortDir])
+
+  const Th = ({ k, label, right }: { k: string; label: string; right?: boolean }) => (
+    <th className={`lt-th${right ? ' r' : ''}${sortKey === k ? ' sorted' : ''}`} onClick={() => toggleSort(k)}>
+      <span className="lt-th-lbl">{label}</span>
+      <span className="lt-th-arrow">{sortKey === k ? (sortDir === 'asc' ? '↑' : '↓') : '↕'}</span>
+    </th>
+  )
+
   return (
-    <div className="lcc-grid">
-      {leads.map((l: any) => {
-        const isP = l.type === 'physique' || l.type === 'Personne physique'
-        const nom = isP
-          ? `${l.identite?.prenom || ''} ${l.identite?.nom || ''}`.trim()
-          : (l.situation?.raison_sociale || l.identite?.raison_sociale || '—')
-        const c = STATUS_COLORS[l.statut] || { bg: '#F1F5F9', fg: '#475569' }
-        const scoreCls = (l.score ?? 0) >= 70 ? 'hi' : (l.score ?? 0) < 40 ? 'lo' : 'mid'
-        const agentName = agentEmailById(l.agent_commercial_id)
-        const msgN = msgCounts[l.id] || 0
-        return (
-          <div key={l.id} className="lcc-card" onClick={() => onOpen(l)}>
-            <div className="lcc-top">
-              <div className="lcc-id">
-                <h3 className="lcc-name">{nom || '—'}{msgN > 0 && <span className="lcc-msg">{msgN}</span>}</h3>
-                <div className="lcc-sub">{isP ? 'Particulier' : 'PME'} · {l.activite || '—'} · {l.ville || '—'}</div>
-              </div>
-              <span className={`lcc-score ${scoreCls}`}>{l.score ?? 0}<small>/100</small></span>
-            </div>
-            <div className="lcc-bot">
-              <div className="lcc-amt">
-                <div className="lcc-amtk">Demandé</div>
-                <div className="lcc-amtv">{xaf(Number(l.montant_demande) || 0)}</div>
-              </div>
-              <div className="lcc-right">
-                <span className="lcc-statut" style={{ background: c.bg, color: c.fg }}>{l.statut}</span>
-                <span className="lcc-date">
-                  {agentName && <>{agentName} · </>}{new Date(l.created_at).toLocaleDateString('fr-FR')}
-                </span>
-              </div>
-            </div>
-          </div>
-        )
-      })}
+    <div className="lt-wrap">
+      <table className="lt-tbl">
+        <thead>
+          <tr>
+            <Th k="nom" label="Nom"/>
+            <Th k="type" label="Type"/>
+            <Th k="activite" label="Activité"/>
+            <Th k="ville" label="Ville"/>
+            <Th k="montant" label="Montant" right/>
+            <Th k="score" label="Score" right/>
+            {isDirector && <Th k="agent" label="Agent"/>}
+            <Th k="statut" label="Statut"/>
+            <Th k="created_at" label="Créé" right/>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((l: any) => {
+            const isP = l.type === 'physique' || l.type === 'Personne physique'
+            const nom = nomOf(l)
+            const c = STATUS_COLORS[l.statut] || { bg: '#F1F5F9', fg: '#475569' }
+            const scoreCls = (l.score ?? 0) >= 70 ? 'hi' : (l.score ?? 0) < 40 ? 'lo' : 'mid'
+            const agentName = agentEmailById(l.agent_commercial_id)
+            const msgN = msgCounts[l.id] || 0
+            return (
+              <tr key={l.id} className="lt-row" onClick={() => onOpen(l)}>
+                <td className="lt-td lt-nom">
+                  <span className="lt-name">{nom || '—'}</span>
+                  {msgN > 0 && <span className="lt-msg">{msgN}</span>}
+                </td>
+                <td className="lt-td">{isP ? 'Part.' : 'PME'}</td>
+                <td className="lt-td">{l.activite || '—'}</td>
+                <td className="lt-td">{l.ville || '—'}</td>
+                <td className="lt-td r"><b>{xaf(Number(l.montant_demande) || 0)}</b></td>
+                <td className="lt-td r"><span className={`lt-score ${scoreCls}`}>{l.score ?? 0}</span></td>
+                {isDirector && <td className="lt-td lt-dim">{agentName || '—'}</td>}
+                <td className="lt-td"><span className="lt-statut" style={{ background: c.bg, color: c.fg }}>{l.statut}</span></td>
+                <td className="lt-td r lt-dim">{new Date(l.created_at).toLocaleDateString('fr-FR')}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
     </div>
   )
 }
