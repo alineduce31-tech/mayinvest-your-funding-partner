@@ -771,14 +771,19 @@ function Admin({ session }: { session: any }) {
         .dr-k { font-size: 10.5px; color: var(--ink-mute); font-weight: 700;
           letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 4px; }
         .dr-v { font-size: 14px; font-weight: 600; color: var(--ink); word-break: break-word; }
-        .dr-wa { background: #25D366; color: #fff; border: none;
-          padding: 12px 20px; border-radius: 100px;
-          font-weight: 700; font-size: 13px; cursor: pointer;
-          display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;
-          font-family: inherit;
-          box-shadow: 0 8px 20px rgba(37,211,102,0.3);
-          transition: all 0.15s; }
-        .dr-wa:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(37,211,102,0.4); }
+        /* Contact header : rangée d'icônes rapides (Appel / Email / Chat) */
+        .dr-contact-row { display: inline-flex; gap: 6px; margin-left: 4px; }
+        .dr-contact-btn {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 34px; height: 34px; border-radius: 999px;
+          background: #FFFFFF; border: 1px solid #D1D5DB; color: #6B7280;
+          cursor: pointer; text-decoration: none;
+          font-family: inherit; box-shadow: none;
+          transition: color .15s ease, background .15s ease, border-color .15s ease;
+        }
+        .dr-contact-btn.phone:hover { color: #0F6E3E; border-color: #0F6E3E; background: #E6F2EB; }
+        .dr-contact-btn.mail:hover { color: #1E4FA3; border-color: #1E4FA3; background: #E8EEF9; }
+        .dr-contact-btn.chat:hover { color: #8A6617; border-color: #B4871F; background: #FBF2DC; }
 
         /* ============ CHAT ============ */
         .chat-wrap { display: flex; flex-direction: column; height: 60vh; min-height: 400px; }
@@ -1846,7 +1851,8 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
   const isP = lead.type === 'physique' || lead.type === 'Personne physique'
   const nom = isP ? `${lead.identite?.prenom || ''} ${lead.identite?.nom || ''}`.trim() : (lead.situation?.raison_sociale || lead.identite?.raison_sociale || '—')
   const tel = lead.identite?.tel || ''
-  const waPhone = tel ? '242' + tel.replace(/\D/g, '') : ''
+  const email = lead.identite?.email || ''
+  const telHref = tel ? `tel:+242${tel.replace(/\D/g, '')}` : ''
 
   async function loadMessages() {
     const { data } = await supabase.from('messages').select('*').eq('lead_id', lead.id).order('created_at')
@@ -1907,10 +1913,21 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
             {!isDirector && lead.agent_commercial_id && (
               <span style={{ background: '#ECFDF5', color: '#047857', padding: '6px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: '1px solid #BBF7D0' }}>Assigné à moi</span>
             )}
-            {waPhone && <a href={`https://wa.me/${waPhone}`} target="_blank" rel="noopener" className="dr-wa">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
-              WhatsApp
-            </a>}
+            <span className="dr-contact-row">
+              {telHref && (
+                <a className="dr-contact-btn phone" href={telHref} title={`Appeler ${tel}`}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </a>
+              )}
+              {email && (
+                <a className="dr-contact-btn mail" href={`mailto:${email}`} title={`Email ${email}`}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                </a>
+              )}
+              <button type="button" className="dr-contact-btn chat" onClick={() => setTab('chat')} title="Messagerie interne">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </button>
+            </span>
           </div>
         </div>
 
