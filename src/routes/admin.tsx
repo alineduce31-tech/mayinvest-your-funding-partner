@@ -1326,10 +1326,17 @@ function DateRangePicker({ dateFrom, dateTo, setDateFrom, setDateTo }: {
   const [open, setOpen] = useState(false)
   const [viewMonth, setViewMonth] = useState<Date>(() => dateFrom ? new Date(dateFrom) : new Date())
   const [pickingStart, setPickingStart] = useState(true)
+  const [align, setAlign] = useState<'left' | 'right'>('left')
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
+    // Anti-overflow : si le panel (520px) déborde à droite, on l'ancre à droite
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      const panelW = 520
+      setAlign(rect.left + panelW > window.innerWidth - 16 ? 'right' : 'left')
+    }
     const onDoc = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
@@ -1402,7 +1409,7 @@ function DateRangePicker({ dateFrom, dateTo, setDateFrom, setDateTo }: {
         <svg className="dr-trigger-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       {open && (
-        <div className="dr-panel">
+        <div className={`dr-panel dr-panel-${align}`}>
           <div className="dr-presets">
             {presets.map(p => <button key={p.label} type="button" onClick={p.fn}>{p.label}</button>)}
             <div className="dr-presets-sep"/>
@@ -1450,12 +1457,19 @@ function MultiSelectFilter({ title, placeholder, options, value, onChange, searc
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<string[]>(value)
   const [q, setQ] = useState('')
+  const [align, setAlign] = useState<'left' | 'right'>('left')
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open) return
     setDraft(value)
     setQ('')
+    // Anti-overflow : si le panel déborde à droite, on l'ancre à droite
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      const panelW = 300
+      setAlign(rect.left + panelW > window.innerWidth - 16 ? 'right' : 'left')
+    }
     const onDoc = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
@@ -1480,7 +1494,7 @@ function MultiSelectFilter({ title, placeholder, options, value, onChange, searc
         <svg className="ms-trigger-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </button>
       {open && (
-        <div className="ms-panel">
+        <div className={`ms-panel ms-panel-${align}`}>
           <div className="ms-head">
             <span>{title}{draft.length > 0 && ` (${draft.length} sélectionné${draft.length > 1 ? 's' : ''})`}</span>
             {draft.length > 0 && <button type="button" onClick={clearAll}>Tout décocher</button>}
