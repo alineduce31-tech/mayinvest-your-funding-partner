@@ -2163,87 +2163,41 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
           </button>
           <h2 className="dr-name">{nom}</h2>
           <div className="dr-code">{lead.access_code || '—'} · {lead.id}</div>
-          <div className="dr-meta">
-            <div className="dr-meta-card">
-              <div className="dr-meta-k">Statut</div>
-              <div className="dr-meta-v">
-                <select className="dr-meta-sel dr-meta-sel-statut" value={lead.statut} onChange={e => onStatutChange(e.target.value)} style={{ color: STATUS_COLORS[lead.statut]?.fg }}>
-                  {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
-              </div>
-            </div>
-            <div className="dr-meta-card">
-              <div className="dr-meta-k">Score</div>
-              <div className="dr-meta-v dr-meta-score">
-                <strong>{lead.score ?? 0}</strong><small>/100</small>
-              </div>
-            </div>
-            <div className="dr-meta-card">
-              <div className="dr-meta-k">Agent</div>
-              <div className="dr-meta-v">
-                {isDirector ? (
-                  <select className="dr-meta-sel" data-assigned={lead.agent_commercial_id ? 'true' : 'false'} value={lead.agent_commercial_id || ''} onChange={e => onAssignAgent(e.target.value || null)} style={{ color: lead.agent_commercial_id ? '#047857' : '#B45309' }}>
-                    <option value="">Non assigné</option>
-                    {teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => (
-                      <option key={m.id} value={m.id}>{m.email.split('@')[0]}</option>
-                    ))}
-                  </select>
-                ) : (
-                  <span style={{ color: lead.agent_commercial_id ? '#047857' : '#B45309' }}>
-                    {lead.agent_commercial_id ? 'Assigné à moi' : 'Non assigné'}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 6, marginTop: 4 }}>
-            <a
-              href={telHref || '#'}
-              title={telHref ? `Appeler ${tel}` : 'Aucun numéro'}
-              onClick={e => { if (!telHref) e.preventDefault() }}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#FAFAF8', border: '1px solid #F3F3F1', borderRadius: 10, textDecoration: 'none', color: 'inherit', boxShadow: 'none', minWidth: 0, opacity: telHref ? 1 : 0.5, cursor: telHref ? 'pointer' : 'default' }}
-              onMouseOver={e => { if (telHref) e.currentTarget.style.borderColor = '#0F6E3E' }}
-              onMouseOut={e => { e.currentTarget.style.borderColor = '#F3F3F1' }}
-            >
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#E6F2EB', color: '#0F6E3E', flexShrink: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              </span>
-              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <span style={{ fontSize: 10, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Téléphone</span>
-                <span style={{ fontSize: 12, color: '#111827', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{tel || '—'}</span>
-              </span>
-            </a>
-            <a
-              href={email ? `mailto:${email}` : '#'}
-              title={email ? `Email ${email}` : 'Aucun email'}
-              onClick={e => { if (!email) e.preventDefault() }}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#FAFAF8', border: '1px solid #F3F3F1', borderRadius: 10, textDecoration: 'none', color: 'inherit', boxShadow: 'none', minWidth: 0, opacity: email ? 1 : 0.5, cursor: email ? 'pointer' : 'default' }}
-              onMouseOver={e => { if (email) e.currentTarget.style.borderColor = '#1E4FA3' }}
-              onMouseOut={e => { e.currentTarget.style.borderColor = '#F3F3F1' }}
-            >
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#E8EEF9', color: '#1E4FA3', flexShrink: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              </span>
-              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <span style={{ fontSize: 10, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Email</span>
-                <span style={{ fontSize: 12, color: '#111827', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{email || '—'}</span>
-              </span>
-            </a>
-            <button
-              type="button"
-              onClick={() => setTab('chat')}
-              title="Ouvrir la messagerie interne"
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: '#FAFAF8', border: '1px solid #F3F3F1', borderRadius: 10, color: 'inherit', boxShadow: 'none', minWidth: 0, cursor: 'pointer', textAlign: 'left', fontFamily: 'inherit' }}
-              onMouseOver={e => { e.currentTarget.style.borderColor = '#B4871F' }}
-              onMouseOut={e => { e.currentTarget.style.borderColor = '#F3F3F1' }}
-            >
-              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, background: '#FBF2DC', color: '#8A6617', flexShrink: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              </span>
-              <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                <span style={{ fontSize: 10, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>Chat interne</span>
-                <span style={{ fontSize: 12, color: '#111827', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>Ouvrir la messagerie</span>
-              </span>
+          <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+            <select className="dr-statut-sel" value={lead.statut} onChange={e => onStatutChange(e.target.value)} style={{ backgroundColor: STATUS_COLORS[lead.statut]?.bg, color: STATUS_COLORS[lead.statut]?.fg, border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 12 }}>
+              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <span style={{ background: '#EEF4FF', color: '#1A6BFF', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800 }}>Score {lead.score}/100</span>
+            {isDirector && (
+              <select
+                className="dr-assign-sel"
+                data-assigned={lead.agent_commercial_id ? 'true' : 'false'}
+                value={lead.agent_commercial_id || ''}
+                onChange={e => onAssignAgent(e.target.value || null)}
+                style={{ background: lead.agent_commercial_id ? '#DCFCE7' : '#FEF3C7', color: lead.agent_commercial_id ? '#047857' : '#B45309', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
+                title="Assigner ce lead à un commercial"
+              >
+                <option value="">Non assigné</option>
+                {teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => (
+                  <option key={m.id} value={m.id}>{m.email.split('@')[0]}</option>
+                ))}
+              </select>
+            )}
+            {!isDirector && lead.agent_commercial_id && (
+              <span style={{ background: '#ECFDF5', color: '#047857', padding: '6px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: '1px solid #BBF7D0' }}>Assigné à moi</span>
+            )}
+            {telHref && (
+              <a href={telHref} title={`Appeler ${tel}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 999, background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#6B7280', textDecoration: 'none' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </a>
+            )}
+            {email && (
+              <a href={`mailto:${email}`} title={`Email ${email}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 999, background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#6B7280', textDecoration: 'none' }}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </a>
+            )}
+            <button type="button" onClick={() => setTab('chat')} title="Messagerie interne" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 999, background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#6B7280', cursor: 'pointer' }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
             </button>
           </div>
         </div>
