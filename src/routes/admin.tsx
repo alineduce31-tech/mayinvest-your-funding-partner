@@ -1900,11 +1900,22 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     onMsgRead()
   }
 
-  // Empêcher le scroll du body quand le drawer est ouvert (fix double scrollbar)
+  // Empêcher le scroll du body ET du html quand le drawer est ouvert (fix double scrollbar)
   useEffect(() => {
-    const prev = document.body.style.overflow
+    const html = document.documentElement
+    const prevHtml = html.style.overflow
+    const prevBody = document.body.style.overflow
+    const prevPad = document.body.style.paddingRight
+    // Compense la disparition de la scrollbar pour éviter un shift de layout
+    const scrollbarW = window.innerWidth - html.clientWidth
+    html.style.overflow = 'hidden'
     document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
+    if (scrollbarW > 0) document.body.style.paddingRight = scrollbarW + 'px'
+    return () => {
+      html.style.overflow = prevHtml
+      document.body.style.overflow = prevBody
+      document.body.style.paddingRight = prevPad
+    }
   }, [])
 
   useEffect(() => {
