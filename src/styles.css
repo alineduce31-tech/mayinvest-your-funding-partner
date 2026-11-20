@@ -806,6 +806,164 @@
 .toolbar input { min-width: 240px; flex: 1; }
 
 /* ============================================================
+   MULTI-SELECT DROPDOWN (filtres CRM Statuts/Types/Activités/Agents)
+   ============================================================ */
+.ms-wrap {
+  position: relative;
+  display: inline-block;
+}
+.ms-trigger {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 10px 8px 12px;
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border-strong);
+  border-radius: 8px;
+  font-family: inherit; font-size: 13px;
+  color: var(--mi-text);
+  cursor: pointer;
+  min-width: 140px;
+  transition: border-color .15s ease, box-shadow .15s ease;
+  box-shadow: none !important;
+}
+.ms-trigger:hover { border-color: var(--mi-text); }
+.ms-trigger.open {
+  border-color: var(--mi-primary);
+  box-shadow: 0 0 0 3px var(--mi-primary-soft) !important;
+}
+.ms-trigger.has .ms-trigger-txt { color: var(--mi-primary); font-weight: 600; }
+.ms-trigger-txt {
+  flex: 1; text-align: left;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ms-trigger-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 18px; height: 18px; padding: 0 5px;
+  background: var(--mi-primary); color: #fff;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ms-trigger-chev {
+  color: var(--mi-muted);
+  transition: transform .15s ease, color .15s ease;
+  flex-shrink: 0;
+}
+.ms-trigger.open .ms-trigger-chev { transform: rotate(180deg); color: var(--mi-primary); }
+
+.ms-panel {
+  position: absolute;
+  top: calc(100% + 6px); left: 0;
+  width: 300px;
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  z-index: 50;
+  display: flex; flex-direction: column;
+}
+.ms-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--mi-hairline);
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--mi-muted);
+}
+.ms-head button {
+  background: none; border: none;
+  color: var(--mi-primary);
+  font-family: inherit; font-size: 11px; font-weight: 600;
+  cursor: pointer;
+  letter-spacing: normal; text-transform: none;
+  padding: 0;
+  box-shadow: none !important;
+}
+.ms-head button:hover { color: var(--mi-primary-dark); text-decoration: underline; }
+
+.ms-search {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--mi-hairline);
+}
+.ms-search svg { color: var(--mi-faint); flex-shrink: 0; }
+.ms-search input {
+  flex: 1; border: none; outline: none;
+  font-family: inherit; font-size: 13px;
+  color: var(--mi-text);
+  background: transparent;
+  padding: 0;
+}
+
+.ms-list {
+  max-height: 260px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.ms-empty {
+  padding: 24px 12px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--mi-faint);
+}
+.ms-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--mi-text-2);
+  transition: background .1s ease, color .1s ease;
+}
+.ms-item:hover { background: var(--mi-hairline); color: var(--mi-text); }
+.ms-item.sel { background: var(--mi-primary-soft); color: var(--mi-primary); font-weight: 600; }
+.ms-item-lbl {
+  flex: 1; min-width: 0;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.ms-box {
+  width: 16px; height: 16px;
+  border: 1.5px solid var(--mi-border-strong);
+  border-radius: 4px;
+  flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: all .1s ease;
+}
+.ms-item.sel .ms-box {
+  background: var(--mi-primary);
+  border-color: var(--mi-primary);
+}
+.ms-box svg { opacity: 0; width: 11px; height: 11px; color: #fff; }
+.ms-item.sel .ms-box svg { opacity: 1; }
+
+.ms-foot {
+  display: flex; gap: 6px;
+  padding: 10px;
+  border-top: 1px solid var(--mi-hairline);
+}
+.ms-foot button {
+  flex: 1;
+  padding: 8px;
+  border-radius: 8px;
+  font-family: inherit; font-size: 12px; font-weight: 600;
+  cursor: pointer;
+  border: none;
+  box-shadow: none !important;
+}
+.ms-cancel {
+  background: transparent;
+  color: var(--mi-muted);
+  border: 1px solid var(--mi-border-strong) !important;
+}
+.ms-cancel:hover { background: var(--mi-hairline); color: var(--mi-text); }
+.ms-apply {
+  background: var(--mi-primary);
+  color: #fff;
+}
+.ms-apply:hover { background: var(--mi-primary-dark); }
+
+/* ============================================================
    EXPORT SEGMENTED GROUP (CSV / Excel / PDF unifiés)
    ============================================================ */
 .sd-export-seg {
