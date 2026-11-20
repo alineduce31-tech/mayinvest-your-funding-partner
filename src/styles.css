@@ -806,6 +806,162 @@
 .toolbar input { min-width: 240px; flex: 1; }
 
 /* ============================================================
+   DATE RANGE PICKER (presets + mini calendrier)
+   ============================================================ */
+.dr-wrap { position: relative; display: inline-block; }
+.dr-trigger {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 10px 8px 12px;
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border-strong);
+  border-radius: 8px;
+  font-family: inherit; font-size: 13px;
+  color: var(--mi-text);
+  cursor: pointer;
+  box-shadow: none !important;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.dr-trigger:hover { border-color: var(--mi-text); }
+.dr-trigger.open {
+  border-color: var(--mi-primary);
+  box-shadow: 0 0 0 3px var(--mi-primary-soft) !important;
+}
+.dr-trigger svg:first-child { color: var(--mi-muted); flex-shrink: 0; }
+.dr-trigger.has svg:first-child { color: var(--mi-primary); }
+.dr-trigger.has .dr-trigger-txt { color: var(--mi-primary); font-weight: 600; }
+.dr-trigger-txt { white-space: nowrap; }
+.dr-trigger-chev {
+  color: var(--mi-muted);
+  transition: transform .15s ease, color .15s ease;
+  flex-shrink: 0;
+}
+.dr-trigger.open .dr-trigger-chev { transform: rotate(180deg); color: var(--mi-primary); }
+
+.dr-panel {
+  position: absolute;
+  top: calc(100% + 6px); left: 0;
+  width: 520px; max-width: 95vw;
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  z-index: 50;
+}
+@media (max-width: 560px) {
+  .dr-panel { flex-direction: column; width: 320px; }
+}
+
+.dr-presets {
+  width: 170px;
+  padding: 6px;
+  border-right: 1px solid var(--mi-hairline);
+  display: flex; flex-direction: column; gap: 2px;
+  flex-shrink: 0;
+}
+@media (max-width: 560px) {
+  .dr-presets { width: 100%; border-right: none; border-bottom: 1px solid var(--mi-hairline); flex-direction: row; flex-wrap: wrap; }
+  .dr-presets button { flex: 1 1 auto; text-align: center !important; }
+}
+.dr-presets button {
+  display: block; width: 100%; text-align: left;
+  padding: 8px 12px;
+  background: transparent; border: none;
+  border-radius: 6px;
+  font-family: inherit; font-size: 13px;
+  color: var(--mi-text-2);
+  cursor: pointer;
+  box-shadow: none !important;
+  transition: background .1s ease, color .1s ease;
+}
+.dr-presets button:hover { background: var(--mi-hairline); color: var(--mi-text); }
+.dr-presets-sep {
+  height: 1px; background: var(--mi-hairline);
+  margin: 6px 4px;
+}
+.dr-presets .dr-clear {
+  color: var(--mi-muted);
+  font-weight: 500;
+}
+.dr-presets .dr-clear:hover { color: var(--mi-red); background: var(--mi-red-soft); }
+
+.dr-cal {
+  flex: 1;
+  padding: 12px;
+  min-width: 0;
+}
+.dr-cal-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 4px 10px;
+  font-size: 13px; font-weight: 600;
+  color: var(--mi-text);
+}
+.dr-cal-title { text-transform: capitalize; }
+.dr-cal-nav {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px;
+  background: transparent;
+  border: none; border-radius: 6px;
+  color: var(--mi-muted);
+  font-size: 18px; line-height: 1;
+  cursor: pointer;
+  box-shadow: none !important;
+}
+.dr-cal-nav:hover { background: var(--mi-hairline); color: var(--mi-text); }
+
+.dr-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.dr-cal-dow {
+  text-align: center;
+  color: var(--mi-faint);
+  font-weight: 600; font-size: 11px;
+  padding: 4px 0;
+}
+.dr-cal-day {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 32px;
+  background: transparent;
+  border: none; border-radius: 6px;
+  color: var(--mi-text-2);
+  font-family: inherit; font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  position: relative;
+  box-shadow: none !important;
+  transition: background .1s ease, color .1s ease;
+}
+.dr-cal-day:hover { background: var(--mi-hairline); color: var(--mi-text); }
+.dr-cal-day.other { color: var(--mi-faint); }
+.dr-cal-day.today {
+  font-weight: 700;
+}
+.dr-cal-day.today::after {
+  content: '';
+  position: absolute; bottom: 4px; left: 50%;
+  transform: translateX(-50%);
+  width: 3px; height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.dr-cal-day.range {
+  background: var(--mi-primary-soft);
+  color: var(--mi-primary);
+  border-radius: 0;
+}
+.dr-cal-day.start, .dr-cal-day.end {
+  background: var(--mi-primary);
+  color: #fff;
+  font-weight: 700;
+  border-radius: 6px;
+}
+.dr-cal-day.start.today::after,
+.dr-cal-day.end.today::after { background: #fff; }
+
+/* ============================================================
    MULTI-SELECT DROPDOWN (filtres CRM Statuts/Types/Activités/Agents)
    ============================================================ */
 .ms-wrap {
