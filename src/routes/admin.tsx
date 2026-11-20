@@ -1426,7 +1426,9 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
           )}
         </div>
       ) : (
-        <LeadsTable leads={leads} msgCounts={msgCounts} onOpen={onOpen} agentEmailById={agentEmailById} isDirector={isDirector} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers}/>
+        <div className="lead-grid">
+          {leads.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={msgCounts[l.id] || 0} onOpen={onOpen} updateStatut={updateStatut} agentName={agentEmailById(l.agent_commercial_id)}/>)}
+        </div>
       )}
     </>
   )
