@@ -817,8 +817,57 @@ function Admin({ session }: { session: any }) {
           overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         }
 
-        /* Contact header : rangée d'icônes rapides (Appel / Email / Chat) */
-        .dr-contact-row { display: inline-flex; gap: 6px; margin-left: auto; }
+        /* Meta header : 3 mini-cards égales (Statut / Score / Agent) */
+        .dr-meta {
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+          margin: 12px 0 10px;
+        }
+        .dr-meta-card {
+          background: var(--bg, #FAFAF8);
+          border: 1px solid var(--hairline, #F3F3F1);
+          border-radius: 10px;
+          padding: 8px 12px;
+          min-width: 0;
+        }
+        .dr-meta-k {
+          font-size: 9px; font-weight: 700;
+          color: var(--muted, #6B7280);
+          text-transform: uppercase; letter-spacing: 0.08em;
+          margin-bottom: 3px;
+        }
+        .dr-meta-v {
+          font-size: 13px; font-weight: 600;
+          color: var(--ink);
+          display: flex; align-items: center;
+          min-width: 0;
+        }
+        .dr-meta-score strong {
+          font-size: 16px; font-weight: 700; color: var(--primary, #0F6E3E);
+          font-variant-numeric: tabular-nums;
+        }
+        .dr-meta-score small {
+          font-size: 11px; color: var(--muted, #6B7280);
+          font-weight: 500; margin-left: 2px;
+        }
+        .dr-meta-sel {
+          appearance: none !important; -webkit-appearance: none !important;
+          background: transparent !important;
+          border: none !important;
+          font-family: inherit; font-size: 13px; font-weight: 600;
+          cursor: pointer;
+          padding: 0 18px 0 0 !important;
+          width: 100%;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E') !important;
+          background-repeat: no-repeat !important;
+          background-position: right 2px center !important;
+          background-size: 10px !important;
+          white-space: nowrap;
+          overflow: hidden; text-overflow: ellipsis;
+        }
+
+        /* Row des icônes contact repositionnée à droite, sur sa propre ligne */
+        .dr-contact-top { display: flex; justify-content: flex-end; }
+        .dr-contact-row { display: inline-flex; gap: 6px; }
         .dr-contact-btn {
           display: inline-flex; align-items: center; justify-content: center;
           width: 34px; height: 34px; border-radius: 999px;
@@ -1996,29 +2045,40 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
           </button>
           <h2 className="dr-name">{nom}</h2>
           <div className="dr-code">{lead.access_code || '—'} · {lead.id}</div>
-          <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <select className="dr-statut-sel" value={lead.statut} onChange={e => onStatutChange(e.target.value)} style={{ backgroundColor: STATUS_COLORS[lead.statut]?.bg, color: STATUS_COLORS[lead.statut]?.fg, border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 12 }}>
-              {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <span style={{ background: '#EEF4FF', color: '#1A6BFF', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800 }}>Score {lead.score}/100</span>
-            {isDirector && (
-              <select
-                className="dr-assign-sel"
-                data-assigned={lead.agent_commercial_id ? 'true' : 'false'}
-                value={lead.agent_commercial_id || ''}
-                onChange={e => onAssignAgent(e.target.value || null)}
-                style={{ background: lead.agent_commercial_id ? '#DCFCE7' : '#FEF3C7', color: lead.agent_commercial_id ? '#047857' : '#B45309', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
-                title="Assigner ce lead à un commercial"
-              >
-                <option value="">Non assigné</option>
-                {teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => (
-                  <option key={m.id} value={m.id}>{m.email.split('@')[0]}</option>
-                ))}
-              </select>
-            )}
-            {!isDirector && lead.agent_commercial_id && (
-              <span style={{ background: '#ECFDF5', color: '#047857', padding: '6px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: '1px solid #BBF7D0' }}>Assigné à moi</span>
-            )}
+          <div className="dr-meta">
+            <div className="dr-meta-card">
+              <div className="dr-meta-k">Statut</div>
+              <div className="dr-meta-v">
+                <select className="dr-meta-sel dr-meta-sel-statut" value={lead.statut} onChange={e => onStatutChange(e.target.value)} style={{ color: STATUS_COLORS[lead.statut]?.fg }}>
+                  {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="dr-meta-card">
+              <div className="dr-meta-k">Score</div>
+              <div className="dr-meta-v dr-meta-score">
+                <strong>{lead.score ?? 0}</strong><small>/100</small>
+              </div>
+            </div>
+            <div className="dr-meta-card">
+              <div className="dr-meta-k">Agent</div>
+              <div className="dr-meta-v">
+                {isDirector ? (
+                  <select className="dr-meta-sel" data-assigned={lead.agent_commercial_id ? 'true' : 'false'} value={lead.agent_commercial_id || ''} onChange={e => onAssignAgent(e.target.value || null)} style={{ color: lead.agent_commercial_id ? '#047857' : '#B45309' }}>
+                    <option value="">Non assigné</option>
+                    {teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => (
+                      <option key={m.id} value={m.id}>{m.email.split('@')[0]}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <span style={{ color: lead.agent_commercial_id ? '#047857' : '#B45309' }}>
+                    {lead.agent_commercial_id ? 'Assigné à moi' : 'Non assigné'}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+          <div className="dr-contact-top">
             <span className="dr-contact-row">
               {telHref && (
                 <a className="dr-contact-btn phone" href={telHref} title={`Appeler ${tel}`}>
