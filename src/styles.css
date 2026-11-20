@@ -655,6 +655,97 @@
 .rap-empty-s { font-size: 12px; color: var(--mi-muted); }
 
 /* ============================================================
+   LEADS CARDS (CRM) — cards 2 colonnes riches
+   ============================================================ */
+.lcc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 10px;
+}
+.lcc-card {
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border);
+  border-radius: 12px;
+  padding: 14px;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+}
+.lcc-card:hover {
+  border-color: var(--mi-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+/* Top : nom + score pill */
+.lcc-top {
+  display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;
+  margin-bottom: 10px;
+}
+.lcc-id { min-width: 0; flex: 1; }
+.lcc-name {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 14px; font-weight: 600;
+  color: var(--mi-text);
+  margin: 0 0 3px;
+  letter-spacing: -0.01em;
+}
+.lcc-msg {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 20px; height: 18px; padding: 0 6px;
+  background: var(--mi-red); color: #fff;
+  border-radius: 999px;
+  font-size: 10px; font-weight: 700;
+}
+.lcc-sub {
+  font-size: 11px; color: var(--mi-muted);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.lcc-score {
+  display: inline-flex; align-items: baseline; gap: 1px;
+  padding: 4px 10px; border-radius: 8px;
+  font-size: 13px; font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  flex-shrink: 0;
+}
+.lcc-score small { font-size: 10px; font-weight: 500; opacity: 0.6; }
+.lcc-score.hi { background: var(--mi-primary-soft); color: var(--mi-primary); }
+.lcc-score.mid { background: var(--mi-blue-soft); color: var(--mi-blue); }
+.lcc-score.lo { background: var(--mi-red-soft); color: var(--mi-red); }
+
+/* Bottom : montant à gauche + statut/date à droite, séparés par pointillé */
+.lcc-bot {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--mi-hairline);
+}
+.lcc-amt { display: flex; flex-direction: column; gap: 1px; }
+.lcc-amtk {
+  font-size: 10px; color: var(--mi-faint);
+  text-transform: uppercase; letter-spacing: 0.06em;
+  font-weight: 600;
+}
+.lcc-amtv {
+  font-size: 15px; font-weight: 700;
+  color: var(--mi-text);
+  font-variant-numeric: tabular-nums;
+}
+.lcc-right {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+  min-width: 0;
+}
+.lcc-statut {
+  padding: 3px 10px; border-radius: 999px;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.lcc-date {
+  font-size: 10px; color: var(--mi-faint);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 200px;
+}
+
+/* ============================================================
    LISTE DÉDIÉE (Bancarisation, Non Éligibles) — carte + empty A
    ============================================================ */
 .lc-card {
