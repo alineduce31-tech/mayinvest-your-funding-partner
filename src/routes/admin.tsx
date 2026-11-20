@@ -2166,22 +2166,39 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
               </div>
             </div>
           </div>
-          <div className="dr-contact-top">
-            <span className="dr-contact-row">
-              {telHref && (
-                <a className="dr-contact-btn phone" href={telHref} title={`Appeler ${tel}`}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                </a>
-              )}
-              {email && (
-                <a className="dr-contact-btn mail" href={`mailto:${email}`} title={`Email ${email}`}>
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                </a>
-              )}
-              <button type="button" className="dr-contact-btn chat" onClick={() => setTab('chat')} title="Messagerie interne">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              </button>
-            </span>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginTop: 8 }}>
+            {telHref && (
+              <a
+                href={telHref}
+                title={`Appeler ${tel}`}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 999, background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#6B7280', textDecoration: 'none', boxShadow: 'none', padding: 0 }}
+                onMouseOver={e => { e.currentTarget.style.color = '#0F6E3E'; e.currentTarget.style.borderColor = '#0F6E3E'; e.currentTarget.style.background = '#E6F2EB' }}
+                onMouseOut={e => { e.currentTarget.style.color = '#6B7280'; e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.background = '#FFFFFF' }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+              </a>
+            )}
+            {email && (
+              <a
+                href={`mailto:${email}`}
+                title={`Email ${email}`}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 999, background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#6B7280', textDecoration: 'none', boxShadow: 'none', padding: 0 }}
+                onMouseOver={e => { e.currentTarget.style.color = '#1E4FA3'; e.currentTarget.style.borderColor = '#1E4FA3'; e.currentTarget.style.background = '#E8EEF9' }}
+                onMouseOut={e => { e.currentTarget.style.color = '#6B7280'; e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.background = '#FFFFFF' }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+              </a>
+            )}
+            <button
+              type="button"
+              onClick={() => setTab('chat')}
+              title="Messagerie interne"
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 999, background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#6B7280', cursor: 'pointer', boxShadow: 'none', padding: 0 }}
+              onMouseOver={e => { e.currentTarget.style.color = '#8A6617'; e.currentTarget.style.borderColor = '#B4871F'; e.currentTarget.style.background = '#FBF2DC' }}
+              onMouseOut={e => { e.currentTarget.style.color = '#6B7280'; e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.background = '#FFFFFF' }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </button>
           </div>
         </div>
 
