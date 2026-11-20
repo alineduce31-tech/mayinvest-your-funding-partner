@@ -178,10 +178,10 @@ function Admin({ session }: { session: any }) {
   const [msgCounts, setMsgCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
-  const [filterStatut, setFilterStatut] = useState<string>('')
-  const [filterType, setFilterType] = useState<string>('')
-  const [filterActivite, setFilterActivite] = useState<string>('')
-  const [filterAgent, setFilterAgent] = useState<string>('')
+  const [filterStatut, setFilterStatut] = useState<string[]>([])
+  const [filterType, setFilterType] = useState<string[]>([])
+  const [filterActivite, setFilterActivite] = useState<string[]>([])
+  const [filterAgent, setFilterAgent] = useState<string[]>([])
   const [dateFrom, setDateFrom] = useState<string>('')
   const [dateTo, setDateTo] = useState<string>('')
   const [teamMembers, setTeamMembers] = useState<any[]>([])
@@ -278,12 +278,12 @@ function Admin({ session }: { session: any }) {
     const dTo = dateTo ? new Date(dateTo).getTime() + 86400000 : Infinity
     return leads.filter(l => {
       if (page === 'crm' && !matchesPriority(l, dashboardSearch.priority || '', Date.now())) return false
-      if (filterStatut && l.statut !== filterStatut) return false
-      if (filterType && l.type !== filterType) return false
-      if (filterActivite && l.activite !== filterActivite) return false
-      if (filterAgent) {
-        if (filterAgent === 'none' && l.agent_commercial_id) return false
-        if (filterAgent !== 'none' && l.agent_commercial_id !== filterAgent) return false
+      if (filterStatut.length > 0 && !filterStatut.includes(l.statut)) return false
+      if (filterType.length > 0 && !filterType.includes(l.type)) return false
+      if (filterActivite.length > 0 && !filterActivite.includes(l.activite)) return false
+      if (filterAgent.length > 0) {
+        const matchAgent = filterAgent.some(a => a === 'none' ? !l.agent_commercial_id : l.agent_commercial_id === a)
+        if (!matchAgent) return false
       }
       const created = Date.parse(l.created_at)
       if (created < dFrom || created > dTo) return false
@@ -301,7 +301,7 @@ function Admin({ session }: { session: any }) {
   }, [leads, search, filterStatut, filterType, filterActivite, filterAgent, dateFrom, dateTo, page, dashboardSearch.priority])
 
   function resetFilters() {
-    setSearch(''); setFilterStatut(''); setFilterType(''); setFilterActivite(''); setFilterAgent(''); setDateFrom(''); setDateTo('')
+    setSearch(''); setFilterStatut([]); setFilterType([]); setFilterActivite([]); setFilterAgent([]); setDateFrom(''); setDateTo('')
   }
 
   function exportCSV() {
@@ -415,9 +415,9 @@ function Admin({ session }: { session: any }) {
   // Export PDF via nouvelle fenêtre + impression navigateur (pas besoin de lib externe)
   function exportPDF() {
     const activeFilters: string[] = []
-    if (filterStatut) activeFilters.push(`Statut: ${filterStatut}`)
-    if (filterType) activeFilters.push(`Type: ${filterType}`)
-    if (filterActivite) activeFilters.push(`Activité: ${filterActivite}`)
+    if (filterStatut.length) activeFilters.push(`Statut: ${filterStatut.join(', ')}`)
+    if (filterType.length) activeFilters.push(`Type: ${filterType.join(', ')}`)
+    if (filterActivite.length) activeFilters.push(`Activité: ${filterActivite.join(', ')}`)
     if (dateFrom) activeFilters.push(`Du: ${dateFrom}`)
     if (dateTo) activeFilters.push(`Au: ${dateTo}`)
     if (search) activeFilters.push(`Recherche: "${search}"`)
@@ -1251,37 +1251,22 @@ function StrategicFunnel({ title, tone, rows }: { title: string; tone: string; r
 }
 
 function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, exportCSV, exportPDF, exportExcel, isDirector }: any) {
-  const activeFiltersCount = [filterStatut, filterType, filterActivite, filterAgent, dateFrom, dateTo, search].filter(Boolean).length
+  const activeFiltersCount = (filterStatut?.length || 0) + (filterType?.length || 0) + (filterActivite?.length || 0) + (filterAgent?.length || 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (search ? 1 : 0)
   const agentEmailById = (id: string | null | undefined): string => {
     if (!id) return ''
     const t = teamMembers?.find((m: any) => m.id === id)
     return t ? t.email.split('@')[0] : ''
   }
+  const agentOptions = [{ value: 'none', label: 'Non assigné' }, ...(teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => ({ value: m.id, label: m.email.split('@')[0] })) || [])]
   return (
     <>
       <div className="toolbar toolbar-advanced">
         <input placeholder="Rechercher nom, téléphone, code…" value={search} onChange={e => setSearch(e.target.value)}/>
-        <select value={filterStatut} onChange={e => setFilterStatut(e.target.value)}>
-          <option value="">Tous statuts</option>
-          {STATUSES.map((s: string) => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select value={filterType} onChange={e => setFilterType(e.target.value)}>
-          <option value="">Tous types</option>
-          <option value="physique">Particulier</option>
-          <option value="morale">PME</option>
-        </select>
-        <select value={filterActivite} onChange={e => setFilterActivite(e.target.value)}>
-          <option value="">Toutes activités</option>
-          {activitesList?.map((a: string) => <option key={a} value={a}>{a}</option>)}
-        </select>
+        <MultiSelectFilter placeholder="Tous statuts" title="Statuts" options={STATUSES.map((s: string) => ({ value: s, label: s }))} value={filterStatut} onChange={setFilterStatut}/>
+        <MultiSelectFilter placeholder="Tous types" title="Type de client" options={[{ value: 'physique', label: 'Particulier' }, { value: 'morale', label: 'PME' }]} value={filterType} onChange={setFilterType}/>
+        <MultiSelectFilter placeholder="Toutes activités" title="Activité" options={(activitesList || []).map((a: string) => ({ value: a, label: a }))} value={filterActivite} onChange={setFilterActivite} searchable/>
         {isDirector && (
-          <select value={filterAgent} onChange={e => setFilterAgent(e.target.value)}>
-            <option value="">Tous agents</option>
-            <option value="none">Non assigné</option>
-            {teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => (
-              <option key={m.id} value={m.id}>{m.email.split('@')[0]}</option>
-            ))}
-          </select>
+          <MultiSelectFilter placeholder="Tous agents" title="Agent commercial" options={agentOptions} value={filterAgent} onChange={setFilterAgent}/>
         )}
         <div className="date-range">
           <label>Du</label>
@@ -1337,6 +1322,82 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
         </div>
       )}
     </>
+  )
+}
+
+function MultiSelectFilter({ title, placeholder, options, value, onChange, searchable }: {
+  title: string;
+  placeholder: string;
+  options: { value: string; label: string }[];
+  value: string[];
+  onChange: (v: string[]) => void;
+  searchable?: boolean;
+}) {
+  const [open, setOpen] = useState(false)
+  const [draft, setDraft] = useState<string[]>(value)
+  const [q, setQ] = useState('')
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    setDraft(value)
+    setQ('')
+    const onDoc = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open, value])
+
+  const toggle = (v: string) => setDraft(draft.includes(v) ? draft.filter(x => x !== v) : [...draft, v])
+  const apply = () => { onChange(draft); setOpen(false) }
+  const cancel = () => { setDraft(value); setOpen(false) }
+  const clearAll = () => setDraft([])
+
+  const filteredOptions = q
+    ? options.filter(o => o.label.toLowerCase().includes(q.toLowerCase()))
+    : options
+
+  return (
+    <div className="ms-wrap" ref={ref}>
+      <button type="button" className={`ms-trigger${open ? ' open' : ''}${value.length > 0 ? ' has' : ''}`} onClick={() => setOpen(!open)}>
+        <span className="ms-trigger-txt">{placeholder}</span>
+        {value.length > 0 && <span className="ms-trigger-badge">{value.length}</span>}
+        <svg className="ms-trigger-chev" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      {open && (
+        <div className="ms-panel">
+          <div className="ms-head">
+            <span>{title}{draft.length > 0 && ` (${draft.length} sélectionné${draft.length > 1 ? 's' : ''})`}</span>
+            {draft.length > 0 && <button type="button" onClick={clearAll}>Tout décocher</button>}
+          </div>
+          {searchable && (
+            <div className="ms-search">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+              <input value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher…" autoFocus/>
+            </div>
+          )}
+          <div className="ms-list">
+            {filteredOptions.length === 0 && <div className="ms-empty">Aucun résultat</div>}
+            {filteredOptions.map(opt => {
+              const sel = draft.includes(opt.value)
+              return (
+                <div key={opt.value} className={`ms-item${sel ? ' sel' : ''}`} onClick={() => toggle(opt.value)}>
+                  <span className="ms-box">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  </span>
+                  <span className="ms-item-lbl">{opt.label}</span>
+                </div>
+              )
+            })}
+          </div>
+          <div className="ms-foot">
+            <button type="button" className="ms-cancel" onClick={cancel}>Annuler</button>
+            <button type="button" className="ms-apply" onClick={apply}>Appliquer{draft.length > 0 && ` (${draft.length})`}</button>
+          </div>
+        </div>
+      )}
+    </div>
   )
 }
 
