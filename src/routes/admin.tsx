@@ -763,6 +763,16 @@ function Admin({ session }: { session: any }) {
         .dr-assign-sel[data-assigned="false"] {
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23B45309' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
         }
+
+        /* Dropdown du statut dans le header du drawer : même traitement */
+        .dr-statut-sel {
+          appearance: none !important; -webkit-appearance: none !important;
+          padding: 6px 30px 6px 12px !important;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+          background-repeat: no-repeat !important;
+          background-position: right 10px center !important;
+          background-size: 10px !important;
+        }
         /* HEADER A — ultra condensé */
         .dr-name { font-size: 18px; font-weight: 700; margin: 0 40px 2px 0;
           letter-spacing: -0.01em; color: var(--ink); }
@@ -1930,7 +1940,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
           <h2 className="dr-name">{nom}</h2>
           <div className="dr-code">{lead.access_code || '—'} · {lead.id}</div>
           <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <select value={lead.statut} onChange={e => onStatutChange(e.target.value)} style={{ background: STATUS_COLORS[lead.statut]?.bg, color: STATUS_COLORS[lead.statut]?.fg, border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 800, fontSize: 12 }}>
+            <select className="dr-statut-sel" value={lead.statut} onChange={e => onStatutChange(e.target.value)} style={{ backgroundColor: STATUS_COLORS[lead.statut]?.bg, color: STATUS_COLORS[lead.statut]?.fg, border: 'none', borderRadius: 8, fontWeight: 800, fontSize: 12 }}>
               {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
             <span style={{ background: '#EEF4FF', color: '#1A6BFF', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800 }}>Score {lead.score}/100</span>
