@@ -745,10 +745,24 @@ function Admin({ session }: { session: any }) {
         .dr-head { padding: 26px 28px 20px; border-bottom: 1px solid var(--border);
           position: sticky; top: 0; background: var(--card); z-index: 1; }
         .dr-close { position: absolute; top: 20px; right: 20px;
-          background: var(--bg); border: 1px solid var(--border); width: 36px; height: 36px;
-          border-radius: 50%; font-size: 18px; cursor: pointer; color: var(--ink-dim);
-          transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+          background: var(--bg); border: 1px solid var(--border); width: 32px; height: 32px;
+          border-radius: 50%; cursor: pointer; color: var(--ink-dim); padding: 0; line-height: 0;
+          transition: all 0.15s; display: inline-flex; align-items: center; justify-content: center; }
         .dr-close:hover { background: var(--red-soft); color: var(--red); border-color: var(--red); }
+        .dr-close svg { display: block; }
+
+        /* Dropdown "Assigner à" (ex: Non assigné) : chevron custom + padding ok */
+        .dr-assign-sel {
+          appearance: none !important; -webkit-appearance: none !important;
+          padding: 6px 30px 6px 12px !important;
+          background-repeat: no-repeat; background-position: right 10px center; background-size: 10px;
+        }
+        .dr-assign-sel[data-assigned="true"] {
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23047857' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        }
+        .dr-assign-sel[data-assigned="false"] {
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23B45309' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+        }
         .dr-name { font-size: 22px; font-weight: 800; margin: 0 40px 6px 0;
           letter-spacing: -0.02em; color: var(--ink); }
         .dr-code { font-size: 11.5px; color: var(--ink-dim); letter-spacing: 0.05em;
@@ -1862,6 +1876,13 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     onMsgRead()
   }
 
+  // Empêcher le scroll du body quand le drawer est ouvert (fix double scrollbar)
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
+
   useEffect(() => {
     loadMessages()
     loadDocuments()
@@ -1889,7 +1910,9 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     <div className="drawer-ovr" onClick={onClose}>
       <div className="drawer" onClick={e => e.stopPropagation()}>
         <div className="dr-head">
-          <button className="dr-close" onClick={onClose}>×</button>
+          <button className="dr-close" onClick={onClose} aria-label="Fermer">
+            <X size={16} strokeWidth={2.2}/>
+          </button>
           <h2 className="dr-name">{nom}</h2>
           <div className="dr-code">{lead.access_code || '—'} · {lead.id}</div>
           <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
@@ -1899,9 +1922,11 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
             <span style={{ background: '#EEF4FF', color: '#1A6BFF', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800 }}>Score {lead.score}/100</span>
             {isDirector && (
               <select
+                className="dr-assign-sel"
+                data-assigned={lead.agent_commercial_id ? 'true' : 'false'}
                 value={lead.agent_commercial_id || ''}
                 onChange={e => onAssignAgent(e.target.value || null)}
-                style={{ background: lead.agent_commercial_id ? '#DCFCE7' : '#FEF3C7', color: lead.agent_commercial_id ? '#047857' : '#B45309', border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
+                style={{ background: lead.agent_commercial_id ? '#DCFCE7' : '#FEF3C7', color: lead.agent_commercial_id ? '#047857' : '#B45309', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 12, cursor: 'pointer' }}
                 title="Assigner ce lead à un commercial"
               >
                 <option value="">Non assigné</option>
