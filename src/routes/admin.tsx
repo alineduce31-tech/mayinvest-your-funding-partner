@@ -1818,29 +1818,34 @@ function StatusSelect({ value, onChange, size = 'md' }: { value: string; onChang
   const ref = useRef<HTMLButtonElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
 
-  // Calcule la position du panel (fixed) à chaque ouverture, se ferme au click dehors
+  // Repositionne le panel pour suivre le trigger (au scroll, au resize)
   useEffect(() => {
-    if (!open || !ref.current) return
-    const rect = ref.current.getBoundingClientRect()
-    const panelW = 300
-    const willOverflowRight = rect.left + panelW > window.innerWidth - 16
-    setPanelPos({
-      top: rect.bottom + 6,
-      left: willOverflowRight ? Math.max(16, rect.right - panelW) : rect.left,
-    })
+    if (!open) return
+    const reposition = () => {
+      if (!ref.current) return
+      const rect = ref.current.getBoundingClientRect()
+      // Si le trigger est hors viewport, ferme
+      if (rect.bottom < 0 || rect.top > window.innerHeight) { setOpen(false); return }
+      const panelW = 300
+      const willOverflowRight = rect.left + panelW > window.innerWidth - 16
+      setPanelPos({
+        top: rect.bottom + 6,
+        left: willOverflowRight ? Math.max(16, rect.right - panelW) : rect.left,
+      })
+    }
+    reposition()
     const onDoc = (e: MouseEvent) => {
       const t = e.target as Node
       if (ref.current?.contains(t) || panelRef.current?.contains(t)) return
       setOpen(false)
     }
-    const onScroll = () => setOpen(false)
     document.addEventListener('mousedown', onDoc)
-    window.addEventListener('scroll', onScroll, true)
-    window.addEventListener('resize', onScroll)
+    window.addEventListener('scroll', reposition, true)
+    window.addEventListener('resize', reposition)
     return () => {
       document.removeEventListener('mousedown', onDoc)
-      window.removeEventListener('scroll', onScroll, true)
-      window.removeEventListener('resize', onScroll)
+      window.removeEventListener('scroll', reposition, true)
+      window.removeEventListener('resize', reposition)
     }
   }, [open])
 
@@ -1870,6 +1875,8 @@ function StatusSelect({ value, onChange, size = 'md' }: { value: string; onChang
           boxShadow: '0 10px 30px rgba(0,0,0,0.15)', padding: 4,
           width: 300, maxWidth: 'calc(100vw - 32px)',
           maxHeight: 440, overflowY: 'auto',
+          fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, sans-serif',
+          color: '#111827',
         }}>
           {STATUS_GROUPS.map(g => (
             <div key={g.group}>
