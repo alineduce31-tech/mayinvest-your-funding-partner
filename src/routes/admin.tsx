@@ -1813,9 +1813,15 @@ const STATUS_GROUPS: { group: string; items: { k: string; sub: string; dot: stri
 
 function StatusSelect({ value, onChange, size = 'md' }: { value: string; onChange: (v: string) => void; size?: 'sm' | 'md' }) {
   const [open, setOpen] = useState(false)
+  const [align, setAlign] = useState<'left' | 'right'>('left')
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!open) return
+    // Anti-overflow : si le panel (300px) déborde à droite, l'ancrer à droite du trigger
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect()
+      setAlign(rect.left + 310 > window.innerWidth - 16 ? 'right' : 'left')
+    }
     const onDoc = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
     }
@@ -1841,10 +1847,14 @@ function StatusSelect({ value, onChange, size = 'md' }: { value: string; onChang
       </button>
       {open && (
         <div onClick={e => e.stopPropagation()} style={{
-          position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 100,
+          position: 'absolute', top: 'calc(100% + 6px)',
+          [align === 'left' ? 'left' : 'right']: 0,
+          zIndex: 100,
           background: '#FFFFFF', border: '1px solid #ECECEA', borderRadius: 10,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.1)', padding: 4, minWidth: 300, maxHeight: 400, overflow: 'auto',
-        }}>
+          boxShadow: '0 10px 30px rgba(0,0,0,0.1)', padding: 4,
+          width: 300, maxWidth: 'calc(100vw - 32px)',
+          maxHeight: 440, overflowY: 'auto',
+        } as React.CSSProperties}>
           {STATUS_GROUPS.map(g => (
             <div key={g.group}>
               <div style={{ padding: '8px 12px 4px', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9CA3AF' }}>{g.group}</div>
@@ -1863,8 +1873,8 @@ function StatusSelect({ value, onChange, size = 'md' }: { value: string; onChang
                   >
                     <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: it.dot, marginTop: 5, flexShrink: 0 }}/>
                     <span style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: sel ? 600 : 500, color: sel ? '#0F6E3E' : '#111827' }}>{it.k}</div>
-                      <div style={{ fontSize: 11, color: '#6B7280', marginTop: 1 }}>{it.sub}</div>
+                      <div style={{ fontSize: 13, fontWeight: sel ? 600 : 500, color: sel ? '#0F6E3E' : '#111827', lineHeight: 1.3, wordBreak: 'break-word' }}>{it.k}</div>
+                      <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2, lineHeight: 1.3, wordBreak: 'break-word' }}>{it.sub}</div>
                     </span>
                     {sel && (
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F6E3E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 3, flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
