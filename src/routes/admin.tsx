@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
+import { createPortal } from 'react-dom'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -1813,27 +1814,43 @@ const STATUS_GROUPS: { group: string; items: { k: string; sub: string; dot: stri
 
 function StatusSelect({ value, onChange, size = 'md' }: { value: string; onChange: (v: string) => void; size?: 'sm' | 'md' }) {
   const [open, setOpen] = useState(false)
-  const [align, setAlign] = useState<'left' | 'right'>('left')
-  const ref = useRef<HTMLDivElement>(null)
+  const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null)
+  const ref = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  // Calcule la position du panel (fixed) à chaque ouverture, se ferme au click dehors
   useEffect(() => {
-    if (!open) return
-    // Anti-overflow : si le panel (300px) déborde à droite, l'ancrer à droite du trigger
-    if (ref.current) {
-      const rect = ref.current.getBoundingClientRect()
-      setAlign(rect.left + 310 > window.innerWidth - 16 ? 'right' : 'left')
-    }
+    if (!open || !ref.current) return
+    const rect = ref.current.getBoundingClientRect()
+    const panelW = 300
+    const willOverflowRight = rect.left + panelW > window.innerWidth - 16
+    setPanelPos({
+      top: rect.bottom + 6,
+      left: willOverflowRight ? Math.max(16, rect.right - panelW) : rect.left,
+    })
     const onDoc = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      const t = e.target as Node
+      if (ref.current?.contains(t) || panelRef.current?.contains(t)) return
+      setOpen(false)
     }
+    const onScroll = () => setOpen(false)
     document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', onScroll)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      window.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('resize', onScroll)
+    }
   }, [open])
+
   const c = STATUS_COLORS[value] || { bg: '#F1F5F9', fg: '#475569' }
   const padBtn = size === 'sm' ? '6px 10px' : '8px 12px'
   const fontBtn = size === 'sm' ? 11 : 12
+
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
-      <button type="button" onClick={e => { e.stopPropagation(); setOpen(!open) }}
+    <>
+      <button ref={ref} type="button" onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
         style={{
           display: 'inline-flex', alignItems: 'center', gap: 6,
           padding: padBtn, background: c.bg, color: c.fg,
@@ -1845,16 +1862,15 @@ function StatusSelect({ value, onChange, size = 'md' }: { value: string; onChang
         {value}
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
       </button>
-      {open && (
-        <div onClick={e => e.stopPropagation()} style={{
-          position: 'absolute', top: 'calc(100% + 6px)',
-          [align === 'left' ? 'left' : 'right']: 0,
-          zIndex: 100,
+      {open && panelPos && createPortal(
+        <div ref={panelRef} onClick={e => e.stopPropagation()} style={{
+          position: 'fixed', top: panelPos.top, left: panelPos.left,
+          zIndex: 10000,
           background: '#FFFFFF', border: '1px solid #ECECEA', borderRadius: 10,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.1)', padding: 4,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.15)', padding: 4,
           width: 300, maxWidth: 'calc(100vw - 32px)',
           maxHeight: 440, overflowY: 'auto',
-        } as React.CSSProperties}>
+        }}>
           {STATUS_GROUPS.map(g => (
             <div key={g.group}>
               <div style={{ padding: '8px 12px 4px', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9CA3AF' }}>{g.group}</div>
@@ -1884,9 +1900,10 @@ function StatusSelect({ value, onChange, size = 'md' }: { value: string; onChang
               })}
             </div>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
-    </div>
+    </>
   )
 }
 
