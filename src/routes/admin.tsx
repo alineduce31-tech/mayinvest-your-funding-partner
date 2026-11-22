@@ -2322,8 +2322,13 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     onMsgRead()
   }
 
-  // Le drawer a son propre scroll interne — pas besoin de locker body/html,
-  // ce qui cassait position:sticky du sidebar et le faisait disparaître.
+  // Masque la scrollbar de la page quand le drawer est ouvert (évite la double scrollbar).
+  // On lock uniquement body (pas html), ça n'affecte pas le position:sticky du sidebar.
+  useEffect(() => {
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prev }
+  }, [])
 
   useEffect(() => {
     loadMessages()
