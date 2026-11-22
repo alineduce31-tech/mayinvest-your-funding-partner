@@ -2322,12 +2322,11 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     onMsgRead()
   }
 
-  // Masque la scrollbar de la page quand le drawer est ouvert (évite la double scrollbar).
-  // On lock uniquement body (pas html), ça n'affecte pas le position:sticky du sidebar.
+  // Masque visuellement la scrollbar de la page quand le drawer est ouvert,
+  // SANS lock overflow (ça casserait position:sticky du sidebar).
   useEffect(() => {
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = prev }
+    document.body.classList.add('drawer-open')
+    return () => { document.body.classList.remove('drawer-open') }
   }, [])
 
   useEffect(() => {
