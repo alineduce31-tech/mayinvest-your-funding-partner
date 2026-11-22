@@ -1489,6 +1489,13 @@
 }
 .sd-kpi-total b { color: var(--mi-text-2); font-weight: 600; font-variant-numeric: tabular-nums; }
 
+/* Masque la scrollbar de la page quand le drawer est ouvert (évite le double scrollbar).
+   On ne touche PAS à overflow pour ne pas casser position:sticky du sidebar. */
+body.drawer-open { scrollbar-width: none; -ms-overflow-style: none; }
+body.drawer-open::-webkit-scrollbar { display: none; width: 0; height: 0; }
+html:has(body.drawer-open) { scrollbar-width: none; }
+html:has(body.drawer-open)::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
 .crm-empty {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
   padding: 48px 20px;
