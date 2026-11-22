@@ -745,8 +745,10 @@ function Admin({ session }: { session: any }) {
           color: var(--ink-mute); margin-bottom: 14px; }
 
         /* ============ DRAWER ============ */
-        .drawer-ovr { position: fixed; inset: 0; background: rgba(13,27,62,0.5);
+        .drawer-ovr { position: fixed; top: 0; right: 0; bottom: 0; left: 240px;
+          background: rgba(13,27,62,0.5);
           backdrop-filter: blur(6px); z-index: 200; display: flex; justify-content: flex-end; }
+        @media (max-width: 900px) { .drawer-ovr { left: 0; } }
         .drawer { background: var(--card); width: 100%; max-width: 580px; height: 100vh;
           overflow-y: auto; animation: slideIn 0.3s cubic-bezier(0.4,0,0.2,1);
           box-shadow: -20px 0 60px rgba(13,27,62,0.15); }
