@@ -847,6 +847,118 @@
 .lc-empty-s { font-size: 12px; color: var(--mi-muted); max-width: 400px; line-height: 1.5; }
 
 /* ============================================================
+   DERNIERS LEADS — Table mix A+B (nom combiné + pills + nombres complets)
+   ============================================================ */
+.dl-wrap {
+  background: var(--mi-card);
+  border: 1px solid var(--mi-border);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--mi-shadow-sm);
+}
+.dl-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.dl-tbl thead th {
+  text-align: left;
+  padding: 11px 16px;
+  background: var(--mi-hairline);
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--mi-muted);
+  border-bottom: 1px solid var(--mi-border);
+  white-space: nowrap;
+}
+.dl-tbl thead th.r { text-align: right; }
+.dl-row {
+  cursor: pointer;
+  transition: background .1s ease;
+}
+.dl-row:hover { background: var(--mi-primary-soft); }
+.dl-tbl td {
+  padding: 12px 16px;
+  color: var(--mi-text-2);
+  border-bottom: 1px solid var(--mi-hairline);
+  vertical-align: middle;
+}
+.dl-tbl tbody tr:last-child td { border-bottom: none; }
+.dl-tbl td.r {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.dl-name strong {
+  display: block;
+  color: var(--mi-text);
+  font-weight: 600;
+  font-size: 13px;
+}
+.dl-name small {
+  display: block;
+  font-size: 11px;
+  color: var(--mi-muted);
+  margin-top: 1px;
+  font-weight: 400;
+}
+.dl-row:hover .dl-name strong { color: var(--mi-primary); }
+.dl-amt {
+  color: var(--mi-text);
+  font-weight: 600;
+  font-size: 13px;
+}
+.dl-date {
+  color: var(--mi-faint);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.dl-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 1px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.dl-score small { font-size: 9px; font-weight: 500; opacity: 0.7; }
+.dl-score.hi { background: var(--mi-primary-soft); color: var(--mi-primary); }
+.dl-score.mid { background: var(--mi-blue-soft); color: var(--mi-blue); }
+.dl-score.lo { background: var(--mi-red-soft); color: var(--mi-red); }
+
+.dl-statut {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.dl-op {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.dl-op.credit { background: var(--mi-primary-soft); color: var(--mi-primary); }
+.dl-op.impact { background: var(--mi-gold-soft); color: var(--mi-gold-dark); }
+.dl-op.dual { background: #F3E8FF; color: #7E22CE; }
+
+/* Scroll horizontal sur mobile */
+@media (max-width: 900px) {
+  .dl-wrap { overflow-x: auto; }
+  .dl-tbl { min-width: 720px; }
+}
+
+/* ============================================================
    DERNIERS LEADS — Empty state
    ============================================================ */
 .sd-leads-empty {
