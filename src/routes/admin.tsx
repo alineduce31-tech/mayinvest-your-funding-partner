@@ -1344,14 +1344,44 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
           <div className="sd-leads-empty-sub">Les leads déposés via le formulaire de préselection apparaîtront ici en temps réel.</div>
         </div>
       ) : (
-        <div className="sd-table-wrap"><table className="sd-table"><thead><tr>{['Nom', 'Type', 'Activité', 'Score', 'Statut', 'Opportunité', 'Montant XAF', 'Créé'].map(h => <th key={h}>{h}</th>)}</tr></thead><tbody>
-          {[...m.current].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 10).map(l => {
-            const name = isCompany(l) ? String(l.situation?.['raison_sociale'] || l.identite?.['raison_sociale'] || l.identite?.['nom'] || 'Non renseigné') : [l.identite?.['prenom'], l.identite?.['nom']].filter(Boolean).join(' ') || 'Non renseigné'
-            const op = opportunity(l)
-            const color = STATUS_COLORS[l.statut]
-            return <tr key={l.id}><td><Button variant="link" className="sd-name" onClick={() => onOpen(l)}>{name}</Button></td><td><span className="sd-badge type">{isCompany(l) ? 'Morale' : 'Physique'}</span></td><td>{l.activite || 'Non renseignée'}</td><td className="sd-score">{l.score ?? 0}<small>/100</small></td><td><span className="sd-badge" style={color ? { background: color.bg, color: color.fg } : undefined}>{l.statut}</span></td><td><span className={`sd-badge ${op === 'Crédit + Impact' ? 'dual' : op === 'Impact' ? 'impact' : 'commercial'}`}>{op || 'À qualifier'}</span></td><td>{xaf(amount(l.montant_demande))}</td><td>{new Date(l.created_at).toLocaleDateString('fr-FR')}</td></tr>
-          })}
-        </tbody></table></div>
+        <div className="dl-wrap">
+          <table className="dl-tbl">
+            <thead>
+              <tr>
+                <th>Lead</th>
+                <th>Score</th>
+                <th>Statut</th>
+                <th>Opportunité</th>
+                <th className="r">Montant XAF</th>
+                <th className="r">Créé</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...m.current].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, 10).map(l => {
+                const name = isCompany(l) ? String(l.situation?.['raison_sociale'] || l.identite?.['raison_sociale'] || l.identite?.['nom'] || 'Non renseigné') : [l.identite?.['prenom'], l.identite?.['nom']].filter(Boolean).join(' ') || 'Non renseigné'
+                const op = opportunity(l)
+                const color = STATUS_COLORS[l.statut] || { bg: '#F1F5F9', fg: '#475569' }
+                const scoreCls = (l.score ?? 0) >= 70 ? 'hi' : (l.score ?? 0) < 40 ? 'lo' : 'mid'
+                const opCls = op === 'Crédit + Impact' ? 'dual' : op === 'Impact' ? 'impact' : 'credit'
+                const typeLbl = isCompany(l) ? 'PME' : 'Part.'
+                const ville = l.ville || '—'
+                return (
+                  <tr key={l.id} className="dl-row" onClick={() => onOpen(l)}>
+                    <td className="dl-name">
+                      <strong>{name}</strong>
+                      <small>{typeLbl} · {l.activite || 'Non renseignée'} · {ville}</small>
+                    </td>
+                    <td><span className={`dl-score ${scoreCls}`}>{l.score ?? 0}<small>/100</small></span></td>
+                    <td><span className="dl-statut" style={{ background: color.bg, color: color.fg }}>{l.statut}</span></td>
+                    <td><span className={`dl-op ${opCls}`}>{op || 'À qualifier'}</span></td>
+                    <td className="r dl-amt">{xaf(amount(l.montant_demande))}</td>
+                    <td className="r dl-date">{new Date(l.created_at).toLocaleDateString('fr-FR')}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
       )}
     </section>
   </>
