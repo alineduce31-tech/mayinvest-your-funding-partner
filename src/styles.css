@@ -1433,6 +1433,62 @@
 }
 .crm-status-me { color: var(--mi-gold-dark); font-weight: 600; margin-left: 4px; }
 
+/* ============================================================
+   CRM STATS PILLS (remplace crm-status)
+   ============================================================ */
+.crm-stats {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  margin: 10px 0 14px; padding: 2px 0;
+}
+.crm-stats .pill {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 5px 12px; border-radius: 999px;
+  font-size: 12px; font-weight: 500; color: var(--mi-text-2);
+  background: var(--mi-hairline); border: 1px solid var(--mi-border);
+  white-space: nowrap;
+}
+.crm-stats .pill b {
+  color: var(--mi-text); font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.crm-stats .pill.total {
+  background: var(--mi-primary-soft); color: var(--mi-primary);
+  border-color: transparent;
+}
+.crm-stats .pill.total b { color: var(--mi-primary); }
+.crm-stats .pill.periode {
+  background: #E8EEF9; color: #1E4FA3; border-color: transparent;
+}
+.crm-stats .pill.periode b { color: #1E4FA3; }
+.crm-stats .pill.warn {
+  background: var(--mi-gold-soft); color: var(--mi-gold-dark);
+  border-color: transparent;
+}
+.crm-stats .pill.warn b { color: var(--mi-gold-dark); }
+.crm-stats .pill.filt {
+  background: transparent; color: var(--mi-muted);
+  border: 1px dashed var(--mi-border-strong);
+}
+.crm-stats .pill.filt b { color: var(--mi-text-2); }
+.crm-stats .sep { color: var(--mi-faint); padding: 0 2px; }
+.crm-stats .btn-reset-pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 5px 11px; border-radius: 999px;
+  font-size: 11px; color: var(--mi-muted); font-weight: 500;
+  border: 1px solid var(--mi-border-strong); background: var(--mi-card);
+  cursor: pointer;
+}
+.crm-stats .btn-reset-pill:hover {
+  color: var(--mi-text); background: var(--mi-hairline);
+}
+
+/* Dashboard KPI — total au total (sous la valeur période) */
+.sd-kpi-total {
+  display: block; margin-top: 2px;
+  font-size: 11px; color: var(--mi-faint); font-weight: 500;
+}
+.sd-kpi-total b { color: var(--mi-text-2); font-weight: 600; font-variant-numeric: tabular-nums; }
+
 .crm-empty {
   display: flex; flex-direction: column; align-items: center; gap: 10px;
   padding: 48px 20px;
