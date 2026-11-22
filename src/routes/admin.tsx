@@ -975,7 +975,7 @@ function Admin({ session }: { session: any }) {
           {page === 'general' && <DashboardView onOpen={setSelectedLead}/>}
           {page !== 'general' && (loading ? <div className="empty">Chargement…</div> : <>
             {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
-            {page === 'crm' && <CRMView leads={filtered} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
+            {page === 'crm' && <CRMView leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead}/>}
@@ -1058,6 +1058,23 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
     staleTime: 60000,
   })
   const m = useMemo(() => dashboardMetrics(rows, period, now), [rows, period, now])
+  // Totaux "au total" (toutes périodes confondues) pour comparer avec la période active
+  const { data: allTimeRows } = useSuspenseQuery({
+    queryKey: ['admin-strategic-dashboard-totals'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('leads').select('statut, eligibilite').limit(10000)
+      if (error) throw new Error('Impossible de charger les totaux.')
+      return (data ?? []) as any[]
+    },
+    staleTime: 60000,
+  })
+  const totals = useMemo(() => {
+    const t = allTimeRows.length
+    const eli = allTimeRows.filter((l: any) => !(l.eligibilite?.non_eligible === true || l.statut === 'Non Éligible')).length
+    const dep = allTimeRows.filter((l: any) => l.statut === 'Dossier Déposé' || l.statut === 'Financé').length
+    const fin = allTimeRows.filter((l: any) => l.statut === 'Financé').length
+    return { total: t, eligibles: eli, nonEligibles: t - eli, deposes: dep, finances: fin }
+  }, [allTimeRows])
   const number = (n: number) => new Intl.NumberFormat('fr-FR').format(n)
   const showCRM = (filter: PriorityFilter) => navigate({ to: '/admin', search: { view: 'crm', priority: filter } })
 
@@ -1109,11 +1126,11 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
 
   // BLOC 1 · KPI GÉNÉRAUX avec Commission 2%
   const bloc1Cards = [
-    { icon: <Users size={18} strokeWidth={1.75}/>, label: 'Total Leads', value: number(m.bloc1.total), detail: 'Sur la période' },
-    { icon: <CheckCircle2 size={18} strokeWidth={1.75}/>, label: 'Éligibles Banque', value: number(m.bloc1.eligibles), detail: pct(m.bloc1.pctEligibles), tone: 'positive' },
-    { icon: <AlertTriangle size={18} strokeWidth={1.75}/>, label: 'Non Éligibles', value: number(m.bloc1.nonEligibles), detail: pct(m.bloc1.pctNonEligibles), tone: 'warning' },
-    { icon: <FileText size={18} strokeWidth={1.75}/>, label: 'Dossiers déposés en banque', value: number(m.bloc1.deposes), detail: 'Transmis aux banques partenaires' },
-    { icon: <Landmark size={18} strokeWidth={1.75}/>, label: 'Financés + Comm. 2%', value: number(m.bloc1.finances), detail: `${xaf(m.bloc1.caCommissionCredit)} · Taux : ${pct(m.bloc1.tauxTransfo)}`, tone: 'positive' },
+    { icon: <Users size={18} strokeWidth={1.75}/>, label: 'Total Leads', value: number(m.bloc1.total), detail: 'Sur la période', total: totals.total },
+    { icon: <CheckCircle2 size={18} strokeWidth={1.75}/>, label: 'Éligibles Banque', value: number(m.bloc1.eligibles), detail: pct(m.bloc1.pctEligibles), tone: 'positive', total: totals.eligibles },
+    { icon: <AlertTriangle size={18} strokeWidth={1.75}/>, label: 'Non Éligibles', value: number(m.bloc1.nonEligibles), detail: pct(m.bloc1.pctNonEligibles), tone: 'warning', total: totals.nonEligibles },
+    { icon: <FileText size={18} strokeWidth={1.75}/>, label: 'Dossiers déposés en banque', value: number(m.bloc1.deposes), detail: 'Transmis aux banques partenaires', total: totals.deposes },
+    { icon: <Landmark size={18} strokeWidth={1.75}/>, label: 'Financés + Comm. 2%', value: number(m.bloc1.finances), detail: `${xaf(m.bloc1.caCommissionCredit)} · Taux : ${pct(m.bloc1.tauxTransfo)}`, tone: 'positive', total: totals.finances },
     { icon: <Wallet size={18} strokeWidth={1.75}/>, label: 'CA Total Mayinvest', value: xaf(m.bloc1.caTotal), detail: `Impact : ${xaf(m.bloc1.caImpactPotentiel)} · Crédit : ${xaf(m.bloc1.caCommissionCredit)}`, tone: 'positive' },
   ]
 
@@ -1130,7 +1147,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
       </div>
     )}
     <section className="sd-pole bloc1"><h2>Bloc 1 · KPI généraux <span>· Impact + Commission 2% sur crédits</span></h2>
-      <div className="sd-grid">{bloc1Cards.map(card => <StrategicKPI key={card.label} {...card}/>)}</div>
+      <div className="sd-grid">{bloc1Cards.map(card => <StrategicKPI key={card.label} {...card} periodLabel={period}/>)}</div>
     </section>
 
     <section className="sd-pole bloc2"><h2>Bloc 2 · Analyse des non-éligibles <span>· Monétiser le Pack Formalisation</span></h2>
@@ -1387,16 +1404,27 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
   </>
 }
 
-function StrategicKPI({ icon, label, value, detail, trend = '' }: { icon: React.ReactNode; label: string; value: string; detail: string; trend?: string }) {
-  return <article className="sd-kpi"><span className="sd-kpi-icon" aria-hidden="true">{icon}</span><h3>{label}</h3><strong>{value}</strong><p className={trend}>{detail}</p></article>
+function StrategicKPI({ icon, label, value, detail, trend = '', total, periodLabel }: { icon: React.ReactNode; label: string; value: string; detail: string; trend?: string; total?: number; periodLabel?: string }) {
+  const fmt = (n: number) => new Intl.NumberFormat('fr-FR').format(n)
+  return <article className="sd-kpi"><span className="sd-kpi-icon" aria-hidden="true">{icon}</span><h3>{label}</h3><strong>{value}</strong><p className={trend}>{detail}</p>{typeof total === 'number' && <span className="sd-kpi-total">sur {periodLabel || '30j'} · <b>{fmt(total)}</b> au total</span>}</article>
 }
 function StrategicFunnel({ title, tone, rows }: { title: string; tone: string; rows: { label: string; count: number }[] }) {
   const max = Math.max(...rows.map(r => r.count), 1)
   return <article className={`sd-funnel ${tone}`}><h3>{title}</h3>{rows.map(row => <div className="sd-funnel-row" key={row.label}><div><span>{row.label}</span><strong>{row.count}</strong></div><progress max={max} value={row.count} aria-label={row.label}/></div>)}</article>
 }
 
-function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, assignLead, exportCSV, exportPDF, exportExcel, isDirector }: any) {
+function CRMView({ leads, allLeads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, assignLead, exportCSV, exportPDF, exportExcel, isDirector }: any) {
   const activeFiltersCount = (filterStatut?.length || 0) + (filterType?.length || 0) + (filterActivite?.length || 0) + (filterAgent?.length || 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (search ? 1 : 0)
+  const total = (allLeads || leads).length
+  const now30 = Date.now() - 30 * 24 * 3600 * 1000
+  const sur30j = (allLeads || leads).filter((l: any) => new Date(l.created_at).getTime() >= now30).length
+  const nonAssignes = isDirector
+    ? (allLeads || leads).filter((l: any) => !l.agent_commercial_id).length
+    : 0
+  const now48 = Date.now() - 48 * 3600 * 1000
+  const aRelancer = !isDirector
+    ? (allLeads || leads).filter((l: any) => (l.statut === 'Nouveau' || l.statut === 'Contacté') && new Date(l.created_at).getTime() < now48).length
+    : 0
   const agentEmailById = (id: string | null | undefined): string => {
     if (!id) return ''
     const t = teamMembers?.find((m: any) => m.id === id)
@@ -1435,11 +1463,31 @@ function CRMView({ leads, msgCounts, search, setSearch, filterStatut, setFilterS
         </div>
       </div>
 
-      <div className="crm-status">
-        <span className="crm-status-dot" aria-hidden="true"/>
-        {leads.length} lead{leads.length > 1 ? 's' : ''} affiché{leads.length > 1 ? 's' : ''}
-        {activeFiltersCount > 0 && <> · {activeFiltersCount} filtre{activeFiltersCount > 1 ? 's' : ''} actif{activeFiltersCount > 1 ? 's' : ''}</>}
-        {!isDirector && <span className="crm-status-me">· Mes leads uniquement</span>}
+      <div className="crm-stats">
+        {activeFiltersCount > 0 ? (
+          <>
+            <span className="pill total">Affichés <b>{leads.length} lead{leads.length > 1 ? 's' : ''}</b></span>
+            <span className="pill filt">sur <b>{total} au total</b></span>
+            <span className="sep">·</span>
+            <span className="pill filt">{activeFiltersCount} filtre{activeFiltersCount > 1 ? 's' : ''} actif{activeFiltersCount > 1 ? 's' : ''}</span>
+            <button type="button" className="btn-reset-pill" onClick={resetFilters}>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M3 21v-5h5"/></svg>
+              Réinitialiser
+            </button>
+          </>
+        ) : isDirector ? (
+          <>
+            <span className="pill total">Total <b>{total} lead{total > 1 ? 's' : ''}</b></span>
+            <span className="pill periode">Sur 30j <b>{sur30j}</b></span>
+            <span className="pill warn">Non assignés <b>{nonAssignes}</b></span>
+          </>
+        ) : (
+          <>
+            <span className="pill total">Mes leads <b>{total}</b></span>
+            <span className="pill periode">Sur 30j <b>{sur30j}</b></span>
+            <span className="pill warn">À relancer <b>{aRelancer}</b></span>
+          </>
+        )}
       </div>
 
       {leads.length === 0 ? (
