@@ -89,13 +89,13 @@ function RejoindreEquipePage() {
 
         .benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; max-width: 1040px; margin: 0 auto; padding: 0 24px 60px; }
         @media (max-width: 820px) { .benefits { grid-template-columns: 1fr; gap: 14px; } }
-        .benefit { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 16px; padding: 28px 24px; }
-        .benefit-icon { width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 14px; }
-        .benefit-icon.b1 { background: #DBEAFE; color: ${MI.blue}; }
-        .benefit-icon.b2 { background: #D1FAE5; color: ${MI.green}; }
-        .benefit-icon.b3 { background: #FEF3C7; color: #B45309; }
-        .benefit h3 { font-size: 16px; font-weight: 700; color: ${MI.navy}; margin: 0 0 8px; }
-        .benefit p { font-size: 13px; color: ${MI.textMuted}; margin: 0; line-height: 1.6; }
+        .benefit { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 20px; padding: 28px 24px; position: relative; overflow: hidden; transition: all 0.2s; }
+        .benefit:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(13,23,41,0.07); }
+        .benefit::before { content: attr(data-n); position: absolute; top: 14px; right: 22px; font-size: 52px; font-weight: 800; color: #F3F4F6; letter-spacing: -0.04em; line-height: 1; pointer-events: none; font-family: inherit; }
+        .benefit-icon { width: 40px; height: 40px; border-radius: 12px; background: ${MI.navy}; color: #fff; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; position: relative; }
+        .benefit h3 { font-size: 17px; font-weight: 800; color: ${MI.navy}; margin: 0 0 8px; position: relative; letter-spacing: -0.01em; }
+        .benefit p { font-size: 13px; color: ${MI.textMuted}; margin: 0; line-height: 1.6; position: relative; }
+        .benefit p b { color: ${MI.text}; font-weight: 700; }
 
         .steps-box { background: ${MI.navy}; color: white; max-width: 1040px; margin: 0 auto 60px; padding: 40px 32px; border-radius: 20px; }
         .steps-box h2 { font-size: 22px; font-weight: 700; margin: 0 0 24px; text-align: center; letter-spacing: -0.02em; }
@@ -163,18 +163,18 @@ function RejoindreEquipePage() {
         </section>
 
         <div className="benefits" id="benefits">
-          <div className="benefit">
-            <div className="benefit-icon b1"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div className="benefit" data-n="01">
+            <div className="benefit-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
             <h3>Commission attractive</h3>
             <p><b>50 000 XAF</b> par dossier financé. Paiement sous 7 jours après déblocage des fonds. Pas de plafond.</p>
           </div>
-          <div className="benefit">
-            <div className="benefit-icon b2"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+          <div className="benefit" data-n="02">
+            <div className="benefit-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
             <h3>Dashboard temps réel</h3>
             <p>Suivi de tes gains, tes leads, ton classement. Lien unique de parrainage à partager sur WhatsApp.</p>
           </div>
-          <div className="benefit">
-            <div className="benefit-icon b3"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+          <div className="benefit" data-n="03">
+            <div className="benefit-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
             <h3>Formation certifiée</h3>
             <p>3 modules (2h) + simulation pratique. Tu es accompagné dès le départ pour réussir tes premiers dossiers.</p>
           </div>
