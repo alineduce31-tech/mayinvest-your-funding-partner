@@ -230,7 +230,7 @@ function Epreuve2Lead({ onComplete }: { onComplete: (score: number, time: number
         <p>
           <b>Marie Ntoumi</b> t'appelle au téléphone. Elle tient une <b>boutique de vêtements à Dolisie</b> depuis <b>6 ans</b>.
           Elle a besoin de <b>2 000 000 XAF</b> pour renouveler son stock. Elle a un <b>RCCM depuis 3 ans</b>, son <b>CA annuel est d'environ 18M XAF</b>,
-          elle a un <b>compte à LCB bien mouvementé</b>. Pas de refus bancaire. Téléphone : <b>066 55 32 18</b>. Email : <b>m.ntoumi@gmail.com</b>.
+          elle a un <b>compte à LCB bien mouvementé</b>. Pas de refus bancaire. Téléphone : <b>06 655 32 18</b>. Email : <b>m.ntoumi@gmail.com</b>.
         </p>
       </div>
       {err && <div className="form-err">{err}</div>}
@@ -245,11 +245,14 @@ function Epreuve2Lead({ onComplete }: { onComplete: (score: number, time: number
 
         <div className="form-section-title">Identité</div>
         <div className="form-grid">
-          <Field label="Raison sociale" req value={form.raison} onChange={v => setForm({ ...form, raison: v })}/>
-          <Field label="Dirigeant" req value={form.dirigeant} onChange={v => setForm({ ...form, dirigeant: v })}/>
+          <Field label="Raison sociale" req value={form.raison} onChange={v => setForm({ ...form, raison: v })}
+            options={['', 'Boutique Marie Ntoumi', 'Ntoumi Commerce', 'Vêtements Dolisie SARL', 'Marie Mode']}/>
+          <Field label="Dirigeant" req value={form.dirigeant} onChange={v => setForm({ ...form, dirigeant: v })}
+            options={['', 'Marie Ntoumi', 'Ntoumi Marie', 'Mme Ntoumi']}/>
           <Field label="Téléphone" req value={form.tel} onChange={v => setForm({ ...form, tel: v })}/>
           <Field label="Email" value={form.email} onChange={v => setForm({ ...form, email: v })}/>
-          <Field label="Ville" req value={form.ville} onChange={v => setForm({ ...form, ville: v })}/>
+          <Field label="Ville" req value={form.ville} onChange={v => setForm({ ...form, ville: v })}
+            options={['', 'Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Ouesso', 'Owando', 'Mossendjo', 'Autre']}/>
         </div>
 
         <div className="form-section-title">Situation juridique & Besoin</div>
@@ -260,7 +263,8 @@ function Epreuve2Lead({ onComplete }: { onComplete: (score: number, time: number
           <Field label="Montant demandé (XAF)" req value={form.montant} onChange={v => setForm({ ...form, montant: v })}/>
           <Field label="Objet du crédit" value={form.objet} onChange={v => setForm({ ...form, objet: v })}
             options={['', 'Investissement', 'Fonds de roulement', 'Marché', 'Véhicule', 'Autre']}/>
-          <Field label="Banque actuelle" value={form.banque} onChange={v => setForm({ ...form, banque: v })}/>
+          <Field label="Banque actuelle" value={form.banque} onChange={v => setForm({ ...form, banque: v })}
+            options={['', 'UBA', 'BGFI', 'LCB', 'MUCODEC', 'Ecobank', 'Crédit du Congo', 'Aucune', 'Autre']}/>
         </div>
 
         <div className="form-actions">
