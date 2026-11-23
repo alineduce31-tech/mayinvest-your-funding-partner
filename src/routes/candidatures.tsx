@@ -18,8 +18,11 @@ type QuizAttempt = { candidate_id: string; module_id: string; score: number; pas
 type SimAttempt = { candidate_id: string; scenario_id: string; points_earned: number; time_seconds: number }
 type PracAttempt = { candidate_id: string; epreuve: number; score: number; time_seconds: number }
 
+const ADMIN_SESSION_KEY = 'mayinvest_admin_session'
+
 function CandidaturesPage() {
   const navigate = useNavigate()
+  const [authChecked, setAuthChecked] = useState(false)
   const [candidates, setCandidates] = useState<Candidate[]>([])
   const [filter, setFilter] = useState<'all' | 'pending' | 'valide' | 'refuse'>('pending')
   const [selected, setSelected] = useState<Candidate | null>(null)
@@ -27,6 +30,19 @@ function CandidaturesPage() {
   const [simAttempts, setSimAttempts] = useState<SimAttempt[]>([])
   const [pracAttempts, setPracAttempts] = useState<PracAttempt[]>([])
   const [loading, setLoading] = useState(true)
+
+  // Vérifie la session admin (réutilise celle de /mon-espace)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ADMIN_SESSION_KEY)
+      if (!raw) { navigate({ to: '/mon-espace' as any }); return }
+      const s = JSON.parse(raw)
+      if (!s?.email || !s?.expiresAt || s.expiresAt < Date.now()) {
+        navigate({ to: '/mon-espace' as any }); return
+      }
+      setAuthChecked(true)
+    } catch { navigate({ to: '/mon-espace' as any }) }
+  }, [navigate])
   const [refuseModal, setRefuseModal] = useState<Candidate | null>(null)
   const [refuseReason, setRefuseReason] = useState('')
 
@@ -44,7 +60,9 @@ function CandidaturesPage() {
     if (pRes.data) setPracAttempts(pRes.data as PracAttempt[])
     setLoading(false)
   }
-  useEffect(() => { loadAll() }, [])
+  useEffect(() => { if (authChecked) loadAll() }, [authChecked])
+
+  if (!authChecked) return <div style={{ padding: 60, textAlign: 'center', fontSize: 13, color: '#6B7280' }}>Vérification…</div>
 
   const filtered = useMemo(() => {
     return candidates.filter(c => {
@@ -187,6 +205,10 @@ function CandidaturesPage() {
           <h1>Candidatures commerciales</h1>
           <Link to="/admin" className="cd-back">← Retour à l'admin</Link>
         </div>
+        <nav style={{ display: 'flex', gap: 6 }}>
+          <Link to={'/candidatures' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, textDecoration: 'none', background: '#0F6E3E', color: '#fff' }}>Candidatures</Link>
+          <Link to={'/equipe-commerciale' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, color: '#6B7280', textDecoration: 'none' }}>Équipe</Link>
+        </nav>
         <div style={{ fontSize: 12, color: '#6B7280' }}>
           {counts.pending > 0 && <span style={{ color: '#B45309', fontWeight: 700 }}>{counts.pending} en attente</span>}
           {counts.pending > 0 && ' · '}
