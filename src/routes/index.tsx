@@ -148,11 +148,25 @@ function Index() {
           .nav-link { padding: 7px 12px; font-size: 13px; gap: 5px; }
           .nav-link svg { width: 15px; height: 15px; }
           .nav-link.hide-mobile { display: none; }
-          /* "Rejoindre l'équipe" : icône seule sur mobile pour gagner de la place */
-          .nav-link.nav-join { padding: 8px; }
-          .nav-link.nav-join .nav-join-txt { display: none; }
-          .nav-link.nav-join svg { width: 18px; height: 18px; }
+          /* "Rejoindre l'équipe" : complètement masqué sur mobile (remplacé par la bande recrutement en bas) */
+          .nav-link.nav-join { display: none; }
         }
+
+        /* ========== BANDE RECRUTEMENT (avant footer) ========== */
+        .recrut-strip { background: #0D1B3E; color: #fff; margin: 0 60px 48px; padding: 20px 28px; border-radius: 20px;
+          display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+        @media (max-width: 900px) { .recrut-strip { margin: 0 32px 40px; } }
+        @media (max-width: 640px) { .recrut-strip { margin: 0 16px 32px; padding: 18px 20px; border-radius: 16px; flex-direction: column; text-align: left; align-items: stretch; } }
+        .recrut-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 240px; }
+        .recrut-ic { width: 48px; height: 48px; border-radius: 12px; background: rgba(26,107,255,0.18); color: #6DAFFF;
+          display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .recrut-h3 { font-size: 15px; font-weight: 800; margin: 0 0 3px; letter-spacing: -0.01em; }
+        .recrut-p { font-size: 12px; color: rgba(255,255,255,0.6); margin: 0; }
+        .recrut-btn { background: #1A6BFF; color: #fff; padding: 13px 24px; border-radius: 100px; font-size: 13px;
+          font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+          white-space: nowrap; font-family: inherit; }
+        .recrut-btn:hover { background: #0051D4; }
+        @media (max-width: 640px) { .recrut-btn { width: 100%; justify-content: center; padding: 14px 24px; } }
 
         .hero { padding: 90px 60px 80px; display: grid; grid-template-columns: 1fr 480px; gap: 60px; align-items: center; }
         @media (max-width: 900px) { .hero { grid-template-columns: 1fr; padding: 48px 32px 40px; gap: 40px; } }
@@ -469,6 +483,23 @@ function Index() {
           </button>
         </div>
       </section>
+
+      {/* ========== BANDE RECRUTEMENT ========== */}
+      <div className="recrut-strip">
+        <div className="recrut-left">
+          <div className="recrut-ic">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2" strokeLinecap="round"/></svg>
+          </div>
+          <div>
+            <div className="recrut-h3">Mayinvest recrute 24 commerciaux au Congo</div>
+            <div className="recrut-p">Formation payée · 50 000 XAF par dossier · Dashboard temps réel</div>
+          </div>
+        </div>
+        <button className="recrut-btn" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>
+          Postuler
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      </div>
 
       <footer className="footer">
         <div className="footer-cols">
