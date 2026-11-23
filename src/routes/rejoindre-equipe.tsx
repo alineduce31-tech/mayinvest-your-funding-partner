@@ -115,16 +115,15 @@ function RejoindreEquipePage() {
         .field label { display: block; font-size: 12px; font-weight: 600; color: ${MI.text}; margin-bottom: 5px; }
         .field label .req { color: #DC2626; }
         .field input, .field select, .field textarea {
-          width: 100%; padding: 12px 14px; background: #fff;
+          width: 100%; padding: 12px 14px; background: #F9FAFB;
           border: 1px solid ${MI.grayBorder}; border-radius: 10px;
           font-size: 14px; font-family: inherit; color: ${MI.text};
-          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-          transition: border-color 0.15s, box-shadow 0.15s;
+          transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
         }
         .field input::placeholder, .field textarea::placeholder { color: ${MI.textFaint}; }
-        .field input:hover, .field select:hover, .field textarea:hover { border-color: #C4C9D1; }
+        .field input:hover, .field select:hover, .field textarea:hover { border-color: #C4C9D1; background: #F3F4F6; }
         .field input:focus, .field select:focus, .field textarea:focus {
-          outline: none; border-color: ${MI.blue};
+          outline: none; border-color: ${MI.blue}; background: #fff;
           box-shadow: 0 0 0 3px rgba(26,107,255,0.12);
         }
         .field select {
