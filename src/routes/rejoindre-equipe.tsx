@@ -70,7 +70,10 @@ function RejoindreEquipePage() {
         @media (max-width: 640px) { .mi-btn-primary { padding: 8px 14px; font-size: 12px; gap: 5px; } .mi-btn-primary svg { width: 12px; height: 12px; } }
 
         .hero { padding: 60px 24px 80px; text-align: center; max-width: 920px; margin: 0 auto; }
-        .hero-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #FEF3C7; color: #B45309; border-radius: 999px; font-size: 12px; font-weight: 600; margin-bottom: 20px; }
+        .hero-pill { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; color: ${MI.text}; font-weight: 600; margin-bottom: 24px; }
+.hero-pill .dot { width: 7px; height: 7px; background: #22C55E; border-radius: 50%; box-shadow: 0 0 0 4px rgba(34,197,94,0.15); animation: pulse-dot 2s ease-in-out infinite; }
+.hero-pill b { color: #1A6BFF; font-weight: 800; border-bottom: 2px solid #1A6BFF; padding-bottom: 1px; }
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:0.4} }
         .hero h1 { font-size: 48px; font-weight: 800; line-height: 1.1; letter-spacing: -0.03em; margin: 0 0 20px; color: ${MI.navy}; }
         .hero h1 span { color: ${MI.blue}; }
         .hero p.sub { font-size: 16px; color: ${MI.textMuted}; max-width: 620px; margin: 0 auto 32px; line-height: 1.6; }
@@ -145,8 +148,8 @@ function RejoindreEquipePage() {
       {step === 'landing' && <>
         <section className="hero">
           <span className="hero-pill">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="4"/></svg>
-            Recrutement ouvert · 24 postes au Congo
+            <span className="dot"></span>
+            Recrutement ouvert · <b>24 postes</b> au Congo
           </span>
           <h1>Rejoignez l'équipe commerciale <span>Mayinvest</span></h1>
           <p className="sub">Gagnez jusqu'à <b>500 000 XAF par mois</b> en aidant les Congolais à obtenir leur crédit bancaire. Formation payée, dashboard temps réel, paiement garanti sur chaque dossier financé.</p>
