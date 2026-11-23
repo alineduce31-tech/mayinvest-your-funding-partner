@@ -278,11 +278,41 @@ function Field({ label, req, value, onChange, options }:
     <div className={`field${filled ? ' filled' : ''}`}>
       <label>{label} {req && <span className="req">*</span>}</label>
       {options ? (
-        <select value={value} onChange={e => onChange(e.target.value)}>
-          {options.map(o => <option key={o} value={o}>{o || '— Choisir —'}</option>)}
-        </select>
+        <CustomSelect value={value} onChange={onChange} options={options}/>
       ) : (
         <input value={value} onChange={e => onChange(e.target.value)}/>
+      )}
+    </div>
+  )
+}
+
+function CustomSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    function handler(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+  const display = value || '— Choisir —'
+  const realOptions = options.filter(o => o !== '')
+  return (
+    <div className="cs-wrap" ref={ref}>
+      <button type="button" className={`cs-btn${value ? ' has-value' : ''}${open ? ' open' : ''}`} onClick={() => setOpen(!open)}>
+        <span>{display}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      {open && (
+        <div className="cs-panel">
+          {realOptions.map(o => (
+            <div key={o} className={`cs-opt${value === o ? ' selected' : ''}`}
+              onClick={() => { onChange(o); setOpen(false) }}>
+              <span>{o}</span>
+              {value === o && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>}
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )
@@ -566,11 +596,26 @@ function GlobalStyles() {
       .form-card { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 16px; padding: 24px; }
       .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
       @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
-      .field { display: flex; flex-direction: column; gap: 4px; }
+      .field { display: flex; flex-direction: column; gap: 4px; position: relative; }
       .field label { font-size: 11px; color: ${MI.textMuted}; font-weight: 600; }
       .field label .req { color: ${MI.red}; }
-      .field input, .field select { padding: 9px 12px; background: ${MI.grayHair}; border: 1px solid ${MI.grayBorder}; border-radius: 8px; font-size: 13px; font-family: inherit; color: ${MI.text}; }
-      .field.filled input, .field.filled select { border-color: ${MI.green}; background: ${MI.greenSoft}; color: ${MI.text}; font-weight: 500; }
+      .field input { padding: 10px 12px; background: #fff; border: 1px solid ${MI.grayBorder}; border-radius: 8px; font-size: 13px; font-family: inherit; color: ${MI.text}; transition: border-color 0.15s, box-shadow 0.15s; }
+      .field input:focus { outline: none; border-color: ${MI.blue}; box-shadow: 0 0 0 3px rgba(35,97,239,0.12); }
+      .field.filled input { border-color: ${MI.green}; background: ${MI.greenSoft}; color: ${MI.text}; font-weight: 500; }
+
+      /* ===== Custom Select ===== */
+      .cs-wrap { position: relative; width: 100%; }
+      .cs-btn { width: 100%; padding: 10px 36px 10px 12px; background: #fff; border: 1px solid ${MI.grayBorder}; border-radius: 8px; font-size: 13px; font-family: inherit; color: ${MI.textMuted}; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; position: relative; }
+      .cs-btn:hover { border-color: #C4C9D1; }
+      .cs-btn.open { border-color: ${MI.blue}; box-shadow: 0 0 0 3px rgba(35,97,239,0.12); }
+      .cs-btn.has-value { color: ${MI.text}; font-weight: 500; }
+      .field.filled .cs-btn.has-value { background: ${MI.greenSoft}; border-color: ${MI.green}; }
+      .cs-btn svg { color: ${MI.textMuted}; flex-shrink: 0; }
+      .cs-panel { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #fff; border: 1px solid ${MI.grayBorder}; border-radius: 10px; box-shadow: 0 10px 30px rgba(13,23,41,0.12), 0 2px 6px rgba(13,23,41,0.05); padding: 6px; z-index: 20; max-height: 260px; overflow-y: auto; animation: csFadeIn 0.12s ease; }
+      @keyframes csFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+      .cs-opt { padding: 9px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; color: ${MI.text}; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .cs-opt:hover { background: ${MI.blue}15; color: ${MI.blue}; }
+      .cs-opt.selected { background: ${MI.blue}15; color: ${MI.blue}; font-weight: 700; }
       .form-section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${MI.textMuted}; margin: 16px 0 8px; }
       .form-actions { display: flex; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid ${MI.grayBorder}; }
       .btn-submit { padding: 12px 24px; background: ${MI.navy}; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
