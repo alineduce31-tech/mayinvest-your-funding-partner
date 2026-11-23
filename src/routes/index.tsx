@@ -194,8 +194,17 @@ function Index() {
         @media (max-width: 640px) { .cta-final h2 { font-size: 28px; letter-spacing: -0.5px; } }
         .cta-row { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
 
-        .footer { border-top: 1px solid #F0F0F0; padding: 32px 60px; display: flex; justify-content: space-between; align-items: center; }
-        @media (max-width: 640px) { .footer { padding: 24px 20px; flex-direction: column; gap: 12px; text-align: center; } }
+        .footer { border-top: 1px solid #F0F0F0; padding: 32px 60px; }
+        @media (max-width: 640px) { .footer { padding: 24px 20px; } }
+        .footer-cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 40px; padding-bottom: 24px; border-bottom: 1px solid #F0F0F0; margin-bottom: 20px; }
+        @media (max-width: 820px) { .footer-cols { grid-template-columns: 1fr 1fr; gap: 28px; } }
+        @media (max-width: 480px) { .footer-cols { grid-template-columns: 1fr; gap: 24px; } }
+        .footer-col-title { font-size: 11px; font-weight: 700; color: #111; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+        .footer-link { display: block; font-size: 13px; color: #666; text-decoration: none; padding: 4px 0; cursor: pointer; }
+        .footer-link:hover { color: #1A6BFF; }
+        .footer-link.disabled { color: #AAA; cursor: default; pointer-events: none; }
+        .footer-bottom { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #AAAAAA; }
+        @media (max-width: 640px) { .footer-bottom { flex-direction: column; gap: 6px; } }
 
         .btn-main { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
         .btn-second { background: #F5F5F5; color: #111; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
@@ -295,6 +304,10 @@ function Index() {
       <nav className="nav">
         <LogoSVG height={56} tone="light" />
         <div className="nav-actions">
+          <a href="/rejoindre-equipe" onClick={(e) => { e.preventDefault(); navigate({ to: '/rejoindre-equipe' as any }) }} className="nav-link muted hide-mobile">
+            <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M10 10a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" strokeWidth="1.8"/><path d="M14 10a2 2 0 100-4 2 2 0 000 4zM6 10a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" strokeWidth="1.8"/><path d="M3 17c0-2.5 2-4.5 4.5-4.5h5c2.5 0 4.5 2 4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+            Rejoindre l'équipe
+          </a>
           <a href="/mon-dossier" onClick={(e) => { e.preventDefault(); navigate({ to: '/mon-dossier' }) }} className="nav-link">
             <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
             Mon dossier
@@ -454,8 +467,32 @@ function Index() {
       </section>
 
       <footer className="footer">
-        <LogoSVG height={48} tone="light" />
-        <div style={{ fontSize: 13, color: '#AAAAAA' }}>© 2026 Mayinvest · Brazzaville, Congo</div>
+        <div className="footer-cols">
+          <div>
+            <LogoSVG height={40} tone="light" />
+            <div style={{ fontSize: 12, color: '#999', marginTop: 10, lineHeight: 1.5, maxWidth: 260 }}>Votre crédit, évalué avant la banque. Cabinet de conseil basé à Brazzaville, Congo.</div>
+          </div>
+          <div>
+            <div className="footer-col-title">Clients</div>
+            <a className="footer-link" onClick={() => navigate({ to: '/preselection', search: { type: 'physique' } as never })}>Je suis un particulier</a>
+            <a className="footer-link" onClick={() => navigate({ to: '/preselection', search: { type: 'morale' } as never })}>Mon entreprise / PME</a>
+            <a className="footer-link" onClick={() => navigate({ to: '/mon-dossier' })}>Mon dossier</a>
+          </div>
+          <div>
+            <div className="footer-col-title">Équipe</div>
+            <a className="footer-link" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>Devenir commercial</a>
+            <a className="footer-link" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>Formation & simulation</a>
+          </div>
+          <div>
+            <div className="footer-col-title">Partenaires</div>
+            <span className="footer-link disabled">Portail banques · bientôt</span>
+            <span className="footer-link">contact@mayinvest.cg</span>
+          </div>
+        </div>
+        <div className="footer-bottom">
+          <span>© 2026 Mayinvest · Brazzaville, Congo</span>
+          <span>Tous droits réservés</span>
+        </div>
       </footer>
 
       {/* ========== HAKI CONSEILLÈRE FINANCE ========== */}
