@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { Logo } from '@/components/Logo'
 
 export const Route = createFileRoute('/rejoindre-equipe')({
   component: RejoindreEquipePage,
@@ -53,13 +54,20 @@ function RejoindreEquipePage() {
     <div style={{ minHeight: '100vh', background: MI.grayBg, fontFamily: 'Inter, system-ui, sans-serif', color: MI.text }}>
       <style>{`
         * { box-sizing: border-box; }
-        .mi-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 32px; background: white; border-bottom: 1px solid ${MI.grayBorder}; }
-        .mi-logo { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 800; color: ${MI.navy}; text-decoration: none; letter-spacing: -0.02em; }
-        .mi-logo-mark { width: 36px; height: 36px; background: ${MI.blue}; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 16px; }
-        .mi-nav-link { font-size: 13px; color: ${MI.textMuted}; text-decoration: none; margin-right: 20px; font-weight: 500; }
-        .mi-nav-link:hover { color: ${MI.blue}; }
-        .mi-btn-primary { padding: 10px 20px; background: ${MI.navy}; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-        .mi-btn-primary:hover { background: ${MI.blue}; }
+        .mi-header { height: 72px; padding: 0 60px; display: flex; align-items: center; justify-content: space-between; background: white; border-bottom: 1px solid #F0F0F0; }
+        @media (max-width: 640px) { .mi-header { height: 60px; padding: 0 16px; } }
+        .mi-nav-actions { display: flex; align-items: center; gap: 10px; }
+        @media (max-width: 640px) { .mi-nav-actions { gap: 6px; } }
+        .mi-nav-link { color: #111; font-family: inherit; font-size: 14px; font-weight: 600; text-decoration: none; padding: 10px 16px; border-radius: 100px; display: flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer; background: none; border: none; }
+        .mi-nav-link:hover { background: #F5F5F5; }
+        .mi-nav-link.muted { color: #666; font-size: 13px; font-weight: 500; padding: 10px 12px; }
+        @media (max-width: 640px) {
+          .mi-nav-link { padding: 7px 12px; font-size: 13px; gap: 5px; }
+          .mi-nav-link svg { width: 15px; height: 15px; }
+          .mi-nav-link.hide-mobile { display: none; }
+        }
+        .mi-btn-primary { background: #111111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 11px 22px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+        @media (max-width: 640px) { .mi-btn-primary { padding: 8px 14px; font-size: 12px; gap: 5px; } .mi-btn-primary svg { width: 12px; height: 12px; } }
 
         .hero { padding: 60px 24px 80px; text-align: center; max-width: 920px; margin: 0 auto; }
         .hero-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: #FEF3C7; color: #B45309; border-radius: 999px; font-size: 12px; font-weight: 600; margin-bottom: 20px; }
@@ -118,18 +126,18 @@ function RejoindreEquipePage() {
       `}</style>
 
       <header className="mi-header">
-        <Link to="/" className="mi-logo">
-          <span className="mi-logo-mark">M</span>
-          Mayinvest
-        </Link>
-        <nav>
-          <Link to="/" className="mi-nav-link">Accueil</Link>
-          <a href="#" className="mi-nav-link">Déjà commercial ? Se connecter</a>
+        <Link to="/"><Logo height={56} tone="light"/></Link>
+        <div className="mi-nav-actions">
+          <Link to="/" className="mi-nav-link muted hide-mobile">Accueil</Link>
+          <a href="#" className="mi-nav-link muted">
+            <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+            Déjà commercial ?
+          </a>
           <Link to="/" className="mi-btn-primary">
             Devenir client
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
           </Link>
-        </nav>
+        </div>
       </header>
 
       {step === 'landing' && <>
