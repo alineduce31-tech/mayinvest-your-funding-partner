@@ -75,10 +75,12 @@ function RejoindreEquipePage() {
         .hero h1 span { color: ${MI.blue}; }
         .hero p.sub { font-size: 16px; color: ${MI.textMuted}; max-width: 620px; margin: 0 auto 32px; line-height: 1.6; }
         .hero-ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-        .btn-hero { padding: 14px 28px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
-        .btn-hero.primary { background: ${MI.navy}; color: white; }
+        .btn-hero { padding: 18px 32px; border-radius: 100px; font-size: 16px; font-weight: 700; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 10px; text-decoration: none; font-family: inherit; }
+        .btn-hero.primary { background: #111111; color: #fff; }
         .btn-hero.primary:hover { background: ${MI.blue}; }
-        .btn-hero.secondary { background: white; color: ${MI.navy}; border: 1px solid ${MI.grayBorder}; }
+        .btn-hero.secondary { background: #F5F5F5; color: #111; }
+        .btn-hero.secondary:hover { background: #ECECEC; }
+        @media (max-width: 640px) { .btn-hero { padding: 16px 24px; font-size: 14px; width: 100%; justify-content: center; } }
 
         @media (max-width: 640px) { .hero h1 { font-size: 34px; } .hero { padding: 40px 20px 60px; } }
 
@@ -115,7 +117,7 @@ function RejoindreEquipePage() {
         .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
         .form-err { background: #FEE2E2; color: #991B1B; padding: 10px 14px; border-radius: 10px; font-size: 12px; margin-bottom: 14px; }
-        .btn-submit { width: 100%; padding: 14px; background: ${MI.navy}; color: white; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; margin-top: 8px; }
+        .btn-submit { width: 100%; padding: 18px 24px; background: #111111; color: white; border: none; border-radius: 100px; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; font-family: inherit; }
         .btn-submit:hover:not(:disabled) { background: ${MI.blue}; }
         .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
