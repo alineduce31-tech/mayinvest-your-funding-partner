@@ -430,10 +430,8 @@ function Epreuve3Pilotage({ onComplete }: { onComplete: (score: number, time: nu
           </div>
           <div className="e3-body">
             <div className="status-row">
-              <span className={`status-pill s-${statut.replace(/\s/g, '')}`}>{statut}</span>
-              <select value={statut} onChange={e => changeStatut(e.target.value as any)}>
-                <option>Nouveau</option><option>Contacté</option><option>RDV</option><option>Dossier Déposé</option>
-              </select>
+              <span className="status-label">Statut :</span>
+              <StatutPill current={statut} onChange={s => changeStatut(s as any)}/>
             </div>
 
             {tab === 'infos' && (
@@ -483,6 +481,50 @@ function Epreuve3Pilotage({ onComplete }: { onComplete: (score: number, time: nu
         </button>
       )}
     </>
+  )
+}
+
+const STATUTS_LEAD: { k: string; label: string; color: string }[] = [
+  { k: 'Nouveau', label: 'Nouveau', color: '#64748B' },
+  { k: 'Contacté', label: 'Contacté', color: '#1A6BFF' },
+  { k: 'RDV', label: 'RDV', color: '#7C3AED' },
+  { k: 'Dossier Déposé', label: 'Dossier Déposé', color: '#F59E0B' },
+]
+
+function StatutPill({ current, onChange }: { current: string; onChange: (s: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    function handler(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+  const cur = STATUTS_LEAD.find(s => s.k === current) || STATUTS_LEAD[0]
+  return (
+    <div className="statut-wrap" ref={ref}>
+      <button type="button" className="statut-pill-btn" onClick={() => setOpen(!open)}
+        style={{ background: cur.color + '20', color: cur.color }}>
+        <span className="sp-dot" style={{ background: cur.color }}/>
+        <span>{cur.label}</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', opacity: 0.7 }}>
+          <polyline points="6 9 12 15 18 9"/>
+        </svg>
+      </button>
+      {open && (
+        <div className="statut-panel">
+          {STATUTS_LEAD.map(s => (
+            <div key={s.k} className={`sp-opt${current === s.k ? ' selected' : ''}`}
+              onClick={() => { onChange(s.k); setOpen(false) }}>
+              <span className="sp-opt-dot" style={{ background: s.color }}/>
+              <span className="sp-opt-lbl">{s.label}</span>
+              {current === s.k && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={MI.blue} strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -647,12 +689,20 @@ function GlobalStyles() {
       .e3-body { padding: 18px; }
 
       .status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-      .status-pill { padding: 4px 14px; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
-      .status-pill.s-Nouveau { background: ${MI.grayHair}; color: ${MI.textMuted}; }
-      .status-pill.s-Contacté { background: ${MI.blueSoft}; color: ${MI.blue}; }
-      .status-pill.s-RDV { background: ${MI.violetSoft}; color: ${MI.violet}; }
-      .status-pill.s-DossierDéposé { background: ${MI.goldSoft}; color: #92400E; }
-      .status-row select { padding: 6px 10px; border: 1px solid ${MI.grayBorder}; border-radius: 8px; font-size: 12px; font-family: inherit; background: white; }
+      .status-label { font-size: 12px; color: ${MI.textMuted}; font-weight: 600; }
+
+      /* StatutPill (V2) */
+      .statut-wrap { position: relative; }
+      .statut-pill-btn { padding: 7px 14px; border: none; border-radius: 100px; font-size: 12px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; transition: filter 0.15s; }
+      .statut-pill-btn:hover { filter: brightness(0.95); }
+      .sp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+      .statut-panel { position: absolute; top: calc(100% + 8px); left: 0; background: #fff; border: 1px solid ${MI.grayBorder}; border-radius: 12px; box-shadow: 0 20px 40px rgba(13,23,41,0.12), 0 2px 6px rgba(13,23,41,0.05); padding: 6px; z-index: 50; min-width: 220px; animation: spFadeIn 0.12s ease; }
+      @keyframes spFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+      .sp-opt { padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: ${MI.text}; display: flex; align-items: center; gap: 10px; }
+      .sp-opt:hover { background: ${MI.grayHair}; }
+      .sp-opt.selected { background: ${MI.grayHair}; font-weight: 700; }
+      .sp-opt-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+      .sp-opt-lbl { flex: 1; }
 
       .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 12px; margin-bottom: 16px; }
       @media (max-width: 480px) { .info-grid { grid-template-columns: 1fr; } }
