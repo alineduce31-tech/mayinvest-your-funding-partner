@@ -404,6 +404,23 @@ function Index() {
         </div>
       </section>
 
+      {/* ========== BANDE RECRUTEMENT (juste après le hero) ========== */}
+      <div className="recrut-strip">
+        <div className="recrut-left">
+          <div className="recrut-ic">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2" strokeLinecap="round"/></svg>
+          </div>
+          <div>
+            <div className="recrut-h3">Mayinvest recrute 24 commerciaux au Congo</div>
+            <div className="recrut-p">Formation payée · 50 000 XAF par dossier · Dashboard temps réel</div>
+          </div>
+        </div>
+        <button className="recrut-btn" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>
+          Postuler
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+        </button>
+      </div>
+
       <div className="proof">
         {[
           { icon: <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="3" y="6" width="16" height="12" rx="2.5" stroke="#1A6BFF" strokeWidth="1.8"/><path d="M6 6V5a2 2 0 012-2h6a2 2 0 012 2v1" stroke="#1A6BFF" strokeWidth="1.8"/><path d="M7 11h8M7 14h5" stroke="#1A6BFF" strokeWidth="1.8" strokeLinecap="round"/></svg>, num: '+500', label: 'Dossiers traités' },
@@ -483,23 +500,6 @@ function Index() {
           </button>
         </div>
       </section>
-
-      {/* ========== BANDE RECRUTEMENT ========== */}
-      <div className="recrut-strip">
-        <div className="recrut-left">
-          <div className="recrut-ic">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2" strokeLinecap="round"/></svg>
-          </div>
-          <div>
-            <div className="recrut-h3">Mayinvest recrute 24 commerciaux au Congo</div>
-            <div className="recrut-p">Formation payée · 50 000 XAF par dossier · Dashboard temps réel</div>
-          </div>
-        </div>
-        <button className="recrut-btn" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>
-          Postuler
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </button>
-      </div>
 
       <footer className="footer">
         <div className="footer-cols">
