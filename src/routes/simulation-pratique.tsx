@@ -157,7 +157,7 @@ function Epreuve1Chat({ onComplete }: { onComplete: (score: number, time: number
           <div className="chat-head">
             <div className="avatar">JP</div>
             <div className="chat-head-info">
-              <div className="chat-head-name">Jean-Pierre Mabiala</div>
+              <div className="chat-head-name">Jean-Pierre Mokoko</div>
               <div className="chat-head-meta"><span className="dot-live"/>En ligne · Pointe-Noire</div>
             </div>
             <span className="chat-head-fake">Virtuel</span>
@@ -550,7 +550,7 @@ function FinalRecap({ candidateName, scores, times }: { candidateName: string; s
     <div className="final-card">
       <div className="final-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
       <h2>Bravo {candidateName}, simulation terminée !</h2>
-      <p>Ton dossier passe à Aldo pour validation. Tu recevras un email sous 24h avec son retour. Si c'est validé, ton dashboard commercial sera activé immédiatement.</p>
+      <p>Ton dossier passe à Mayinvest pour validation. Tu recevras un email sous 24h avec le retour. Si c'est validé, ton dashboard commercial sera activé immédiatement.</p>
       <div className="final-score-row">
         <div className="final-score">
           <div className="final-score-num">{total}</div>
