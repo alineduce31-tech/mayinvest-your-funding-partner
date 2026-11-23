@@ -114,8 +114,26 @@ function RejoindreEquipePage() {
         .field { margin-bottom: 14px; }
         .field label { display: block; font-size: 12px; font-weight: 600; color: ${MI.text}; margin-bottom: 5px; }
         .field label .req { color: #DC2626; }
-        .field input, .field select, .field textarea { width: 100%; padding: 11px 14px; background: ${MI.grayBg}; border: 1px solid ${MI.grayBorder}; border-radius: 10px; font-size: 14px; font-family: inherit; color: ${MI.text}; }
-        .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: ${MI.blue}; background: white; }
+        .field input, .field select, .field textarea {
+          width: 100%; padding: 12px 14px; background: #fff;
+          border: 1px solid ${MI.grayBorder}; border-radius: 10px;
+          font-size: 14px; font-family: inherit; color: ${MI.text};
+          box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+          transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        .field input::placeholder, .field textarea::placeholder { color: ${MI.textFaint}; }
+        .field input:hover, .field select:hover, .field textarea:hover { border-color: #C4C9D1; }
+        .field input:focus, .field select:focus, .field textarea:focus {
+          outline: none; border-color: ${MI.blue};
+          box-shadow: 0 0 0 3px rgba(26,107,255,0.12);
+        }
+        .field select {
+          appearance: none; -webkit-appearance: none; -moz-appearance: none;
+          padding-right: 40px;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+          background-repeat: no-repeat; background-position: right 14px center; background-size: 12px;
+          cursor: pointer;
+        }
         .field textarea { resize: vertical; min-height: 80px; }
         .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
         @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
