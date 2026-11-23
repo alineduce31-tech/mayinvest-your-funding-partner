@@ -305,7 +305,7 @@ function Index() {
         <LogoSVG height={56} tone="light" />
         <div className="nav-actions">
           <a href="/rejoindre-equipe" onClick={(e) => { e.preventDefault(); navigate({ to: '/rejoindre-equipe' as any }) }} className="nav-link muted hide-mobile">
-            <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><path d="M10 10a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" strokeWidth="1.8"/><path d="M14 10a2 2 0 100-4 2 2 0 000 4zM6 10a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" strokeWidth="1.8"/><path d="M3 17c0-2.5 2-4.5 4.5-4.5h5c2.5 0 4.5 2 4.5 4.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+            <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="8" cy="7" r="3" stroke="currentColor" strokeWidth="1.8"/><path d="M2 17c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><path d="M15 6v4M13 8h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
             Rejoindre l'équipe
           </a>
           <a href="/mon-dossier" onClick={(e) => { e.preventDefault(); navigate({ to: '/mon-dossier' }) }} className="nav-link">
