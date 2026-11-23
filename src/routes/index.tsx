@@ -148,6 +148,10 @@ function Index() {
           .nav-link { padding: 7px 12px; font-size: 13px; gap: 5px; }
           .nav-link svg { width: 15px; height: 15px; }
           .nav-link.hide-mobile { display: none; }
+          /* "Rejoindre l'équipe" : icône seule sur mobile pour gagner de la place */
+          .nav-link.nav-join { padding: 8px; }
+          .nav-link.nav-join .nav-join-txt { display: none; }
+          .nav-link.nav-join svg { width: 18px; height: 18px; }
         }
 
         .hero { padding: 90px 60px 80px; display: grid; grid-template-columns: 1fr 480px; gap: 60px; align-items: center; }
@@ -304,9 +308,9 @@ function Index() {
       <nav className="nav">
         <LogoSVG height={56} tone="light" />
         <div className="nav-actions">
-          <a href="/rejoindre-equipe" onClick={(e) => { e.preventDefault(); navigate({ to: '/rejoindre-equipe' as any }) }} className="nav-link muted hide-mobile">
+          <a href="/rejoindre-equipe" onClick={(e) => { e.preventDefault(); navigate({ to: '/rejoindre-equipe' as any }) }} className="nav-link muted nav-join">
             <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><circle cx="8" cy="7" r="3" stroke="currentColor" strokeWidth="1.8"/><path d="M2 17c0-3.31 2.69-6 6-6s6 2.69 6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/><path d="M15 6v4M13 8h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-            Rejoindre l'équipe
+            <span className="nav-join-txt">Rejoindre l'équipe</span>
           </a>
           <a href="/mon-dossier" onClick={(e) => { e.preventDefault(); navigate({ to: '/mon-dossier' }) }} className="nav-link">
             <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
