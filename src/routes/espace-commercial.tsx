@@ -178,7 +178,7 @@ function EspaceCommercialPage() {
               <StatusCard icon="inprogress" title="Simulation en cours" subtitle="Évaluation de ta candidature" body="Continue la simulation pour valider ta candidature. Compte environ 30 min." cta="Reprendre la simulation" onCta={resumeFormation}/>
             )}
             {session.status === 'en_attente_validation' && (
-              <StatusCard icon="pending" title="En attente de validation" subtitle="Aldo examine ta candidature" body="Tu as terminé ta formation et ta simulation. Aldo revient vers toi sous 24h par WhatsApp avec sa décision."/>
+              <StatusCard icon="pending" title="En attente de validation" subtitle="Aldo examine ta candidature" body="Tu as terminé ta formation et ta simulation. Aldo revient vers toi sous 24h par email avec sa décision."/>
             )}
             {session.status === 'refuse' && (
               <StatusCard icon="refuse" title="Candidature non retenue" subtitle="Pour cette fois" body="Tu peux repostuler dans 90 jours. En attendant, perfectionne-toi et reviens plus fort."/>
@@ -419,12 +419,16 @@ function LeadDrawer({ lead, commercialId, onClose, onUpdated }: { lead: Lead; co
             <div className="drawer-sec-title">Contact</div>
             <div className="info-row"><span>Téléphone</span><b>{tel || '—'}</b></div>
             <div className="info-row"><span>Email</span><b>{email || '—'}</b></div>
-            {tel && (
-              <div className="drawer-actions-row">
-                <a href={`tel:${tel}`} className="btn-mini">📞 Appeler</a>
-                <a href={`https://wa.me/${tel.replace(/[^0-9]/g, '')}`} target="_blank" className="btn-mini">💬 WhatsApp</a>
-              </div>
-            )}
+            <div className="drawer-actions-row">
+              {tel && <a href={`tel:${tel}`} className="btn-mini">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                Appeler
+              </a>}
+              <button className="btn-mini" onClick={() => alert('La messagerie avec les prospects sera disponible dans la prochaine vague.')} style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Messagerie
+              </button>
+            </div>
           </div>
 
           <div className="drawer-sec">
@@ -544,7 +548,7 @@ function OutilsTab({ refCode, refLink, session }: { refCode?: string; refLink: s
     })
   }
   const scripts = [
-    { k: 'intro', title: 'Message d\'introduction (WhatsApp)', body: `Bonjour, je suis ${session.prenom} de Mayinvest Conseil. On aide les Congolais à obtenir leur crédit bancaire plus vite et sans se faire renvoyer. Vous remplissez un formulaire de 2 minutes, on vous dit en 24h si votre dossier est bancable. C'est gratuit, et vous ne payez que si on obtient votre financement. Voici le lien : ${refLink}` },
+    { k: 'intro', title: 'Message d\'introduction', body: `Bonjour, je suis ${session.prenom} de Mayinvest Conseil. On aide les Congolais à obtenir leur crédit bancaire plus vite et sans se faire renvoyer. Vous remplissez un formulaire de 2 minutes, on vous dit en 24h si votre dossier est bancable. C'est gratuit, et vous ne payez que si on obtient votre financement. Voici le lien : ${refLink}` },
     { k: 'relance', title: 'Message de relance (après 48h sans réponse)', body: `Bonjour, je reviens vers vous pour votre projet de financement. 2 banques partenaires m'ont confirmé pouvoir traiter votre dossier cette semaine si on le dépose avant vendredi. Vous êtes toujours partant ?` },
     { k: 'pme', title: 'Message pour PME sans RCCM (upsell Pack)', body: `Bonjour, je comprends que vous n'avez pas encore de RCCM. Pas de problème : pour 50 000 XAF, on vous met en règle (RCCM, NIU, compte bancaire pro) en 2 semaines. Après ça, votre dossier crédit passe comme une lettre à la poste. On commence ?` },
   ]
@@ -572,8 +576,8 @@ function OutilsTab({ refCode, refLink, session }: { refCode?: string; refLink: s
 
       <div className="section-card">
         <div className="section-head">
-          <h3>Scripts prêts à copier</h3>
-          <span className="section-sub">Pré-rédigés, personnalisés avec ton prénom et ton lien</span>
+          <h3>Scripts de messagerie prêts à copier</h3>
+          <span className="section-sub">À utiliser dans la messagerie interne du prospect</span>
         </div>
         {scripts.map(s => (
           <div key={s.k} className="script-card">
