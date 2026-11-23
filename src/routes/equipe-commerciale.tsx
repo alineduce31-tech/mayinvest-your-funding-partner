@@ -1,0 +1,235 @@
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { useEffect, useState, useMemo } from 'react'
+import { supabase } from '@/integrations/supabase/client'
+
+export const Route = createFileRoute('/equipe-commerciale')({
+  component: EquipeCommercialePage,
+})
+
+const ADMIN_SESSION_KEY = 'mayinvest_admin_session'
+
+type Commercial = {
+  id: string; nom: string; prenom: string; email: string; telephone: string; ville: string;
+  ref_code: string; status: string; activated_at: string | null; created_at: string;
+  total_leads: number; leads_actifs: number; dossiers_finances: number;
+  gains_total_xaf: number; gains_mois_xaf: number;
+}
+
+const xaf = (n: number) => new Intl.NumberFormat('fr-FR').format(n) + ' XAF'
+
+function EquipeCommercialePage() {
+  const navigate = useNavigate()
+  const [authChecked, setAuthChecked] = useState(false)
+  const [commercials, setCommercials] = useState<Commercial[]>([])
+  const [loading, setLoading] = useState(true)
+  const [search, setSearch] = useState('')
+  const [villeFilter, setVilleFilter] = useState<string>('')
+  const [sort, setSort] = useState<'activated_desc' | 'gains_desc' | 'leads_desc'>('activated_desc')
+  const [deactivateModal, setDeactivateModal] = useState<Commercial | null>(null)
+  const [deactivateReason, setDeactivateReason] = useState('')
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ADMIN_SESSION_KEY)
+      if (!raw) { navigate({ to: '/mon-espace' as any }); return }
+      const s = JSON.parse(raw)
+      if (!s?.email || !s?.expiresAt || s.expiresAt < Date.now()) {
+        navigate({ to: '/mon-espace' as any }); return
+      }
+      setAuthChecked(true)
+    } catch { navigate({ to: '/mon-espace' as any }) }
+  }, [navigate])
+
+  useEffect(() => { if (authChecked) loadAll() }, [authChecked])
+
+  async function loadAll() {
+    setLoading(true)
+    const { data } = await supabase.rpc('get_all_commercials_with_stats')
+    if (data) setCommercials(data as Commercial[])
+    setLoading(false)
+  }
+
+  async function deactivate() {
+    if (!deactivateModal || !deactivateReason.trim()) return
+    await supabase.rpc('deactivate_commercial', { p_commercial_id: deactivateModal.id, p_reason: deactivateReason })
+    setDeactivateModal(null); setDeactivateReason('')
+    await loadAll()
+  }
+
+  const filtered = useMemo(() => {
+    let res = commercials
+    if (search) {
+      const q = search.toLowerCase()
+      res = res.filter(c => (c.nom + ' ' + c.prenom + ' ' + c.email + ' ' + c.telephone).toLowerCase().includes(q))
+    }
+    if (villeFilter) res = res.filter(c => c.ville === villeFilter)
+    if (sort === 'gains_desc') res = [...res].sort((a, b) => b.gains_total_xaf - a.gains_total_xaf)
+    else if (sort === 'leads_desc') res = [...res].sort((a, b) => b.total_leads - a.total_leads)
+    return res
+  }, [commercials, search, villeFilter, sort])
+
+  const villes = useMemo(() => Array.from(new Set(commercials.map(c => c.ville))).sort(), [commercials])
+
+  const totals = useMemo(() => ({
+    nb: commercials.length,
+    totalLeads: commercials.reduce((s, c) => s + c.total_leads, 0),
+    totalFinances: commercials.reduce((s, c) => s + c.dossiers_finances, 0),
+    totalGains: commercials.reduce((s, c) => s + c.gains_total_xaf, 0),
+  }), [commercials])
+
+  if (!authChecked) return <div style={{ padding: 60, textAlign: 'center', fontSize: 13, color: '#6B7280' }}>Vérification…</div>
+  if (loading) return <div style={{ padding: 60, textAlign: 'center' }}>Chargement…</div>
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, system-ui, sans-serif', color: '#111827' }}>
+      <style>{`
+        * { box-sizing: border-box; }
+        .ec-header { padding: 18px 32px; background: #FFFFFF; border-bottom: 1px solid #ECECEA; display: flex; justify-content: space-between; align-items: center; }
+        .ec-header h1 { font-size: 20px; font-weight: 800; margin: 0; color: #0F1729; letter-spacing: -0.02em; }
+        .ec-back { font-size: 12px; color: #6B7280; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+        .ec-back:hover { color: #0F6E3E; }
+        .ec-nav { display: flex; gap: 6px; }
+        .ec-nav a { padding: 7px 14px; border-radius: 100px; font-size: 12px; font-weight: 600; color: #6B7280; text-decoration: none; }
+        .ec-nav a:hover { background: #F3F3F1; color: #111827; }
+        .ec-nav a.active { background: #0F6E3E; color: #fff; }
+
+        .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 32px; }
+        @media (max-width: 640px) { .wrap { padding: 20px 16px; } .ec-header { padding: 14px 16px; } }
+
+        .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+        @media (max-width: 720px) { .kpi-row { grid-template-columns: repeat(2, 1fr); } }
+        .kpi { background: #fff; border: 1px solid #ECECEA; border-radius: 14px; padding: 16px 18px; }
+        .kpi-lbl { font-size: 11px; color: #6B7280; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+        .kpi-val { font-size: 22px; font-weight: 800; color: #0F1729; margin-top: 6px; letter-spacing: -0.02em; }
+
+        .toolbar { background: #fff; border: 1px solid #ECECEA; border-radius: 12px; padding: 10px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+        .toolbar input, .toolbar select { padding: 8px 12px; background: #F9FAFB; border: 1px solid #ECECEA; border-radius: 8px; font-size: 12px; font-family: inherit; color: #111827; }
+        .toolbar input { flex: 1; min-width: 180px; }
+        .toolbar select { cursor: pointer; }
+
+        .list { background: #fff; border: 1px solid #ECECEA; border-radius: 12px; overflow: hidden; }
+        .row { display: grid; grid-template-columns: 2fr 1fr 110px 110px 130px 90px; gap: 12px; align-items: center; padding: 14px 18px; border-bottom: 1px solid #F3F3F1; font-size: 12px; }
+        .row-head { background: #F9FAFB; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #6B7280; }
+        .row-head .r, .row .r { text-align: right; }
+        @media (max-width: 820px) {
+          .row { grid-template-columns: 1fr auto; gap: 6px; }
+          .row-head { display: none; }
+          .row > *:not(.row-name):not(.row-action) { grid-column: 1; }
+          .row .row-action { grid-column: 2; grid-row: 1; }
+        }
+        .row-name { display: flex; align-items: center; gap: 10px; }
+        .ava { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #2361EF, #7C3AED); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
+        .row-name strong { font-size: 13px; font-weight: 700; color: #111827; display: block; }
+        .row-name small { font-size: 11px; color: #6B7280; display: block; margin-top: 1px; }
+        .row-ville { color: #374151; font-weight: 500; }
+        .row-count { font-weight: 700; font-variant-numeric: tabular-nums; color: #0F1729; }
+        .row-finance { font-weight: 700; font-variant-numeric: tabular-nums; color: #0F6E3E; }
+        .row-gains { font-weight: 700; font-variant-numeric: tabular-nums; color: #111827; text-align: right; }
+        .row-action { text-align: right; }
+        .btn-deact { background: #FEE2E2; color: #B42318; border: 1px solid #FCA5A5; border-radius: 100px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
+        .btn-deact:hover { background: #FCA5A5; color: #fff; }
+
+        .ref-pill { display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; background: #EEF4FF; color: #1A6BFF; border-radius: 100px; font-size: 10px; font-weight: 700; font-family: 'SF Mono', Menlo, monospace; letter-spacing: 0.04em; }
+
+        .empty { padding: 60px 20px; text-align: center; color: #6B7280; font-size: 13px; }
+
+        .modal-ovr { position: fixed; inset: 0; background: rgba(13,23,41,0.6); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .modal { background: white; border-radius: 14px; max-width: 420px; width: 100%; padding: 24px; }
+        .modal h3 { margin: 0 0 8px; font-size: 16px; font-weight: 700; }
+        .modal p { font-size: 13px; color: #6B7280; margin: 0 0 14px; }
+        .modal textarea { width: 100%; min-height: 80px; padding: 10px 12px; background: #F3F3F1; border: 1px solid #ECECEA; border-radius: 8px; font-size: 13px; font-family: inherit; }
+        .modal-actions { display: flex; gap: 8px; margin-top: 16px; }
+        .modal-actions button { flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; border: none; font-family: inherit; }
+        .modal-btn-cancel { background: #F3F3F1; color: #6B7280; }
+        .modal-btn-confirm { background: #B42318; color: white; }
+      `}</style>
+
+      <header className="ec-header">
+        <div>
+          <h1>Équipe commerciale</h1>
+          <Link to="/admin" className="ec-back">← Retour à l'admin</Link>
+        </div>
+        <nav className="ec-nav">
+          <Link to={'/candidatures' as any}>Candidatures</Link>
+          <Link to={'/equipe-commerciale' as any} className="active">Équipe</Link>
+        </nav>
+      </header>
+
+      <div className="wrap">
+        <div className="kpi-row">
+          <div className="kpi"><div className="kpi-lbl">Commerciaux actifs</div><div className="kpi-val">{totals.nb}</div></div>
+          <div className="kpi"><div className="kpi-lbl">Leads attribués</div><div className="kpi-val">{totals.totalLeads}</div></div>
+          <div className="kpi"><div className="kpi-lbl">Dossiers financés</div><div className="kpi-val">{totals.totalFinances}</div></div>
+          <div className="kpi"><div className="kpi-lbl">Commissions versées</div><div className="kpi-val">{xaf(totals.totalGains)}</div></div>
+        </div>
+
+        <div className="toolbar">
+          <input placeholder="Rechercher par nom, email, téléphone…" value={search} onChange={e => setSearch(e.target.value)}/>
+          <select value={villeFilter} onChange={e => setVilleFilter(e.target.value)}>
+            <option value="">Toutes les villes</option>
+            {villes.map(v => <option key={v} value={v}>{v}</option>)}
+          </select>
+          <select value={sort} onChange={e => setSort(e.target.value as any)}>
+            <option value="activated_desc">Plus récents</option>
+            <option value="gains_desc">Gains ↓</option>
+            <option value="leads_desc">Leads ↓</option>
+          </select>
+        </div>
+
+        <div className="list">
+          <div className="row row-head">
+            <span>Commercial</span>
+            <span>Ville · Code</span>
+            <span>Leads</span>
+            <span>Financés</span>
+            <span className="r">Gains totaux</span>
+            <span className="r">Action</span>
+          </div>
+          {filtered.length === 0 ? (
+            <div className="empty">Aucun commercial trouvé.</div>
+          ) : filtered.map(c => {
+            const initials = (c.prenom[0] + c.nom[0]).toUpperCase()
+            return (
+              <div key={c.id} className="row">
+                <div className="row-name">
+                  <span className="ava">{initials}</span>
+                  <div>
+                    <strong>{c.prenom} {c.nom}</strong>
+                    <small>{c.email} · {c.telephone}</small>
+                  </div>
+                </div>
+                <div className="row-ville">
+                  {c.ville}<br/>
+                  <span className="ref-pill">{c.ref_code}</span>
+                </div>
+                <div className="row-count">{c.total_leads}<br/><small style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 500 }}>{c.leads_actifs} actifs</small></div>
+                <div className="row-finance">{c.dossiers_finances}</div>
+                <div className="row-gains">
+                  {xaf(c.gains_total_xaf)}
+                  {c.gains_mois_xaf > 0 && <><br/><small style={{ fontSize: 10, color: '#0F6E3E', fontWeight: 500 }}>+{xaf(c.gains_mois_xaf)} ce mois</small></>}
+                </div>
+                <div className="row-action">
+                  <button className="btn-deact" onClick={() => setDeactivateModal(c)}>Désactiver</button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {deactivateModal && (
+        <div className="modal-ovr" onClick={() => setDeactivateModal(null)}>
+          <div className="modal" onClick={e => e.stopPropagation()}>
+            <h3>Désactiver {deactivateModal.prenom} {deactivateModal.nom}</h3>
+            <p>Le commercial ne pourra plus se connecter à son workspace. Ses leads restent attribués (à redistribuer manuellement si besoin).</p>
+            <textarea value={deactivateReason} onChange={e => setDeactivateReason(e.target.value)} placeholder="Raison (ex: inactivité prolongée, mauvaise conduite…)"/>
+            <div className="modal-actions">
+              <button className="modal-btn-cancel" onClick={() => { setDeactivateModal(null); setDeactivateReason('') }}>Annuler</button>
+              <button className="modal-btn-confirm" onClick={deactivate} disabled={!deactivateReason.trim()}>Désactiver</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
