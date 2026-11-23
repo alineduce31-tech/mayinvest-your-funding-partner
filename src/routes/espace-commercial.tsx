@@ -178,7 +178,7 @@ function EspaceCommercialPage() {
               <StatusCard icon="inprogress" title="Simulation en cours" subtitle="Évaluation de ta candidature" body="Continue la simulation pour valider ta candidature. Compte environ 30 min." cta="Reprendre la simulation" onCta={resumeFormation}/>
             )}
             {session.status === 'en_attente_validation' && (
-              <StatusCard icon="pending" title="En attente de validation" subtitle="Aldo examine ta candidature" body="Tu as terminé ta formation et ta simulation. Aldo revient vers toi sous 24h par email avec sa décision."/>
+              <StatusCard icon="pending" title="En attente de validation" subtitle="L'équipe Mayinvest examine ta candidature" body="Tu as terminé ta formation et ta simulation. L'équipe Mayinvest revient vers toi sous 24h par email avec sa décision."/>
             )}
             {session.status === 'refuse' && (
               <StatusCard icon="refuse" title="Candidature non retenue" subtitle="Pour cette fois" body="Tu peux repostuler dans 90 jours. En attendant, perfectionne-toi et reviens plus fort."/>
@@ -197,7 +197,7 @@ function EspaceCommercialPage() {
               <NavItem icon={<IconGrid/>} label="Dashboard" active={tab === 'dashboard'} onClick={() => { setTab('dashboard'); setSidebarOpen(false) }}/>
               <NavItem icon={<IconUsers/>} label="Mes Leads" count={stats?.leads_actifs} active={tab === 'leads'} onClick={() => { setTab('leads'); setSidebarOpen(false) }}/>
               <NavItem icon={<IconLink/>} label="Outils" active={tab === 'outils'} onClick={() => { setTab('outils'); setSidebarOpen(false) }}/>
-              <NavItem icon={<IconChat/>} label="Chat Aldo" count={unreadChat} active={tab === 'chat'} onClick={() => { setTab('chat'); setSidebarOpen(false) }}/>
+              <NavItem icon={<IconChat/>} label="Chat Mayinvest" count={unreadChat} active={tab === 'chat'} onClick={() => { setTab('chat'); setSidebarOpen(false) }}/>
             </nav>
             <div className="ws-sidebar-footer">
               <div className="ws-user">
@@ -220,7 +220,7 @@ function EspaceCommercialPage() {
                 {tab === 'dashboard' && 'Dashboard'}
                 {tab === 'leads' && 'Mes Leads'}
                 {tab === 'outils' && 'Mes Outils'}
-                {tab === 'chat' && 'Chat avec Aldo'}
+                {tab === 'chat' && 'Chat avec Mayinvest'}
               </h1>
             </header>
 
@@ -663,16 +663,16 @@ function ChatTab({ commercialId, onRead }: { commercialId: string; onRead: () =>
   return (
     <div className="chat-wrap">
       <div className="chat-head">
-        <div className="chat-ava">A</div>
+        <div className="chat-ava">M</div>
         <div>
-          <div className="chat-head-name">Aldo (Directeur commercial)</div>
-          <div className="chat-head-sub">Mayinvest · Brazzaville</div>
+          <div className="chat-head-name">Équipe Mayinvest</div>
+          <div className="chat-head-sub">Support commercial · Brazzaville</div>
         </div>
       </div>
       <div className="chat-messages">
         {messages.length === 0 && (
           <div className="chat-empty">
-            <p>Pas encore de messages. Dis bonjour à Aldo ou pose-lui une question sur un dossier !</p>
+            <p>Pas encore de messages. Dis bonjour à l'équipe Mayinvest ou pose une question sur un dossier !</p>
           </div>
         )}
         {messages.map(m => (
@@ -684,7 +684,7 @@ function ChatTab({ commercialId, onRead }: { commercialId: string; onRead: () =>
       </div>
       <div className="chat-input-row">
         <input
-          placeholder="Écris ton message à Aldo…"
+          placeholder="Écris ton message à Mayinvest…"
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), send())}
