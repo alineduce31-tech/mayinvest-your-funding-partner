@@ -62,8 +62,6 @@ function CandidaturesPage() {
   }
   useEffect(() => { if (authChecked) loadAll() }, [authChecked])
 
-  if (!authChecked) return <div style={{ padding: 60, textAlign: 'center', fontSize: 13, color: '#6B7280' }}>Vérification…</div>
-
   const filtered = useMemo(() => {
     return candidates.filter(c => {
       if (filter === 'pending') return c.status === 'en_attente_validation'
@@ -85,6 +83,8 @@ function CandidaturesPage() {
     const times = candidates.filter(c => c.time_total_seconds > 0).map(c => c.time_total_seconds).sort((a, b) => a - b)
     return times.length ? times[Math.floor(times.length / 2)] : 0
   }, [candidates])
+
+  if (!authChecked) return <div style={{ padding: 60, textAlign: 'center', fontSize: 13, color: '#6B7280' }}>Vérification…</div>
 
   async function validate(c: Candidate) {
     const { error } = await supabase.from('commercial_candidates').update({
