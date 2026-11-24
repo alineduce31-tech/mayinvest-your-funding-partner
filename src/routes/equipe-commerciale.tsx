@@ -77,17 +77,17 @@ function EquipeCommercialePage() {
     totalGains: commercials.reduce((s, c) => s + c.gains_total_xaf, 0),
   }), [commercials])
 
-  if (!authChecked) return <div style={{ padding: 60, textAlign: 'center', fontSize: 13, color: '#6B7280' }}>Vérification…</div>
-  if (loading) return <div style={{ padding: 60, textAlign: 'center' }}>Chargement…</div>
+  if (!authChecked || loading) return <SkeletonPage/>
 
   return (
     <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, system-ui, sans-serif', color: '#111827' }}>
       <style>{`
         * { box-sizing: border-box; }
-        .ec-header { padding: 18px 32px; background: #FFFFFF; border-bottom: 1px solid #ECECEA; display: flex; justify-content: space-between; align-items: center; }
-        .ec-header h1 { font-size: 20px; font-weight: 800; margin: 0; color: #0F1729; letter-spacing: -0.02em; }
-        .ec-back { font-size: 12px; color: #6B7280; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
-        .ec-back:hover { color: #0F6E3E; }
+        .ec-header { padding: 20px 32px; background: #FFFFFF; border-bottom: 1px solid #ECECEA; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .ec-header h1 { font-size: 22px; font-weight: 800; margin: 0; color: #0F1729; letter-spacing: -0.02em; }
+        .ec-sub { font-size: 12px; color: #6B7280; margin-top: 4px; }
+        .back-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 100px; font-size: 11px; font-weight: 600; color: #111; text-decoration: none; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+        .back-pill:hover { background: #0D1B3E; color: #fff; border-color: #0D1B3E; }
         .ec-nav { display: flex; gap: 6px; }
         .ec-nav a { padding: 7px 14px; border-radius: 100px; font-size: 12px; font-weight: 600; color: #6B7280; text-decoration: none; }
         .ec-nav a:hover { background: #F3F3F1; color: #111827; }
@@ -146,8 +146,12 @@ function EquipeCommercialePage() {
 
       <header className="ec-header">
         <div>
+          <Link to="/admin" className="back-pill">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Admin
+          </Link>
           <h1>Équipe commerciale</h1>
-          <Link to="/admin" className="ec-back">← Retour à l'admin</Link>
+          <div className="ec-sub">Gestion et performance des commerciaux actifs</div>
         </div>
         <nav className="ec-nav">
           <Link to={'/candidatures' as any}>Candidatures</Link>
@@ -230,6 +234,50 @@ function EquipeCommercialePage() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function SkeletonPage() {
+  return (
+    <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <style>{`
+        .skp-head { padding: 20px 32px; background: #fff; border-bottom: 1px solid #ECECEA; }
+        .skp-bar { height: 14px; background: linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%); background-size: 200% 100%; animation: skp-shimmer 1.5s infinite; border-radius: 6px; margin-bottom: 8px; }
+        .skp-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 32px; }
+        .skp-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+        @media (max-width: 720px) { .skp-kpis { grid-template-columns: repeat(2, 1fr); } }
+        .skp-kpi { height: 88px; background: #fff; border: 1px solid #ECECEA; border-radius: 14px; padding: 16px 18px; }
+        .skp-row { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid #ECECEA; border-radius: 12px; padding: 16px; margin-bottom: 8px; }
+        .skp-ava { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%); background-size: 200% 100%; animation: skp-shimmer 1.5s infinite; flex-shrink: 0; }
+        .skp-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .skp-line { height: 10px; border-radius: 5px; background: linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%); background-size: 200% 100%; animation: skp-shimmer 1.5s infinite; }
+        .skp-line.long { width: 90%; }
+        .skp-line.short { width: 55%; }
+        @keyframes skp-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+      `}</style>
+      <div className="skp-head">
+        <div className="skp-bar" style={{ width: 70, height: 22, borderRadius: 100, marginBottom: 10 }}/>
+        <div className="skp-bar" style={{ width: 240, height: 22, marginBottom: 6 }}/>
+        <div className="skp-bar" style={{ width: 320, height: 10 }}/>
+      </div>
+      <div className="skp-wrap">
+        <div className="skp-kpis">
+          <div className="skp-kpi"><div className="skp-bar" style={{ width: '70%' }}/><div className="skp-bar" style={{ width: '40%', marginTop: 10, height: 20 }}/></div>
+          <div className="skp-kpi"><div className="skp-bar" style={{ width: '70%' }}/><div className="skp-bar" style={{ width: '40%', marginTop: 10, height: 20 }}/></div>
+          <div className="skp-kpi"><div className="skp-bar" style={{ width: '70%' }}/><div className="skp-bar" style={{ width: '40%', marginTop: 10, height: 20 }}/></div>
+          <div className="skp-kpi"><div className="skp-bar" style={{ width: '70%' }}/><div className="skp-bar" style={{ width: '40%', marginTop: 10, height: 20 }}/></div>
+        </div>
+        {[1,2,3,4].map(i => (
+          <div key={i} className="skp-row">
+            <div className="skp-ava"/>
+            <div className="skp-lines">
+              <div className="skp-line long"/>
+              <div className="skp-line short"/>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
