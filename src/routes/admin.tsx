@@ -6,6 +6,7 @@ import { ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, W
 import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase } from '@/integrations/supabase/client'
+import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
 import { LEAD_ACTIONS, buildWhatsappUrl, fillTemplate, LIFECYCLE_STATUTS, STATUT_COLORS } from '@/lib/lead-templates'
 
@@ -990,7 +991,7 @@ function Admin({ session }: { session: any }) {
           </div>
 
           {page === 'general' && <DashboardView onOpen={setSelectedLead}/>}
-          {page !== 'general' && (loading ? <div className="empty">Chargement…</div> : <>
+          {page !== 'general' && (loading ? <SkeletonPage rows={3} label="Chargement des leads…" /> : <>
             {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
             {page === 'crm' && <CRMView leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
@@ -2495,7 +2496,10 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
               <div style={{ fontSize: 11, color: '#666', marginBottom: 10 }}>
                 {documents.filter(d => d.status === 'validated').length} validés · {documents.filter(d => d.status === 'uploaded').length} à valider · {documents.filter(d => d.status === 'pending').length} en attente
               </div>
-              {docsLoading && <div style={{ color: '#999', textAlign: 'center', padding: 20 }}>Chargement…</div>}
+              {docsLoading && <div style={{ color: '#999', textAlign: 'center', padding: 20 }}>
+                                  <div style={{ height: 14, width: '60%', margin: '0 auto', background: 'linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%)', backgroundSize: '200% 100%', animation: 'skp-shimmer 1.5s infinite', borderRadius: 6 }}/>
+                                  <style>{`@keyframes skp-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
+                                </div>}
               {!docsLoading && documents.length === 0 && <div style={{ color: '#999', textAlign: 'center', padding: 20 }}>Aucun document.</div>}
               {documents.map(d => {
                 const isUploaded = d.status === 'uploaded'
