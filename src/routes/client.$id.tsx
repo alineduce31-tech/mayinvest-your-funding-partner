@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import SkeletonPage from '@/components/SkeletonPage'
 
 export const Route = createFileRoute('/client/$id')({
   component: ClientPortal,
@@ -805,12 +806,7 @@ function ClientPortal() {
 
   /* ===== STAGE: LOADING ===== */
   if (stage === 'loading') {
-    return (
-      <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#F8FAFC', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {commonStyle}
-        <div style={{ color: '#666', fontSize: 14 }}>Chargement…</div>
-      </div>
-    )
+    return <SkeletonPage variant="form" label="Préparation de votre espace…" />
   }
 
   /* ===== STAGE: NEEDS CODE ===== */
@@ -1217,7 +1213,11 @@ function ClientPortal() {
               Téléversez vos documents un par un. Chaque pièce est validée automatiquement par votre conseiller.
             </div>
             {documents.length === 0 ? (
-              <div style={{ color: '#999', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Chargement de la liste…</div>
+              <div style={{ padding: '24px 0' }}>
+                <div style={{ height: 12, width: '50%', margin: '0 auto 10px', background: 'linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%)', backgroundSize: '200% 100%', animation: 'skp-inline-shim 1.5s infinite', borderRadius: 6 }}/>
+                <div style={{ height: 12, width: '35%', margin: '0 auto', background: 'linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%)', backgroundSize: '200% 100%', animation: 'skp-inline-shim 1.5s infinite', borderRadius: 6 }}/>
+                <style>{`@keyframes skp-inline-shim { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
+              </div>
             ) : (
               <div className="c-docs">
                 <div className="c-docs-progress">
