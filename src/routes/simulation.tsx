@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import SkeletonPage from '@/components/SkeletonPage'
 
 export const Route = createFileRoute('/simulation')({
   component: SimulationPage,
@@ -101,7 +102,7 @@ function SimulationPage() {
     navigate({ to: '/simulation-pratique' as any })
   }
 
-  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: MI.textMuted }}>Chargement de la simulation…</div>
+  if (loading) return <SkeletonPage label="Chargement de la simulation…" />
   if (!scenarios.length) return <div style={{ padding: 60, textAlign: 'center', color: MI.textMuted }}>Aucun scénario disponible.</div>
 
   return (
