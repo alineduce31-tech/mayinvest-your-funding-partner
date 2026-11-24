@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import SkeletonPage from '@/components/SkeletonPage'
 
 export const Route = createFileRoute('/formation')({
   component: FormationPage,
@@ -106,7 +107,7 @@ function FormationPage() {
     navigate({ to: '/simulation' as any })
   }
 
-  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: MI.textMuted }}>Chargement de ta formation…</div>
+  if (loading) return <SkeletonPage label="Chargement de ta formation…" />
 
   const progressPct = modules.length ? Math.round((completedModules.size / modules.length) * 100) : 0
 
@@ -295,7 +296,7 @@ function FormationPage() {
                     <button className="result-cta" onClick={finishFormation}>Passer à la simulation →</button>
                   )
                 ) : (
-                  <button className="result-cta retry" onClick={() => setMode('content')}>Relire le module</button>
+                  <button className="result-cta retry" onClick={finishFormation}>Relire le module</button>
                 )}
               </div>
             </div>
