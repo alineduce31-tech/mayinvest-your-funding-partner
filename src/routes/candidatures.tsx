@@ -156,16 +156,50 @@ function CandidaturesPage() {
         .cd-empty { padding: 60px 20px; text-align: center; color: #6B7280; font-size: 13px; }
 
         /* Panneau détail */
-        .cd-panel { background: white; border: 1px solid #ECECEA; border-radius: 14px; padding: 0; overflow: hidden; height: fit-content; position: sticky; top: 90px; }
-        .cd-panel-head { padding: 20px; background: linear-gradient(135deg, #E6F2EB 0%, transparent 60%); border-bottom: 1px solid #ECECEA; display: flex; justify-content: space-between; align-items: center; }
-        .cd-panel-close { background: #F3F3F1; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #6B7280; }
-        .cd-panel-body { padding: 20px; max-height: calc(100vh - 220px); overflow-y: auto; }
-        .cd-panel h3 { font-size: 16px; font-weight: 700; margin: 0 0 4px; color: #0F1729; }
-        .cd-panel .meta { font-size: 11px; color: #6B7280; margin: 0; }
+        .cd-panel { background: white; border: 1px solid #ECECEA; border-radius: 20px; padding: 0; overflow: hidden; height: fit-content; position: sticky; top: 90px; box-shadow: 0 20px 40px rgba(13,23,41,0.08); }
 
+        /* === HEADER VERT MAYINVEST === */
+        .cd-panel-head { padding: 22px 24px 24px; background: linear-gradient(135deg, #0F6E3E 0%, #0A4E2C 100%); color: white; position: relative; }
+        .cd-panel-head-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+        .cd-panel-ref { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; font-weight: 700; }
+        .cd-panel-close { background: rgba(255,255,255,0.15); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; transition: background 0.15s; }
+        .cd-panel-close:hover { background: rgba(255,255,255,0.28); }
+
+        .cd-identity { display: flex; align-items: center; gap: 18px; }
+        .cd-ring { position: relative; width: 78px; height: 78px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .cd-ring-inner { width: 66px; height: 66px; background: #0A4E2C; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .cd-ring-num { font-size: 22px; font-weight: 800; color: white; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+        .cd-ring-lbl { font-size: 8px; color: rgba(255,255,255,0.75); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
+        .cd-identity-info { flex: 1; min-width: 0; }
+        .cd-identity-info h3 { font-size: 22px; font-weight: 800; margin: 0 0 6px; color: white; letter-spacing: -0.02em; line-height: 1.1; }
+        .cd-identity-info .meta { font-size: 12px; color: rgba(255,255,255,0.88); margin: 0; display: flex; gap: 10px; flex-wrap: wrap; }
+        .cd-identity-info .meta span::before { content: '·'; margin-right: 10px; opacity: 0.6; }
+        .cd-identity-info .meta span:first-child::before { content: ''; margin: 0; }
+
+        /* === VERDICT === */
+        .cd-verdict { padding: 14px 24px; background: #E6F2EB; border-bottom: 1px solid #ECECEA; font-size: 13px; color: #0A4E2C; line-height: 1.5; display: flex; align-items: flex-start; gap: 10px; }
+        .cd-verdict svg { flex-shrink: 0; margin-top: 2px; }
+        .cd-verdict b { font-weight: 700; }
+        .cd-verdict.warn { background: #FEF3C7; color: #92400E; }
+        .cd-verdict.danger { background: #FEE2E2; color: #991B1B; }
+
+        .cd-panel-body { padding: 0; max-height: calc(100vh - 220px); overflow-y: auto; }
+
+        /* === CONTACT === */
+        .cd-contact { padding: 16px 24px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 14px; border-bottom: 1px solid #F3F3F1; }
+        @media (max-width: 520px) { .cd-contact { grid-template-columns: 1fr; } }
+        .cd-contact-item { display: flex; align-items: center; gap: 9px; min-width: 0; font-size: 12.5px; }
+        .cd-contact-item svg { width: 14px; height: 14px; color: #9CA3AF; flex-shrink: 0; }
+        .cd-contact-item .t { color: #111827; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+        /* === SECTION CONTAINER (ancienne cd-info-grid réutilisée ailleurs) === */
         .cd-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; margin: 16px 0; font-size: 12px; }
         .cd-info-grid .k { color: #6B7280; font-weight: 500; }
         .cd-info-grid .v { color: #111827; font-weight: 600; text-align: right; }
+
+        /* === SECTION PADDING WRAPPER === */
+        .cd-sec-wrap { padding: 18px 24px; }
+        .cd-sec-wrap:not(:last-child) { border-bottom: 1px solid #F3F3F1; }
 
         .cd-sec-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7280; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #F3F3F1; }
 
@@ -187,11 +221,18 @@ function CandidaturesPage() {
 
         .cd-motivation { background: #FEF3C7; border-left: 3px solid #F59E0B; padding: 10px 14px; border-radius: 0 10px 10px 0; font-size: 12px; color: #92400E; font-style: italic; line-height: 1.5; }
 
-        .cd-actions { display: flex; gap: 8px; margin-top: 18px; padding-top: 14px; border-top: 1px solid #ECECEA; }
-        .cd-btn-val { flex: 1; padding: 12px; background: #0F6E3E; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
-        .cd-btn-val:hover { background: #0A5530; }
-        .cd-btn-ref { padding: 12px 18px; background: #FEE2E2; color: #B42318; border: 1px solid #FCA5A5; border-radius: 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
-        .cd-btn-ref:hover { background: #FCA5A5; color: white; }
+        /* === ACTIONS (boutons pill style landing) === */
+        .cd-actions { padding: 18px 24px 22px; display: flex; flex-direction: column; gap: 10px; }
+        .cd-btn { width: 100%; padding: 14px 20px; border-radius: 999px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 12px; text-align: left; font-family: inherit; transition: all 0.15s; }
+        .cd-btn-ic { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.18); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .cd-btn-tx { flex: 1; }
+        .cd-btn-ar { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.18); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .cd-btn-val { background: #0F6E3E; color: white; box-shadow: 0 6px 18px rgba(15,110,62,0.25); }
+        .cd-btn-val:hover { background: #0A4E2C; transform: translateY(-1px); box-shadow: 0 8px 22px rgba(15,110,62,0.32); }
+        .cd-btn-ref { background: transparent; color: #B42318; border: 1.5px solid #ECECEA; }
+        .cd-btn-ref .cd-btn-ic { background: #FEE2E2; }
+        .cd-btn-ref .cd-btn-ar { background: #F3F3F1; }
+        .cd-btn-ref:hover { background: #FEE2E2; border-color: #FEE2E2; }
 
         /* Modal refus */
         .modal-ovr { position: fixed; inset: 0; background: rgba(13,23,41,0.6); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -267,62 +308,120 @@ function CandidaturesPage() {
           </div>
         </div>
 
-        {selected && (
+        {selected && (() => {
+          const score = selected.score_total || 0
+          const verdictCls = score >= 70 ? '' : score >= 50 ? ' warn' : ' danger'
+          const verdictWord = score >= 70 ? 'Profil recommandé pour validation.' : score >= 50 ? 'Profil limite, à examiner.' : 'Profil en-dessous des attentes.'
+          const refNum = `MI-C-${new Date(selected.created_at).getFullYear()}-${selected.id.slice(0, 4).toUpperCase()}`
+          const ringPct = Math.min(100, Math.max(0, score))
+          return (
           <div className="cd-panel">
+
+            {/* === HEADER VERT === */}
             <div className="cd-panel-head">
-              <div>
-                <h3>{selected.prenom} {selected.nom}</h3>
-                <p className="meta">{selected.ville} · Candidature {new Date(selected.created_at).toLocaleDateString('fr-FR')}</p>
+              <div className="cd-panel-head-top">
+                <div className="cd-panel-ref">Dossier {refNum}</div>
+                <button className="cd-panel-close" onClick={() => setSelected(null)} aria-label="Fermer">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
               </div>
-              <button className="cd-panel-close" onClick={() => setSelected(null)}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-              </button>
+              <div className="cd-identity">
+                <div className="cd-ring" style={{ background: `conic-gradient(white calc(${ringPct} * 1%), rgba(255,255,255,0.2) 0)` }}>
+                  <div className="cd-ring-inner">
+                    <div className="cd-ring-num">{Math.round(score)}</div>
+                    <div className="cd-ring-lbl">Score</div>
+                  </div>
+                </div>
+                <div className="cd-identity-info">
+                  <h3>{selected.prenom} {selected.nom}</h3>
+                  <p className="meta">
+                    <span>{selected.ville}</span>
+                    <span>Candidature {new Date(selected.created_at).toLocaleDateString('fr-FR')}</span>
+                  </p>
+                </div>
+              </div>
             </div>
+
+            {/* === VERDICT === */}
+            <div className={`cd-verdict${verdictCls}`}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                {score >= 70
+                  ? <polyline points="20 6 9 17 4 12"/>
+                  : <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>}
+              </svg>
+              <div>Score <b>{Math.round(score)}/100</b> · Simulation complète. {verdictWord}</div>
+            </div>
+
             <div className="cd-panel-body">
-              <div className="cd-info-grid">
-                <div className="k">Téléphone</div><div className="v">{selected.telephone}</div>
-                <div className="k">Email</div><div className="v">{selected.email || '—'}</div>
-                <div className="k">Ville</div><div className="v">{selected.ville}</div>
-                <div className="k">Statut</div><div className="v">{selected.status}</div>
+
+              {/* === CONTACT === */}
+              <div className="cd-contact">
+                <div className="cd-contact-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.86 19.86 0 013 5.18 2 2 0 015 3h3a2 2 0 012 1.72c.12.9.33 1.78.63 2.62a2 2 0 01-.45 2.11L8.91 10.91a16 16 0 006 6l1.46-1.27a2 2 0 012.11-.45c.84.3 1.72.5 2.62.63A2 2 0 0122 16.92z"/></svg>
+                  <span className="t">{selected.telephone}</span>
+                </div>
+                <div className="cd-contact-item">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+                  <span className="t">{selected.email || '—'}</span>
+                </div>
               </div>
 
               {selected.motivation && (
-                <>
-                  <div className="cd-sec-title">Motivation</div>
+                <div className="cd-sec-wrap">
+                  <div className="cd-sec-title" style={{ margin: '0 0 8px', border: 'none', padding: 0 }}>Motivation</div>
                   <div className="cd-motivation">« {selected.motivation} »</div>
-                </>
+                </div>
               )}
 
-              <div className="cd-sec-title">Scores détaillés</div>
-              <CandidateBreakdown candidate={selected} quizAttempts={quizAttempts} simAttempts={simAttempts} pracAttempts={pracAttempts}/>
+              <div className="cd-sec-wrap">
+                <div className="cd-sec-title" style={{ margin: '0 0 10px', border: 'none', padding: 0 }}>Scores détaillés</div>
+                <CandidateBreakdown candidate={selected} quizAttempts={quizAttempts} simAttempts={simAttempts} pracAttempts={pracAttempts}/>
+              </div>
 
-              <div className="cd-sec-title">Chronomètre (vue admin)</div>
-              <CandidateChrono candidate={selected} medianTime={medianTime}/>
+              <div className="cd-sec-wrap">
+                <div className="cd-sec-title" style={{ margin: '0 0 10px', border: 'none', padding: 0 }}>Chronomètre (vue admin)</div>
+                <CandidateChrono candidate={selected} medianTime={medianTime}/>
+              </div>
 
               {selected.status === 'en_attente_validation' && (
                 <div className="cd-actions">
-                  <button className="cd-btn-val" onClick={() => validate(selected)}>
-                    ✓ Valider — Activer le compte
+                  <button className="cd-btn cd-btn-val" onClick={() => validate(selected)}>
+                    <span className="cd-btn-ic">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    </span>
+                    <span className="cd-btn-tx">Valider et activer le compte</span>
+                    <span className="cd-btn-ar">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </span>
                   </button>
-                  <button className="cd-btn-ref" onClick={() => setRefuseModal(selected)}>
-                    Refuser
+                  <button className="cd-btn cd-btn-ref" onClick={() => setRefuseModal(selected)}>
+                    <span className="cd-btn-ic">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </span>
+                    <span className="cd-btn-tx">Refuser le candidat</span>
+                    <span className="cd-btn-ar">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    </span>
                   </button>
                 </div>
               )}
+
               {selected.status === 'refuse' && selected.refused_reason && (
-                <div style={{ marginTop: 14, padding: 12, background: '#FEE2E2', borderLeft: '3px solid #B42318', borderRadius: '0 8px 8px 0', fontSize: 12, color: '#991B1B' }}>
-                  <b style={{ display: 'block', marginBottom: 4 }}>Raison du refus</b>
+                <div style={{ margin: '0 24px 22px', padding: 14, background: '#FEE2E2', borderLeft: '3px solid #B42318', borderRadius: '0 10px 10px 0', fontSize: 12, color: '#991B1B' }}>
+                  <b style={{ display: 'block', marginBottom: 4, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Raison du refus</b>
                   {selected.refused_reason}
                 </div>
               )}
               {selected.status === 'valide' && selected.activated_at && (
-                <div style={{ marginTop: 14, padding: 12, background: '#D1FAE5', borderLeft: '3px solid #0F6E3E', borderRadius: '0 8px 8px 0', fontSize: 12, color: '#065F46' }}>
-                  ✓ Compte activé le {new Date(selected.activated_at).toLocaleDateString('fr-FR')}
+                <div style={{ margin: '0 24px 22px', padding: 14, background: '#D1FAE5', borderLeft: '3px solid #0F6E3E', borderRadius: '0 10px 10px 0', fontSize: 12, color: '#065F46', display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Compte activé le {new Date(selected.activated_at).toLocaleDateString('fr-FR')}
                 </div>
               )}
             </div>
           </div>
-        )}
+          )
+        })()}
       </div>
 
       {refuseModal && (
