@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import SkeletonPage from '@/components/SkeletonPage'
 
 export const Route = createFileRoute('/simulation-pratique')({
   component: SimulationPratiquePage,
@@ -66,7 +67,7 @@ function SimulationPratiquePage() {
     }
   }
 
-  if (loading) return <div style={{ padding: 60, textAlign: 'center', color: MI.textMuted }}>Chargement…</div>
+  if (loading) return <SkeletonPage label="Chargement…" />
 
   return (
     <div style={{ minHeight: '100vh', background: MI.grayBg, fontFamily: 'Inter, system-ui, sans-serif', color: MI.text }}>
