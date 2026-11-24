@@ -1818,3 +1818,65 @@ button:active, .lap-btn:active {
   .sd-kpi { padding: 14px; }
   .sd-kpi strong { font-size: 22px; }
 }
+/* ============================================================
+   PATCH SPACING — Dashboard stratégique (plus d'air)
+   À coller à la FIN de src/styles.css
+   ============================================================ */
+
+/* Header du dashboard : titre + sous-titre + sélecteur période */
+.sd-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;              /* air entre le header et le premier bloc */
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--mi-border);
+}
+
+.sd-header h1 {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--mi-text);
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.sd-header p {
+  font-size: 13px;
+  color: var(--mi-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Le sélecteur de période respire mieux */
+.sd-header .sd-seg {
+  margin-top: 0;                    /* reset du margin-top: 2px existant */
+}
+
+/* Premier pôle : un peu d'air avant le titre BLOC 1 */
+.strategic-dashboard .sd-pole:first-of-type,
+.strategic-dashboard .sd-section:first-of-type {
+  margin-top: 8px;
+}
+
+/* Titres de pôle : plus d'air sous la ligne de séparation */
+.sd-pole h2,
+.sd-section h2 {
+  padding-bottom: 14px;             /* au lieu de 10px */
+  margin-bottom: 20px;              /* au lieu de 16px */
+  gap: 12px;                        /* au lieu de 10px, air entre "BLOC 1 · KPI GÉNÉRAUX" et "· Impact + Commission..." */
+}
+
+/* Responsive mobile : le header se stacke proprement */
+@media (max-width: 640px) {
+  .sd-header {
+    align-items: flex-start;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+  }
+  .sd-header h1 { font-size: 18px; }
+  .sd-header p { font-size: 12px; }
+}
