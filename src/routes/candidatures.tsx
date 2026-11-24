@@ -84,7 +84,7 @@ function CandidaturesPage() {
     return times.length ? times[Math.floor(times.length / 2)] : 0
   }, [candidates])
 
-  if (!authChecked) return <div style={{ padding: 60, textAlign: 'center', fontSize: 13, color: '#6B7280' }}>Vérification…</div>
+  if (!authChecked) return <SkeletonPage/>
 
   async function validate(c: Candidate) {
     const { error } = await supabase.from('commercial_candidates').update({
@@ -105,16 +105,17 @@ function CandidaturesPage() {
     if (!error) { await loadAll(); setRefuseModal(null); setRefuseReason(''); setSelected(null) }
   }
 
-  if (loading) return <div style={{ padding: 60, textAlign: 'center' }}>Chargement…</div>
+  if (loading) return <SkeletonPage/>
 
   return (
     <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, system-ui, sans-serif', color: '#111827' }}>
       <style>{`
         * { box-sizing: border-box; }
-        .cd-header { padding: 18px 32px; background: #FFFFFF; border-bottom: 1px solid #ECECEA; display: flex; justify-content: space-between; align-items: center; }
-        .cd-header h1 { font-size: 20px; font-weight: 800; margin: 0; color: #0F1729; letter-spacing: -0.02em; }
-        .cd-back { font-size: 12px; color: #6B7280; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
-        .cd-back:hover { color: #0F6E3E; }
+        .cd-header { padding: 20px 32px; background: #FFFFFF; border-bottom: 1px solid #ECECEA; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .cd-header h1 { font-size: 22px; font-weight: 800; margin: 0; color: #0F1729; letter-spacing: -0.02em; }
+        .cd-sub { font-size: 12px; color: #6B7280; margin-top: 4px; }
+        .back-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 100px; font-size: 11px; font-weight: 600; color: #111; text-decoration: none; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
+        .back-pill:hover { background: #0D1B3E; color: #fff; border-color: #0D1B3E; }
 
         .cd-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 32px; display: grid; grid-template-columns: ${selected ? '1fr 440px' : '1fr'}; gap: 20px; }
         @media (max-width: 980px) { .cd-wrap { grid-template-columns: 1fr; } }
@@ -202,8 +203,12 @@ function CandidaturesPage() {
 
       <header className="cd-header">
         <div>
+          <Link to="/admin" className="back-pill">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Admin
+          </Link>
           <h1>Candidatures commerciales</h1>
-          <Link to="/admin" className="cd-back">← Retour à l'admin</Link>
+          <div className="cd-sub">Valider ou refuser les nouveaux commerciaux Mayinvest</div>
         </div>
         <nav style={{ display: 'flex', gap: 6 }}>
           <Link to={'/candidatures' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, textDecoration: 'none', background: '#0F6E3E', color: '#fff' }}>Candidatures</Link>
@@ -377,6 +382,49 @@ function CandidateBreakdown({ candidate, quizAttempts, simAttempts, pracAttempts
         ))}
       </div>
     </>
+  )
+}
+
+function SkeletonPage() {
+  return (
+    <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, system-ui, sans-serif' }}>
+      <style>{`
+        .skp-head { padding: 20px 32px; background: #fff; border-bottom: 1px solid #ECECEA; }
+        .skp-bar { height: 14px; background: linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%); background-size: 200% 100%; animation: skp-shimmer 1.5s infinite; border-radius: 6px; margin-bottom: 8px; }
+        .skp-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 32px; }
+        .skp-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .skp-tab { width: 90px; height: 32px; border-radius: 100px; background: #F3F4F6; }
+        .skp-row { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid #ECECEA; border-radius: 12px; padding: 16px; margin-bottom: 8px; }
+        .skp-ava { width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%); background-size: 200% 100%; animation: skp-shimmer 1.5s infinite; flex-shrink: 0; }
+        .skp-lines { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+        .skp-line { height: 10px; border-radius: 5px; background: linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%); background-size: 200% 100%; animation: skp-shimmer 1.5s infinite; }
+        .skp-line.long { width: 90%; }
+        .skp-line.short { width: 55%; }
+        @keyframes skp-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+      `}</style>
+      <div className="skp-head">
+        <div className="skp-bar" style={{ width: 70, height: 22, borderRadius: 100, marginBottom: 10 }}/>
+        <div className="skp-bar" style={{ width: 280, height: 22, marginBottom: 6 }}/>
+        <div className="skp-bar" style={{ width: 340, height: 10 }}/>
+      </div>
+      <div className="skp-wrap">
+        <div className="skp-tabs">
+          <div className="skp-tab"/>
+          <div className="skp-tab"/>
+          <div className="skp-tab"/>
+          <div className="skp-tab"/>
+        </div>
+        {[1,2,3,4].map(i => (
+          <div key={i} className="skp-row">
+            <div className="skp-ava"/>
+            <div className="skp-lines">
+              <div className="skp-line long"/>
+              <div className="skp-line short"/>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
