@@ -111,11 +111,15 @@ function CandidaturesPage() {
     <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, system-ui, sans-serif', color: '#111827' }}>
       <style>{`
         * { box-sizing: border-box; }
-        .cd-header { padding: 20px 32px; background: #FFFFFF; border-bottom: 1px solid #ECECEA; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; }
-        .cd-header h1 { font-size: 22px; font-weight: 800; margin: 0; color: #0F1729; letter-spacing: -0.02em; }
+        .cd-header { padding: 20px 32px; background: #FFFFFF; border-bottom: 1px solid #ECECEA; margin: 20px 32px 0; border-radius: 16px; box-shadow: 0 2px 4px rgba(13,23,41,0.03); border: 1px solid #ECECEA; display: flex; align-items: center; gap: 20px; }
+        @media (max-width: 640px) { .cd-header { margin: 12px 16px 0; padding: 16px 20px; gap: 14px; } }
+        .cd-header-left { flex: 1; display: flex; align-items: center; gap: 16px; }
+        .cd-header-right { text-align: right; }
+        .cd-header h1 { font-size: 22px; font-weight: 800; margin: 0; color: #0F1729; letter-spacing: -0.02em; line-height: 1.1; }
+        @media (max-width: 640px) { .cd-header h1 { font-size: 18px; } }
         .cd-sub { font-size: 12px; color: #6B7280; margin-top: 4px; }
-        .back-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: #F3F4F6; border: 1px solid #E5E7EB; border-radius: 100px; font-size: 11px; font-weight: 600; color: #111; text-decoration: none; margin-bottom: 8px; cursor: pointer; transition: all 0.15s; }
-        .back-pill:hover { background: #0D1B3E; color: #fff; border-color: #0D1B3E; }
+        .back-round { width: 40px; height: 40px; border-radius: 50%; background: #F3F4F6; border: 1px solid #E5E7EB; display: inline-flex; align-items: center; justify-content: center; color: #111; cursor: pointer; flex-shrink: 0; text-decoration: none; transition: all 0.15s; }
+        .back-round:hover { background: #0D1B3E; color: #fff; border-color: #0D1B3E; transform: translateX(-2px); }
 
         .cd-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 32px; display: grid; grid-template-columns: ${selected ? '1fr 440px' : '1fr'}; gap: 20px; }
         @media (max-width: 980px) { .cd-wrap { grid-template-columns: 1fr; } }
@@ -202,18 +206,19 @@ function CandidaturesPage() {
       `}</style>
 
       <header className="cd-header">
-        <div>
-          <Link to="/admin" className="back-pill">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-            Admin
+        <div className="cd-header-left">
+          <Link to="/admin" className="back-round" aria-label="Retour à l'admin">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           </Link>
-          <h1>Candidatures commerciales</h1>
-          <div className="cd-sub">Valider ou refuser les nouveaux commerciaux Mayinvest</div>
+          <nav style={{ display: 'flex', gap: 6 }}>
+            <Link to={'/candidatures' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, textDecoration: 'none', background: '#0F6E3E', color: '#fff' }}>Candidatures</Link>
+            <Link to={'/equipe-commerciale' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, color: '#6B7280', textDecoration: 'none' }}>Équipe</Link>
+          </nav>
         </div>
-        <nav style={{ display: 'flex', gap: 6 }}>
-          <Link to={'/candidatures' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, textDecoration: 'none', background: '#0F6E3E', color: '#fff' }}>Candidatures</Link>
-          <Link to={'/equipe-commerciale' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, color: '#6B7280', textDecoration: 'none' }}>Équipe</Link>
-        </nav>
+        <div className="cd-header-right">
+          <h1>Candidatures commerciales</h1>
+          <div className="cd-sub">Admin · Validation des commerciaux</div>
+        </div>
         <div style={{ fontSize: 12, color: '#6B7280' }}>
           {counts.pending > 0 && <span style={{ color: '#B45309', fontWeight: 700 }}>{counts.pending} en attente</span>}
           {counts.pending > 0 && ' · '}
