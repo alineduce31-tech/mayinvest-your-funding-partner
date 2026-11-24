@@ -952,6 +952,21 @@ function Admin({ session }: { session: any }) {
                 <span>{n.icon}</span><span>{n.label}</span>
               </button>
             ))}
+            {isDirector && <>
+              <div style={{ margin: '10px 16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}/>
+              <button className="sb-link" onClick={() => { navigate({ to: '/candidatures' as any }); setSidebarOpen(false) }}>
+                <span>
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 4.5h11a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H3a1.5 1.5 0 0 1-1.5-1.5V6A1.5 1.5 0 0 1 3 4.5z" stroke="currentColor" strokeWidth="1.6"/><path d="M5 8.5h7M5 11.5h7M5 14.5h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><path d="M14 2v5l2-1.5L18 7V2" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>
+                </span>
+                <span>Candidatures</span>
+              </button>
+              <button className="sb-link" onClick={() => { navigate({ to: '/equipe-commerciale' as any }); setSidebarOpen(false) }}>
+                <span>
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="7" cy="7" r="3" stroke="currentColor" strokeWidth="1.6"/><path d="M1 17c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><circle cx="14" cy="7" r="2.5" stroke="currentColor" strokeWidth="1.6"/><path d="M12 17c0-2 1.5-4 4-4s4 2 4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>
+                </span>
+                <span>Équipe commerciale</span>
+              </button>
+            </>}
           </nav>
           <div className="sb-footer">
             <div className="sb-user">{session.email}</div>
