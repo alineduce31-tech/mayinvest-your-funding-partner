@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
 
 export const Route = createFileRoute('/espace-commercial')({
@@ -112,7 +113,7 @@ function EspaceCommercialPage() {
     else if (session.status === 'simulation_prat') navigate({ to: '/simulation-pratique' as any })
   }
 
-  if (loading) return <div style={{ padding: 60, textAlign: 'center' }}>Chargement…</div>
+  if (loading) return <SkeletonPage label="Chargement de ton espace…" />
 
   const refLink = session?.ref_code ? `${SITE_URL}/preselection?ref=${session.ref_code}` : ''
 
