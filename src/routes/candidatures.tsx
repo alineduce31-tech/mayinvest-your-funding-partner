@@ -25,7 +25,8 @@ function CandidaturesPage() {
   const navigate = useNavigate()
   const [authChecked, setAuthChecked] = useState(false)
   const [candidates, setCandidates] = useState<Candidate[]>([])
-  const [filter, setFilter] = useState<'all' | 'pending' | 'valide' | 'refuse'>('pending')
+  const [filter, setFilter] = useState<'all' | 'pending' | 'valide' | 'refuse' | 'en_cours'>('pending')
+  const [notifyCandidate, setNotifyCandidate] = useState<Candidate | null>(null)
   const [selected, setSelected] = useState<Candidate | null>(null)
   const [quizAttempts, setQuizAttempts] = useState<QuizAttempt[]>([])
   const [simAttempts, setSimAttempts] = useState<SimAttempt[]>([])
@@ -68,6 +69,7 @@ function CandidaturesPage() {
       if (filter === 'pending') return c.status === 'en_attente_validation'
       if (filter === 'valide') return c.status === 'valide'
       if (filter === 'refuse') return c.status === 'refuse'
+      if (filter === 'en_cours') return ['formation', 'simulation_theo', 'simulation_prat'].includes(c.status)
       return true
     })
   }, [candidates, filter])
@@ -76,6 +78,7 @@ function CandidaturesPage() {
     pending: candidates.filter(c => c.status === 'en_attente_validation').length,
     valide: candidates.filter(c => c.status === 'valide').length,
     refuse: candidates.filter(c => c.status === 'refuse').length,
+    en_cours: candidates.filter(c => ['formation', 'simulation_theo', 'simulation_prat'].includes(c.status)).length,
     all: candidates.length,
   }), [candidates])
 
@@ -153,6 +156,12 @@ function CandidaturesPage() {
         .cd-status.valide { background: #D1FAE5; color: #047857; }
         .cd-status.refuse { background: #FEE2E2; color: #991B1B; }
         .cd-status.encours { background: #DBEAFE; color: #1D4ED8; }
+        .cd-status.encours.formation { background: #FDE68A; color: #92400E; }
+        .cd-status.encours.simu-theo { background: #DDD6FE; color: #5B21B6; }
+        .cd-status.encours.simu-prat { background: #BAE6FD; color: #075985; }
+
+        .cd-notify-btn { background: #F3F3F1; border: 1px solid #E5E7EB; width: 28px; height: 28px; border-radius: 50%; color: #6B7280; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
+        .cd-notify-btn:hover { background: #0F6E3E; color: white; border-color: #0F6E3E; transform: translateY(-1px); }
 
         .cd-empty { padding: 60px 20px; text-align: center; color: #6B7280; font-size: 13px; }
 
@@ -273,6 +282,7 @@ function CandidaturesPage() {
         <div>
           <div className="cd-tabs">
             <button className={`cd-tab${filter === 'pending' ? ' active' : ''}`} onClick={() => setFilter('pending')}>À valider <span className="cd-tab-count">{counts.pending}</span></button>
+            <button className={`cd-tab${filter === 'en_cours' ? ' active' : ''}`} onClick={() => setFilter('en_cours')}>En parcours <span className="cd-tab-count">{counts.en_cours}</span></button>
             <button className={`cd-tab${filter === 'valide' ? ' active' : ''}`} onClick={() => setFilter('valide')}>Validés <span className="cd-tab-count">{counts.valide}</span></button>
             <button className={`cd-tab${filter === 'refuse' ? ' active' : ''}`} onClick={() => setFilter('refuse')}>Refusés <span className="cd-tab-count">{counts.refuse}</span></button>
             <button className={`cd-tab${filter === 'all' ? ' active' : ''}`} onClick={() => setFilter('all')}>Tous <span className="cd-tab-count">{counts.all}</span></button>
@@ -292,11 +302,22 @@ function CandidaturesPage() {
                 : (c.score_total || 0)
               const scoreCls = scorePct >= 70 ? 'hi' : scorePct >= 50 ? 'mid' : 'lo'
               const tCls = c.time_total_seconds && medianTime ? (c.time_total_seconds < medianTime * 0.85 ? 'fast' : c.time_total_seconds > medianTime * 1.3 ? 'slow' : '') : ''
-              const statusCls = c.status === 'en_attente_validation' ? 'pending' : c.status === 'valide' ? 'valide' : c.status === 'refuse' ? 'refuse' : 'encours'
-              const statusLbl = c.status === 'en_attente_validation' ? 'À valider' : c.status === 'valide' ? 'Validé' : c.status === 'refuse' ? 'Refusé' : c.status
+              // Labels humains + classe CSS par statut
+              const statusMap: Record<string, { lbl: string; cls: string }> = {
+                en_attente_validation: { lbl: 'À valider',           cls: 'pending' },
+                valide:                { lbl: 'Validé',              cls: 'valide' },
+                refuse:                { lbl: 'Refusé',              cls: 'refuse' },
+                formation:             { lbl: 'En formation',        cls: 'encours formation' },
+                simulation_theo:       { lbl: 'Simu théorique',      cls: 'encours simu-theo' },
+                simulation_prat:       { lbl: 'Simu pratique',       cls: 'encours simu-prat' },
+              }
+              const s = statusMap[c.status] || { lbl: c.status, cls: 'encours' }
+              const statusCls = s.cls
+              const statusLbl = s.lbl
+              const canNotify = ['formation', 'simulation_theo', 'simulation_prat', 'en_attente_validation'].includes(c.status)
               const mins = c.time_total_seconds ? Math.floor(c.time_total_seconds / 60) : 0
               const secs = c.time_total_seconds ? c.time_total_seconds % 60 : 0
-              const initials = ((c.prenom[0] || '') + (c.nom[0] || '')).toUpperCase()
+              const initials = (c.prenom[0] + c.nom[0]).toUpperCase()
               return (
                 <div key={c.id} className={`cd-row${selected?.id === c.id ? ' selected' : ''}`} onClick={() => setSelected(c)}>
                   <div className="cd-row-name">
@@ -306,8 +327,20 @@ function CandidaturesPage() {
                   <div className={`cd-score ${scoreCls} hide-mobile`}>{scorePct}%<small>/100</small></div>
                   <div className={`cd-time ${tCls} hide-mobile`}>{c.time_total_seconds ? `${mins}:${String(secs).padStart(2, '0')}` : '—'}</div>
                   <span className={`cd-status ${statusCls}`}>{statusLbl}</span>
-                  <div style={{ fontSize: 10, color: '#9CA3AF', textAlign: 'right' }} className="hide-mobile">
-                    {new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end' }}>
+                    {canNotify && (
+                      <button
+                        className="cd-notify-btn"
+                        onClick={(e) => { e.stopPropagation(); setNotifyCandidate(c) }}
+                        title="Envoyer un email à ce candidat"
+                        aria-label="Notifier"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+                      </button>
+                    )}
+                    <div style={{ fontSize: 10, color: '#9CA3AF' }} className="hide-mobile">
+                      {new Date(c.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                    </div>
                   </div>
                 </div>
               )
@@ -394,7 +427,7 @@ function CandidaturesPage() {
 
               <div className="cd-sec-wrap">
                 <div className="cd-sec-title" style={{ margin: '0 0 10px', border: 'none', padding: 0 }}>Chronomètre (vue admin)</div>
-                <CandidateChrono candidate={selected} medianTime={medianTime ?? 0}/>
+                <CandidateChrono candidate={selected} medianTime={medianTime}/>
               </div>
 
               {selected.status === 'en_attente_validation' && (
@@ -451,6 +484,147 @@ function CandidaturesPage() {
           </div>
         </div>
       )}
+
+      {notifyCandidate && <NotifyModal candidate={notifyCandidate} onClose={() => setNotifyCandidate(null)}/>}
+    </div>
+  )
+}
+
+// ============================================================
+// MODAL : Notifier un candidat par email (ouvre le client mail)
+// ============================================================
+function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: () => void }) {
+  const stageMap: Record<string, { label: string; cta: string }> = {
+    formation:             { label: 'En formation',   cta: 'reprendre votre formation' },
+    simulation_theo:       { label: 'Simu théorique', cta: 'terminer la simulation théorique' },
+    simulation_prat:       { label: 'Simu pratique',  cta: 'passer la simulation pratique' },
+    en_attente_validation: { label: 'En attente',     cta: 'suivre la validation de votre candidature' },
+  }
+  const stage = stageMap[candidate.status] || { label: candidate.status, cta: 'continuer votre parcours' }
+
+  const TEMPLATES = [
+    {
+      k: 'relance',
+      title: '📣 Relance douce',
+      subject: `Mayinvest · ${candidate.prenom}, on vous attend pour ${stage.cta}`,
+      body: `Bonjour ${candidate.prenom},\n\nL'équipe Mayinvest remarque que votre parcours de recrutement commercial est actuellement en pause (étape : ${stage.label}).\n\nPrenez 10 minutes pour ${stage.cta} depuis votre espace :\n👉 https://preselect.mayinvest.cg/espace-commercial\n\nBesoin d'aide ? Répondez à cet email ou contactez-nous sur WhatsApp au +242 06 53 13 187.\n\nÀ très vite,\nL'équipe Mayinvest`,
+    },
+    {
+      k: 'encourage',
+      title: '🎉 Encouragement',
+      subject: `${candidate.prenom}, vous êtes presque arrivé(e) !`,
+      body: `Bonjour ${candidate.prenom},\n\nFélicitations pour votre engagement jusqu'ici ! Il ne vous reste qu'une étape (${stage.label}) avant de rejoindre officiellement l'équipe commerciale Mayinvest.\n\n💚 Chaque dossier financé = 50 000 XAF de commission.\n\nContinuez ici : https://preselect.mayinvest.cg/espace-commercial\n\nL'équipe Mayinvest`,
+    },
+    {
+      k: 'urgent',
+      title: '⏰ Dernier rappel',
+      subject: `Dernier rappel · Finalisez votre inscription Mayinvest`,
+      body: `Bonjour ${candidate.prenom},\n\nNous clôturons bientôt la campagne de recrutement en cours. Pour que votre candidature soit retenue, il faut ${stage.cta} dans les prochains jours.\n\nLien direct vers votre espace :\nhttps://preselect.mayinvest.cg/espace-commercial\n\nSi vous ne souhaitez plus participer, répondez simplement « STOP » à cet email.\n\nL'équipe Mayinvest`,
+    },
+  ]
+
+  const [template, setTemplate] = useState(TEMPLATES[0].k)
+  const current = TEMPLATES.find(t => t.k === template)!
+  const [subject, setSubject] = useState(current.subject)
+  const [body, setBody] = useState(current.body)
+
+  function selectTpl(k: string) {
+    const t = TEMPLATES.find(x => x.k === k)!
+    setTemplate(k)
+    setSubject(t.subject)
+    setBody(t.body)
+  }
+
+  function openMail() {
+    const to = encodeURIComponent(candidate.email || '')
+    const sub = encodeURIComponent(subject)
+    const bod = encodeURIComponent(body)
+    window.open(`mailto:${to}?subject=${sub}&body=${bod}`, '_blank')
+  }
+
+  async function copyToClipboard() {
+    try {
+      await navigator.clipboard.writeText(`À : ${candidate.email}\nObjet : ${subject}\n\n${body}`)
+      alert('✓ Email copié dans le presse-papiers')
+    } catch {
+      alert('Impossible de copier automatiquement — sélectionnez le texte à la main.')
+    }
+  }
+
+  return (
+    <div className="modal-ovr" onClick={onClose}>
+      <div className="modal nmodal" onClick={e => e.stopPropagation()}>
+        <div className="nmodal-head">
+          <div>
+            <h3 style={{ margin: 0 }}>Notifier {candidate.prenom}</h3>
+            <div style={{ fontSize: 12, color: '#6B7280', marginTop: 4, fontFamily: 'monospace' }}>{candidate.email || 'Email non renseigné'}</div>
+          </div>
+          <button className="nmodal-close" onClick={onClose} aria-label="Fermer">✕</button>
+        </div>
+
+        <div className="nmodal-body">
+          <div className="nmodal-section-title">Choisir un modèle</div>
+          <div className="nmodal-tpls">
+            {TEMPLATES.map(t => (
+              <button key={t.k} type="button" className={`nmodal-tpl${template === t.k ? ' active' : ''}`} onClick={() => selectTpl(t.k)}>
+                {t.title}
+              </button>
+            ))}
+          </div>
+
+          <div className="nmodal-section-title" style={{ marginTop: 14 }}>Objet</div>
+          <input className="nmodal-input" value={subject} onChange={e => setSubject(e.target.value)}/>
+
+          <div className="nmodal-section-title" style={{ marginTop: 10 }}>Message</div>
+          <textarea className="nmodal-textarea" rows={10} value={body} onChange={e => setBody(e.target.value)}/>
+        </div>
+
+        <div className="nmodal-actions">
+          {!candidate.email ? (
+            <div style={{ fontSize: 12, color: '#B45309', background: '#FEF3C7', padding: '10px 14px', borderRadius: 8, textAlign: 'center' }}>
+              ⚠ Pas d'email — impossible d'envoyer. Contacte-le par téléphone : {candidate.telephone}
+            </div>
+          ) : (
+            <>
+              <button className="nmodal-btn-sec" type="button" onClick={copyToClipboard}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+                Copier
+              </button>
+              <button className="nmodal-btn-pri" type="button" onClick={openMail}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
+                Ouvrir mon client email
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+
+      <style>{`
+        .nmodal { max-width: 560px !important; padding: 0 !important; overflow: hidden; }
+        .nmodal-head { padding: 20px 24px 16px; display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #F3F3F1; }
+        .nmodal-head h3 { font-size: 16px; font-weight: 700; color: #0F1729; letter-spacing: -0.01em; }
+        .nmodal-close { background: #F3F3F1; border: none; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; color: #6B7280; font-size: 14px; flex-shrink: 0; }
+        .nmodal-close:hover { background: #ECECEA; color: #0F1729; }
+
+        .nmodal-body { padding: 18px 24px; max-height: 60vh; overflow-y: auto; }
+        .nmodal-section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #9CA3AF; margin-bottom: 8px; }
+
+        .nmodal-tpls { display: flex; flex-wrap: wrap; gap: 6px; }
+        .nmodal-tpl { padding: 8px 14px; background: #F3F3F1; border: 1px solid transparent; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: #6B7280; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+        .nmodal-tpl:hover { background: #ECECEA; color: #0F1729; }
+        .nmodal-tpl.active { background: #0F6E3E; color: white; border-color: #0F6E3E; box-shadow: 0 4px 10px rgba(15,110,62,0.2); }
+
+        .nmodal-input { width: 100%; padding: 11px 14px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; font-size: 13px; font-family: inherit; color: #0F1729; }
+        .nmodal-input:focus { outline: none; border-color: #0F6E3E; box-shadow: 0 0 0 3px rgba(15,110,62,0.12); }
+        .nmodal-textarea { width: 100%; padding: 12px 14px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; font-size: 13px; font-family: inherit; color: #0F1729; line-height: 1.5; resize: vertical; min-height: 180px; }
+        .nmodal-textarea:focus { outline: none; border-color: #0F6E3E; box-shadow: 0 0 0 3px rgba(15,110,62,0.12); }
+
+        .nmodal-actions { padding: 16px 24px 20px; display: flex; gap: 10px; justify-content: flex-end; background: #FAFAF8; border-top: 1px solid #F3F3F1; flex-wrap: wrap; }
+        .nmodal-btn-sec { padding: 11px 18px; background: #fff; color: #6B7280; border: 1.5px solid #E5E7EB; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; }
+        .nmodal-btn-sec:hover { background: #F3F3F1; color: #0F1729; }
+        .nmodal-btn-pri { padding: 11px 22px; background: #0F6E3E; color: white; border: none; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 6px 16px rgba(15,110,62,0.25); }
+        .nmodal-btn-pri:hover { background: #0A4E2C; transform: translateY(-1px); }
+      `}</style>
     </div>
   )
 }
