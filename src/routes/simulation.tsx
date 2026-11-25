@@ -132,7 +132,7 @@ function Epreuve1Chat({ onComplete }: { onComplete: (score: number, time: number
     const hasMontant = text.match(/montant|combien|somme|xaf|million/i)
     const hasUsage = text.match(/pourquoi|usage|projet|utilis|servir|faire|objet/i)
     const hasRevenu = text.match(/revenu|salaire|gagne|mensuel|salarié|employeur|travaill/i)
-    const hasBanque = text.match(/banque|compte|uba|bgfi|lcb|mucodec|ecobank|crédit du congo/i)
+    const hasBanque = text.match(/banque|compte|uba|bgfi|boa|lcb|mucodec|ecobank|crédit du congo/i)
     const hasGreeting = text.match(/bonjour|salut|bonsoir/i)
     const hasQualify = text.match(/question|rapide|minute|vérifi|éligib/i)
 
@@ -225,7 +225,7 @@ function Epreuve2Lead({ onComplete }: { onComplete: (score: number, time: number
 
   const expected = {
     type: 'PME', activite: 'Commerce', raison: 'Boutique Marie Ntoumi', dirigeant: 'Marie Ntoumi',
-    tel: '0665532', ville: 'Dolisie', rccm: 'Oui', ca_min: 15000000, montant: 2000000, banque: 'LCB',
+    tel: '0665532', ville: 'Dolisie', rccm: 'Oui', ca_min: 15000000, montant: 2000000, banque: 'BOA',
   }
 
   function validate() {
@@ -243,7 +243,7 @@ function Epreuve2Lead({ onComplete }: { onComplete: (score: number, time: number
         <p>
           <b>Marie Ntoumi</b> t'appelle au téléphone. Elle tient une <b>boutique de vêtements à Dolisie</b> depuis <b>6 ans</b>.
           Elle a besoin de <b>2 000 000 XAF</b> pour renouveler son stock. Elle a un <b>RCCM depuis 3 ans</b>, son <b>CA annuel est d'environ 18M XAF</b>,
-          elle a un <b>compte à LCB bien mouvementé</b>. Pas de refus bancaire. Téléphone : <b>06 655 32 18</b>. Email : <b>m.ntoumi@gmail.com</b>.
+          elle a un <b>compte à BOA bien mouvementé</b>. Pas de refus bancaire. Téléphone : <b>06 655 32 18</b>. Email : <b>m.ntoumi@gmail.com</b>.
         </p>
       </div>
       {err && <div className="form-err">{err}</div>}
@@ -277,7 +277,7 @@ function Epreuve2Lead({ onComplete }: { onComplete: (score: number, time: number
           <Field label="Objet du crédit" value={form.objet} onChange={v => setForm({ ...form, objet: v })}
             options={['', 'Investissement', 'Fonds de roulement', 'Marché', 'Véhicule', 'Autre']}/>
           <Field label="Banque actuelle" value={form.banque} onChange={v => setForm({ ...form, banque: v })}
-            options={['', 'UBA', 'BGFI', 'LCB', 'MUCODEC', 'Ecobank', 'Crédit du Congo', 'Aucune', 'Autre']}/>
+            options={['', 'UBA', 'BGFI', 'BOA', 'MUCODEC', 'Ecobank', 'Crédit du Congo', 'Aucune', 'Autre']}/>
         </div>
 
         <div className="form-actions">
@@ -513,7 +513,7 @@ function StatutPill({ current, onChange }: { current: string; onChange: (s: stri
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
-  const cur = STATUTS_LEAD.find(s => s.k === current) ?? STATUTS_LEAD[0]!
+  const cur = STATUTS_LEAD.find(s => s.k === current) || STATUTS_LEAD[0]
   return (
     <div className="statut-wrap" ref={ref}>
       <button type="button" className="statut-pill-btn" onClick={() => setOpen(!open)}
