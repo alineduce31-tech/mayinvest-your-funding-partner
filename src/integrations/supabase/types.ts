@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.5"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -63,6 +63,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          access_code: string
           activite: string | null
           agent_id: string | null
           banque_actuelle: string | null
@@ -81,6 +82,7 @@ export type Database = {
           ville: string | null
         }
         Insert: {
+          access_code: string
           activite?: string | null
           agent_id?: string | null
           banque_actuelle?: string | null
@@ -99,6 +101,7 @@ export type Database = {
           ville?: string | null
         }
         Update: {
+          access_code?: string
           activite?: string | null
           agent_id?: string | null
           banque_actuelle?: string | null
@@ -190,6 +193,62 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      find_leads_by_phone_code: {
+        Args: { p_code: string; p_phone: string }
+        Returns: {
+          access_code: string
+          activite: string | null
+          agent_id: string | null
+          banque_actuelle: string | null
+          besoin: Json
+          created_at: string
+          eligibilite: Json
+          id: string
+          identite: Json
+          montant_demande: number | null
+          raison_non_eligibilite: string | null
+          score: number
+          situation: Json
+          statut: string
+          type: string
+          updated_at: string
+          ville: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "leads"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_lead_by_code: {
+        Args: { p_code: string; p_id: string }
+        Returns: {
+          access_code: string
+          activite: string | null
+          agent_id: string | null
+          banque_actuelle: string | null
+          besoin: Json
+          created_at: string
+          eligibilite: Json
+          id: string
+          identite: Json
+          montant_demande: number | null
+          raison_non_eligibilite: string | null
+          score: number
+          situation: Json
+          statut: string
+          type: string
+          updated_at: string
+          ville: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "leads"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       is_admin: { Args: never; Returns: boolean }
       is_staff: { Args: never; Returns: boolean }
     }
