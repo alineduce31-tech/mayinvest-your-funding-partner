@@ -493,6 +493,7 @@ const CSS = `
   @media (max-width: 640px) { .ea-header { margin: 12px 16px 0; padding: 16px 20px; gap: 14px; } }
   .ea-header-left { flex: 1; display: flex; align-items: center; gap: 16px; }
   .ea-header-right { text-align: right; }
+  @media (max-width: 760px) { .ea-header { flex-wrap: wrap; align-items: flex-start; } .ea-header-right { order: -1; flex: 1 1 100%; text-align: left; } .ea-header-left { flex: 1 1 100%; min-width: 0; } .ea-header-left nav, .ea-nav { overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; max-width: 100%; } .ea-header-left nav a, .ea-nav a { white-space: nowrap; flex-shrink: 0; } .ea-header > div:last-child:not(.ea-header-left):not(.ea-header-right) { flex: 1 1 100%; } }
   .ea-header h1 { font-size: 22px; font-weight: 800; margin: 0; color: #0F1729; letter-spacing: -0.02em; line-height: 1.1; }
   @media (max-width: 640px) { .ea-header h1 { font-size: 18px; } }
   .ea-sub { font-size: 12px; color: #6B7280; margin-top: 4px; }
@@ -533,6 +534,17 @@ const CSS = `
   .ea-table .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #374151; }
   .ea-table .small { font-size: 11.5px; color: #6B7280; }
   .ea-table .empty { text-align: center; padding: 40px; color: #9CA3AF; font-style: italic; }
+  @media (max-width: 760px) {
+    .ea-table { min-width: 0; display: block; }
+    .ea-table thead { display: none; }
+    .ea-table tbody { display: block; }
+    .ea-table tr { display: grid; grid-template-columns: 1fr auto; gap: 8px 10px; padding: 14px 16px; border-bottom: 1px solid #F3F3F1; align-items: center; }
+    .ea-table tr:last-child { border-bottom: none; }
+    .ea-table td { display: block; padding: 0; border: none; }
+    .ea-table td:first-child, .ea-table td.mono, .ea-table td.empty { grid-column: 1 / -1; }
+    .ea-table td.mono { overflow-wrap: anywhere; }
+    .ea-table td.actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 6px; }
+  }
 
   .cell-user { display: flex; align-items: center; gap: 10px; }
   .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #0F6E3E, #0A4E2C); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0; letter-spacing: 0.02em; }

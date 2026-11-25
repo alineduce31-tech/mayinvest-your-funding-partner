@@ -664,7 +664,8 @@ function ClientPortal() {
           .c-head-actions { flex-direction: column !important; gap: 8px !important; width: 100%; }
         }
         .c-portal-head::before { content: ''; position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(26,107,255,0.35), transparent 65%); pointer-events: none; }
-        .c-head-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; position: relative; z-index: 1; }
+        .c-head-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 0 12px; margin-bottom: 16px; position: relative; z-index: 1; }
+        .c-head-top > .c-head-meta { grid-column: 1 / -1; }
         .c-head-identity { min-width: 0; flex: 1; }
         .c-head-name { font-size: 20px; font-weight: 800; margin: 0 0 3px; letter-spacing: -0.5px; line-height: 1.15; word-break: break-word; }
         @media (min-width: 640px) { .c-head-name { font-size: 26px; } }
@@ -1035,7 +1036,7 @@ function ClientPortal() {
           <div className="c-head-top">
             <div className="c-head-identity">
               <h1 className="c-head-name">{nom || 'Mon dossier'}</h1>
-              <div className="c-head-ref">Réf. {id}</div>
+              <div className="c-head-ref">Dossier n° {String(id).slice(0, 8).toUpperCase()}</div>
             </div>
             <div className="c-head-score">
               <div className="c-head-score-v">{lead?.score || 0}</div>

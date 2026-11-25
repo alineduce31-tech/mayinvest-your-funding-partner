@@ -600,7 +600,7 @@ function MessagerieStyles() {
     .am-btn-ghost { border: 1.5px solid rgba(255,255,255,0.25); background: transparent; color: #fff; padding: 7px 14px; border-radius: 100px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
     .am-btn-dark { display: inline-flex; align-items: center; justify-content: space-between; gap: 8px; border: none; background: #0D1B3E; color: #fff; padding: 5px 5px 5px 16px; border-radius: 100px; font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer; margin-top: 14px; }
     .am-body { flex: 1; display: grid; grid-template-columns: 320px minmax(0, 1fr); min-height: 0; }
-    .am-list { border-right: 1px solid #E8ECF3; display: flex; flex-direction: column; min-height: 0; }
+    .am-list { border-right: 1px solid #E8ECF3; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
     .am-list-tools { padding: 12px; display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid #EEF2F8; }
     .am-search { border: 1.5px solid #E5E7EB; border-radius: 100px; padding: 9px 14px; font-family: inherit; font-size: 13.5px; outline: none; width: 100%; box-sizing: border-box; }
     .am-search:focus { border-color: #1A6BFF; }
@@ -746,7 +746,7 @@ function MessagerieStyles() {
       .am-root:not(.page) { height: calc(100vh - 90px); border-radius: 14px; }
       .am-top { padding: 10px 12px; }
       .am-btn-ghost { display: none; }
-      .am-body { grid-template-columns: 1fr; }
+      .am-body { grid-template-columns: minmax(0, 1fr); }
       .am-body.has-fil .am-list { display: none; }
       .am-body:not(.has-fil) .am-main { display: none; }
       .am-back { display: inline-flex; }

@@ -119,6 +119,7 @@ function CandidaturesPage() {
         @media (max-width: 640px) { .cd-header { margin: 12px 16px 0; padding: 16px 20px; gap: 14px; } }
         .cd-header-left { flex: 1; display: flex; align-items: center; gap: 16px; }
         .cd-header-right { text-align: right; }
+        @media (max-width: 760px) { .cd-header { flex-wrap: wrap; align-items: flex-start; } .cd-header-right { order: -1; flex: 1 1 100%; text-align: left; } .cd-header-left { flex: 1 1 100%; min-width: 0; } .cd-header-left nav, .cd-nav { overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; max-width: 100%; } .cd-header-left nav a, .cd-nav a { white-space: nowrap; flex-shrink: 0; } .cd-header > div:last-child:not(.cd-header-left):not(.cd-header-right) { flex: 1 1 100%; } }
         .cd-header h1 { font-size: 22px; font-weight: 800; margin: 0; color: #0F1729; letter-spacing: -0.02em; line-height: 1.1; }
         @media (max-width: 640px) { .cd-header h1 { font-size: 18px; } }
         .cd-sub { font-size: 12px; color: #6B7280; margin-top: 4px; }

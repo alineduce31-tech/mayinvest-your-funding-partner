@@ -88,6 +88,7 @@ function EquipeCommercialePage() {
         @media (max-width: 640px) { .ec-header { margin: 12px 16px 0; padding: 16px 20px; gap: 14px; } }
         .ec-header-left { flex: 1; display: flex; align-items: center; gap: 16px; }
         .ec-header-right { text-align: right; }
+        @media (max-width: 760px) { .ec-header { flex-wrap: wrap; align-items: flex-start; } .ec-header-right { order: -1; flex: 1 1 100%; text-align: left; } .ec-header-left { flex: 1 1 100%; min-width: 0; } .ec-header-left nav, .ec-nav { overflow-x: auto; scrollbar-width: none; flex-wrap: nowrap; max-width: 100%; } .ec-header-left nav a, .ec-nav a { white-space: nowrap; flex-shrink: 0; } .ec-header > div:last-child:not(.ec-header-left):not(.ec-header-right) { flex: 1 1 100%; } }
         .ec-header h1 { font-size: 22px; font-weight: 800; margin: 0; color: #0F1729; letter-spacing: -0.02em; line-height: 1.1; }
         @media (max-width: 640px) { .ec-header h1 { font-size: 18px; } }
         .ec-sub { font-size: 12px; color: #6B7280; margin-top: 4px; }

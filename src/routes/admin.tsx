@@ -729,6 +729,11 @@ function Admin({ session }: { session: any }) {
           font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
         .lead-meta { font-size: 12.5px; color: var(--ink-dim); font-weight: 500; }
         .lead-r { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+        @media (max-width: 640px) {
+          .lead-row { grid-template-columns: minmax(0, 1fr); padding: 14px 16px; gap: 10px; }
+          .lead-r { justify-content: space-between; border-top: 1px solid var(--border); padding-top: 10px; }
+          .lead-meta { line-height: 1.5; }
+        }
         .lead-score { background: var(--blue-soft); color: var(--blue);
           font-size: 14px; font-weight: 800;
           padding: 7px 13px; border-radius: 10px; min-width: 50px; text-align: center;
