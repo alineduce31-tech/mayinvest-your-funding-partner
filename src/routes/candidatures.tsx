@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { formatPhone } from '@/lib/phone'
 
 export const Route = createFileRoute('/candidatures')({
   component: CandidaturesPage,
@@ -295,7 +296,7 @@ function CandidaturesPage() {
                 <div key={c.id} className={`cd-row${selected?.id === c.id ? ' selected' : ''}`} onClick={() => setSelected(c)}>
                   <div className="cd-row-name">
                     <span className="cd-ava">{initials}</span>
-                    <div><strong>{c.prenom} {c.nom}</strong><small>{c.ville} · {c.telephone}</small></div>
+                    <div><strong>{c.prenom} {c.nom}</strong><small>{c.ville} · {formatPhone(c.telephone)}</small></div>
                   </div>
                   <div className={`cd-score ${scoreCls} hide-mobile`}>{scorePct}%<small>/100</small></div>
                   <div className={`cd-time ${tCls} hide-mobile`}>{c.time_total_seconds ? `${mins}:${String(secs).padStart(2, '0')}` : '—'}</div>
@@ -366,7 +367,7 @@ function CandidaturesPage() {
               <div className="cd-contact">
                 <div className="cd-contact-item">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 01-2.18 2A19.86 19.86 0 013 5.18 2 2 0 015 3h3a2 2 0 012 1.72c.12.9.33 1.78.63 2.62a2 2 0 01-.45 2.11L8.91 10.91a16 16 0 006 6l1.46-1.27a2 2 0 012.11-.45c.84.3 1.72.5 2.62.63A2 2 0 0122 16.92z"/></svg>
-                  <span className="t">{selected.telephone}</span>
+                  <span className="t">{formatPhone(selected.telephone)}</span>
                 </div>
                 <div className="cd-contact-item">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><path d="M22 6l-10 7L2 6"/></svg>
