@@ -175,7 +175,8 @@ function EquipeCommercialePage() {
           </Link>
           <nav className="ec-nav">
             <Link to={'/candidatures' as any}>Candidatures</Link>
-            <Link to={'/equipe-commerciale' as any} className="active">Équipe</Link>
+            <Link to={'/equipe-commerciale' as any} className="active">Commerciaux</Link>
+            <Link to={'/equipe-admin' as any}>Admins</Link>
           </nav>
         </div>
         <div className="ec-header-right">
