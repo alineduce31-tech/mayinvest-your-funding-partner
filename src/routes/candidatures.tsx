@@ -455,13 +455,28 @@ function CandidateBreakdown({ candidate, quizAttempts, simAttempts, pracAttempts
   const simForCand = simAttempts.filter(s => s.candidate_id === candidate.id)
   const pracForCand = pracAttempts.filter(p => p.candidate_id === candidate.id)
 
-  const quizPassed = quizForCand.filter(q => q.passed).length
+  // Formation : nombre de modules UNIQUES validés (pas les retries)
+  const passedModules = new Set(quizForCand.filter(q => q.passed).map(q => q.module_id))
+  const quizPassed = passedModules.size
   const quizTime = quizForCand.reduce((s, q) => s + (q.time_seconds || 0), 0)
-  const simPts = simForCand.reduce((s, x) => s + x.points_earned, 0)
-  const simTime = simForCand.reduce((s, x) => s + (x.time_seconds || 0), 0)
+
+  // Simu théorique : meilleur essai par scénario (dédupe les retries)
+  const bestByScenario = new Map<string, SimAttempt>()
+  for (const att of simForCand) {
+    const current = bestByScenario.get(att.scenario_id)
+    if (!current || att.points_earned > current.points_earned) {
+      bestByScenario.set(att.scenario_id, att)
+    }
+  }
+  const simBestAttempts = Array.from(bestByScenario.values())
+  const simPts = Math.min(100, simBestAttempts.reduce((s, x) => s + x.points_earned, 0))
+  const simTime = simBestAttempts.reduce((s, x) => s + (x.time_seconds || 0), 0)
+
+  // Pratique : meilleur score par épreuve (1, 2, 3)
   const pracByEp = [1, 2, 3].map(e => {
-    const att = pracForCand.find(p => p.epreuve === e)
-    return { ep: e, score: att?.score || 0, time: att?.time_seconds || 0 }
+    const atts = pracForCand.filter(p => p.epreuve === e)
+    const best = atts.reduce<PracAttempt | null>((b, a) => (!b || a.score > b.score) ? a : b, null)
+    return { ep: e, score: best?.score || 0, time: best?.time_seconds || 0 }
   })
 
   const fmt = (t: number) => t ? `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}` : '—'
