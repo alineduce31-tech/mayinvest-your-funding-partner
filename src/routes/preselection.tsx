@@ -8,11 +8,13 @@ export const Route = createFileRoute('/preselection')({
 })
 
 /* ---------- Helpers ---------- */
+// Format XX XXX XX XX (9 chiffres congolais) — cohérent avec src/lib/phone.ts
 function formatPhone(digits: string): string {
   const d = digits.replace(/\D/g, '').slice(0, 9)
   if (d.length <= 2) return d
   if (d.length <= 5) return `${d.slice(0, 2)} ${d.slice(2)}`
-  return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`
+  if (d.length <= 7) return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`
+  return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5, 7)} ${d.slice(7, 9)}`
 }
 function cleanPhone(v: string): string { return v.replace(/\D/g, '').slice(0, 9) }
 function formatMoney(digits: string): string {
@@ -1252,7 +1254,7 @@ function Simulation() {
                   <div className="field"><label>Nom du dirigeant *</label><input placeholder="Ex : Alain Mabiala" value={form['dirigeant']||''} onChange={e=>set('dirigeant',e.target.value)} onBlur={()=>onFieldBlur('dirigeant')}/></div>
                 </>}
                 <div className="field"><label>Téléphone *</label><input
-                  type="tel" inputMode="numeric" placeholder="Ex : 06 123 4567" maxLength={11}
+                  type="tel" inputMode="numeric" placeholder="Ex : 06 655 32 18" maxLength={13}
                   value={formatPhone(form['tel']||'')} onChange={e=>set('tel', cleanPhone(e.target.value))} onBlur={()=>onFieldBlur('tel')}/></div>
                 <div className="field"><label>Email (facultatif)</label><input type="email" placeholder="Ex : jp.moukouama@gmail.com" value={form['email']||''} onChange={e=>set('email',e.target.value)} onBlur={()=>onFieldBlur('email')}/></div>
                 <div className="field"><label>Ville *</label>
