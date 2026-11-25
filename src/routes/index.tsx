@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Logo } from '@/components/Logo'
 import { trackHaki } from '@/lib/haki-tracking'
+import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles } from '@/components/HakiTeaser'
 const PAGE = '/index'
 
 /* Avatar Haki */
@@ -64,13 +65,13 @@ function Index() {
   })
   const [showAutoHelp, setShowAutoHelp] = useState(false)
 
-  // Haki s'ouvre automatiquement 2s après le chargement si auto activé ET pas décliné
-  useEffect(() => {
-    trackHaki(PAGE, 'page_view')
-    if (!hakiAuto || hakiDeclined) return
-    const t = setTimeout(() => { setHakiOpen(true); trackHaki(PAGE, 'haki_open', { trigger: 'auto' }) }, 2000)
-    return () => clearTimeout(t)
-  }, [])  // eslint-disable-line
+  // Haki : bulle discrète sur mobile, panneau après un délai sur ordinateur
+  useEffect(() => { trackHaki(PAGE, 'page_view') }, [])  // eslint-disable-line
+  const bulle = useHakiTeaser('home', {
+    autoActif: hakiAuto, refuse: hakiDeclined,
+    ouvrirPanneau: () => { setHakiOpen(true); trackHaki(PAGE, 'haki_open', { trigger: 'auto' }) },
+  })
+  useSheetSwipe(hakiOpen, '.ix-panel', () => setHakiOpen(false))
 
   function declineHakiHome() {
     setHakiDeclined(true)
@@ -708,7 +709,9 @@ function Index() {
           </div>
         </div>
       )}
-      <button className="ix-fab" onClick={toggleHakiHome} aria-label="Haki">
+      <HakiSheetStyles panel=".ix-panel"/>
+      {!hakiOpen && <HakiBulle texte={bulle.texte} onFermer={bulle.fermer} onOuvrir={() => { bulle.fermer(); setHakiOpen(true); trackHaki(PAGE, 'haki_open', { trigger: 'bulle' }) }}/>}
+      <button className="ix-fab" onClick={() => { bulle.fermer(); toggleHakiHome() }} aria-label="Haki">
         {hakiEye(46)}
         {!hakiOpen && !hakiDeclined && <span className="ix-fab-tag">💬 Besoin d'aide ?</span>}
       </button>

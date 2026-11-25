@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
+import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles, vueMobile } from '@/components/HakiTeaser'
 
 export const Route = createFileRoute('/preselection')({
   component: Simulation,
@@ -541,6 +542,11 @@ function Simulation() {
     if (!hakiAccepted || !autoMode) return
     const result = validateField(key, form[key] || '', type === 'physique')
     setFieldFeedback({ ...result, field: key })
+    // Mobile : jamais de panneau pendant la saisie, une bulle seulement en cas d'erreur
+    if (vueMobile()) {
+      if (!result.ok) bulle.montrer(`${result.msg || 'Champ à corriger'}${result.example ? ' · ' + result.example : ''}`)
+      return undefined
+    }
     setMascotOpen(true)
     // Succès → auto-ferme après 2.5s pour ne pas bloquer
     if (result.ok) {
@@ -571,17 +577,14 @@ function Simulation() {
 
   // Haki s'ouvre AUTOMATIQUEMENT à chaque chargement de page si pas encore refusée
   // (le mode auto peut être désactivé via le toggle dans le panneau)
-  useEffect(() => {
-    if (!hakiDeclined) {
-      const t = setTimeout(() => setMascotOpen(true), 900)
-      return () => clearTimeout(t)
-    }
-    return undefined
-  }, []) // ← [] = s'exécute une fois au chargement de la page
+  // Mobile : bulle discrète ; ordinateur : panneau après un court délai
+  const bulle = useHakiTeaser('form', { autoActif: true, refuse: hakiDeclined, ouvrirPanneau: () => setMascotOpen(true) })
+  useSheetSwipe(mascotOpen, '.haki-panel', () => setMascotOpen(false))
 
   // Si acceptée ET mode auto activé : s'ouvre à chaque changement d'étape pour guider
   useEffect(() => {
     if (hakiAccepted && autoMode) {
+      if (vueMobile()) return undefined
       const t = setTimeout(() => setMascotOpen(true), 400)
       return () => clearTimeout(t)
     }
@@ -1522,7 +1525,9 @@ function Simulation() {
         </div>}
       </div>
 
-      <HakiAssistant msg={hakiMsg} open={mascotOpen} onToggle={toggleHaki} onDecline={declineHaki} accepted={hakiAccepted} autoMode={autoMode} onToggleAuto={toggleAutoMode} />
+      <HakiSheetStyles panel=".haki-panel"/>
+      {!mascotOpen && <HakiBulle texte={bulle.texte} onFermer={bulle.fermer} onOuvrir={() => { bulle.fermer(); setMascotOpen(true) }}/>}
+      <HakiAssistant msg={hakiMsg} open={mascotOpen} onToggle={() => { bulle.fermer(); toggleHaki() }} onDecline={declineHaki} accepted={hakiAccepted} autoMode={autoMode} onToggleAuto={toggleAutoMode} />
     </div>
   )
 }

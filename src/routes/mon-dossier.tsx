@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 import { formatPhoneInput } from '@/lib/phone'
 import { requestPasswordReset } from '@/lib/password-reset'
+import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles, vueMobile } from '@/components/HakiTeaser'
 
 export const Route = createFileRoute('/mon-dossier')({
   component: MonDossier,
@@ -160,23 +161,21 @@ function MonDossier() {
     return () => clearInterval(t)
   }, [])
 
-  // Haki s'ouvre automatiquement si mode auto activé et pas décliné
-  useEffect(() => {
-    if (autoMode && !hakiDeclined) {
-      const t = setTimeout(() => setHakiOpen(true), 600)
-      return () => clearTimeout(t)
-    }
-    return undefined
-  }, []) // eslint-disable-line
+  // Haki : bulle sur mobile (rapide sur cette page), panneau sur ordinateur
+  const bulle = useHakiTeaser('login', { autoActif: autoMode, refuse: hakiDeclined, ouvrirPanneau: () => setHakiOpen(true) })
+  useSheetSwipe(hakiOpen, '.hk-panel', () => setHakiOpen(false))
 
-  // En mode auto : Haki s'ouvre quand on clique sur un champ ou en cas d'erreur
+  // Ordinateur : Haki s'ouvre quand on clique sur un champ. Mobile : jamais pendant la saisie.
   useEffect(() => {
-    if (autoMode && !hakiDeclined && activeField !== 'none') setHakiOpen(true)
+    if (autoMode && !hakiDeclined && activeField !== 'none' && !vueMobile()) setHakiOpen(true)
   }, [activeField, autoMode, hakiDeclined])
 
+  // En cas d'erreur : panneau sur ordinateur, bulle sur mobile
   useEffect(() => {
-    if (error && autoMode && !hakiDeclined) setHakiOpen(true)
-  }, [error, autoMode, hakiDeclined])
+    if (!error || !autoMode || hakiDeclined) return
+    if (vueMobile()) bulle.montrer('Ça ne passe pas ? Touchez ici, je vous aide à vous connecter.')
+    else setHakiOpen(true)
+  }, [error, autoMode, hakiDeclined]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function toggleAutoMode() {
     const next = !autoMode
@@ -715,7 +714,9 @@ function MonDossier() {
           </div>
         )
       })()}
-      <button className="hk-fab" onClick={toggleHakiManually} aria-label="Haki">
+      <HakiSheetStyles panel=".hk-panel"/>
+      {!hakiOpen && <HakiBulle texte={bulle.texte} onFermer={bulle.fermer} onOuvrir={() => { bulle.fermer(); setHakiDeclined(false); setHakiOpen(true) }}/>}
+      <button className="hk-fab" onClick={() => { bulle.fermer(); toggleHakiManually() }} aria-label="Haki">
         {hakiAvatar(44)}
       </button>
 

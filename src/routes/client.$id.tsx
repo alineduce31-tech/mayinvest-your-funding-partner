@@ -5,6 +5,7 @@ import { setClientToken } from '@/lib/session-tokens'
 import { requestPasswordReset } from '@/lib/password-reset'
 import SkeletonPage from '@/components/SkeletonPage'
 import { formatPhoneInput } from '@/lib/phone'
+import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles } from '@/components/HakiTeaser'
 
 export const Route = createFileRoute('/client/$id')({
   component: ClientPortal,
@@ -353,21 +354,9 @@ function ClientPortal() {
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
-  // Auto-ouverture Haki selon le mode et le tab
-  useEffect(() => {
-    if (stage === 'needsCode' && autoMode) {
-      const t = setTimeout(() => setHakiOpen(true), 800)
-      return () => clearTimeout(t)
-    }
-    return undefined
-  }, [stage, autoMode])
-  useEffect(() => {
-    if (stage === 'portal' && autoMode) {
-      const t = setTimeout(() => setHakiOpen(true), 500)
-      return () => clearTimeout(t)
-    }
-    return undefined
-  }, [activeTab, stage, autoMode])
+  // Haki : bulle discrète sur mobile, panneau après un délai sur ordinateur (une fois par session)
+  const bulle = useHakiTeaser(stage === 'needsCode' ? 'login' : 'client', { autoActif: autoMode, refuse: false, ouvrirPanneau: () => setHakiOpen(true), actif: stage === 'needsCode' || stage === 'portal' })
+  useSheetSwipe(hakiOpen, '.c-haki-panel', () => setHakiOpen(false))
 
   async function envoyer() {
     if (!newMsg.trim() || sending) return
@@ -1012,7 +1001,9 @@ function ClientPortal() {
             </div>
           </div>
         </div>
-        <HakiAssistant msg={hakiMsg} open={hakiOpen} onToggle={() => setHakiOpen(o => !o)} autoMode={autoMode} onToggleAuto={toggleAuto}/>
+        <HakiSheetStyles panel=".c-haki-panel"/>
+      {!hakiOpen && <HakiBulle texte={bulle.texte} onFermer={bulle.fermer} onOuvrir={() => { bulle.fermer(); setHakiOpen(true) }}/>}
+      <HakiAssistant msg={hakiMsg} open={hakiOpen} onToggle={() => { bulle.fermer(); setHakiOpen(o => !o) }} autoMode={autoMode} onToggleAuto={toggleAuto}/>
       </div>
     )
   }
@@ -1322,7 +1313,9 @@ function ClientPortal() {
         )}
       </div>
 
-      <HakiAssistant msg={hakiMsg} open={hakiOpen} onToggle={() => setHakiOpen(o => !o)} autoMode={autoMode} onToggleAuto={toggleAuto}/>
+      <HakiSheetStyles panel=".c-haki-panel"/>
+      {!hakiOpen && <HakiBulle texte={bulle.texte} onFermer={bulle.fermer} onOuvrir={() => { bulle.fermer(); setHakiOpen(true) }}/>}
+      <HakiAssistant msg={hakiMsg} open={hakiOpen} onToggle={() => { bulle.fermer(); setHakiOpen(o => !o) }} autoMode={autoMode} onToggleAuto={toggleAuto}/>
     </div>
   )
 }
