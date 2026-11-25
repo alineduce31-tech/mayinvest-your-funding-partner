@@ -17,10 +17,11 @@ const ArrowDot = () => (
   </span>
 )
 
-export default function AdminMessagerie({ session, onOpenLead, onLeadChanged }: {
+export default function AdminMessagerie({ session, onOpenLead, onLeadChanged, onBack }: {
   session: any
   onOpenLead: (lead: any) => void
   onLeadChanged: () => void
+  onBack?: (() => void) | undefined
 }) {
   const [inbox, setInbox] = useState<InboxRow[]>([])
   const [team, setTeam] = useState<TeamRow[]>([])
@@ -66,10 +67,15 @@ export default function AdminMessagerie({ session, onOpenLead, onLeadChanged }: 
   function ouvrir(f: Fil) { setFil(f) }
 
   return (
-    <div className="am-root">
+    <div className={`am-root ${onBack ? 'page' : ''}`}>
       <MessagerieStyles/>
       <div className="am-top">
         <div className="am-top-l">
+          {onBack && (
+            <button className="am-home" onClick={onBack} aria-label="Retour au tableau de bord">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4L3 7l3 3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          )}
           <span className="am-title">Messagerie</span>
           {c.nonLus > 0 && <span className="am-badge">{c.nonLus} non lu{c.nonLus > 1 ? 's' : ''}</span>}
           {c.enAttente > 0 && <button className="am-alert" onClick={() => setFiltre('attente')}>{c.enAttente} client{c.enAttente > 1 ? 's' : ''} attend{c.enAttente > 1 ? 'ent' : ''} depuis plus de 24 h</button>}
@@ -578,6 +584,9 @@ function NouvelleConversation({ onClose, onPick }: { onClose: () => void; onPick
 function MessagerieStyles() {
   return <style>{`
     .am-root { display: flex; flex-direction: column; height: calc(100vh - 120px); min-height: 560px; background: #fff; border: 1px solid #E8ECF3; border-radius: 18px; overflow: hidden; position: relative; }
+    .am-root.page { height: 100vh; height: 100dvh; min-height: 0; border: none; border-radius: 0; }
+    .am-home { width: 36px; height: 36px; border-radius: 50%; border: none; background: rgba(255,255,255,0.12); display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
+    .am-home:hover { background: rgba(255,255,255,0.22); }
     .am-top { background: #0D1B3E; color: #fff; padding: 12px 18px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
     .am-top-l, .am-top-r { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
     .am-title { font-weight: 800; font-size: 17px; }
@@ -734,7 +743,9 @@ function MessagerieStyles() {
       .am-side.static { display: none; }
     }
     @media (max-width: 760px) {
-      .am-root { height: calc(100vh - 90px); border-radius: 14px; }
+      .am-root:not(.page) { height: calc(100vh - 90px); border-radius: 14px; }
+      .am-top { padding: 10px 12px; }
+      .am-btn-ghost { display: none; }
       .am-body { grid-template-columns: 1fr; }
       .am-body.has-fil .am-list { display: none; }
       .am-body:not(.has-fil) .am-main { display: none; }

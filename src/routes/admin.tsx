@@ -8,14 +8,14 @@ import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
-import AdminMessagerie from '@/components/AdminMessagerie'
 import { LEAD_ACTIONS, buildWhatsappUrl, fillTemplate, LIFECYCLE_STATUTS, STATUT_COLORS } from '@/lib/lead-templates'
 
 // Estimates: Pack Formalisation = 500 000 XAF; dual credit/impact threshold = 5 000 000 XAF.
 // See admin-dashboard.ts for cohort, date and financed-status proxies.
 export const Route = createFileRoute('/admin')({
-  validateSearch: (search: Record<string, unknown>): { view?: 'crm' | undefined; priority?: PriorityFilter | undefined } => ({
+  validateSearch: (search: Record<string, unknown>): { view?: 'crm' | undefined; priority?: PriorityFilter | undefined; lead?: string | undefined } => ({
     view: search['view'] === 'crm' ? 'crm' : undefined,
+    lead: typeof search['lead'] === 'string' && /^[0-9a-f-]{36}$/i.test(search['lead']) ? search['lead'] : undefined,
     priority: ['ready', 'impact', 'followup'].includes(String(search['priority'])) ? search['priority'] as PriorityFilter : undefined,
   }),
   head: () => ({ meta: [
@@ -170,13 +170,21 @@ function _UnusedLoginScreen() {
 /* ============================================================
  * ADMIN APP
  * ============================================================ */
-type Page = 'general' | 'crm' | 'messagerie' | 'segments' | 'bancarisation' | 'non-eligibles' | 'rapports'
+type Page = 'general' | 'crm' | 'segments' | 'bancarisation' | 'non-eligibles' | 'rapports'
 
 function Admin({ session }: { session: any }) {
   const navigate = useNavigate()
   const dashboardSearch = Route.useSearch()
   const [page, setPage] = useState<Page>(dashboardSearch.view === 'crm' ? 'crm' : 'general')
   useEffect(() => { if (dashboardSearch.view === 'crm') setPage('crm') }, [dashboardSearch.view, dashboardSearch.priority])
+  useEffect(() => {
+    const id = dashboardSearch.lead
+    if (!id) return
+    supabase.from('leads').select('*').eq('id', id).maybeSingle().then(({ data }) => {
+      if (data) { setPage('crm'); setSelectedLead(data) }
+      navigate({ to: '/admin', search: { view: 'crm' }, replace: true })
+    })
+  }, [dashboardSearch.lead])
   const [leads, setLeads] = useState<any[]>([])
   const [msgCounts, setMsgCounts] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(true)
@@ -502,7 +510,6 @@ function Admin({ session }: { session: any }) {
   const NAV: { k: Page; label: string; icon: any }[] = [
     { k: 'general', label: 'Dashboard', icon: ICON.dashboard },
     { k: 'crm', label: 'CRM', icon: ICON.crm },
-    { k: 'messagerie', label: 'Messagerie', icon: <MessageCircle size={18} strokeWidth={1.75}/> },
     { k: 'segments', label: 'Segments', icon: ICON.segments },
     { k: 'bancarisation', label: 'Bancarisation', icon: ICON.bank },
     { k: 'non-eligibles', label: 'Non éligibles', icon: ICON.noelig },
@@ -954,9 +961,14 @@ function Admin({ session }: { session: any }) {
           <nav className="sb-nav">
             {NAV.map(n => (
               <button key={n.k} className={`sb-link ${page === n.k ? 'on' : ''}`} onClick={() => { setPage(n.k); setSidebarOpen(false) }}>
-                <span>{n.icon}</span><span>{n.label}</span>{n.k === 'messagerie' && unreadTotal > 0 && <span style={{ marginLeft: 'auto', background: '#1A6BFF', color: '#fff', borderRadius: 100, padding: '1px 8px', fontSize: 11, fontWeight: 800 }}>{unreadTotal}</span>}
+                <span>{n.icon}</span><span>{n.label}</span>
               </button>
             ))}
+            <button className="sb-link" onClick={() => { navigate({ to: '/messagerie' as any }); setSidebarOpen(false) }}>
+              <span><MessageCircle size={18} strokeWidth={1.75}/></span>
+              <span>Messagerie</span>
+              {unreadTotal > 0 && <span style={{ marginLeft: 'auto', background: '#1A6BFF', color: '#fff', borderRadius: 100, padding: '1px 8px', fontSize: 11, fontWeight: 800 }}>{unreadTotal}</span>}
+            </button>
             {isDirector && <>
               <div style={{ margin: '10px 16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}/>
               <button className="sb-link" onClick={() => { navigate({ to: '/candidatures' as any }); setSidebarOpen(false) }}>
@@ -997,12 +1009,11 @@ function Admin({ session }: { session: any }) {
             <button className="burger" onClick={() => setSidebarOpen(true)} aria-label="Menu">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="#111" strokeWidth="2" strokeLinecap="round"/></svg>
             </button>
-            {page !== 'general' && page !== 'messagerie' && <h1 className="page-title">{NAV.find(n => n.k === page)?.label}</h1>}
+            {page !== 'general' && <h1 className="page-title">{NAV.find(n => n.k === page)?.label}</h1>}
           </div>
 
           {page === 'general' && <DashboardView onOpen={setSelectedLead}/>}
-          {page === 'messagerie' && <AdminMessagerie session={session} onOpenLead={setSelectedLead} onLeadChanged={loadLeads}/>}
-          {page !== 'general' && page !== 'messagerie' && (loading ? <SkeletonPage rows={3} label="Chargement des leads…" /> : <>
+          {page !== 'general' && (loading ? <SkeletonPage rows={3} label="Chargement des leads…" /> : <>
             {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
             {page === 'crm' && <CRMView leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}

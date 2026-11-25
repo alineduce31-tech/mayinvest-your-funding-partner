@@ -16,6 +16,7 @@ import { Route as EquipeAdminRouteImport } from './routes/equipe-admin'
 import { Route as EquipeCommercialeRouteImport } from './routes/equipe-commerciale'
 import { Route as EspaceCommercialRouteImport } from './routes/espace-commercial'
 import { Route as FormationRouteImport } from './routes/formation'
+import { Route as MessagerieRouteImport } from './routes/messagerie'
 import { Route as MonDossierRouteImport } from './routes/mon-dossier'
 import { Route as MonEspaceRouteImport } from './routes/mon-espace'
 import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
@@ -59,6 +60,11 @@ const EspaceCommercialRoute = EspaceCommercialRouteImport.update({
 const FormationRoute = FormationRouteImport.update({
   id: '/formation',
   path: '/formation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MessagerieRoute = MessagerieRouteImport.update({
+  id: '/messagerie',
+  path: '/messagerie',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MonDossierRoute = MonDossierRouteImport.update({
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/equipe-commerciale': typeof EquipeCommercialeRoute
   '/espace-commercial': typeof EspaceCommercialRoute
   '/formation': typeof FormationRoute
+  '/messagerie': typeof MessagerieRoute
   '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
@@ -133,6 +140,7 @@ export interface FileRoutesByTo {
   '/equipe-commerciale': typeof EquipeCommercialeRoute
   '/espace-commercial': typeof EspaceCommercialRoute
   '/formation': typeof FormationRoute
+  '/messagerie': typeof MessagerieRoute
   '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
@@ -152,6 +160,7 @@ export interface FileRoutesById {
   '/equipe-commerciale': typeof EquipeCommercialeRoute
   '/espace-commercial': typeof EspaceCommercialRoute
   '/formation': typeof FormationRoute
+  '/messagerie': typeof MessagerieRoute
   '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
   '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
@@ -172,6 +181,7 @@ export interface FileRouteTypes {
     | '/equipe-commerciale'
     | '/espace-commercial'
     | '/formation'
+    | '/messagerie'
     | '/mon-dossier'
     | '/mon-espace'
     | '/mot-de-passe-oublie'
@@ -190,6 +200,7 @@ export interface FileRouteTypes {
     | '/equipe-commerciale'
     | '/espace-commercial'
     | '/formation'
+    | '/messagerie'
     | '/mon-dossier'
     | '/mon-espace'
     | '/mot-de-passe-oublie'
@@ -208,6 +219,7 @@ export interface FileRouteTypes {
     | '/equipe-commerciale'
     | '/espace-commercial'
     | '/formation'
+    | '/messagerie'
     | '/mon-dossier'
     | '/mon-espace'
     | '/mot-de-passe-oublie'
@@ -227,6 +239,7 @@ export interface RootRouteChildren {
   EquipeCommercialeRoute: typeof EquipeCommercialeRoute
   EspaceCommercialRoute: typeof EspaceCommercialRoute
   FormationRoute: typeof FormationRoute
+  MessagerieRoute: typeof MessagerieRoute
   MonDossierRoute: typeof MonDossierRoute
   MonEspaceRoute: typeof MonEspaceRoute
   MotDePasseOublieRoute: typeof MotDePasseOublieRoute
@@ -287,6 +300,13 @@ declare module '@tanstack/react-router' {
       path: '/formation'
       fullPath: '/formation'
       preLoaderRoute: typeof FormationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/messagerie': {
+      id: '/messagerie'
+      path: '/messagerie'
+      fullPath: '/messagerie'
+      preLoaderRoute: typeof MessagerieRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mon-dossier': {
@@ -363,6 +383,7 @@ const rootRouteChildren: RootRouteChildren = {
   EquipeCommercialeRoute: EquipeCommercialeRoute,
   EspaceCommercialRoute: EspaceCommercialRoute,
   FormationRoute: FormationRoute,
+  MessagerieRoute: MessagerieRoute,
   MonDossierRoute: MonDossierRoute,
   MonEspaceRoute: MonEspaceRoute,
   MotDePasseOublieRoute: MotDePasseOublieRoute,
