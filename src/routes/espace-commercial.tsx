@@ -6,6 +6,7 @@ import { Logo } from '@/components/Logo'
 import { AuthStyles, AuthHeader, AuthTitle, AuthTabs, PasswordField, IconPhone, IconMail, IconBriefcase, AlertIcon } from '@/components/AuthUI'
 import { getCommercialToken, setCommercialToken } from '@/lib/session-tokens'
 import { formatPhoneInput } from '@/lib/phone'
+import CommercialMessagerie from '@/components/CommercialMessagerie'
 import { ETAPES, COMMISSION_PAR_DOSSIER, grouperParEtape, financesCeMois, progressionObjectif, gainsPour, tachesDuJour } from '@/lib/commercial-dashboard'
 
 export const Route = createFileRoute('/espace-commercial')({
@@ -37,9 +38,10 @@ function EspaceCommercialPage() {
   const [loginPhone, setLoginPhone] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<'dashboard' | 'leads' | 'clients' | 'outils' | 'chat'>('dashboard')
+  const [tab, setTab] = useState<'dashboard' | 'leads' | 'messagerie' | 'outils'>('dashboard')
   const [unreadClients, setUnreadClients] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [threadOpen, setThreadOpen] = useState(false)
   const [stats, setStats] = useState<Stats | null>(null)
   const [leads, setLeads] = useState<Lead[]>([])
   const [unreadChat, setUnreadChat] = useState(0)
@@ -208,7 +210,7 @@ function EspaceCommercialPage() {
         </>
       ) : (
         // ========== WORKSPACE COMMERCIAL VALIDÉ ==========
-        <div className="workspace">
+        <div className={`workspace ${tab === 'messagerie' && threadOpen ? 'no-bnav' : ''}`}>
           {sidebarOpen && <div className="sidebar-ovr" onClick={() => setSidebarOpen(false)}/>}
           <aside className={`ws-sidebar ${sidebarOpen ? 'open' : ''}`}>
             <div className="ws-logo">
@@ -217,9 +219,8 @@ function EspaceCommercialPage() {
             <nav className="ws-nav">
               <NavItem icon={<IconGrid/>} label="Accueil" active={tab === 'dashboard'} onClick={() => { setTab('dashboard'); setSidebarOpen(false) }}/>
               <NavItem icon={<IconUsers/>} label="Mes dossiers" count={stats?.leads_actifs} active={tab === 'leads'} onClick={() => { setTab('leads'); setSidebarOpen(false) }}/>
-              <NavItem icon={<IconChat/>} label="Mes clients" count={unreadClients} active={tab === 'clients'} onClick={() => { setTab('clients'); setSidebarOpen(false) }}/>
+              <NavItem icon={<IconChat/>} label="Messagerie" count={unreadClients + unreadChat} active={tab === 'messagerie'} onClick={() => { setTab('messagerie'); setSidebarOpen(false) }}/>
               <NavItem icon={<IconLink/>} label="Outils" active={tab === 'outils'} onClick={() => { setTab('outils'); setSidebarOpen(false) }}/>
-              <NavItem icon={<IconChat/>} label="Direction" count={unreadChat} active={tab === 'chat'} onClick={() => { setTab('chat'); setSidebarOpen(false) }}/>
             </nav>
             <div className="ws-sidebar-footer">
               <div className="ws-user">
@@ -241,20 +242,32 @@ function EspaceCommercialPage() {
               <h1 className="ws-page-title">
                 {tab === 'dashboard' && 'Accueil'}
                 {tab === 'leads' && 'Mes dossiers'}
-                {tab === 'clients' && 'Discussions clients'}
+                {tab === 'messagerie' && 'Messagerie'}
                 {tab === 'outils' && 'Mes Outils'}
-                {tab === 'chat' && 'Échanges avec la direction'}
               </h1>
             </header>
 
-            <div className="ws-content">
+            <div className={`ws-content ${tab === 'messagerie' ? 'flush' : ''}`}>
               {tab === 'dashboard' && <DashboardTab session={session} stats={stats} leads={leads} refLink={refLink} unreadClients={unreadClients} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)} onGo={setTab}/>}
               {tab === 'leads' && <LeadsTab leads={leads} onReload={loadLeads} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)}/>}
-              {tab === 'clients' && <ClientChatsTab commercialId={session.id} onRead={loadUnreadClients}/>}
+              {tab === 'messagerie' && <CommercialMessagerie commercialId={session.id} onThreadOpen={setThreadOpen} onCountsChange={() => { loadUnreadClients(); loadUnreadChat() }}/>}
               {tab === 'outils' && <OutilsTab refCode={session.ref_code} refLink={refLink} session={session}/>}
-              {tab === 'chat' && <ChatTab commercialId={session.id} onRead={loadUnreadChat}/>}
             </div>
           </main>
+
+          <nav className="bnav" aria-label="Navigation">
+            {([
+              ['dashboard', 'Accueil', <IconGrid key="i"/>, 0],
+              ['leads', 'Dossiers', <IconUsers key="i"/>, 0],
+              ['messagerie', 'Messagerie', <IconChat key="i"/>, unreadClients + unreadChat],
+              ['outils', 'Outils', <IconLink key="i"/>, 0],
+            ] as const).map(([k, label, icon, n]) => (
+              <button key={k} className={`bnav-item ${tab === k ? 'on' : ''}`} onClick={() => { setTab(k); window.scrollTo(0, 0) }}>
+                <span className="bnav-ic">{icon}{n > 0 && <span className="bnav-badge">{n > 9 ? '9+' : n}</span>}</span>
+                <span>{label}</span>
+              </button>
+            ))}
+          </nav>
 
           {selectedLead && (
             <LeadDrawer
@@ -319,7 +332,7 @@ function leadNom(l: Lead) {
 
 function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLead, onNewLead, onGo }: {
   session: Session; stats: Stats | null; leads: Lead[]; refLink: string; unreadClients: number
-  onOpenLead: (l: Lead) => void; onNewLead: () => void; onGo: (t: 'leads' | 'clients' | 'outils') => void
+  onOpenLead: (l: Lead) => void; onNewLead: () => void; onGo: (t: 'leads' | 'messagerie' | 'outils') => void
 }) {
   const [copied, setCopied] = useState(false)
   const [calcNb, setCalcNb] = useState(3)
@@ -362,7 +375,7 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
       <div className="kpi-grid">
         <KpiCard tone="primary" label="Gains ce mois" value={stats ? xaf(stats.gains_mois_xaf) : '—'} sub={stats ? `${xaf(stats.gains_total_xaf)} au total` : ''}/>
         <KpiCard label="Dossiers actifs" value={actifs} sub={`${leads.length} au total`}/>
-        <KpiCard label="Clients qui attendent" value={unreadClients} sub={unreadClients > 0 ? 'Réponds vite, ils comptent sur toi' : 'Tout le monde a sa réponse'} alert={unreadClients > 0} onClick={() => onGo('clients')}/>
+        <KpiCard label="Clients qui attendent" value={unreadClients} sub={unreadClients > 0 ? 'Réponds vite, ils comptent sur toi' : 'Tout le monde a sa réponse'} alert={unreadClients > 0} onClick={() => onGo('messagerie')}/>
         <KpiCard label="Classement du mois" value={stats?.classement ? `#${stats.classement}` : '—'} sub="Parmi les commerciaux actifs"/>
       </div>
 
@@ -404,7 +417,7 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
                       {done[t.key] && <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3 7.5l2.5 2.5L11 4.5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                     </button>
                     <div className="cd-task-txt"><div>{t.label}</div><small>{t.detail}</small></div>
-                    <button className="pill-btn sm" onClick={() => onGo(t.cible)}>Ouvrir<Arrow/></button>
+                    <button className="pill-btn sm" onClick={() => onGo(t.cible === 'clients' ? 'messagerie' : t.cible)}>Ouvrir<Arrow/></button>
                   </div>
                 ))}
               </div>
@@ -720,267 +733,6 @@ function CommissionCalc() {
   )
 }
 
-// ============ DISCUSSIONS CLIENTS ============
-type Conversation = { lead_id: string; nom: string; statut: string; last_message: string | null; last_at: string | null; unread: number }
-
-const QUICK_REPLIES: { label: string; text: string }[] = [
-  { label: 'Prise en charge', text: "Bonjour, je suis votre conseiller Mayinvest. J'ai bien reçu votre dossier et je m'en occupe. Avez-vous un moment pour un appel aujourd'hui ?" },
-  { label: 'Pièces à fournir', text: "Pour avancer, merci de déposer dans l'onglet « Mes infos » : votre pièce d'identité, vos 3 derniers bulletins de salaire et vos relevés bancaires des 3 derniers mois." },
-  { label: 'Rendez-vous', text: "Je vous propose un rendez-vous pour finaliser votre dossier. Quel jour et quelle heure vous conviennent cette semaine ?" },
-  { label: 'Relance', text: "Bonjour, je reviens vers vous au sujet de votre dossier. Êtes-vous toujours intéressé ? Je reste disponible pour répondre à vos questions." },
-]
-
-function ClientChatsTab({ commercialId, onRead }: { commercialId: string; onRead: () => void }) {
-  const [convs, setConvs] = useState<Conversation[]>([])
-  const [loadingList, setLoadingList] = useState(true)
-  const [current, setCurrent] = useState<Conversation | null>(null)
-  const [messages, setMessages] = useState<any[]>([])
-  const [input, setInput] = useState('')
-  const [sending, setSending] = useState(false)
-  const [search, setSearch] = useState('')
-
-  async function loadConvs() {
-    const { data } = await supabase.rpc('commercial_conversations')
-    setConvs(((data || []) as any[]).map(r => ({ ...r, unread: Number(r.unread || 0) })))
-    setLoadingList(false)
-  }
-  async function loadThread(leadId: string) {
-    const { data } = await supabase.from('messages').select('*').eq('lead_id', leadId).order('created_at')
-    setMessages(data || [])
-    const { data: marked } = await supabase.rpc('mark_messages_read', { p_lead_id: leadId, p_reader: 'commercial' })
-    if (marked) { loadConvs(); onRead() }
-  }
-
-  useEffect(() => { loadConvs() }, [])
-  useEffect(() => {
-    return onLiveEvent(`cc-${commercialId}`, (e) => {
-      if (e.topic !== 'msg') return
-      loadConvs()
-      if (current && e.ref === current.lead_id) loadThread(current.lead_id)
-    })
-  }, [commercialId, current?.lead_id])
-
-  function open(c: Conversation) {
-    setCurrent(c)
-    setInput('')
-    loadThread(c.lead_id)
-  }
-
-  const [noteMode, setNoteMode] = useState(false)
-  async function send() {
-    if (!current || !input.trim() || sending) return
-    const text = input.trim()
-    setSending(true)
-    setInput('')
-    const { error } = noteMode
-      ? await supabase.rpc('send_internal_note', { p_lead_id: current.lead_id, p_content: text })
-      : await supabase.rpc('send_lead_message', { p_lead_id: current.lead_id, p_sender: 'commercial', p_author_id: commercialId, p_content: text })
-    setSending(false)
-    if (error) { setInput(text); alert('Message non envoyé : ' + error.message); return }
-    loadThread(current.lead_id)
-  }
-
-  const filtered = convs.filter(c => !search.trim() || (c.nom || '').toLowerCase().includes(search.trim().toLowerCase()))
-  const fmt = (d: string | null) => {
-    if (!d) return ''
-    const dt = new Date(d)
-    return dt.toDateString() === new Date().toDateString()
-      ? dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-      : dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-  }
-
-  return (
-    <div className={`cc-wrap ${current ? 'has-current' : ''}`}>
-      <style>{`
-        .cc-wrap { display: grid; grid-template-columns: 300px 1fr; background: #fff; border: 1px solid #F0F0F0; border-radius: 18px; overflow: hidden; height: calc(100vh - 150px); min-height: 480px; }
-        .cc-list { border-right: 1px solid #F0F0F0; display: flex; flex-direction: column; min-height: 0; }
-        .cc-search { margin: 12px; padding: 10px 14px; border: 1.5px solid #E5E7EB; border-radius: 100px; font-family: inherit; font-size: 14px; outline: none; }
-        .cc-search:focus { border-color: #1A6BFF; }
-        .cc-items { overflow-y: auto; flex: 1; }
-        .cc-item { width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid #F7F7F7; padding: 12px 14px; display: flex; gap: 10px; align-items: center; cursor: pointer; font-family: inherit; }
-        .cc-item:hover, .cc-item.on { background: #EEF4FF; }
-        .cc-ava { width: 38px; height: 38px; border-radius: 50%; background: #0D1B3E; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
-        .cc-item-main { flex: 1; min-width: 0; }
-        .cc-item-top { display: flex; justify-content: space-between; gap: 6px; }
-        .cc-name { font-weight: 800; font-size: 13.5px; color: #0D1B3E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .cc-time { font-size: 11px; color: #9CA3AF; flex-shrink: 0; }
-        .cc-last { font-size: 12px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-        .cc-badge { background: #1A6BFF; color: #fff; font-size: 10px; font-weight: 800; border-radius: 100px; padding: 2px 7px; }
-        .cc-statut { font-size: 10px; font-weight: 800; color: #1A6BFF; background: #EEF4FF; border-radius: 100px; padding: 2px 8px; }
-        .cc-thread { display: flex; flex-direction: column; min-height: 0; background: #F8FAFC; }
-        .cc-thread-head { background: #0D1B3E; color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
-        .cc-back { display: none; background: rgba(255,255,255,0.12); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; align-items: center; justify-content: center; }
-        .cc-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-        .cc-msg { max-width: 78%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
-        .cc-msg.me { align-self: flex-end; background: #1A6BFF; color: #fff; border-bottom-right-radius: 4px; }
-        .cc-msg.client { align-self: flex-start; background: #fff; border: 1px solid #E5E7EB; color: #111; border-bottom-left-radius: 4px; }
-        .cc-msg.staff { align-self: flex-end; background: #0D1B3E; color: #fff; border-bottom-right-radius: 4px; }
-        .cc-msg.note { background: #FEF3C7; color: #78350F; border: 1.5px dashed #F59E0B; }
-        .cc-note-lbl { font-size: 11px; font-weight: 800; margin-bottom: 3px; }
-        .cc-mode { display: inline-flex; background: #F0F2F5; border-radius: 100px; padding: 3px; gap: 0 !important; }
-        .cc-quick .cc-mode button { border: none !important; background: transparent; color: #5B6478; padding: 5px 10px; }
-        .cc-quick .cc-mode button.on { background: #fff; color: #1A6BFF; box-shadow: 0 1px 4px rgba(13,27,62,0.08); }
-        .cc-quick .cc-mode button.on.note { color: #B45309; }
-        .cc-input textarea.note { background: #FFFBEB; border-color: #FCD34D; }
-        .cc-meta { font-size: 10.5px; opacity: 0.7; margin-top: 4px; }
-        .cc-quick { display: flex; gap: 6px; overflow-x: auto; padding: 8px 12px 0; }
-        .cc-quick button { flex-shrink: 0; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 100px; padding: 6px 12px; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; font-family: inherit; }
-        .cc-quick button:hover { border-color: #1A6BFF; color: #1A6BFF; }
-        .cc-input { display: flex; gap: 8px; padding: 10px 12px 12px; }
-        .cc-input textarea { flex: 1; resize: none; border: 1.5px solid #E5E7EB; border-radius: 18px; padding: 10px 14px; font-family: inherit; font-size: 14px; outline: none; max-height: 120px; }
-        .cc-input textarea:focus { border-color: #1A6BFF; }
-        .cc-send { background: #1A6BFF; color: #fff; border: none; border-radius: 100px; padding: 0 18px; font-weight: 800; cursor: pointer; font-family: inherit; }
-        .cc-send:disabled { background: #C7D0DB; cursor: not-allowed; }
-        .cc-empty { margin: auto; text-align: center; color: #6B7280; font-size: 13px; padding: 24px; line-height: 1.6; }
-        @media (max-width: 760px) {
-          .cc-wrap { grid-template-columns: 1fr; height: calc(100vh - 130px); }
-          .cc-wrap.has-current .cc-list { display: none; }
-          .cc-wrap:not(.has-current) .cc-thread { display: none; }
-          .cc-back { display: flex; }
-        }
-      `}</style>
-      <div className="cc-list">
-        <input className="cc-search" placeholder="Rechercher un client…" value={search} onChange={e => setSearch(e.target.value)}/>
-        <div className="cc-items">
-          {loadingList && <div className="cc-empty">Chargement…</div>}
-          {!loadingList && filtered.length === 0 && <div className="cc-empty">Aucun client pour l'instant.<br/>Les dossiers qui te sont attribués apparaissent ici.</div>}
-          {filtered.map(c => (
-            <button key={c.lead_id} className={`cc-item ${current?.lead_id === c.lead_id ? 'on' : ''}`} onClick={() => open(c)}>
-              <span className="cc-ava">{(c.nom || '?').trim().charAt(0).toUpperCase() || '?'}</span>
-              <span className="cc-item-main">
-                <span className="cc-item-top"><span className="cc-name">{c.nom || 'Client'}</span><span className="cc-time">{fmt(c.last_at)}</span></span>
-                <span className="cc-item-top" style={{ marginTop: 3 }}>
-                  <span className="cc-last">{c.last_message ? c.last_message.split('\n')[0] : <span className="cc-statut">{c.statut}</span>}</span>
-                  {c.unread > 0 && <span className="cc-badge">{c.unread}</span>}
-                </span>
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-      <div className="cc-thread">
-        {!current ? (
-          <div className="cc-empty">Choisis un client à gauche pour voir la discussion.</div>
-        ) : (<>
-          <div className="cc-thread-head">
-            <button className="cc-back" onClick={() => setCurrent(null)} aria-label="Retour à la liste">
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            </button>
-            <span className="cc-ava" style={{ background: '#1A6BFF' }}>{(current.nom || '?').charAt(0).toUpperCase()}</span>
-            <div style={{ minWidth: 0 }}>
-              <div style={{ fontWeight: 800, fontSize: 14 }}>{current.nom || 'Client'}</div>
-              <div style={{ fontSize: 11, opacity: 0.7 }}>Statut : {current.statut}</div>
-            </div>
-          </div>
-          <div className="cc-msgs">
-            {messages.length === 0 && <div className="cc-empty">Aucun message. Présente-toi au client avec un message rapide ci-dessous.</div>}
-            {messages.map(m => (
-              <div key={m.id} className={`cc-msg ${m.sender === 'client' ? 'client' : m.author_id === commercialId ? 'me' : 'staff'} ${m.visibility === 'internal' ? 'note' : ''}`}>
-                {m.visibility === 'internal' && <div className="cc-note-lbl">Note interne · invisible pour le client</div>}
-                {m.content}
-                <div className="cc-meta">
-                  {m.sender !== 'client' && m.author_id !== commercialId ? `${m.author_name || 'Direction'} · ` : ''}
-                  {new Date(m.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                  {m.sender !== 'client' && m.read_at ? ' · Lu' : ''}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="cc-quick">
-            <span className="cc-mode">
-              <button className={!noteMode ? 'on' : ''} onClick={() => setNoteMode(false)}>Au client</button>
-              <button className={noteMode ? 'on note' : ''} onClick={() => setNoteMode(true)}>Note pour la direction</button>
-            </span>
-            {!noteMode && QUICK_REPLIES.map(q => <button key={q.label} onClick={() => setInput(q.text)}>{q.label}</button>)}
-          </div>
-          <div className="cc-input">
-            <textarea rows={1} className={noteMode ? 'note' : ''} placeholder={noteMode ? 'Note interne : seule la direction la verra…' : 'Écris au client…'} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}/>
-            <button className="cc-send" onClick={send} disabled={!input.trim() || sending}>{sending ? '…' : 'Envoyer'}</button>
-          </div>
-        </>)}
-      </div>
-    </div>
-  )
-}
-
-// ============ CHAT TAB ============
-type ChatMsg = { id: string; sender_type: 'commercial' | 'director'; body: string; created_at: string; read_at: string | null }
-
-function ChatTab({ commercialId, onRead }: { commercialId: string; onRead: () => void }) {
-  const [messages, setMessages] = useState<ChatMsg[]>([])
-  const [input, setInput] = useState('')
-  const [sending, setSending] = useState(false)
-  const endRef = useState<HTMLDivElement | null>(null)
-
-  async function load() {
-    const { data } = await supabase.from('commercial_chats').select('*').eq('commercial_id', commercialId).order('created_at', { ascending: true })
-    if (data) setMessages(data as ChatMsg[])
-  }
-  async function markRead() {
-    await supabase.rpc('mark_commercial_messages_read', { p_commercial_id: commercialId, p_reader_type: 'commercial' })
-    onRead()
-  }
-
-  useEffect(() => {
-    load()
-    markRead()
-    return onLiveEvent(`chat-tab-${commercialId}`, (e) => {
-      if (e.topic !== 'cchat' || e.ref !== commercialId) return
-      load()
-      if (e.extra === 'director') markRead()
-    })
-  }, [commercialId])
-
-  async function send() {
-    if (!input.trim() || sending) return
-    setSending(true)
-    const body = input.trim()
-    setInput('')
-    const { error } = await supabase.rpc('send_commercial_message', { p_commercial_id: commercialId, p_sender_type: 'commercial', p_body: body })
-    setSending(false)
-    if (error) { setInput(body); alert('Message non envoyé : ' + error.message); return }
-    load()
-  }
-
-  return (
-    <div className="chat-wrap">
-      <div className="chat-head">
-        <div className="chat-ava">M</div>
-        <div>
-          <div className="chat-head-name">Équipe Mayinvest</div>
-          <div className="chat-head-sub">Support commercial · Brazzaville</div>
-        </div>
-      </div>
-      <div className="chat-messages">
-        {messages.length === 0 && (
-          <div className="chat-empty">
-            <p>Pas encore de messages. Dis bonjour à l'équipe Mayinvest ou pose une question sur un dossier !</p>
-          </div>
-        )}
-        {messages.map(m => (
-          <div key={m.id} className={`chat-msg ${m.sender_type === 'commercial' ? 'me' : 'them'}`}>
-            <div className="chat-msg-body">{m.body}</div>
-            <div className="chat-msg-time">{new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</div>
-          </div>
-        ))}
-      </div>
-      <div className="chat-input-row">
-        <input
-          placeholder="Écris ton message à Mayinvest…"
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), send())}
-          disabled={sending}
-        />
-        <button onClick={send} disabled={!input.trim() || sending}>
-          {sending ? '…' : 'Envoyer'}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ============ ICONS ============
 const IconGrid = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
 const IconUsers = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
 const IconLink = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
@@ -1064,13 +816,27 @@ function GlobalStyles() {
       .btn-logout-sm:hover { background: rgba(255,255,255,0.1); color: #fff; }
 
       .ws-main { min-width: 0; }
-      .ws-topbar { padding: 14px 32px; background: #fff; border-bottom: 1px solid ${MI.grayBorder}; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 10; }
-      @media (max-width: 640px) { .ws-topbar { padding: 12px 16px; } }
+      .ws-topbar { height: 56px; box-sizing: border-box; padding: 0 32px; background: #fff; border-bottom: 1px solid ${MI.grayBorder}; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 10; }
+      @media (max-width: 640px) { .ws-topbar { padding: 0 16px; } }
       .ws-burger { display: none; background: none; border: none; padding: 8px; cursor: pointer; color: ${MI.text}; }
       @media (max-width: 900px) { .ws-burger { display: inline-flex; } }
       .ws-page-title { font-size: 18px; font-weight: 800; margin: 0; color: ${MI.navy}; letter-spacing: -0.01em; }
       .ws-content { padding: 24px 32px 60px; max-width: 1160px; }
-      @media (max-width: 640px) { .ws-content { padding: 20px 16px 40px; } }
+      .ws-content.flush { padding: 0; max-width: none; }
+      .bnav { display: none; }
+      @media (max-width: 900px) {
+        .workspace { --bnav-h: calc(64px + env(safe-area-inset-bottom)); }
+        .workspace.no-bnav { --bnav-h: 0px; }
+        .ws-main { padding-bottom: var(--bnav-h); }
+        .bnav { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: rgba(255,255,255,0.96); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border-top: 1px solid #E8ECF3; padding: 6px 6px calc(6px + env(safe-area-inset-bottom)); height: var(--bnav-h); box-sizing: border-box; }
+        .workspace.no-bnav .bnav { display: none; }
+        .bnav-item { border: none; background: none; font-family: inherit; font-size: 10.5px; font-weight: 700; color: #64748B; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; border-radius: 14px; -webkit-tap-highlight-color: transparent; }
+        .bnav-item.on { color: ${MI.blue}; }
+        .bnav-item.on .bnav-ic { background: ${MI.blueSoft}; }
+        .bnav-ic { position: relative; width: 48px; height: 28px; border-radius: 100px; display: flex; align-items: center; justify-content: center; transition: background 0.15s; }
+        .bnav-badge { position: absolute; top: -3px; right: 4px; background: #EF4444; color: #fff; border-radius: 100px; font-size: 9.5px; font-weight: 800; min-width: 16px; height: 16px; padding: 0 4px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; }
+      }
+      @media (max-width: 640px) { .ws-content { padding: 20px 16px 40px; } .ws-content.flush { padding: 0; } }
 
       .hero-strip { background: linear-gradient(135deg, ${MI.navy} 0%, #1A2F5F 100%); color: #fff; border-radius: 20px; padding: 28px 32px; margin-bottom: 20px; position: relative; overflow: hidden; }
       .hero-strip::before { content: ''; position: absolute; top: -40px; right: -40px; width: 200px; height: 200px; background: radial-gradient(circle, rgba(26,107,255,0.3) 0%, transparent 60%); }
