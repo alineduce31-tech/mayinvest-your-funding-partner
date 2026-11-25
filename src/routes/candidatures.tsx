@@ -253,7 +253,8 @@ function CandidaturesPage() {
           </Link>
           <nav style={{ display: 'flex', gap: 6 }}>
             <Link to={'/candidatures' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, textDecoration: 'none', background: '#0F6E3E', color: '#fff' }}>Candidatures</Link>
-            <Link to={'/equipe-commerciale' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, color: '#6B7280', textDecoration: 'none' }}>Équipe</Link>
+            <Link to={'/equipe-commerciale' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, color: '#6B7280', textDecoration: 'none' }}>Commerciaux</Link>
+            <Link to={'/equipe-admin' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, color: '#6B7280', textDecoration: 'none' }}>Admins</Link>
           </nav>
         </div>
         <div className="cd-header-right">
