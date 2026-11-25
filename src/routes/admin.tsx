@@ -967,6 +967,12 @@ function Admin({ session }: { session: any }) {
                 </span>
                 <span>Équipe commerciale</span>
               </button>
+              <button className="sb-link" onClick={() => { navigate({ to: '/equipe-admin' as any }); setSidebarOpen(false) }}>
+                <span>
+                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.5 5 5.5.8-4 3.9.9 5.5L10 14.8 5.1 17.2 6 11.7 2 7.8l5.5-.8L10 2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>
+                </span>
+                <span>Équipe admin</span>
+              </button>
             </>}
           </nav>
           <div className="sb-footer">
