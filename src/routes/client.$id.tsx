@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
+import { formatPhoneInput } from '@/lib/phone'
 
 export const Route = createFileRoute('/client/$id')({
   component: ClientPortal,
@@ -845,9 +846,9 @@ function ClientPortal() {
                   <input
                     type="tel"
                     inputMode="numeric"
-                    placeholder="06 123 4567"
-                    maxLength={11}
-                    value={identifierInput}
+                    placeholder="06 655 32 18"
+                    maxLength={13}
+                    value={formatPhoneInput(identifierInput)}
                     onChange={e => setIdentifierInput(e.target.value.replace(/\D/g, '').slice(0, 9))}
                   />
                 </div>
