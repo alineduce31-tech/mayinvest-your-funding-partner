@@ -6,6 +6,7 @@ import { Logo } from '@/components/Logo'
 import { AuthStyles, AuthHeader, AuthTitle, AuthTabs, PasswordField, IconPhone, IconMail, IconBriefcase, AlertIcon } from '@/components/AuthUI'
 import { getCommercialToken, setCommercialToken } from '@/lib/session-tokens'
 import { formatPhoneInput } from '@/lib/phone'
+import { ETAPES, COMMISSION_PAR_DOSSIER, grouperParEtape, financesCeMois, progressionObjectif, gainsPour, tachesDuJour } from '@/lib/commercial-dashboard'
 
 export const Route = createFileRoute('/espace-commercial')({
   component: EspaceCommercialPage,
@@ -214,11 +215,11 @@ function EspaceCommercialPage() {
               <Link to="/"><Logo height={48} tone="light"/></Link>
             </div>
             <nav className="ws-nav">
-              <NavItem icon={<IconGrid/>} label="Dashboard" active={tab === 'dashboard'} onClick={() => { setTab('dashboard'); setSidebarOpen(false) }}/>
-              <NavItem icon={<IconUsers/>} label="Mes Leads" count={stats?.leads_actifs} active={tab === 'leads'} onClick={() => { setTab('leads'); setSidebarOpen(false) }}/>
+              <NavItem icon={<IconGrid/>} label="Accueil" active={tab === 'dashboard'} onClick={() => { setTab('dashboard'); setSidebarOpen(false) }}/>
+              <NavItem icon={<IconUsers/>} label="Mes dossiers" count={stats?.leads_actifs} active={tab === 'leads'} onClick={() => { setTab('leads'); setSidebarOpen(false) }}/>
               <NavItem icon={<IconChat/>} label="Mes clients" count={unreadClients} active={tab === 'clients'} onClick={() => { setTab('clients'); setSidebarOpen(false) }}/>
               <NavItem icon={<IconLink/>} label="Outils" active={tab === 'outils'} onClick={() => { setTab('outils'); setSidebarOpen(false) }}/>
-              <NavItem icon={<IconChat/>} label="Chat Mayinvest" count={unreadChat} active={tab === 'chat'} onClick={() => { setTab('chat'); setSidebarOpen(false) }}/>
+              <NavItem icon={<IconChat/>} label="Direction" count={unreadChat} active={tab === 'chat'} onClick={() => { setTab('chat'); setSidebarOpen(false) }}/>
             </nav>
             <div className="ws-sidebar-footer">
               <div className="ws-user">
@@ -238,16 +239,16 @@ function EspaceCommercialPage() {
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round"/></svg>
               </button>
               <h1 className="ws-page-title">
-                {tab === 'dashboard' && 'Dashboard'}
-                {tab === 'leads' && 'Mes Leads'}
+                {tab === 'dashboard' && 'Accueil'}
+                {tab === 'leads' && 'Mes dossiers'}
                 {tab === 'clients' && 'Discussions clients'}
                 {tab === 'outils' && 'Mes Outils'}
-                {tab === 'chat' && 'Chat avec Mayinvest'}
+                {tab === 'chat' && 'Échanges avec la direction'}
               </h1>
             </header>
 
             <div className="ws-content">
-              {tab === 'dashboard' && <DashboardTab session={session} stats={stats} leads={leads} onOpenLead={setSelectedLead}/>}
+              {tab === 'dashboard' && <DashboardTab session={session} stats={stats} leads={leads} refLink={refLink} unreadClients={unreadClients} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)} onGo={setTab}/>}
               {tab === 'leads' && <LeadsTab leads={leads} onReload={loadLeads} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)}/>}
               {tab === 'clients' && <ClientChatsTab commercialId={session.id} onRead={loadUnreadClients}/>}
               {tab === 'outils' && <OutilsTab refCode={session.ref_code} refLink={refLink} session={session}/>}
@@ -306,58 +307,134 @@ function StatusCard({ icon, title, subtitle, body, cta, onCta }: { icon: 'inprog
 }
 
 // ============ DASHBOARD TAB ============
-function DashboardTab({ session, stats, leads, onOpenLead }: { session: Session; stats: Stats | null; leads: Lead[]; onOpenLead: (l: Lead) => void }) {
-  const recentLeads = leads.slice(0, 5)
+const Arrow = () => (
+  <span className="arr-dot" aria-hidden="true">
+    <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  </span>
+)
+
+function leadNom(l: Lead) {
+  return `${l.identite?.prenom || l.identite?.raison_sociale || 'Prospect'} ${l.identite?.nom || ''}`.trim()
+}
+
+function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLead, onNewLead, onGo }: {
+  session: Session; stats: Stats | null; leads: Lead[]; refLink: string; unreadClients: number
+  onOpenLead: (l: Lead) => void; onNewLead: () => void; onGo: (t: 'leads' | 'clients' | 'outils') => void
+}) {
+  const [copied, setCopied] = useState(false)
+  const [calcNb, setCalcNb] = useState(3)
+  const [done, setDone] = useState<Record<string, boolean>>({})
+  const now = Date.now()
+  const finances = financesCeMois(leads, now)
+  const obj = progressionObjectif(finances)
+  const colonnes = grouperParEtape(leads)
+  const taches = tachesDuJour(leads, unreadClients, now)
+  const actifs = colonnes.a_contacter.length + colonnes.rdv.length + colonnes.depose.length
+  const waText = encodeURIComponent(`Bonjour ! Mayinvest vous dit en 24 h si votre dossier de crédit est bancable. Gratuit, 2 minutes : ${refLink}`)
+
+  function copyLink() {
+    if (!refLink) return
+    navigator.clipboard.writeText(refLink).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) })
+  }
+
   return (
     <>
-      <div className="hero-strip">
-        <div>
+      <div className="hero-strip cd-hero">
+        <div className="cd-hero-left">
           <div className="hero-tag"><span className="dot"/>Commercial validé · {session.ville}</div>
-          <h2>Salut {session.prenom} 👋</h2>
-          <p>Voici tes résultats en temps réel.</p>
+          <h2>Salut {session.prenom}</h2>
+          <p>{obj.atteint ? 'Objectif du mois atteint, bravo. Chaque dossier en plus est un bonus.' : `Encore ${obj.reste} dossier${obj.reste > 1 ? 's' : ''} financé${obj.reste > 1 ? 's' : ''} pour atteindre ton objectif du mois.`}</p>
+          <div className="cd-goal">
+            <div className="cd-goal-row"><span>Objectif du mois</span><b>{obj.fait} / {obj.objectif} financés</b></div>
+            <div className="cd-bar"><div style={{ width: `${obj.pct}%` }}/></div>
+          </div>
+        </div>
+        <div className="cd-ref">
+          <div className="cd-ref-lbl">Ton lien de parrainage</div>
+          <div className="cd-ref-link">{refLink ? refLink.replace(/^https?:\/\//, '') : 'Lien en cours de création'}</div>
+          <div className="cd-ref-btns">
+            <button className="cd-btn-light" onClick={copyLink} disabled={!refLink}>{copied ? 'Lien copié' : 'Copier le lien'}</button>
+            <a className="cd-btn-wa" href={refLink ? `https://wa.me/?text=${waText}` : undefined} target="_blank" rel="noreferrer">Partager sur WhatsApp</a>
+          </div>
         </div>
       </div>
 
       <div className="kpi-grid">
         <KpiCard tone="primary" label="Gains ce mois" value={stats ? xaf(stats.gains_mois_xaf) : '—'} sub={stats ? `${xaf(stats.gains_total_xaf)} au total` : ''}/>
-        <KpiCard label="Leads actifs" value={stats?.leads_actifs ?? 0} sub={stats ? `${stats.total_leads} au total` : ''}/>
-        <KpiCard label="Dossiers financés" value={stats?.dossiers_finances ?? 0} sub="50 000 XAF chacun"/>
-        <KpiCard label="Classement mois" value={stats?.classement ? `#${stats.classement}` : '—'} sub="Parmi les commerciaux actifs"/>
+        <KpiCard label="Dossiers actifs" value={actifs} sub={`${leads.length} au total`}/>
+        <KpiCard label="Clients qui attendent" value={unreadClients} sub={unreadClients > 0 ? 'Réponds vite, ils comptent sur toi' : 'Tout le monde a sa réponse'} alert={unreadClients > 0} onClick={() => onGo('clients')}/>
+        <KpiCard label="Classement du mois" value={stats?.classement ? `#${stats.classement}` : '—'} sub="Parmi les commerciaux actifs"/>
       </div>
 
-      <div className="section-card">
-        <div className="section-head">
-          <h3>Derniers leads</h3>
-          <span className="section-sub">{leads.length} au total</span>
-        </div>
-        {recentLeads.length === 0 ? (
-          <div className="empty">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <p>Aucun lead pour l'instant. Partage ton lien unique pour en recevoir !</p>
+      <div className="cd-grid">
+        <div className="section-card cd-kanban-card">
+          <div className="section-head">
+            <h3>Mes dossiers par étape</h3>
+            <button className="pill-btn" onClick={onNewLead}>Nouveau dossier<Arrow/></button>
           </div>
-        ) : (
-          <div className="leads-mini">
-            {recentLeads.map(l => (
-              <div key={l.id} className="lead-mini" onClick={() => onOpenLead(l)} style={{ cursor: 'pointer' }}>
-                <div className="lead-mini-name">{l.identite?.prenom || l.identite?.raison_sociale || 'Lead'} {l.identite?.nom || ''}</div>
-                <div className="lead-mini-meta">{l.type === 'physique' ? 'Particulier' : 'PME'} · {l.activite} · {l.statut}</div>
+          <div className="cd-kanban">
+            {ETAPES.map(e => (
+              <div key={e.key} className={`cd-col cd-col-${e.key}`}>
+                <div className="cd-col-head"><span>{e.label}</span><b>{colonnes[e.key].length}</b></div>
+                {colonnes[e.key].length === 0 ? (
+                  <div className="cd-col-empty">Aucun dossier</div>
+                ) : colonnes[e.key].slice(0, 4).map(l => (
+                  <button key={l.id} className="cd-card" onClick={() => onOpenLead(l)}>
+                    <div className="cd-card-name">{leadNom(l)}</div>
+                    <div className="cd-card-meta">{l.montant_demande ? xaf(l.montant_demande) : (l.type === 'physique' ? 'Particulier' : 'PME')}</div>
+                    <span className="cd-card-st">{l.statut}</span>
+                  </button>
+                ))}
+                {colonnes[e.key].length > 4 && <button className="cd-more" onClick={() => onGo('leads')}>+ {colonnes[e.key].length - 4} autres</button>}
               </div>
             ))}
           </div>
-        )}
+        </div>
+
+        <div className="cd-side">
+          <div className="section-card">
+            <div className="section-head"><h3>Ma journée</h3><span className="section-sub">{taches.filter(t => done[t.key]).length} / {taches.length}</span></div>
+            {taches.length === 0 ? (
+              <div className="cd-col-empty">Rien d'urgent. Partage ton lien pour trouver de nouveaux prospects.</div>
+            ) : (
+              <div className="cd-tasks">
+                {taches.map(t => (
+                  <div key={t.key} className={`cd-task ${done[t.key] ? 'done' : ''}`}>
+                    <button className="cd-check" aria-label={done[t.key] ? 'Marquer à faire' : 'Marquer fait'} onClick={() => setDone(d => ({ ...d, [t.key]: !d[t.key] }))}>
+                      {done[t.key] && <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M3 7.5l2.5 2.5L11 4.5" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                    </button>
+                    <div className="cd-task-txt"><div>{t.label}</div><small>{t.detail}</small></div>
+                    <button className="pill-btn sm" onClick={() => onGo(t.cible)}>Ouvrir<Arrow/></button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="cd-tip"><b>Conseil de Haki :</b> un client relancé dans les 24 h signe deux fois plus souvent. Commence par ceux qui attendent.</div>
+          </div>
+
+          <div className="section-card">
+            <div className="section-head"><h3>Combien je peux gagner</h3><span className="section-sub">{xaf(COMMISSION_PAR_DOSSIER)} par dossier</span></div>
+            <div className="cd-chips">
+              {[3, 5, 10].map(n => (
+                <button key={n} className={`cd-chip ${calcNb === n ? 'on' : ''}`} onClick={() => setCalcNb(n)}>{n} dossiers</button>
+              ))}
+            </div>
+            <div className="cd-calc"><span>Gains du mois</span><b>{xaf(gainsPour(calcNb))}</b></div>
+          </div>
+        </div>
       </div>
     </>
   )
 }
 
-function KpiCard({ tone, label, value, sub }: { tone?: 'primary'; label: string; value: any; sub?: string }) {
-  return (
-    <div className={`kpi ${tone === 'primary' ? 'primary' : ''}`}>
-      <div className="kpi-lbl">{label}</div>
-      <div className="kpi-val">{value}</div>
-      {sub && <div className="kpi-sub">{sub}</div>}
-    </div>
-  )
+function KpiCard({ tone, label, value, sub, alert, onClick }: { tone?: 'primary'; label: string; value: any; sub?: string; alert?: boolean; onClick?: () => void }) {
+  const cls = `kpi ${tone === 'primary' ? 'primary' : ''} ${alert ? 'alert' : ''} ${onClick ? 'clickable' : ''}`
+  const body = (<>
+    <div className="kpi-lbl">{label}</div>
+    <div className="kpi-val">{value}</div>
+    {sub && <div className="kpi-sub">{sub}</div>}
+  </>)
+  return onClick ? <button className={cls} onClick={onClick}>{body}</button> : <div className={cls}>{body}</div>
 }
 
 // ============ LEADS TAB ============
@@ -996,6 +1073,66 @@ function GlobalStyles() {
       .kpi-val { font-size: 26px; font-weight: 800; color: ${MI.navy}; margin: 6px 0 3px; letter-spacing: -0.03em; }
       .kpi.primary .kpi-val { color: #fff; }
       .kpi-sub { font-size: 11px; color: ${MI.textFaint}; }
+      button.kpi { font-family: inherit; text-align: left; cursor: pointer; width: 100%; }
+      .kpi.clickable:hover { border-color: #BFD4FF; }
+      .kpi.alert { background: ${MI.goldSoft}; border-color: #FCD34D; }
+      .kpi.alert .kpi-val { color: #B45309; }
+      .arr-dot { width: 24px; height: 24px; border-radius: 50%; background: ${MI.blue}; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+      .pill-btn { display: inline-flex; align-items: center; gap: 8px; background: ${MI.blueSoft}; color: ${MI.blue}; border: none; padding: 4px 4px 4px 14px; border-radius: 100px; font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+      .pill-btn:hover { background: #DCE8FF; }
+      .pill-btn:hover .arr-dot { transform: translateX(2px); }
+      .arr-dot { transition: transform 0.15s; }
+      .pill-btn.sm { font-size: 12px; padding: 3px 3px 3px 11px; gap: 6px; }
+      .pill-btn.sm .arr-dot { width: 22px; height: 22px; }
+      .cd-hero { display: flex; flex-wrap: wrap; gap: 24px; align-items: stretch; justify-content: space-between; }
+      .cd-hero-left { flex: 1 1 320px; position: relative; }
+      .cd-goal { margin-top: 18px; max-width: 420px; }
+      .cd-goal-row { display: flex; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.75); margin-bottom: 8px; }
+      .cd-goal-row b { color: #fff; }
+      .cd-bar { height: 10px; background: rgba(255,255,255,0.14); border-radius: 100px; overflow: hidden; }
+      .cd-bar div { height: 100%; background: linear-gradient(90deg, ${MI.blue}, #5B9BFF); border-radius: 100px; transition: width 0.4s; }
+      .cd-ref { flex: 0 1 340px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 16px; position: relative; display: flex; flex-direction: column; gap: 10px; }
+      .cd-ref-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: rgba(255,255,255,0.6); }
+      .cd-ref-link { font-size: 13px; font-weight: 700; word-break: break-all; }
+      .cd-ref-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+      .cd-btn-light, .cd-btn-wa { flex: 1 1 130px; border: none; border-radius: 100px; padding: 10px 14px; font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer; text-align: center; text-decoration: none; }
+      .cd-btn-light { background: #fff; color: ${MI.navy}; }
+      .cd-btn-light:disabled { opacity: 0.5; cursor: default; }
+      .cd-btn-wa { background: #16A34A; color: #fff; }
+      .cd-btn-wa:hover { color: #fff; background: #15803D; }
+      .cd-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+      @media (max-width: 1000px) { .cd-grid { grid-template-columns: 1fr; } }
+      .cd-side { display: flex; flex-direction: column; gap: 16px; }
+      .cd-side .section-card { margin-bottom: 0; }
+      .cd-kanban { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+      @media (max-width: 640px) { .cd-kanban { grid-template-columns: 1fr; } }
+      .cd-col { background: ${MI.grayBg}; border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; }
+      .cd-col-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800; color: ${MI.navy}; padding: 2px 4px 4px; }
+      .cd-col-head b { background: #fff; border-radius: 100px; padding: 1px 9px; font-size: 11px; }
+      .cd-col-a_contacter .cd-col-head { border-bottom: 2px solid ${MI.gold}; }
+      .cd-col-rdv .cd-col-head { border-bottom: 2px solid ${MI.blue}; }
+      .cd-col-depose .cd-col-head { border-bottom: 2px solid ${MI.violet}; }
+      .cd-col-empty { font-size: 12px; color: ${MI.textFaint}; padding: 10px 4px; }
+      .cd-card { background: #fff; border: 1px solid ${MI.grayBorder}; border-radius: 12px; padding: 10px 12px; text-align: left; font-family: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 3px; transition: border-color 0.15s, box-shadow 0.15s; }
+      .cd-card:hover { border-color: #BFD4FF; box-shadow: 0 4px 12px rgba(13,27,62,0.06); }
+      .cd-card-name { font-size: 13px; font-weight: 800; color: ${MI.navy}; }
+      .cd-card-meta { font-size: 12px; color: ${MI.textMuted}; }
+      .cd-card-st { align-self: flex-start; margin-top: 4px; font-size: 10.5px; font-weight: 800; background: ${MI.blueSoft}; color: ${MI.blue}; border-radius: 100px; padding: 2px 8px; }
+      .cd-more { background: none; border: none; color: ${MI.blue}; font-family: inherit; font-size: 12px; font-weight: 800; cursor: pointer; padding: 4px; text-align: left; }
+      .cd-tasks { display: flex; flex-direction: column; gap: 8px; }
+      .cd-task { display: flex; align-items: center; gap: 10px; padding: 10px; border: 1px solid ${MI.grayBorder}; border-radius: 12px; }
+      .cd-task.done { opacity: 0.55; }
+      .cd-task.done .cd-task-txt div { text-decoration: line-through; }
+      .cd-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #CBD5E1; background: #fff; flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0; }
+      .cd-task.done .cd-check { background: ${MI.green}; border-color: ${MI.green}; }
+      .cd-task-txt { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; color: ${MI.navy}; }
+      .cd-task-txt small { display: block; font-size: 11.5px; font-weight: 600; color: ${MI.textMuted}; margin-top: 1px; }
+      .cd-tip { margin-top: 12px; background: ${MI.blueSoft}; border-radius: 12px; padding: 12px; font-size: 12.5px; line-height: 1.5; color: ${MI.navy}; }
+      .cd-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+      .cd-chip { border: 1.5px solid #E5E7EB; background: #fff; color: #334155; padding: 7px 14px; border-radius: 100px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
+      .cd-chip.on { border-color: ${MI.blue}; background: ${MI.blueSoft}; color: ${MI.blue}; font-weight: 800; }
+      .cd-calc { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, ${MI.blue}, ${MI.blueDark}); color: #fff; border-radius: 14px; padding: 14px 16px; font-size: 13px; font-weight: 700; }
+      .cd-calc b { font-size: 20px; font-weight: 800; }
       .kpi.primary .kpi-sub { color: rgba(255,255,255,0.65); }
 
       .section-card { background: #fff; border: 1px solid ${MI.grayBorder}; border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(13,23,41,0.03); }
