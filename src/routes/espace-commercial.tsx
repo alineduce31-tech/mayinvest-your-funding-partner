@@ -766,12 +766,15 @@ function ClientChatsTab({ commercialId, onRead }: { commercialId: string; onRead
     loadThread(c.lead_id)
   }
 
+  const [noteMode, setNoteMode] = useState(false)
   async function send() {
     if (!current || !input.trim() || sending) return
     const text = input.trim()
     setSending(true)
     setInput('')
-    const { error } = await supabase.rpc('send_lead_message', { p_lead_id: current.lead_id, p_sender: 'commercial', p_author_id: commercialId, p_content: text })
+    const { error } = noteMode
+      ? await supabase.rpc('send_internal_note', { p_lead_id: current.lead_id, p_content: text })
+      : await supabase.rpc('send_lead_message', { p_lead_id: current.lead_id, p_sender: 'commercial', p_author_id: commercialId, p_content: text })
     setSending(false)
     if (error) { setInput(text); alert('Message non envoyé : ' + error.message); return }
     loadThread(current.lead_id)
@@ -812,6 +815,13 @@ function ClientChatsTab({ commercialId, onRead }: { commercialId: string; onRead
         .cc-msg.me { align-self: flex-end; background: #1A6BFF; color: #fff; border-bottom-right-radius: 4px; }
         .cc-msg.client { align-self: flex-start; background: #fff; border: 1px solid #E5E7EB; color: #111; border-bottom-left-radius: 4px; }
         .cc-msg.staff { align-self: flex-end; background: #0D1B3E; color: #fff; border-bottom-right-radius: 4px; }
+        .cc-msg.note { background: #FEF3C7; color: #78350F; border: 1.5px dashed #F59E0B; }
+        .cc-note-lbl { font-size: 11px; font-weight: 800; margin-bottom: 3px; }
+        .cc-mode { display: inline-flex; background: #F0F2F5; border-radius: 100px; padding: 3px; gap: 0 !important; }
+        .cc-quick .cc-mode button { border: none !important; background: transparent; color: #5B6478; padding: 5px 10px; }
+        .cc-quick .cc-mode button.on { background: #fff; color: #1A6BFF; box-shadow: 0 1px 4px rgba(13,27,62,0.08); }
+        .cc-quick .cc-mode button.on.note { color: #B45309; }
+        .cc-input textarea.note { background: #FFFBEB; border-color: #FCD34D; }
         .cc-meta { font-size: 10.5px; opacity: 0.7; margin-top: 4px; }
         .cc-quick { display: flex; gap: 6px; overflow-x: auto; padding: 8px 12px 0; }
         .cc-quick button { flex-shrink: 0; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 100px; padding: 6px 12px; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; font-family: inherit; }
@@ -865,7 +875,8 @@ function ClientChatsTab({ commercialId, onRead }: { commercialId: string; onRead
           <div className="cc-msgs">
             {messages.length === 0 && <div className="cc-empty">Aucun message. Présente-toi au client avec un message rapide ci-dessous.</div>}
             {messages.map(m => (
-              <div key={m.id} className={`cc-msg ${m.sender === 'client' ? 'client' : m.author_id === commercialId ? 'me' : 'staff'}`}>
+              <div key={m.id} className={`cc-msg ${m.sender === 'client' ? 'client' : m.author_id === commercialId ? 'me' : 'staff'} ${m.visibility === 'internal' ? 'note' : ''}`}>
+                {m.visibility === 'internal' && <div className="cc-note-lbl">Note interne · invisible pour le client</div>}
                 {m.content}
                 <div className="cc-meta">
                   {m.sender !== 'client' && m.author_id !== commercialId ? `${m.author_name || 'Direction'} · ` : ''}
@@ -876,10 +887,14 @@ function ClientChatsTab({ commercialId, onRead }: { commercialId: string; onRead
             ))}
           </div>
           <div className="cc-quick">
-            {QUICK_REPLIES.map(q => <button key={q.label} onClick={() => setInput(q.text)}>{q.label}</button>)}
+            <span className="cc-mode">
+              <button className={!noteMode ? 'on' : ''} onClick={() => setNoteMode(false)}>Au client</button>
+              <button className={noteMode ? 'on note' : ''} onClick={() => setNoteMode(true)}>Note pour la direction</button>
+            </span>
+            {!noteMode && QUICK_REPLIES.map(q => <button key={q.label} onClick={() => setInput(q.text)}>{q.label}</button>)}
           </div>
           <div className="cc-input">
-            <textarea rows={1} placeholder="Écris au client…" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}/>
+            <textarea rows={1} className={noteMode ? 'note' : ''} placeholder={noteMode ? 'Note interne : seule la direction la verra…' : 'Écris au client…'} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}/>
             <button className="cc-send" onClick={send} disabled={!input.trim() || sending}>{sending ? '…' : 'Envoyer'}</button>
           </div>
         </>)}

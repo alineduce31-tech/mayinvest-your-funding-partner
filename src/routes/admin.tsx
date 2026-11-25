@@ -8,6 +8,7 @@ import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
+import AdminMessagerie from '@/components/AdminMessagerie'
 import { LEAD_ACTIONS, buildWhatsappUrl, fillTemplate, LIFECYCLE_STATUTS, STATUT_COLORS } from '@/lib/lead-templates'
 
 // Estimates: Pack Formalisation = 500 000 XAF; dual credit/impact threshold = 5 000 000 XAF.
@@ -169,7 +170,7 @@ function _UnusedLoginScreen() {
 /* ============================================================
  * ADMIN APP
  * ============================================================ */
-type Page = 'general' | 'crm' | 'segments' | 'bancarisation' | 'non-eligibles' | 'rapports'
+type Page = 'general' | 'crm' | 'messagerie' | 'segments' | 'bancarisation' | 'non-eligibles' | 'rapports'
 
 function Admin({ session }: { session: any }) {
   const navigate = useNavigate()
@@ -497,9 +498,11 @@ function Admin({ session }: { session: any }) {
     noelig: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M4.5 4.5l11 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
     report: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="2.5" width="15" height="15" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M6 14V9M10 14V6M14 14v-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>,
   }
+  const unreadTotal = Object.values(msgCounts).reduce((a, b) => a + (b || 0), 0)
   const NAV: { k: Page; label: string; icon: any }[] = [
     { k: 'general', label: 'Dashboard', icon: ICON.dashboard },
     { k: 'crm', label: 'CRM', icon: ICON.crm },
+    { k: 'messagerie', label: 'Messagerie', icon: <MessageCircle size={18} strokeWidth={1.75}/> },
     { k: 'segments', label: 'Segments', icon: ICON.segments },
     { k: 'bancarisation', label: 'Bancarisation', icon: ICON.bank },
     { k: 'non-eligibles', label: 'Non éligibles', icon: ICON.noelig },
@@ -951,7 +954,7 @@ function Admin({ session }: { session: any }) {
           <nav className="sb-nav">
             {NAV.map(n => (
               <button key={n.k} className={`sb-link ${page === n.k ? 'on' : ''}`} onClick={() => { setPage(n.k); setSidebarOpen(false) }}>
-                <span>{n.icon}</span><span>{n.label}</span>
+                <span>{n.icon}</span><span>{n.label}</span>{n.k === 'messagerie' && unreadTotal > 0 && <span style={{ marginLeft: 'auto', background: '#1A6BFF', color: '#fff', borderRadius: 100, padding: '1px 8px', fontSize: 11, fontWeight: 800 }}>{unreadTotal}</span>}
               </button>
             ))}
             {isDirector && <>
@@ -994,11 +997,12 @@ function Admin({ session }: { session: any }) {
             <button className="burger" onClick={() => setSidebarOpen(true)} aria-label="Menu">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="#111" strokeWidth="2" strokeLinecap="round"/></svg>
             </button>
-            {page !== 'general' && <h1 className="page-title">{NAV.find(n => n.k === page)?.label}</h1>}
+            {page !== 'general' && page !== 'messagerie' && <h1 className="page-title">{NAV.find(n => n.k === page)?.label}</h1>}
           </div>
 
           {page === 'general' && <DashboardView onOpen={setSelectedLead}/>}
-          {page !== 'general' && (loading ? <SkeletonPage rows={3} label="Chargement des leads…" /> : <>
+          {page === 'messagerie' && <AdminMessagerie session={session} onOpenLead={setSelectedLead} onLeadChanged={loadLeads}/>}
+          {page !== 'general' && page !== 'messagerie' && (loading ? <SkeletonPage rows={3} label="Chargement des leads…" /> : <>
             {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
             {page === 'crm' && <CRMView leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
@@ -2565,7 +2569,8 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
             <div className="chat-scroll">
               {messages.length === 0 && <div className="chat-empty">Aucun message. Démarrez la conversation.</div>}
               {messages.map(m => (
-                <div key={m.id} className={`msg ${m.sender === 'client' ? 'client' : 'admin'}`}>
+                <div key={m.id} className={`msg ${m.sender === 'client' ? 'client' : 'admin'}`} style={m.visibility === 'internal' ? { background: '#FEF3C7', color: '#78350F', border: '1.5px dashed #F59E0B' } : undefined}>
+                  {m.visibility === 'internal' && <div style={{ fontSize: 11, fontWeight: 800, marginBottom: 3 }}>Note interne · invisible pour le client</div>}
                   <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{m.content}</div>
                   <div className="msg-meta">
                     {m.sender !== 'client' && m.author_name ? `${m.author_name} · ` : ''}
