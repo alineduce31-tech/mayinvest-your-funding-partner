@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { messageRdv, initiales, heureCourte } from '@/lib/messagerie'
 import { COMMISSION_PAR_DOSSIER } from '@/lib/commercial-dashboard'
+import CallButton from '@/components/CallButton'
 import {
   SUIVI, aRelancer, demainMatin, etapeFaite, etapeSuivante, filtrerCom, heuresDepuis, indexSuivi,
   messagePieces, prochaineEtape, type ComRow, type FiltreCom, type Rappels,
@@ -27,11 +28,6 @@ const ArrowDot = () => (
 const BackIcon = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4L3 7l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
 const SendIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11l18-8-8 18-3-8-7-2z" fill="#fff"/></svg>
 const PhoneIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round"/></svg>
-
-function telHref(tel: string | null) {
-  const d = (tel || '').replace(/\D/g, '')
-  return d ? `tel:+242${d.slice(-9)}` : undefined
-}
 
 function useRappels(commercialId: string) {
   const key = `mi_rappels_${commercialId}`
@@ -238,7 +234,6 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
 
   const idx = indexSuivi(row.statut)
   const next = etapeSuivante(row.statut)
-  const href = telHref(row.tel)
 
   return (
     <div className="cm-wrap">
@@ -249,14 +244,14 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
             <b>{row.nom || 'Client'}{row.montant ? ` · ${fmtXaf(row.montant)}` : ''}</b>
             <small>{[row.activite, row.statut, row.ville].filter(Boolean).join(' · ')}</small>
           </div>
-          {href && <a className="cm-call" href={href}>Appeler<span className="cm-adot green"><PhoneIcon/></span></a>}
+          <CallButton tel={row.tel} nom={row.nom} leadId={row.lead_id} className="cm-call" onLogged={loadMsgs}>Appeler<span className="cm-adot green"><PhoneIcon/></span></CallButton>
           <button className="cm-side-btn" onClick={() => setSideOpen(true)}>Dossier</button>
         </div>
 
         <div className={`cm-next ${step.ton}`}>
           <div><b>Prochaine étape :</b> {step.texte}</div>
           {step.bouton && (step.action === 'appeler'
-            ? (href ? <a className="cm-pill" href={href}>{step.bouton}<ArrowDot/></a> : null)
+            ? <CallButton tel={row.tel} nom={row.nom} leadId={row.lead_id} className="cm-pill" onLogged={loadMsgs}>{step.bouton}<ArrowDot/></CallButton>
             : <button className="cm-pill" onClick={doAction} disabled={busyStep}>{step.bouton}<ArrowDot/></button>)}
         </div>
 
@@ -533,7 +528,7 @@ function CmStyles() {
     .cm-back { display: none; width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid #E5E7EB; background: #fff; color: #0D1B3E; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
     .cm-adot { width: 26px; height: 26px; border-radius: 50%; background: #1A6BFF; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.15s; }
     .cm-adot.green { background: #16A34A; }
-    .cm-call { display: inline-flex; align-items: center; gap: 8px; background: #DCFCE7; color: #15803D; padding: 4px 4px 4px 14px; border-radius: 100px; font-size: 13px; font-weight: 800; text-decoration: none; flex-shrink: 0; }
+    .cm-call { border: none; display: inline-flex; align-items: center; gap: 8px; background: #DCFCE7; color: #15803D; padding: 4px 4px 4px 14px; border-radius: 100px; font-size: 13px; font-weight: 800; text-decoration: none; flex-shrink: 0; }
     .cm-call:hover { color: #15803D; background: #BBF7D0; }
     .cm-side-btn { display: none; border: 1.5px solid #E5E7EB; background: #fff; border-radius: 100px; padding: 8px 12px; font-family: inherit; font-size: 12px; font-weight: 800; color: #0D1B3E; cursor: pointer; flex-shrink: 0; }
     .cm-next { margin: 12px 16px 0; border-radius: 14px; padding: 10px 12px 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; font-size: 13px; color: #0D1B3E; line-height: 1.45; }

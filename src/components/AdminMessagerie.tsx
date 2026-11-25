@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { LIFECYCLE_STATUTS } from '@/lib/lead-templates'
+import CallButton from '@/components/CallButton'
 import {
   filtrerInbox, filtrerEquipe, compteurs, heuresAttente, enRetard, apercu, heureCourte, initiales,
   messageRdv, MESSAGES_TYPES, type InboxRow, type TeamRow, type Filtre,
@@ -272,6 +273,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
             <span className={`am-mem ${agentId ? 'blue' : 'warn'}`}>{agentNom || 'Sans conseiller'}</span>
             <span className="am-mem navy">Direction</span>
           </div>
+          <CallButton tel={lead?.identite?.tel} nom={nom} leadId={leadId} className="am-call" onLogged={loadMsgs}>Appeler<span className="am-adot green"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" stroke="#fff" strokeWidth="2.4" strokeLinejoin="round"/></svg></span></CallButton>
           <button className="am-info-btn" onClick={() => setInfoOpen(o => !o)}>Dossier</button>
         </div>
 
@@ -354,7 +356,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
             ) : <b>{agentNom || 'Sans conseiller'}</b>}
           </div>
           <div><span>Pièces validées</span><b className={docsOk < docs.length ? 'warn' : 'ok'}>{docsOk} / {docs.length}</b></div>
-          {lead?.identite?.tel && <div><span>Téléphone</span><a href={`tel:+242${String(lead.identite.tel).replace(/\D/g, '')}`}>{lead.identite.tel}</a></div>}
+          {lead?.identite?.tel && <div><span>Téléphone</span><CallButton tel={lead.identite.tel} nom={nom} leadId={leadId} className="am-tel" onLogged={loadMsgs}>{lead.identite.tel}</CallButton></div>}
         </div>
 
         <div className="am-side-sub">Pièces du dossier</div>
@@ -478,7 +480,7 @@ function TeamThread({ commercialId, row, dossiers, tick, onBack, onRead, onOpenD
       <aside className="am-side static">
         <div className="am-side-head"><span>Le commercial</span></div>
         <div className="am-side-id"><span className="am-score blue">{initiales(row?.nom)}</span><div><b>{row?.nom}</b><small>{row?.ville}</small></div></div>
-        {row?.telephone && <div className="am-kv"><div><span>Téléphone</span><a href={`tel:+242${row.telephone.replace(/\D/g, '')}`}>{row.telephone}</a></div></div>}
+        {row?.telephone && <div className="am-kv"><div><span>Téléphone</span><CallButton tel={row.telephone} nom={row.nom} className="am-tel">{row.telephone}</CallButton></div></div>}
         <div className="am-side-sub">Ses dossiers en discussion</div>
         {dossiers.length === 0 ? <div className="am-empty sm">Aucun dossier avec messages.</div> : (
           <div className="am-docs">
@@ -595,6 +597,10 @@ function MessagerieStyles() {
     .am-adot { width: 24px; height: 24px; border-radius: 50%; background: #1A6BFF; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.15s; }
     .am-btn-primary { display: inline-flex; align-items: center; gap: 8px; border: none; background: #fff; color: #0D1B3E; padding: 4px 4px 4px 14px; border-radius: 100px; font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
     .am-btn-primary:hover .am-adot { transform: translateX(2px); }
+    .am-adot.green { background: #16A34A; }
+    .am-call { border: none; display: inline-flex; align-items: center; gap: 8px; background: #DCFCE7 !important; color: #15803D; padding: 4px 4px 4px 13px; border-radius: 100px; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+    .am-call:hover { background: #BBF7D0 !important; }
+    .am-tel { border: none; background: none !important; padding: 0; color: #1A6BFF; font-weight: 800; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; }
     .am-btn-primary:disabled { opacity: 0.5; cursor: default; }
     .am-bc .am-btn-primary { background: #EEF4FF; color: #1A6BFF; }
     .am-btn-ghost { border: 1.5px solid rgba(255,255,255,0.25); background: transparent; color: #fff; padding: 7px 14px; border-radius: 100px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
@@ -751,6 +757,7 @@ function MessagerieStyles() {
       .am-body:not(.has-fil) .am-main { display: none; }
       .am-back { display: inline-flex; }
       .am-members { display: none; }
+      .am-call { font-size: 0; gap: 0; padding: 4px; }
       .am-bubble { max-width: 88%; }
     }
   `}</style>
