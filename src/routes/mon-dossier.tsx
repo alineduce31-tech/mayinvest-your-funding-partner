@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
+import { formatPhoneInput } from '@/lib/phone'
 
 export const Route = createFileRoute('/mon-dossier')({
   component: MonDossier,
@@ -487,9 +488,9 @@ function MonDossier() {
                 ref={phoneRef}
                 type="tel"
                 inputMode="numeric"
-                placeholder="Ex : 06 53 13 187"
-                maxLength={11}
-                value={phone}
+                placeholder="Ex : 06 655 32 18"
+                maxLength={13}
+                value={formatPhoneInput(phone)}
                 onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 9))}
                 onFocus={() => setActiveField('identifier')}
                 onBlur={() => setActiveField('none')}
@@ -587,14 +588,14 @@ function MonDossier() {
                   </>}
                   {step === 'id-focus' && <>
                     <div><strong>Je vous accompagne 👀</strong></div>
-                    <div style={{ marginTop: 6 }}>{tab === 'phone' ? 'Tapez votre numéro à 9 chiffres sans espaces (ex : 065313187).' : 'Tapez l\'adresse email que vous avez utilisée à l\'inscription.'}</div>
+                    <div style={{ marginTop: 6 }}>{tab === 'phone' ? 'Tapez votre numéro à 9 chiffres (ex : 06 655 32 18).' : 'Tapez l\'adresse email que vous avez utilisée à l\'inscription.'}</div>
                   </>}
                   {step === 'pwd-focus' && <>
                     <div><strong>Mot de passe sécurisé 🔒</strong></div>
                     <div style={{ marginTop: 6 }}>Minimum 8 caractères, lettres + chiffres. Cliquez sur l'œil 👁️ pour vérifier ce que vous tapez.</div>
                   </>}
                   {step === 'pwd' && <>
-                    <div><strong>Super ! {tab === 'phone' ? '📱 ' + phone : '✉️ ' + email}</strong></div>
+                    <div><strong>Super ! {tab === 'phone' ? '📱 ' + formatPhoneInput(phone) : '✉️ ' + email}</strong></div>
                     <div style={{ marginTop: 6 }}>Entrez maintenant votre mot de passe. Si vous l'avez oublié, pas de souci, je peux vous aider.</div>
                   </>}
                   {step === 'ready' && <>
@@ -641,7 +642,7 @@ function MonDossier() {
                       <div className="hk-demo-field">
                         <div className="hk-demo-label">{demoChannel === 'phone' ? 'TÉLÉPHONE (9 CHIFFRES)' : 'EMAIL'}</div>
                         <div className="hk-demo-value">
-                          {demoId || <span className="hk-demo-placeholder">{demoChannel === 'phone' ? 'Ex : 06 53 13 187' : 'Ex : jean.pierre@gmail.com'}</span>}
+                          {demoId ? (demoChannel === 'phone' ? formatPhoneInput(demoId) : demoId) : <span className="hk-demo-placeholder">{demoChannel === 'phone' ? 'Ex : 06 655 32 18' : 'Ex : jean.pierre@gmail.com'}</span>}
                           {demoStage === 'typing' && !demoPwd && <span className="hk-caret"/>}
                         </div>
                       </div>
