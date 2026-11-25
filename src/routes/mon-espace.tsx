@@ -8,6 +8,9 @@ export const Route = createFileRoute('/mon-espace')({
 
 const ADMIN_SESSION_KEY = 'mayinvest_admin_session'
 
+// Ville affichée par défaut avant qu'un admin se connecte (session vide)
+const DEFAULT_VILLE = 'Brazzaville'
+
 function MonEspaceAdmin() {
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
@@ -16,6 +19,8 @@ function MonEspaceAdmin() {
   const [loading, setLoading] = useState(false)
   const [time, setTime] = useState('')
   const [showPwd, setShowPwd] = useState(false)
+  // Ville affichée dans la meta "Région" — sort de la session si connecté
+  const [ville, setVille] = useState<string>(DEFAULT_VILLE)
 
   useEffect(() => {
     const update = () => {
@@ -33,6 +38,8 @@ function MonEspaceAdmin() {
       if (raw) {
         const s = JSON.parse(raw)
         if (s?.email && s?.expiresAt && s.expiresAt > Date.now()) {
+          // Hydrate la ville depuis la session existante pour affichage avant redirect
+          if (s.ville) setVille(s.ville)
           navigate({ to: '/admin' })
         }
       }
@@ -49,14 +56,18 @@ function MonEspaceAdmin() {
         setLoading(false)
         return
       }
-      // NOUVEAU : on stocke id + role en plus de email pour les filtres role-based
+      // On stocke id + role + ville + nom pour les affichages et filtres role-based
       const session = {
         id: row.id,
         email: row.email,
         role: row.role || 'director',
+        nom: row.nom || '',
+        prenom: row.prenom || '',
+        ville: row.ville || DEFAULT_VILLE,
         expiresAt: Date.now() + 8 * 60 * 60 * 1000,
       }
       localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session))
+      setVille(session.ville)
       navigate({ to: '/admin' })
     } catch {
       setError('Erreur de connexion')
@@ -178,7 +189,7 @@ function MonEspaceAdmin() {
             </div>
             <div className="me-meta-item">
               <div className="me-meta-label">Région</div>
-              <div className="me-meta-value">Brazzaville</div>
+              <div className="me-meta-value">{ville}</div>
             </div>
           </div>
         </div>
