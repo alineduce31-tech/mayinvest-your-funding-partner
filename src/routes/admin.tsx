@@ -98,7 +98,7 @@ function AdminGate() {
     }
   }, [navigate])
 
-  if (checking) return <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#666' }}>Vérification de la session…</div>
+  if (checking) return <SkeletonPage label="Vérification de la session…" />
   if (!session) return null
   return <Admin session={session} />
 }
