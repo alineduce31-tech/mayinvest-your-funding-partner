@@ -31,6 +31,8 @@ function EquipeAdminPage() {
   const [showAdd, setShowAdd] = useState(false)
   const [editing, setEditing] = useState<Admin | null>(null)
   const [resetting, setResetting] = useState<Admin | null>(null)
+  const [deleting, setDeleting] = useState<Admin | null>(null)
+  const [currentEmail, setCurrentEmail] = useState<string>('')
   const [search, setSearch] = useState('')
   const [notice, setNotice] = useState<{ type: 'ok' | 'err'; msg: string } | null>(null)
 
@@ -47,6 +49,7 @@ function EquipeAdminPage() {
         navigate({ to: '/admin' as any }); return
       }
       setIsDirector(true)
+      setCurrentEmail(s.email || '')
       setAuthChecked(true)
     } catch { navigate({ to: '/mon-espace' as any }) }
   }, [navigate])
@@ -112,6 +115,14 @@ function EquipeAdminPage() {
     if (error) { setNotice({ type: 'err', msg: error.message }); return }
     setNotice({ type: 'ok', msg: `Nouveau mot de passe défini pour ${a.email}.` })
     setResetting(null)
+  }
+
+  async function handleDelete(a: Admin) {
+    const { error } = await supabase.rpc('delete_admin', { p_id: a.id })
+    if (error) { setNotice({ type: 'err', msg: error.message }); return }
+    setNotice({ type: 'ok', msg: `Admin ${a.email} supprimé définitivement.` })
+    setDeleting(null)
+    await loadAll()
   }
 
   useEffect(() => {
@@ -203,11 +214,33 @@ function EquipeAdminPage() {
                     </td>
                     <td className="small">{lastLogin}</td>
                     <td className="actions">
-                      <button onClick={() => setEditing(a)} title="Modifier">
+                      <button onClick={() => setEditing(a)} title="Modifier" aria-label="Modifier">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </button>
-                      <button onClick={() => setResetting(a)} title="Réinitialiser le mot de passe">
+                      <button onClick={() => setResetting(a)} title="Réinitialiser le mot de passe" aria-label="Reset mot de passe">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>
+                      </button>
+                      <button
+                        className={a.is_active ? 'warn' : 'ok'}
+                        onClick={() => handleToggleActive(a)}
+                        disabled={a.email === currentEmail}
+                        title={a.email === currentEmail ? 'Impossible de désactiver votre propre compte' : (a.is_active ? 'Désactiver le compte' : 'Réactiver le compte')}
+                        aria-label={a.is_active ? 'Désactiver' : 'Réactiver'}
+                      >
+                        {a.is_active ? (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18.36 6.64a9 9 0 11-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+                        ) : (
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        )}
+                      </button>
+                      <button
+                        className="danger"
+                        onClick={() => setDeleting(a)}
+                        disabled={a.email === currentEmail}
+                        title={a.email === currentEmail ? 'Impossible de supprimer votre propre compte' : 'Supprimer définitivement'}
+                        aria-label="Supprimer"
+                      >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a2 2 0 012-2h2a2 2 0 012 2v2"/></svg>
                       </button>
                     </td>
                   </tr>
@@ -221,6 +254,7 @@ function EquipeAdminPage() {
       {showAdd && <AddAdminModal onClose={() => setShowAdd(false)} onSubmit={handleCreate}/>}
       {editing && <EditAdminModal admin={editing} onClose={() => setEditing(null)} onSubmit={(patch) => handleUpdate(editing, patch)}/>}
       {resetting && <ResetPwdModal admin={resetting} onClose={() => setResetting(null)} onSubmit={(pwd) => handleResetPassword(resetting, pwd)}/>}
+      {deleting && <DeleteAdminModal admin={deleting} onClose={() => setDeleting(null)} onConfirm={() => handleDelete(deleting)}/>}
     </div>
   )
 }
@@ -335,6 +369,56 @@ function ResetPwdModal({ admin, onClose, onSubmit }: { admin: Admin; onClose: ()
         </div>
         <div className="modal-actions stacked">
           <PillBtn type="submit" variant="danger" disabled={submitting}>{submitting ? 'Reset…' : 'Réinitialiser le mot de passe'}</PillBtn>
+          <PillBtn type="button" variant="ghost" onClick={onClose}>Annuler</PillBtn>
+        </div>
+      </form>
+    </div>
+  )
+}
+
+// ============================================================
+// MODAL : Confirmer la suppression d'un admin
+// ============================================================
+function DeleteAdminModal({ admin, onClose, onConfirm }: { admin: Admin; onClose: () => void; onConfirm: () => void }) {
+  const [confirmText, setConfirmText] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const expected = admin.email
+
+  async function handleConfirm(e: React.FormEvent) {
+    e.preventDefault()
+    if (confirmText.trim().toLowerCase() !== expected.toLowerCase()) return
+    setSubmitting(true)
+    await onConfirm()
+    setSubmitting(false)
+  }
+
+  const canConfirm = confirmText.trim().toLowerCase() === expected.toLowerCase()
+
+  return (
+    <div className="modal-ovr" onClick={onClose}>
+      <form className="modal" onClick={e => e.stopPropagation()} onSubmit={handleConfirm}>
+        <div className="modal-head">
+          <h3 style={{ color: '#B42318' }}>Supprimer définitivement</h3>
+          <button type="button" className="modal-close" onClick={onClose}>✕</button>
+        </div>
+        <div className="modal-body">
+          <div style={{ padding: 12, background: '#FEE2E2', borderLeft: '3px solid #B42318', borderRadius: '0 8px 8px 0', fontSize: 13, color: '#991B1B', marginBottom: 14, lineHeight: 1.55 }}>
+            <b style={{ display: 'block', marginBottom: 4 }}>⚠ Action irréversible</b>
+            Vous allez supprimer définitivement le compte <b>{admin.email}</b>. L'historique et les traces liés à cet admin seront perdus. Pour désactiver temporairement, utilisez plutôt le bouton <b>Désactiver</b>.
+          </div>
+          <label className="flabel">Pour confirmer, tape l'email : <code style={{ background: '#F3F3F1', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontSize: 12 }}>{expected}</code></label>
+          <input
+            className="finput"
+            autoFocus
+            value={confirmText}
+            onChange={e => setConfirmText(e.target.value)}
+            placeholder={expected}
+          />
+        </div>
+        <div className="modal-actions stacked">
+          <PillBtn type="submit" variant="danger" disabled={!canConfirm || submitting}>
+            {submitting ? 'Suppression…' : 'Supprimer définitivement'}
+          </PillBtn>
           <PillBtn type="button" variant="ghost" onClick={onClose}>Annuler</PillBtn>
         </div>
       </form>
@@ -467,7 +551,16 @@ const CSS = `
 
   .actions { display: flex; gap: 6px; }
   .actions button { background: #F3F3F1; border: none; border-radius: 8px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: #6B7280; cursor: pointer; transition: all 0.15s; }
-  .actions button:hover { background: #0F6E3E; color: white; }
+  .actions button:hover:not(:disabled) { background: #0F6E3E; color: white; }
+  .actions button:disabled { opacity: 0.35; cursor: not-allowed; }
+  .actions button.warn:hover:not(:disabled) { background: #B4871F; color: white; }
+  .actions button.ok:hover:not(:disabled) { background: #22C55E; color: white; }
+  .actions button.danger:hover:not(:disabled) { background: #B42318; color: white; }
+
+  /* Styles helpers utilisés dans la modale delete */
+  .flabel { display: block; font-size: 11.5px; color: #6B7280; margin-bottom: 6px; font-weight: 500; }
+  .finput { width: 100%; padding: 11px 14px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; font-size: 13px; font-family: inherit; color: #0F1729; transition: all 0.15s; }
+  .finput:focus { outline: none; border-color: #B42318; box-shadow: 0 0 0 3px rgba(180,35,24,0.12); }
 
   /* ===== Modales ===== */
   .modal-ovr { position: fixed; inset: 0; background: rgba(13,23,41,0.6); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; }
