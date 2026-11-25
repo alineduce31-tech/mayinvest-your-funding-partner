@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 
 export const Route = createFileRoute('/equipe-commerciale')({
@@ -107,9 +107,23 @@ function EquipeCommercialePage() {
         .kpi-val { font-size: 22px; font-weight: 800; color: #0F1729; margin-top: 6px; letter-spacing: -0.02em; }
 
         .toolbar { background: #fff; border: 1px solid #ECECEA; border-radius: 12px; padding: 10px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
-        .toolbar input, .toolbar select { padding: 8px 12px; background: #F9FAFB; border: 1px solid #ECECEA; border-radius: 8px; font-size: 12px; font-family: inherit; color: #111827; }
-        .toolbar input { flex: 1; min-width: 180px; }
-        .toolbar select { cursor: pointer; }
+        .toolbar input { flex: 1; min-width: 180px; padding: 9px 13px; background: #F9FAFB; border: 1px solid #ECECEA; border-radius: 10px; font-size: 12.5px; font-family: inherit; color: #111827; }
+        .toolbar input:focus { outline: none; border-color: #0F6E3E; background: #fff; box-shadow: 0 0 0 3px rgba(15,110,62,0.1); }
+
+        /* === FilterSelect (custom dropdown) === */
+        .fs-wrap { position: relative; }
+        .fs-btn { padding: 9px 12px 9px 14px; background: #F9FAFB; border: 1px solid #ECECEA; border-radius: 10px; font-size: 12.5px; font-family: inherit; color: #111827; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; min-width: 150px; justify-content: space-between; transition: all 0.15s; font-weight: 500; }
+        .fs-btn:hover { background: #fff; border-color: #D1D5DB; }
+        .fs-btn.open { background: #fff; border-color: #0F6E3E; box-shadow: 0 0 0 3px rgba(15,110,62,0.1); }
+        .fs-lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .fs-chev { color: #6B7280; transition: transform 0.2s; flex-shrink: 0; }
+        .fs-btn.open .fs-chev { transform: rotate(180deg); color: #0F6E3E; }
+
+        .fs-panel { position: absolute; top: calc(100% + 6px); left: 0; min-width: 100%; background: #fff; border: 1px solid #ECECEA; border-radius: 12px; box-shadow: 0 20px 40px rgba(13,23,41,0.12), 0 2px 6px rgba(13,23,41,0.05); padding: 6px; z-index: 50; max-height: 320px; overflow-y: auto; animation: fsFadeIn 0.14s ease; }
+        @keyframes fsFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+        .fs-opt { padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #111827; display: flex; align-items: center; justify-content: space-between; gap: 10px; white-space: nowrap; }
+        .fs-opt:hover { background: #E6F2EB; color: #0A4E2C; }
+        .fs-opt.selected { background: #E6F2EB; color: #0F6E3E; font-weight: 700; }
 
         .list { background: #fff; border: 1px solid #ECECEA; border-radius: 12px; overflow: hidden; }
         .row { display: grid; grid-template-columns: 2fr 1fr 110px 110px 130px 90px; gap: 12px; align-items: center; padding: 14px 18px; border-bottom: 1px solid #F3F3F1; font-size: 12px; }
@@ -174,15 +188,21 @@ function EquipeCommercialePage() {
 
         <div className="toolbar">
           <input placeholder="Rechercher par nom, email, téléphone…" value={search} onChange={e => setSearch(e.target.value)}/>
-          <select value={villeFilter} onChange={e => setVilleFilter(e.target.value)}>
-            <option value="">Toutes les villes</option>
-            {villes.map(v => <option key={v} value={v}>{v}</option>)}
-          </select>
-          <select value={sort} onChange={e => setSort(e.target.value as any)}>
-            <option value="activated_desc">Plus récents</option>
-            <option value="gains_desc">Gains ↓</option>
-            <option value="leads_desc">Leads ↓</option>
-          </select>
+          <FilterSelect
+            value={villeFilter}
+            onChange={setVilleFilter}
+            options={[{ k: '', label: 'Toutes les villes' }, ...villes.map(v => ({ k: v, label: v }))]}
+          />
+          <FilterSelect
+            value={sort}
+            onChange={(v) => setSort(v as any)}
+            options={[
+              { k: 'activated_desc', label: 'Plus récents' },
+              { k: 'gains_desc', label: 'Gains ↓' },
+              { k: 'leads_desc', label: 'Leads ↓' },
+            ]}
+          />
+
         </div>
 
         <div className="list">
@@ -283,6 +303,45 @@ function SkeletonPage() {
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+// ============================================================
+// FilterSelect : custom dropdown Mayinvest (chevron rotate + options en vert soft)
+// ============================================================
+function FilterSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { k: string; label: string }[] }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    function handler(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [open])
+  const current = options.find(o => o.k === value) || options[0]
+  return (
+    <div className="fs-wrap" ref={ref}>
+      <button type="button" className={`fs-btn${open ? ' open' : ''}`} onClick={() => setOpen(v => !v)}>
+        <span className="fs-lbl">{current.label}</span>
+        <svg className="fs-chev" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      {open && (
+        <div className="fs-panel">
+          {options.map(o => (
+            <div
+              key={o.k}
+              className={`fs-opt${value === o.k ? ' selected' : ''}`}
+              onClick={() => { onChange(o.k); setOpen(false) }}
+            >
+              <span>{o.label}</span>
+              {value === o.k && (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
