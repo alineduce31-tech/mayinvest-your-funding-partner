@@ -225,7 +225,7 @@ function EquipeCommercialePage() {
           {filtered.length === 0 ? (
             <div className="empty">Aucun commercial trouvé.</div>
           ) : filtered.map(c => {
-            const initials = (c.prenom[0] + c.nom[0]).toUpperCase()
+            const initials = ((c.prenom[0] || '') + (c.nom[0] || '')).toUpperCase()
             return (
               <div key={c.id} className="row">
                 <div className="row-name">
@@ -327,7 +327,7 @@ function FilterSelect({ value, onChange, options }: { value: string; onChange: (
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
-  const current = options.find(o => o.k === value) || options[0]
+  const current = options.find(o => o.k === value) ?? options[0]!
   return (
     <div className="fs-wrap" ref={ref}>
       <button type="button" className={`fs-btn${open ? ' open' : ''}`} onClick={() => setOpen(v => !v)}>

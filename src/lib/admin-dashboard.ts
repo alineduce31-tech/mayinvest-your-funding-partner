@@ -34,6 +34,7 @@ export type DashboardLead = {
   montant_finance?: number | string | null
   score?: number
   activite?: string | null
+  ville?: string | null
   identite?: Record<string, unknown>
   situation?: Record<string, unknown>
 }

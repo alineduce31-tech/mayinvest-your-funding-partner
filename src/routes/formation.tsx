@@ -97,7 +97,7 @@ function FormationPage() {
   function goToModule(idx: number) {
     if (idx < 0 || idx >= modules.length) return
     // Pas sauter un module non complété
-    if (idx > 0 && !completedModules.has(modules[idx - 1].id)) return
+    if (idx > 0 && !completedModules.has(modules[idx - 1]?.id ?? '')) return
     setCurrentIdx(idx)
     setMode('content')
     setLastScore(null)
@@ -208,7 +208,7 @@ function FormationPage() {
           {modules.map((m, idx) => {
             const isDone = completedModules.has(m.id)
             const isActive = idx === currentIdx && !allCompleted
-            const isLocked = idx > 0 && !completedModules.has(modules[idx - 1].id) && !isDone
+            const isLocked = idx > 0 && !completedModules.has(modules[idx - 1]?.id ?? '') && !isDone
             const cls = isDone ? 'done' : isActive ? 'active' : 'todo'
             return (
               <div key={m.id} className={`fm-mod-item ${cls}${isLocked ? ' locked' : ''}`} onClick={() => !isLocked && goToModule(idx)}>

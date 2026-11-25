@@ -189,8 +189,8 @@ function EquipeAdminPage() {
               {filtered.length === 0 ? (
                 <tr><td colSpan={7} className="empty">Aucun administrateur ne correspond.</td></tr>
               ) : filtered.map(a => {
-                const role = ROLES.find(r => r.k === a.role) || ROLES[1]
-                const initials = ((a.prenom?.[0] || '') + (a.nom?.[0] || '')).toUpperCase() || a.email[0].toUpperCase()
+                const role = ROLES.find(r => r.k === a.role) ?? ROLES[1]!
+                const initials = ((a.prenom?.[0] || '') + (a.nom?.[0] || '')).toUpperCase() || (a.email[0] || '?').toUpperCase()
                 const fullName = [a.prenom, a.nom].filter(Boolean).join(' ') || '—'
                 const lastLogin = a.last_login_at ? new Date(a.last_login_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'Jamais'
                 return (

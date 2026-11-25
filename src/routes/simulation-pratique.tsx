@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
 
-export const Route = createFileRoute('/simulation')({
+export const Route = createFileRoute('/simulation-pratique')({
   component: SimulationPage,
 })
 

@@ -11,11 +11,18 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
-import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CandidaturesRouteImport } from './routes/candidatures'
+import { Route as EquipeAdminRouteImport } from './routes/equipe-admin'
+import { Route as EquipeCommercialeRouteImport } from './routes/equipe-commerciale'
+import { Route as EspaceCommercialRouteImport } from './routes/espace-commercial'
+import { Route as FormationRouteImport } from './routes/formation'
 import { Route as MonDossierRouteImport } from './routes/mon-dossier'
 import { Route as MonEspaceRouteImport } from './routes/mon-espace'
 import { Route as PreselectionRouteImport } from './routes/preselection'
+import { Route as RejoindreEquipeRouteImport } from './routes/rejoindre-equipe'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
+import { Route as SimulationRouteImport } from './routes/simulation'
+import { Route as SimulationPratiqueRouteImport } from './routes/simulation-pratique'
 import { Route as ClientIdRouteImport } from './routes/client.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -28,9 +35,29 @@ const AdminRoute = AdminRouteImport.update({
   path: '/admin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const CandidaturesRoute = CandidaturesRouteImport.update({
+  id: '/candidatures',
+  path: '/candidatures',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EquipeAdminRoute = EquipeAdminRouteImport.update({
+  id: '/equipe-admin',
+  path: '/equipe-admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EquipeCommercialeRoute = EquipeCommercialeRouteImport.update({
+  id: '/equipe-commerciale',
+  path: '/equipe-commerciale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EspaceCommercialRoute = EspaceCommercialRouteImport.update({
+  id: '/espace-commercial',
+  path: '/espace-commercial',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FormationRoute = FormationRouteImport.update({
+  id: '/formation',
+  path: '/formation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MonDossierRoute = MonDossierRouteImport.update({
@@ -48,9 +75,24 @@ const PreselectionRoute = PreselectionRouteImport.update({
   path: '/preselection',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RejoindreEquipeRoute = RejoindreEquipeRouteImport.update({
+  id: '/rejoindre-equipe',
+  path: '/rejoindre-equipe',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimulationRoute = SimulationRouteImport.update({
+  id: '/simulation',
+  path: '/simulation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SimulationPratiqueRoute = SimulationPratiqueRouteImport.update({
+  id: '/simulation-pratique',
+  path: '/simulation-pratique',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientIdRoute = ClientIdRouteImport.update({
@@ -62,32 +104,53 @@ const ClientIdRoute = ClientIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/auth': typeof AuthRoute
+  '/candidatures': typeof CandidaturesRoute
+  '/equipe-admin': typeof EquipeAdminRoute
+  '/equipe-commerciale': typeof EquipeCommercialeRoute
+  '/espace-commercial': typeof EspaceCommercialRoute
+  '/formation': typeof FormationRoute
   '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
   '/preselection': typeof PreselectionRoute
+  '/rejoindre-equipe': typeof RejoindreEquipeRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/simulation': typeof SimulationRoute
+  '/simulation-pratique': typeof SimulationPratiqueRoute
   '/client/$id': typeof ClientIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/auth': typeof AuthRoute
+  '/candidatures': typeof CandidaturesRoute
+  '/equipe-admin': typeof EquipeAdminRoute
+  '/equipe-commerciale': typeof EquipeCommercialeRoute
+  '/espace-commercial': typeof EspaceCommercialRoute
+  '/formation': typeof FormationRoute
   '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
   '/preselection': typeof PreselectionRoute
+  '/rejoindre-equipe': typeof RejoindreEquipeRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/simulation': typeof SimulationRoute
+  '/simulation-pratique': typeof SimulationPratiqueRoute
   '/client/$id': typeof ClientIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
-  '/auth': typeof AuthRoute
+  '/candidatures': typeof CandidaturesRoute
+  '/equipe-admin': typeof EquipeAdminRoute
+  '/equipe-commerciale': typeof EquipeCommercialeRoute
+  '/espace-commercial': typeof EspaceCommercialRoute
+  '/formation': typeof FormationRoute
   '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
   '/preselection': typeof PreselectionRoute
+  '/rejoindre-equipe': typeof RejoindreEquipeRoute
   '/reset-password': typeof ResetPasswordRoute
+  '/simulation': typeof SimulationRoute
+  '/simulation-pratique': typeof SimulationPratiqueRoute
   '/client/$id': typeof ClientIdRoute
 }
 export interface FileRouteTypes {
@@ -95,42 +158,70 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
-    | '/auth'
+    | '/candidatures'
+    | '/equipe-admin'
+    | '/equipe-commerciale'
+    | '/espace-commercial'
+    | '/formation'
     | '/mon-dossier'
     | '/mon-espace'
     | '/preselection'
+    | '/rejoindre-equipe'
     | '/reset-password'
+    | '/simulation'
+    | '/simulation-pratique'
     | '/client/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/admin'
-    | '/auth'
+    | '/candidatures'
+    | '/equipe-admin'
+    | '/equipe-commerciale'
+    | '/espace-commercial'
+    | '/formation'
     | '/mon-dossier'
     | '/mon-espace'
     | '/preselection'
+    | '/rejoindre-equipe'
     | '/reset-password'
+    | '/simulation'
+    | '/simulation-pratique'
     | '/client/$id'
   id:
     | '__root__'
     | '/'
     | '/admin'
-    | '/auth'
+    | '/candidatures'
+    | '/equipe-admin'
+    | '/equipe-commerciale'
+    | '/espace-commercial'
+    | '/formation'
     | '/mon-dossier'
     | '/mon-espace'
     | '/preselection'
+    | '/rejoindre-equipe'
     | '/reset-password'
+    | '/simulation'
+    | '/simulation-pratique'
     | '/client/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
-  AuthRoute: typeof AuthRoute
+  CandidaturesRoute: typeof CandidaturesRoute
+  EquipeAdminRoute: typeof EquipeAdminRoute
+  EquipeCommercialeRoute: typeof EquipeCommercialeRoute
+  EspaceCommercialRoute: typeof EspaceCommercialRoute
+  FormationRoute: typeof FormationRoute
   MonDossierRoute: typeof MonDossierRoute
   MonEspaceRoute: typeof MonEspaceRoute
   PreselectionRoute: typeof PreselectionRoute
+  RejoindreEquipeRoute: typeof RejoindreEquipeRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  SimulationRoute: typeof SimulationRoute
+  SimulationPratiqueRoute: typeof SimulationPratiqueRoute
   ClientIdRoute: typeof ClientIdRoute
 }
 
@@ -150,11 +241,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/candidatures': {
+      id: '/candidatures'
+      path: '/candidatures'
+      fullPath: '/candidatures'
+      preLoaderRoute: typeof CandidaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/equipe-admin': {
+      id: '/equipe-admin'
+      path: '/equipe-admin'
+      fullPath: '/equipe-admin'
+      preLoaderRoute: typeof EquipeAdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/equipe-commerciale': {
+      id: '/equipe-commerciale'
+      path: '/equipe-commerciale'
+      fullPath: '/equipe-commerciale'
+      preLoaderRoute: typeof EquipeCommercialeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/espace-commercial': {
+      id: '/espace-commercial'
+      path: '/espace-commercial'
+      fullPath: '/espace-commercial'
+      preLoaderRoute: typeof EspaceCommercialRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/formation': {
+      id: '/formation'
+      path: '/formation'
+      fullPath: '/formation'
+      preLoaderRoute: typeof FormationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/mon-dossier': {
@@ -178,11 +297,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PreselectionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/rejoindre-equipe': {
+      id: '/rejoindre-equipe'
+      path: '/rejoindre-equipe'
+      fullPath: '/rejoindre-equipe'
+      preLoaderRoute: typeof RejoindreEquipeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
       fullPath: '/reset-password'
       preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simulation': {
+      id: '/simulation'
+      path: '/simulation'
+      fullPath: '/simulation'
+      preLoaderRoute: typeof SimulationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/simulation-pratique': {
+      id: '/simulation-pratique'
+      path: '/simulation-pratique'
+      fullPath: '/simulation-pratique'
+      preLoaderRoute: typeof SimulationPratiqueRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/client/$id': {
@@ -198,11 +338,18 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
-  AuthRoute: AuthRoute,
+  CandidaturesRoute: CandidaturesRoute,
+  EquipeAdminRoute: EquipeAdminRoute,
+  EquipeCommercialeRoute: EquipeCommercialeRoute,
+  EspaceCommercialRoute: EspaceCommercialRoute,
+  FormationRoute: FormationRoute,
   MonDossierRoute: MonDossierRoute,
   MonEspaceRoute: MonEspaceRoute,
   PreselectionRoute: PreselectionRoute,
+  RejoindreEquipeRoute: RejoindreEquipeRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  SimulationRoute: SimulationRoute,
+  SimulationPratiqueRoute: SimulationPratiqueRoute,
   ClientIdRoute: ClientIdRoute,
 }
 export const routeTree = rootRouteImport

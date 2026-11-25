@@ -2597,10 +2597,10 @@ function LeadActionsPanel({ lead, onSendInternal }: { lead: any; onSendInternal:
 
   const identite = (lead.identite || {}) as Record<string, string>
   const situation = (lead.situation || {}) as Record<string, string>
-  const prenom = identite.prenom || identite.nom || situation.raison_sociale || 'Client'
-  const nom = identite.nom || ''
-  const raison_sociale = situation.raison_sociale || identite.raison_sociale || ''
-  const telephone = identite.telephone || identite.tel || situation.telephone || ''
+  const prenom = identite['prenom'] || identite['nom'] || situation['raison_sociale'] || 'Client'
+  const nom = identite['nom'] || ''
+  const raison_sociale = situation['raison_sociale'] || identite['raison_sociale'] || ''
+  const telephone = identite['telephone'] || identite['tel'] || situation['telephone'] || ''
 
   const vars = { prenom, nom, raison_sociale, telephone }
 

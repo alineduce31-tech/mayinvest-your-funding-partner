@@ -58,6 +58,7 @@ function EspaceCommercialPage() {
         .subscribe()
       return () => { supabase.removeChannel(chan) }
     }
+    return undefined
   }, [session])
 
   async function loadUnreadChat() {
@@ -256,7 +257,7 @@ function EspaceCommercialPage() {
 
 // ============ COMPONENTS ============
 
-function NavItem({ icon, label, count, active, onClick }: { icon: React.ReactNode; label: string; count?: number; active: boolean; onClick: () => void }) {
+function NavItem({ icon, label, count, active, onClick }: { icon: React.ReactNode; label: string; count?: number | undefined; active: boolean; onClick: () => void }) {
   return (
     <button className={`ws-nav-item ${active ? 'active' : ''}`} onClick={onClick}>
       <span className="ws-nav-icon">{icon}</span>
@@ -541,7 +542,7 @@ function NewLeadModal({ commercialId, onClose, onCreated }: { commercialId: stri
 }
 
 // ============ OUTILS TAB ============
-function OutilsTab({ refCode, refLink, session }: { refCode?: string; refLink: string; session: Session }) {
+function OutilsTab({ refCode, refLink, session }: { refCode?: string | undefined; refLink: string; session: Session }) {
   const [copied, setCopied] = useState<string | null>(null)
   function copy(text: string, id: string) {
     navigator.clipboard.writeText(text).then(() => {
