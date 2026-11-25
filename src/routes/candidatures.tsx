@@ -282,9 +282,14 @@ function CandidaturesPage() {
             {filtered.length === 0 ? (
               <div className="cd-empty">Aucun candidat dans cette catégorie.</div>
             ) : filtered.map(c => {
-              const totalPts = (c.score_quiz || 0) + (c.score_simulation_theo || 0) + (c.score_simulation_prat || 0)
-              const totalMax = 15 + 100 + 60
-              const scorePct = Math.round((totalPts / totalMax) * 100)
+              // Score global = moyenne pondérée (theo /100 + prat /60 ramené sur 100) → identique au drawer
+              const theoList = Number(c.score_simulation_theo) || 0
+              const pratRawList = Number(c.score_simulation_prat) || 0
+              const pratPctList = Math.min(100, (pratRawList / 60) * 100)
+              const hasAnyList = theoList > 0 || pratRawList > 0
+              const scorePct = hasAnyList
+                ? Math.round((theoList + pratPctList) / 2)
+                : (c.score_total || 0)
               const scoreCls = scorePct >= 70 ? 'hi' : scorePct >= 50 ? 'mid' : 'lo'
               const tCls = c.time_total_seconds && medianTime ? (c.time_total_seconds < medianTime * 0.85 ? 'fast' : c.time_total_seconds > medianTime * 1.3 ? 'slow' : '') : ''
               const statusCls = c.status === 'en_attente_validation' ? 'pending' : c.status === 'valide' ? 'valide' : c.status === 'refuse' ? 'refuse' : 'encours'
