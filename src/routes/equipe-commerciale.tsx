@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { formatPhone } from '@/lib/phone'
 
 export const Route = createFileRoute('/equipe-commerciale')({
   component: EquipeCommercialePage,
@@ -231,7 +232,7 @@ function EquipeCommercialePage() {
                   <span className="ava">{initials}</span>
                   <div>
                     <strong>{c.prenom} {c.nom}</strong>
-                    <small>{c.email} · {c.telephone}</small>
+                    <small>{c.email} · {formatPhone(c.telephone)}</small>
                   </div>
                 </div>
                 <div className="row-ville">
