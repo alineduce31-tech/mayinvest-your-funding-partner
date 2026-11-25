@@ -1,36 +1,43 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
 
-export const Route = createFileRoute('/simulation-pratique')({
-  component: SimulationPratiquePage,
+export const Route = createFileRoute('/simulation')({
+  component: SimulationPage,
 })
 
 const MI = {
-  blue: '#2361EF', blueSoft: '#DBEAFE',
-  navy: '#0F1729', green: '#22C55E', greenSoft: '#D1FAE5',
+  blue: '#2361EF', blueDark: '#1A4ECC', blueSoft: '#DBEAFE',
+  navy: '#0F1729', navyLight: '#1A2340',
+  green: '#22C55E', greenSoft: '#D1FAE5',
   red: '#DC2626', redSoft: '#FEE2E2',
   gold: '#F59E0B', goldSoft: '#FEF3C7',
   violet: '#7C3AED', violetSoft: '#EDE9FE',
-  waBg: '#E7FFDB',
   grayBg: '#F7F8FA', grayCard: '#FFFFFF',
   grayBorder: '#E5E7EB', grayHair: '#F3F4F6',
   text: '#111827', textMuted: '#6B7280', textFaint: '#9CA3AF',
 }
 
-type Epreuve = 1 | 2 | 3
-type Msg = { from: 'them' | 'me'; text: string }
+type Choice = { id: string; text: string; points: number }
+type Scenario = {
+  id: string; position: number; title: string; tag: string;
+  context: string; prospect_message: string | null;
+  question: string; choices: Choice[]; best_choice_id: string; feedback: string;
+}
 
-function SimulationPratiquePage() {
+function SimulationPage() {
   const navigate = useNavigate()
   const [candidateId, setCandidateId] = useState<string | null>(null)
   const [candidateName, setCandidateName] = useState('')
-  const [epreuve, setEpreuve] = useState<Epreuve>(1)
-  const [scores, setScores] = useState<Record<Epreuve, number>>({ 1: 0, 2: 0, 3: 0 })
-  const [times, setTimes] = useState<Record<Epreuve, number>>({ 1: 0, 2: 0, 3: 0 })
-  const [done, setDone] = useState(false)
+  const [scenarios, setScenarios] = useState<Scenario[]>([])
+  const [currentIdx, setCurrentIdx] = useState(0)
+  const [selected, setSelected] = useState<string | null>(null)
+  const [showFeedback, setShowFeedback] = useState(false)
+  const [scores, setScores] = useState<number[]>([])
+  const [startTime, setStartTime] = useState<number>(0)
   const [loading, setLoading] = useState(true)
+  const [done, setDone] = useState(false)
 
   useEffect(() => {
     const cid = localStorage.getItem('mi_candidate_id')
@@ -38,28 +45,60 @@ function SimulationPratiquePage() {
     if (!cid) { navigate({ to: '/rejoindre-equipe' as any }); return }
     setCandidateId(cid)
     setCandidateName(cname)
-    setLoading(false)
+
+    ;(async () => {
+      // Vérifier que le candidat a bien fini la formation
+      const { data: mods } = await supabase.from('training_modules').select('id').eq('is_active', true)
+      const { data: attempts } = await supabase.from('quiz_attempts').select('module_id, passed').eq('candidate_id', cid).eq('passed', true)
+      if (mods && attempts) {
+        const uniq = new Set(attempts.map((a: any) => a.module_id))
+        if (uniq.size < mods.length) {
+          navigate({ to: '/formation' as any }); return
+        }
+      }
+
+      const { data } = await supabase.from('simulation_scenarios').select('*').eq('is_active', true).order('position')
+      if (data) setScenarios(data as Scenario[])
+      setStartTime(Date.now())
+      setLoading(false)
+    })()
   }, [navigate])
 
-  async function completeEpreuve(num: Epreuve, score: number, time: number, data: any) {
-    setScores({ ...scores, [num]: score })
-    setTimes({ ...times, [num]: time })
-    if (candidateId) {
-      await supabase.from('practical_attempts').insert({
-        candidate_id: candidateId, epreuve: num, score, time_seconds: time, data,
-      })
-    }
-    if (num < 3) {
-      setEpreuve((num + 1) as Epreuve)
+  const current = scenarios[currentIdx]
+  const totalScore = scores.reduce((s, n) => s + n, 0)
+
+  async function pickChoice(choiceId: string) {
+    if (showFeedback) return
+    setSelected(choiceId)
+    setShowFeedback(true)
+    if (!candidateId || !current) return
+
+    const chosen = current.choices.find(c => c.id === choiceId)
+    const pts = chosen?.points || 0
+    const timeSeconds = Math.round((Date.now() - startTime) / 1000)
+    setScores([...scores, pts])
+
+    await supabase.from('simulation_attempts').insert({
+      candidate_id: candidateId,
+      scenario_id: current.id,
+      choice_id: choiceId,
+      points_earned: pts,
+      time_seconds: timeSeconds,
+    })
+  }
+
+  async function next() {
+    if (currentIdx < scenarios.length - 1) {
+      setCurrentIdx(currentIdx + 1)
+      setSelected(null)
+      setShowFeedback(false)
+      setStartTime(Date.now())
     } else {
-      // Totalisation finale
-      const totalPts = scores[1] + scores[2] + score  // use the latest score for 3
-      const totalTime = times[1] + times[2] + time
+      // Fin de la simu théorique → persiste le score dans commercial_candidates
       if (candidateId) {
+        const finalScore = scores.reduce((s, n) => s + n, 0)  // /100
         await supabase.from('commercial_candidates').update({
-          score_simulation_prat: totalPts,
-          time_total_seconds: totalTime,
-          status: 'en_attente_validation',
+          score_simulation_theo: finalScore,
           updated_at: new Date().toISOString(),
         }).eq('id', candidateId)
       }
@@ -67,674 +106,181 @@ function SimulationPratiquePage() {
     }
   }
 
-  if (loading) return <SkeletonPage label="Chargement…" />
+  function goToPractical() {
+    navigate({ to: '/simulation-pratique' as any })
+  }
+
+  if (loading) return <SkeletonPage label="Chargement de la simulation…" />
+  if (!scenarios.length) return <div style={{ padding: 60, textAlign: 'center', color: MI.textMuted }}>Aucun scénario disponible.</div>
 
   return (
     <div style={{ minHeight: '100vh', background: MI.grayBg, fontFamily: 'Inter, system-ui, sans-serif', color: MI.text }}>
-      <GlobalStyles/>
+      <style>{`
+        * { box-sizing: border-box; }
+        .sm-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 32px; background: white; border-bottom: 1px solid ${MI.grayBorder}; position: sticky; top: 0; z-index: 10; }
+        .sm-logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; color: ${MI.navy}; text-decoration: none; }
+        .sm-logo-mark { width: 32px; height: 32px; background: ${MI.violet}; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
+        .sm-prog { display: flex; align-items: center; gap: 12px; }
+        .sm-prog-bar { width: 180px; height: 6px; background: ${MI.grayBorder}; border-radius: 3px; overflow: hidden; }
+        .sm-prog-fill { height: 100%; background: ${MI.violet}; transition: width 0.3s; }
+        .sm-prog-txt { font-size: 12px; font-weight: 600; color: ${MI.text}; }
+        .sm-user { font-size: 13px; color: ${MI.textMuted}; }
+        .sm-user b { color: ${MI.text}; }
 
-      <header className="sp-header">
-        <Link to="/" className="sp-logo"><span className="sp-logo-mark">P</span>Simulation Pratique</Link>
-        <div className="sp-prog">
-          <div className="sp-prog-bar"><div className="sp-prog-fill" style={{ width: done ? '100%' : `${((epreuve - 1) / 3) * 100}%` }}/></div>
-          <span className="sp-prog-txt">Épreuve {done ? 3 : epreuve}/3</span>
+        .sm-wrap { max-width: 760px; margin: 0 auto; padding: 32px 24px; }
+        .sm-banner { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: ${MI.violetSoft}; color: ${MI.violet}; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 16px; }
+
+        .sm-card { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 16px; padding: 32px; }
+        .sm-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+        .sm-head h1 { font-size: 20px; font-weight: 800; margin: 0; color: ${MI.navy}; letter-spacing: -0.02em; flex: 1; }
+        .sm-tag { padding: 4px 12px; background: ${MI.goldSoft}; color: #92400E; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; }
+
+        .sm-context { font-size: 14px; color: ${MI.text}; line-height: 1.6; margin-bottom: 16px; }
+        .sm-msg { background: ${MI.grayHair}; border-left: 3px solid ${MI.violet}; padding: 14px 16px; border-radius: 0 10px 10px 0; font-size: 14px; color: ${MI.text}; font-style: italic; margin-bottom: 20px; line-height: 1.5; }
+
+        .sm-question { font-size: 12px; font-weight: 700; color: ${MI.textMuted}; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 10px; }
+        .sm-choices { display: grid; gap: 10px; }
+        .sm-choice { display: block; width: 100%; text-align: left; padding: 14px 16px; background: ${MI.grayHair}; border: 2px solid ${MI.grayBorder}; border-radius: 12px; cursor: pointer; font-size: 13px; color: ${MI.text}; line-height: 1.5; font-family: inherit; transition: all 0.15s; }
+        .sm-choice:hover:not(:disabled) { border-color: ${MI.violet}; background: white; }
+        .sm-choice:disabled { cursor: not-allowed; }
+        .sm-choice b { display: block; font-weight: 700; margin-bottom: 4px; font-size: 11px; letter-spacing: 0.03em; color: ${MI.navy}; }
+        .sm-choice.selected-good { background: ${MI.greenSoft}; border-color: ${MI.green}; color: ${MI.text}; }
+        .sm-choice.selected-good b { color: ${MI.green}; }
+        .sm-choice.selected-bad { background: ${MI.redSoft}; border-color: ${MI.red}; color: ${MI.text}; }
+        .sm-choice.selected-bad b { color: ${MI.red}; }
+        .sm-choice.correct { background: ${MI.greenSoft}; border-color: ${MI.green}; }
+        .sm-choice.correct b { color: ${MI.green}; }
+        .sm-points { float: right; font-weight: 700; font-size: 11px; }
+
+        .sm-feedback { background: ${MI.blueSoft}; border-left: 3px solid ${MI.blue}; padding: 14px 16px; border-radius: 0 10px 10px 0; font-size: 13px; color: ${MI.text}; margin-top: 16px; line-height: 1.5; }
+        .sm-feedback b { color: ${MI.blue}; }
+
+        .sm-actions { display: flex; justify-content: flex-end; margin-top: 20px; }
+        .btn-next { padding: 12px 24px; background: ${MI.navy}; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-next:hover { background: ${MI.violet}; }
+
+        /* Récap final */
+        .result-card { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 20px; padding: 40px; text-align: center; }
+        .result-score-wrap { position: relative; display: inline-block; margin-bottom: 16px; }
+        .result-score { width: 140px; height: 140px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; background: conic-gradient(${MI.violet} var(--pct), ${MI.grayHair} var(--pct)); }
+        .result-score-inner { width: 112px; height: 112px; background: white; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .result-score-num { font-size: 36px; font-weight: 800; color: ${MI.violet}; line-height: 1; }
+        .result-score-lbl { font-size: 10px; color: ${MI.textMuted}; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-top: 2px; }
+        .result-title { font-size: 22px; font-weight: 800; color: ${MI.navy}; margin: 0 0 8px; letter-spacing: -0.02em; }
+        .result-sub { font-size: 14px; color: ${MI.textMuted}; max-width: 440px; margin: 0 auto 24px; line-height: 1.6; }
+        .result-cta { padding: 14px 28px; background: ${MI.navy}; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+        .result-cta:hover { background: ${MI.violet}; }
+
+        .result-breakdown { background: ${MI.grayHair}; border-radius: 12px; padding: 16px; margin: 20px 0; text-align: left; }
+        .result-breakdown-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 12px; color: ${MI.text}; }
+        .result-breakdown-row b { font-weight: 700; font-variant-numeric: tabular-nums; }
+        .result-breakdown-row .pts-good { color: ${MI.green}; }
+        .result-breakdown-row .pts-mid { color: ${MI.gold}; }
+        .result-breakdown-row .pts-bad { color: ${MI.red}; }
+      `}</style>
+
+      <header className="sm-header">
+        <Link to="/" className="sm-logo"><span className="sm-logo-mark">S</span>Simulation</Link>
+        <div className="sm-prog">
+          <div className="sm-prog-bar"><div className="sm-prog-fill" style={{ width: done ? '100%' : `${((currentIdx + (showFeedback ? 1 : 0)) / scenarios.length) * 100}%` }}/></div>
+          <span className="sm-prog-txt">{done ? scenarios.length : currentIdx + (showFeedback ? 1 : 0)}/{scenarios.length}</span>
         </div>
-        <div className="sp-user">Bonjour <b>{candidateName}</b></div>
+        <div className="sm-user">Bonjour <b>{candidateName}</b></div>
       </header>
 
-      <div className="sp-wrap">
-        {!done && epreuve === 1 && <Epreuve1Chat onComplete={(s, t, d) => completeEpreuve(1, s, t, d)}/>}
-        {!done && epreuve === 2 && <Epreuve2Lead onComplete={(s, t, d) => completeEpreuve(2, s, t, d)}/>}
-        {!done && epreuve === 3 && <Epreuve3Pilotage onComplete={(s, t, d) => completeEpreuve(3, s, t, d)}/>}
-        {done && <FinalRecap candidateName={candidateName} scores={scores} times={times}/>}
-      </div>
-    </div>
-  )
-}
+      <div className="sm-wrap">
+        {!done && current ? (
+          <>
+            <span className="sm-banner">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+              Scénario {current.position}/{scenarios.length}
+            </span>
 
-// ============================================================
-// ÉPREUVE 1 — Chat avec client virtuel
-// ============================================================
-function Epreuve1Chat({ onComplete }: { onComplete: (score: number, time: number, data: any) => void }) {
-  const [messages, setMessages] = useState<Msg[]>([
-    { from: 'them', text: 'Bonjour, j\'ai vu votre annonce sur Facebook. Vous faites des crédits ?' },
-  ])
-  const [input, setInput] = useState('')
-  const [extracted, setExtracted] = useState({ montant: false, usage: false, revenu: false, banque: false })
-  const [startTime] = useState(Date.now())
-  const [msgSent, setMsgSent] = useState(0)
-  const endRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
-
-  const allExtracted = Object.values(extracted).every(Boolean)
-
-  function send() {
-    if (!input.trim()) return
-    const text = input.trim().toLowerCase()
-    const newMsgs: Msg[] = [...messages, { from: 'me', text: input.trim() }]
-    const next = { ...extracted }
-    let reply = ''
-
-    // Logique scriptée du client virtuel
-    const hasMontant = text.match(/montant|combien|somme|xaf|million/i)
-    const hasUsage = text.match(/pourquoi|usage|projet|utilis|servir|faire|objet/i)
-    const hasRevenu = text.match(/revenu|salaire|gagne|mensuel|salarié|employeur|travaill/i)
-    const hasBanque = text.match(/banque|compte|uba|bgfi|lcb|mucodec|ecobank|crédit du congo/i)
-    const hasGreeting = text.match(/bonjour|salut|bonsoir/i)
-    const hasQualify = text.match(/question|rapide|minute|vérifi|éligib/i)
-
-    if (hasMontant && !extracted.montant) { reply = 'J\'ai besoin de 15 millions pour construire ma maison.'; next.montant = true; next.usage = true }
-    else if (hasUsage && !extracted.usage) { reply = 'C\'est pour construire ma maison à Pointe-Noire.'; next.usage = true }
-    else if (hasRevenu && !extracted.revenu) { reply = 'Je suis fonctionnaire à l\'Education Nationale, je gagne 450 000 par mois, depuis 7 ans.'; next.revenu = true }
-    else if (hasBanque && !extracted.banque) { reply = 'J\'ai un compte à UBA depuis 5 ans, mon salaire y est domicilié.'; next.banque = true }
-    else if (hasGreeting) { reply = 'Bonjour, oui.' }
-    else if (hasQualify) { reply = 'OK allez-y, posez vos questions.' }
-    else if (allExtracted) { reply = 'Merci beaucoup. Quand est-ce qu\'on se rappelle ?' }
-    else { reply = 'Oui, c\'est bien ça.' }
-
-    newMsgs.push({ from: 'them', text: reply })
-    setMessages(newMsgs)
-    setInput('')
-    setExtracted(next)
-    setMsgSent(msgSent + 1)
-  }
-
-  function finish() {
-    // Score : 20 si tout extrait en <=8 messages, dégressif
-    const extractedCount = Object.values(extracted).filter(Boolean).length
-    let score = Math.round((extractedCount / 4) * 20)
-    if (msgSent > 10) score = Math.max(0, score - 4)
-    if (msgSent > 15) score = Math.max(0, score - 4)
-    const time = Math.round((Date.now() - startTime) / 1000)
-    onComplete(score, time, { messages, extracted, msgSent })
-  }
-
-  return (
-    <>
-      <span className="sp-banner"><SparkIcon/> Épreuve 1 · Chat client virtuel</span>
-      <div className="e1-grid">
-        <div className="chat-pan">
-          <div className="chat-head">
-            <div className="avatar">JP</div>
-            <div className="chat-head-info">
-              <div className="chat-head-name">Jean-Pierre Mokoko</div>
-              <div className="chat-head-meta"><span className="dot-live"/>En ligne · Pointe-Noire</div>
-            </div>
-            <span className="chat-head-fake">Virtuel</span>
-          </div>
-          <div className="chat-body">
-            {messages.map((m, i) => (
-              <div key={i} className={`msg ${m.from}`}>{m.text}</div>
-            ))}
-            <div ref={endRef}/>
-          </div>
-          <div className="chat-input">
-            <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && send()}
-              placeholder="Écris ta réponse…" disabled={allExtracted}/>
-            <button onClick={send} disabled={!input.trim() || allExtracted}>Envoyer</button>
-          </div>
-        </div>
-
-        <div>
-          <div className="obj-box">
-            <h4>Infos à extraire ({Object.values(extracted).filter(Boolean).length}/4)</h4>
-            <ObjItem ok={extracted.montant} label="Montant du crédit"/>
-            <ObjItem ok={extracted.usage} label="Usage / projet"/>
-            <ObjItem ok={extracted.revenu} label="Revenu + situation pro"/>
-            <ObjItem ok={extracted.banque} label="Banque actuelle"/>
-          </div>
-          <div className="hint-box">
-            <b>Astuce</b>
-            Pose une question à la fois, reste poli, conclus poliment quand tu as tout.
-          </div>
-          {allExtracted && (
-            <button className="btn-finish" onClick={finish}>
-              Terminer cette épreuve →
-            </button>
-          )}
-          <div className="counter">Messages envoyés : <b>{msgSent}</b></div>
-        </div>
-      </div>
-    </>
-  )
-}
-
-// ============================================================
-// ÉPREUVE 2 — Créer un lead
-// ============================================================
-function Epreuve2Lead({ onComplete }: { onComplete: (score: number, time: number, data: any) => void }) {
-  const [startTime] = useState(Date.now())
-  const [form, setForm] = useState({
-    type: '', activite: '', raison: '', dirigeant: '', tel: '', email: '',
-    ville: '', rccm: '', anciennete: '', ca: '', montant: '', objet: '', banque: '',
-  })
-  const [err, setErr] = useState('')
-
-  const expected = {
-    type: 'PME', activite: 'Commerce', raison: 'Boutique Marie Ntoumi', dirigeant: 'Marie Ntoumi',
-    tel: '0665532', ville: 'Dolisie', rccm: 'Oui', ca_min: 15000000, montant: 2000000, banque: 'LCB',
-  }
-
-  function validate() {
-    const score = computeScore(form, expected)
-    if (score < 10) { setErr('Tu as trop d\'erreurs. Relis bien le brief et corrige les champs.'); return }
-    const time = Math.round((Date.now() - startTime) / 1000)
-    onComplete(score, time, { form })
-  }
-
-  return (
-    <>
-      <span className="sp-banner"><SparkIcon/> Épreuve 2 · Créer un lead à la main</span>
-      <div className="brief-box">
-        <h4>Mise en situation</h4>
-        <p>
-          <b>Marie Ntoumi</b> t'appelle au téléphone. Elle tient une <b>boutique de vêtements à Dolisie</b> depuis <b>6 ans</b>.
-          Elle a besoin de <b>2 000 000 XAF</b> pour renouveler son stock. Elle a un <b>RCCM depuis 3 ans</b>, son <b>CA annuel est d'environ 18M XAF</b>,
-          elle a un <b>compte à LCB bien mouvementé</b>. Pas de refus bancaire. Téléphone : <b>06 655 32 18</b>. Email : <b>m.ntoumi@gmail.com</b>.
-        </p>
-      </div>
-      {err && <div className="form-err">{err}</div>}
-      <div className="form-card">
-        <div className="form-section-title">Type de client</div>
-        <div className="form-grid">
-          <Field label="Type" req value={form.type} onChange={v => setForm({ ...form, type: v })}
-            options={['', 'Personne Physique', 'PME']}/>
-          <Field label="Activité" req value={form.activite} onChange={v => setForm({ ...form, activite: v })}
-            options={['', 'Commerce', 'Tourisme', 'BTP', 'Industrie/Bois', 'Agriculture', 'Transport', 'Santé', 'Tech', 'Autre']}/>
-        </div>
-
-        <div className="form-section-title">Identité</div>
-        <div className="form-grid">
-          <Field label="Raison sociale" req value={form.raison} onChange={v => setForm({ ...form, raison: v })}
-            options={['', 'Boutique Marie Ntoumi', 'Ntoumi Commerce', 'Vêtements Dolisie SARL', 'Marie Mode']}/>
-          <Field label="Dirigeant" req value={form.dirigeant} onChange={v => setForm({ ...form, dirigeant: v })}
-            options={['', 'Marie Ntoumi', 'Ntoumi Marie', 'Mme Ntoumi']}/>
-          <Field label="Téléphone" req value={form.tel} onChange={v => setForm({ ...form, tel: v })}/>
-          <Field label="Email" value={form.email} onChange={v => setForm({ ...form, email: v })}/>
-          <Field label="Ville" req value={form.ville} onChange={v => setForm({ ...form, ville: v })}
-            options={['', 'Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Ouesso', 'Owando', 'Mossendjo', 'Autre']}/>
-        </div>
-
-        <div className="form-section-title">Situation juridique & Besoin</div>
-        <div className="form-grid">
-          <Field label="RCCM" value={form.rccm} onChange={v => setForm({ ...form, rccm: v })} options={['', 'Oui', 'Non']}/>
-          <Field label="Ancienneté activité" value={form.anciennete} onChange={v => setForm({ ...form, anciennete: v })}/>
-          <Field label="CA annuel (XAF)" req value={form.ca} onChange={v => setForm({ ...form, ca: v })}/>
-          <Field label="Montant demandé (XAF)" req value={form.montant} onChange={v => setForm({ ...form, montant: v })}/>
-          <Field label="Objet du crédit" value={form.objet} onChange={v => setForm({ ...form, objet: v })}
-            options={['', 'Investissement', 'Fonds de roulement', 'Marché', 'Véhicule', 'Autre']}/>
-          <Field label="Banque actuelle" value={form.banque} onChange={v => setForm({ ...form, banque: v })}
-            options={['', 'UBA', 'BGFI', 'LCB', 'MUCODEC', 'Ecobank', 'Crédit du Congo', 'Aucune', 'Autre']}/>
-        </div>
-
-        <div className="form-actions">
-          <button className="btn-submit" onClick={validate}>Enregistrer le lead →</button>
-        </div>
-      </div>
-    </>
-  )
-}
-
-function Field({ label, req, value, onChange, options }:
-  { label: string; req?: boolean; value: string; onChange: (v: string) => void; options?: string[] }) {
-  const filled = value.trim() !== ''
-  return (
-    <div className={`field${filled ? ' filled' : ''}`}>
-      <label>{label} {req && <span className="req">*</span>}</label>
-      {options ? (
-        <CustomSelect value={value} onChange={onChange} options={options}/>
-      ) : (
-        <input value={value} onChange={e => onChange(e.target.value)}/>
-      )}
-    </div>
-  )
-}
-
-function CustomSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (!open) return
-    function handler(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [open])
-  const display = value || '— Choisir —'
-  const realOptions = options.filter(o => o !== '')
-  return (
-    <div className="cs-wrap" ref={ref}>
-      <button type="button" className={`cs-btn${value ? ' has-value' : ''}${open ? ' open' : ''}`} onClick={() => setOpen(!open)}>
-        <span>{display}</span>
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }}><polyline points="6 9 12 15 18 9"/></svg>
-      </button>
-      {open && (
-        <div className="cs-panel">
-          {realOptions.map(o => (
-            <div key={o} className={`cs-opt${value === o ? ' selected' : ''}`}
-              onClick={() => { onChange(o); setOpen(false) }}>
-              <span>{o}</span>
-              {value === o && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function computeScore(form: any, exp: any): number {
-  let pts = 0
-  // 2 pts par champ correct, 20 max
-  if (form.type === exp.type) pts += 2
-  if (form.activite === exp.activite) pts += 2
-  if (form.raison.toLowerCase().includes('marie') || form.raison.toLowerCase().includes('ntoumi') || form.raison.toLowerCase().includes('boutique')) pts += 2
-  if (form.dirigeant.toLowerCase().includes('marie') && form.dirigeant.toLowerCase().includes('ntoumi')) pts += 2
-  if (form.tel.replace(/\s/g, '').includes(exp.tel)) pts += 2
-  if (form.ville === exp.ville) pts += 2
-  if (form.rccm === exp.rccm) pts += 1
-  const caNum = parseInt(form.ca.replace(/\D/g, ''))
-  if (caNum >= exp.ca_min * 0.9 && caNum <= exp.ca_min * 1.2) pts += 2
-  const mntNum = parseInt(form.montant.replace(/\D/g, ''))
-  if (mntNum === exp.montant) pts += 3
-  if (form.banque.toUpperCase().includes(exp.banque)) pts += 2
-  return pts
-}
-
-// ============================================================
-// ÉPREUVE 3 — Pilotage d'un dossier complet
-// ============================================================
-function Epreuve3Pilotage({ onComplete }: { onComplete: (score: number, time: number, data: any) => void }) {
-  const [startTime] = useState(Date.now())
-  const [tab, setTab] = useState<'infos' | 'chat' | 'docs'>('infos')
-  const [statut, setStatut] = useState<'Nouveau' | 'Contacté' | 'RDV' | 'Dossier Déposé'>('Nouveau')
-  const [chatMsgs, setChatMsgs] = useState<Msg[]>([])
-  const [chatInput, setChatInput] = useState('')
-  const [docsRequested, setDocsRequested] = useState<string[]>([])
-  const [steps, setSteps] = useState({ lu: false, contacte: false, rdv: false, docs: false, depose: false })
-
-  function markRead() { setSteps({ ...steps, lu: true }) }
-
-  function sendChat() {
-    if (!chatInput.trim()) return
-    const text = chatInput.trim()
-    setChatMsgs([...chatMsgs, { from: 'me', text }])
-    setChatInput('')
-    // Détecter type de message
-    const t = text.toLowerCase()
-    if (!steps.contacte && (t.match(/bonjour|salut|monsieur|m\./) )) {
-      setSteps(prev => ({ ...prev, contacte: true }))
-      setTimeout(() => setChatMsgs(prev => [...prev, { from: 'them', text: 'Bonjour, oui je suis bien Pierre Makosso.' }]), 800)
-    }
-    if (!steps.rdv && (t.match(/rendez-vous|rdv|rencontr|agence|banque/))) {
-      setSteps(prev => ({ ...prev, rdv: true }))
-      setTimeout(() => setChatMsgs(prev => [...prev, { from: 'them', text: 'Parfait, je suis disponible vendredi 15h.' }]), 800)
-    }
-    if (!steps.docs && (t.match(/document|pièce|bulletin|relevé|identité|pièce/))) {
-      setSteps(prev => ({ ...prev, docs: true }))
-      setTimeout(() => setChatMsgs(prev => [...prev, { from: 'them', text: 'Je vous les envoie demain.' }]), 800)
-    }
-  }
-
-  function changeStatut(newS: typeof statut) {
-    setStatut(newS)
-    if (newS === 'Contacté') setSteps(prev => ({ ...prev, contacte: true }))
-    if (newS === 'RDV') setSteps(prev => ({ ...prev, rdv: true }))
-    if (newS === 'Dossier Déposé') {
-      setSteps(prev => ({ ...prev, depose: true }))
-    }
-  }
-
-  function requestDoc(doc: string) {
-    if (docsRequested.includes(doc)) return
-    setDocsRequested([...docsRequested, doc])
-    if (docsRequested.length + 1 >= 3) setSteps(prev => ({ ...prev, docs: true }))
-  }
-
-  const allDone = Object.values(steps).every(Boolean) && statut === 'Dossier Déposé'
-
-  function finish() {
-    let score = 0
-    if (steps.lu) score += 2
-    if (steps.contacte) score += 4
-    if (steps.rdv) score += 4
-    if (steps.docs) score += 4
-    if (steps.depose) score += 4
-    if (docsRequested.length >= 3) score += 2
-    const time = Math.round((Date.now() - startTime) / 1000)
-    onComplete(score, time, { statut, chatMsgs, docsRequested, steps })
-  }
-
-  return (
-    <>
-      <span className="sp-banner"><SparkIcon/> Épreuve 3 · Piloter un dossier</span>
-      <div className="e3-grid">
-        <div className="e3-steps">
-          <h4>Ton parcours</h4>
-          <StepItem ok={steps.lu} num={1} label="Lire le dossier"/>
-          <StepItem ok={steps.contacte} num={2} label="Contacter le client (chat)"/>
-          <StepItem ok={statut === 'Contacté' || steps.rdv || steps.depose} num={3} label="Statut : Contacté"/>
-          <StepItem ok={steps.rdv} num={4} label="Fixer un RDV & changer statut"/>
-          <StepItem ok={steps.docs} num={5} label="Demander les documents (3 min)"/>
-          <StepItem ok={steps.depose} num={6} label="Marquer « Dossier Déposé »"/>
-        </div>
-
-        <div className="e3-main">
-          <div className="e3-main-head">
-            <h3>Pierre Makosso · Salarié Privé · Brazzaville</h3>
-            <span className="fake">Virtuel</span>
-          </div>
-          <div className="e3-tabs">
-            <div className={`e3-tab${tab === 'infos' ? ' active' : ''}`} onClick={() => { setTab('infos'); markRead() }}>Infos</div>
-            <div className={`e3-tab${tab === 'chat' ? ' active' : ''}`} onClick={() => setTab('chat')}>Discussion</div>
-            <div className={`e3-tab${tab === 'docs' ? ' active' : ''}`} onClick={() => setTab('docs')}>Documents</div>
-          </div>
-          <div className="e3-body">
-            <div className="status-row">
-              <span className="status-label">Statut :</span>
-              <StatutPill current={statut} onChange={s => changeStatut(s as any)}/>
-            </div>
-
-            {tab === 'infos' && (
-              <div className="info-grid">
-                <div className="k">Téléphone</div><div className="v">066 42 18 03</div>
-                <div className="k">Employeur</div><div className="v">Total Energies Congo</div>
-                <div className="k">Ancienneté</div><div className="v">7 ans</div>
-                <div className="k">Revenu net</div><div className="v">950 000 XAF</div>
-                <div className="k">Montant demandé</div><div className="v">8 000 000 XAF</div>
-                <div className="k">Objet</div><div className="v">Véhicule</div>
-                <div className="k">Banque actuelle</div><div className="v">BGFI</div>
-                <div className="k">Score</div><div className="v" style={{ color: MI.green }}>78/100</div>
+            <div className="sm-card">
+              <div className="sm-head">
+                <h1>{current.title}</h1>
+                <span className="sm-tag">{current.tag}</span>
               </div>
-            )}
+              <p className="sm-context">{current.context}</p>
+              {current.prospect_message && <div className="sm-msg">« {current.prospect_message} »</div>}
 
-            {tab === 'chat' && (
-              <div className="e3-chat">
-                <div className="e3-chat-body">
-                  {chatMsgs.length === 0 && <div className="e3-empty">Commence la conversation avec le client.</div>}
-                  {chatMsgs.map((m, i) => <div key={i} className={`msg ${m.from}`}>{m.text}</div>)}
-                </div>
-                <div className="chat-input">
-                  <input value={chatInput} onChange={e => setChatInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && sendChat()} placeholder="Message au client…"/>
-                  <button onClick={sendChat} disabled={!chatInput.trim()}>Envoyer</button>
+              <div className="sm-question">{current.question}</div>
+              <div className="sm-choices">
+                {current.choices.map((c, i) => {
+                  const letter = String.fromCharCode(65 + i)
+                  let cls = ''
+                  if (showFeedback) {
+                    if (c.id === selected) cls = c.points >= 20 ? 'selected-good' : c.points > 0 ? 'selected-good' : 'selected-bad'
+                    else if (c.id === current.best_choice_id) cls = 'correct'
+                  }
+                  return (
+                    <button key={c.id} className={`sm-choice ${cls}`}
+                      disabled={showFeedback} onClick={() => pickChoice(c.id)}>
+                      <b>{letter} {showFeedback && <span className="sm-points">+{c.points} pts</span>}</b>
+                      {c.text}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {showFeedback && (
+                <>
+                  <div className="sm-feedback">
+                    <b>Explication :</b> {current.feedback}
+                  </div>
+                  <div className="sm-actions">
+                    <button className="btn-next" onClick={next}>
+                      {currentIdx < scenarios.length - 1 ? 'Scénario suivant →' : 'Voir mon score →'}
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </>
+        ) : done ? (
+          <div className="result-card">
+            <div className="result-score-wrap">
+              <div className="result-score" style={{ ['--pct' as any]: `${(totalScore / 100) * 360}deg` }}>
+                <div className="result-score-inner">
+                  <div className="result-score-num">{totalScore}</div>
+                  <div className="result-score-lbl">/ 100</div>
                 </div>
               </div>
-            )}
+            </div>
+            <h2 className="result-title">
+              {totalScore >= 70 ? `Bravo ${candidateName} !` : `Peut mieux faire ${candidateName}`}
+            </h2>
+            <p className="result-sub">
+              {totalScore >= 70
+                ? `Tu as les bons réflexes commerciaux. Prochaine étape : la simulation pratique (3 épreuves sur l'application réelle).`
+                : `Il faut au moins 70/100 pour valider. Relis la formation et retente la simulation.`}
+            </p>
 
-            {tab === 'docs' && (
-              <div className="e3-docs">
-                <div className="e3-docs-title">Clique sur les documents à demander (minimum 3) :</div>
-                {['Pièce d\'identité', 'Fiche de paie (3 derniers mois)', 'Relevés de compte (3 mois)', 'Justificatif de domicile', 'Devis véhicule'].map(d => (
-                  <button key={d} className={`doc-pill${docsRequested.includes(d) ? ' asked' : ''}`} onClick={() => requestDoc(d)}>
-                    {docsRequested.includes(d) ? '✓ ' : '+ '}{d}
-                  </button>
-                ))}
-                <div className="e3-docs-count">{docsRequested.length} document{docsRequested.length > 1 ? 's' : ''} demandé{docsRequested.length > 1 ? 's' : ''}</div>
-              </div>
+            <div className="result-breakdown">
+              {scenarios.map((s, i) => {
+                const pts = scores[i] || 0
+                const cls = pts >= 20 ? 'pts-good' : pts > 0 ? 'pts-mid' : 'pts-bad'
+                return (
+                  <div key={s.id} className="result-breakdown-row">
+                    <span>Scénario {s.position} — {s.title}</span>
+                    <b className={cls}>{pts}/20</b>
+                  </div>
+                )
+              })}
+            </div>
+
+            {totalScore >= 70 ? (
+              <button className="result-cta" onClick={goToPractical}>
+                Passer à la simulation pratique →
+              </button>
+            ) : (
+              <button className="result-cta" onClick={() => window.location.reload()}>
+                Rejouer la simulation
+              </button>
             )}
           </div>
-        </div>
+        ) : null}
       </div>
-
-      {allDone && (
-        <button className="btn-finish wide" onClick={finish}>
-          Terminer la simulation →
-        </button>
-      )}
-    </>
-  )
-}
-
-const STATUTS_LEAD: { k: string; label: string; color: string }[] = [
-  { k: 'Nouveau', label: 'Nouveau', color: '#64748B' },
-  { k: 'Contacté', label: 'Contacté', color: '#1A6BFF' },
-  { k: 'RDV', label: 'RDV', color: '#7C3AED' },
-  { k: 'Dossier Déposé', label: 'Dossier Déposé', color: '#F59E0B' },
-]
-
-function StatutPill({ current, onChange }: { current: string; onChange: (s: string) => void }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    if (!open) return
-    function handler(e: MouseEvent) { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
-    document.addEventListener('mousedown', handler)
-    return () => document.removeEventListener('mousedown', handler)
-  }, [open])
-  const cur = STATUTS_LEAD.find(s => s.k === current) || STATUTS_LEAD[0]
-  return (
-    <div className="statut-wrap" ref={ref}>
-      <button type="button" className="statut-pill-btn" onClick={() => setOpen(!open)}
-        style={{ background: cur.color + '20', color: cur.color }}>
-        <span className="sp-dot" style={{ background: cur.color }}/>
-        <span>{cur.label}</span>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-          style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s', opacity: 0.7 }}>
-          <polyline points="6 9 12 15 18 9"/>
-        </svg>
-      </button>
-      {open && (
-        <div className="statut-panel">
-          {STATUTS_LEAD.map(s => (
-            <div key={s.k} className={`sp-opt${current === s.k ? ' selected' : ''}`}
-              onClick={() => { onChange(s.k); setOpen(false) }}>
-              <span className="sp-opt-dot" style={{ background: s.color }}/>
-              <span className="sp-opt-lbl">{s.label}</span>
-              {current === s.k && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={MI.blue} strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>}
-            </div>
-          ))}
-        </div>
-      )}
     </div>
-  )
-}
-
-function StepItem({ ok, num, label }: { ok: boolean; num: number; label: string }) {
-  return (
-    <div className={`e3-step ${ok ? 'done' : 'todo'}`}>
-      <span className="num">{ok ? '✓' : num}</span>
-      <span className="txt">{label}</span>
-    </div>
-  )
-}
-
-// ============================================================
-// Récap final
-// ============================================================
-function FinalRecap({ candidateName, scores, times }: { candidateName: string; scores: Record<Epreuve, number>; times: Record<Epreuve, number> }) {
-  const total = scores[1] + scores[2] + scores[3]
-  const totalTime = times[1] + times[2] + times[3]
-  const mins = Math.floor(totalTime / 60)
-  const secs = totalTime % 60
-
-  return (
-    <div className="final-card">
-      <div className="final-icon"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg></div>
-      <h2>Bravo {candidateName}, simulation terminée !</h2>
-      <p>Ton dossier passe à Mayinvest pour validation. Tu recevras un email sous 24h avec le retour. Si c'est validé, ton dashboard commercial sera activé immédiatement.</p>
-      <div className="final-score-row">
-        <div className="final-score">
-          <div className="final-score-num">{total}</div>
-          <div className="final-score-lbl">/ 60 points</div>
-        </div>
-        <div className="final-time">
-          <div className="final-time-num">{mins}min {secs}s</div>
-          <div className="final-time-lbl">Temps total</div>
-        </div>
-      </div>
-      <div className="final-breakdown">
-        <div className="final-row"><span>Épreuve 1 · Chat</span><b>{scores[1]}/20</b></div>
-        <div className="final-row"><span>Épreuve 2 · Création lead</span><b>{scores[2]}/20</b></div>
-        <div className="final-row"><span>Épreuve 3 · Pilotage dossier</span><b>{scores[3]}/20</b></div>
-      </div>
-      <p className="final-sub">Statut de ta candidature : <b>En attente de validation</b></p>
-    </div>
-  )
-}
-
-function ObjItem({ ok, label }: { ok: boolean; label: string }) {
-  return (
-    <div className={`obj-item${ok ? ' ok' : ''}`}>
-      <span className="chk">{ok && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3"><polyline points="20 6 9 17 4 12"/></svg>}</span>
-      <span>{label}</span>
-    </div>
-  )
-}
-
-function SparkIcon() {
-  return <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-}
-
-function GlobalStyles() {
-  return (
-    <style>{`
-      * { box-sizing: border-box; }
-      .sp-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 32px; background: white; border-bottom: 1px solid ${MI.grayBorder}; position: sticky; top: 0; z-index: 10; }
-      .sp-logo { display: flex; align-items: center; gap: 10px; font-size: 18px; font-weight: 800; color: ${MI.navy}; text-decoration: none; }
-      .sp-logo-mark { width: 32px; height: 32px; background: ${MI.violet}; color: white; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; }
-      .sp-prog { display: flex; align-items: center; gap: 12px; }
-      .sp-prog-bar { width: 180px; height: 6px; background: ${MI.grayBorder}; border-radius: 3px; overflow: hidden; }
-      .sp-prog-fill { height: 100%; background: ${MI.violet}; transition: width 0.3s; }
-      .sp-prog-txt { font-size: 12px; font-weight: 600; color: ${MI.text}; }
-      .sp-user { font-size: 13px; color: ${MI.textMuted}; }
-      .sp-user b { color: ${MI.text}; }
-      .sp-wrap { max-width: 1040px; margin: 0 auto; padding: 32px 24px; }
-      .sp-banner { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; background: ${MI.violetSoft}; color: ${MI.violet}; border-radius: 999px; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 16px; }
-
-      /* ==== Épreuve 1 Chat ==== */
-      .e1-grid { display: grid; grid-template-columns: 1fr 280px; gap: 16px; }
-      @media (max-width: 780px) { .e1-grid { grid-template-columns: 1fr; } }
-      .chat-pan { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 14px; display: flex; flex-direction: column; overflow: hidden; height: 520px; }
-      .chat-head { padding: 12px 16px; background: ${MI.grayHair}; border-bottom: 1px solid ${MI.grayBorder}; display: flex; align-items: center; gap: 10px; }
-      .avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, ${MI.blue}, ${MI.violet}); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
-      .chat-head-info { flex: 1; }
-      .chat-head-name { font-size: 13px; font-weight: 700; color: ${MI.text}; }
-      .chat-head-meta { font-size: 10px; color: ${MI.textMuted}; margin-top: 1px; display: flex; align-items: center; gap: 4px; }
-      .dot-live { width: 6px; height: 6px; border-radius: 50%; background: ${MI.green}; display: inline-block; }
-      .chat-head-fake { padding: 3px 8px; background: ${MI.violet}; color: white; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
-      .chat-body { flex: 1; overflow-y: auto; padding: 14px 16px; background: ${MI.grayBg}; display: flex; flex-direction: column; gap: 8px; }
-      .msg { max-width: 78%; padding: 9px 13px; border-radius: 14px; font-size: 13px; line-height: 1.4; }
-      .msg.them { align-self: flex-start; background: white; border: 1px solid ${MI.grayBorder}; border-bottom-left-radius: 4px; color: ${MI.text}; }
-      .msg.me { align-self: flex-end; background: ${MI.waBg}; color: ${MI.text}; border-bottom-right-radius: 4px; }
-      .chat-input { padding: 12px 14px; border-top: 1px solid ${MI.grayBorder}; display: flex; gap: 8px; background: white; }
-      .chat-input input { flex: 1; padding: 9px 14px; background: ${MI.grayHair}; border: 1px solid ${MI.grayBorder}; border-radius: 999px; font-size: 13px; font-family: inherit; color: ${MI.text}; }
-      .chat-input button { padding: 9px 16px; background: ${MI.navy}; color: white; border: none; border-radius: 999px; font-size: 12px; font-weight: 700; cursor: pointer; }
-      .chat-input button:disabled { opacity: 0.4; cursor: not-allowed; }
-
-      .obj-box { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 14px; padding: 16px; }
-      .obj-box h4 { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${MI.textMuted}; margin: 0 0 10px; }
-      .obj-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: ${MI.grayHair}; border-radius: 8px; margin-bottom: 6px; font-size: 12px; color: ${MI.text}; }
-      .obj-item .chk { width: 16px; height: 16px; border-radius: 4px; background: ${MI.grayBorder}; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: transparent; }
-      .obj-item.ok { color: ${MI.green}; font-weight: 600; }
-      .obj-item.ok .chk { background: ${MI.green}; color: white; }
-      .hint-box { margin-top: 12px; padding: 12px; background: ${MI.goldSoft}; color: #92400E; border-radius: 10px; font-size: 11px; line-height: 1.5; }
-      .hint-box b { display: block; margin-bottom: 4px; font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 700; }
-      .counter { margin-top: 10px; text-align: center; font-size: 11px; color: ${MI.textMuted}; }
-      .counter b { color: ${MI.text}; font-weight: 700; }
-      .btn-finish { display: block; width: 100%; margin-top: 12px; padding: 12px; background: ${MI.green}; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
-      .btn-finish.wide { max-width: 320px; margin: 24px auto 0; }
-
-      /* ==== Épreuve 2 Form ==== */
-      .brief-box { background: ${MI.violetSoft}; border-left: 3px solid ${MI.violet}; padding: 14px 18px; border-radius: 0 12px 12px 0; margin-bottom: 16px; }
-      .brief-box h4 { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${MI.violet}; margin: 0 0 6px; }
-      .brief-box p { font-size: 13px; color: ${MI.text}; margin: 0; line-height: 1.6; }
-      .brief-box b { color: ${MI.navy}; font-weight: 700; }
-      .form-err { background: ${MI.redSoft}; color: ${MI.red}; padding: 10px 14px; border-radius: 10px; font-size: 12px; margin-bottom: 12px; font-weight: 600; }
-      .form-card { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 16px; padding: 24px; }
-      .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 8px; }
-      @media (max-width: 560px) { .form-grid { grid-template-columns: 1fr; } }
-      .field { display: flex; flex-direction: column; gap: 4px; position: relative; }
-      .field label { font-size: 11px; color: ${MI.textMuted}; font-weight: 600; }
-      .field label .req { color: ${MI.red}; }
-      .field input { padding: 10px 12px; background: #fff; border: 1px solid ${MI.grayBorder}; border-radius: 8px; font-size: 13px; font-family: inherit; color: ${MI.text}; transition: border-color 0.15s, box-shadow 0.15s; }
-      .field input:focus { outline: none; border-color: ${MI.blue}; box-shadow: 0 0 0 3px rgba(35,97,239,0.12); }
-      .field.filled input { border-color: ${MI.green}; background: ${MI.greenSoft}; color: ${MI.text}; font-weight: 500; }
-
-      /* ===== Custom Select ===== */
-      .cs-wrap { position: relative; width: 100%; }
-      .cs-btn { width: 100%; padding: 10px 36px 10px 12px; background: #fff; border: 1px solid ${MI.grayBorder}; border-radius: 8px; font-size: 13px; font-family: inherit; color: ${MI.textMuted}; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 8px; text-align: left; position: relative; }
-      .cs-btn:hover { border-color: #C4C9D1; }
-      .cs-btn.open { border-color: ${MI.blue}; box-shadow: 0 0 0 3px rgba(35,97,239,0.12); }
-      .cs-btn.has-value { color: ${MI.text}; font-weight: 500; }
-      .field.filled .cs-btn.has-value { background: ${MI.greenSoft}; border-color: ${MI.green}; }
-      .cs-btn svg { color: ${MI.textMuted}; flex-shrink: 0; }
-      .cs-panel { position: absolute; top: calc(100% + 6px); left: 0; right: 0; background: #fff; border: 1px solid ${MI.grayBorder}; border-radius: 10px; box-shadow: 0 10px 30px rgba(13,23,41,0.12), 0 2px 6px rgba(13,23,41,0.05); padding: 6px; z-index: 20; max-height: 260px; overflow-y: auto; animation: csFadeIn 0.12s ease; }
-      @keyframes csFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-      .cs-opt { padding: 9px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; color: ${MI.text}; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-      .cs-opt:hover { background: ${MI.blue}15; color: ${MI.blue}; }
-      .cs-opt.selected { background: ${MI.blue}15; color: ${MI.blue}; font-weight: 700; }
-      .form-section-title { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${MI.textMuted}; margin: 16px 0 8px; }
-      .form-actions { display: flex; justify-content: flex-end; margin-top: 20px; padding-top: 16px; border-top: 1px solid ${MI.grayBorder}; }
-      .btn-submit { padding: 12px 24px; background: ${MI.navy}; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; }
-      .btn-submit:hover { background: ${MI.blue}; }
-
-      /* ==== Épreuve 3 Pilotage ==== */
-      .e3-grid { display: grid; grid-template-columns: 260px 1fr; gap: 16px; }
-      @media (max-width: 820px) { .e3-grid { grid-template-columns: 1fr; } }
-      .e3-steps { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 14px; padding: 16px; height: fit-content; }
-      .e3-steps h4 { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: ${MI.textMuted}; margin: 0 0 10px; }
-      .e3-step { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-radius: 8px; margin-bottom: 4px; font-size: 12px; }
-      .e3-step .num { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: 11px; font-weight: 700; flex-shrink: 0; }
-      .e3-step.done .num { background: ${MI.green}; color: white; }
-      .e3-step.todo .num { background: ${MI.grayHair}; color: ${MI.textMuted}; border: 1px solid ${MI.grayBorder}; }
-      .e3-step .txt { line-height: 1.3; color: ${MI.text}; }
-      .e3-step.done .txt { color: ${MI.green}; font-weight: 600; }
-
-      .e3-main { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 14px; overflow: hidden; }
-      .e3-main-head { padding: 14px 18px; background: ${MI.grayHair}; border-bottom: 1px solid ${MI.grayBorder}; display: flex; justify-content: space-between; align-items: center; }
-      .e3-main-head h3 { font-size: 14px; font-weight: 700; margin: 0; color: ${MI.text}; }
-      .e3-main-head .fake { padding: 3px 8px; background: ${MI.violet}; color: white; border-radius: 999px; font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; }
-      .e3-tabs { display: flex; gap: 4px; padding: 0 18px; border-bottom: 1px solid ${MI.grayBorder}; }
-      .e3-tab { padding: 12px 16px; font-size: 12px; font-weight: 600; color: ${MI.textMuted}; cursor: pointer; border-bottom: 2px solid transparent; }
-      .e3-tab.active { color: ${MI.blue}; border-bottom-color: ${MI.blue}; }
-      .e3-body { padding: 18px; }
-
-      .status-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-      .status-label { font-size: 12px; color: ${MI.textMuted}; font-weight: 600; }
-
-      /* StatutPill (V2) */
-      .statut-wrap { position: relative; }
-      .statut-pill-btn { padding: 7px 14px; border: none; border-radius: 100px; font-size: 12px; font-weight: 700; letter-spacing: 0.03em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-family: inherit; transition: filter 0.15s; }
-      .statut-pill-btn:hover { filter: brightness(0.95); }
-      .sp-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-      .statut-panel { position: absolute; top: calc(100% + 8px); left: 0; background: #fff; border: 1px solid ${MI.grayBorder}; border-radius: 12px; box-shadow: 0 20px 40px rgba(13,23,41,0.12), 0 2px 6px rgba(13,23,41,0.05); padding: 6px; z-index: 50; min-width: 220px; animation: spFadeIn 0.12s ease; }
-      @keyframes spFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
-      .sp-opt { padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: ${MI.text}; display: flex; align-items: center; gap: 10px; }
-      .sp-opt:hover { background: ${MI.grayHair}; }
-      .sp-opt.selected { background: ${MI.grayHair}; font-weight: 700; }
-      .sp-opt-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-      .sp-opt-lbl { flex: 1; }
-
-      .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 16px; font-size: 12px; margin-bottom: 16px; }
-      @media (max-width: 480px) { .info-grid { grid-template-columns: 1fr; } }
-      .info-grid .k { color: ${MI.textMuted}; font-weight: 500; }
-      .info-grid .v { color: ${MI.text}; font-weight: 600; text-align: right; }
-
-      .e3-chat { display: flex; flex-direction: column; height: 400px; border: 1px solid ${MI.grayBorder}; border-radius: 10px; overflow: hidden; }
-      .e3-chat-body { flex: 1; overflow-y: auto; padding: 14px; background: ${MI.grayBg}; display: flex; flex-direction: column; gap: 8px; }
-      .e3-empty { text-align: center; color: ${MI.textMuted}; font-size: 12px; padding: 20px; }
-
-      .e3-docs-title { font-size: 12px; color: ${MI.textMuted}; margin-bottom: 10px; font-weight: 600; }
-      .doc-pill { display: inline-block; margin: 0 6px 6px 0; padding: 6px 12px; background: ${MI.grayHair}; border: 1px solid ${MI.grayBorder}; border-radius: 999px; font-size: 12px; cursor: pointer; font-family: inherit; color: ${MI.text}; }
-      .doc-pill.asked { background: ${MI.greenSoft}; color: ${MI.green}; border-color: ${MI.green}; font-weight: 600; }
-      .e3-docs-count { margin-top: 10px; font-size: 11px; color: ${MI.textMuted}; }
-
-      /* ==== Récap final ==== */
-      .final-card { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 20px; padding: 40px; text-align: center; max-width: 560px; margin: 0 auto; }
-      .final-icon { width: 80px; height: 80px; background: ${MI.greenSoft}; color: ${MI.green}; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; }
-      .final-card h2 { font-size: 24px; font-weight: 800; color: ${MI.navy}; margin: 0 0 10px; letter-spacing: -0.02em; }
-      .final-card p { font-size: 14px; color: ${MI.textMuted}; margin: 0 0 20px; line-height: 1.6; }
-      .final-score-row { display: flex; gap: 20px; justify-content: center; margin: 20px 0; }
-      .final-score, .final-time { background: ${MI.grayHair}; padding: 16px 24px; border-radius: 12px; }
-      .final-score-num { font-size: 28px; font-weight: 800; color: ${MI.violet}; line-height: 1; }
-      .final-score-lbl { font-size: 11px; color: ${MI.textMuted}; margin-top: 4px; }
-      .final-time-num { font-size: 20px; font-weight: 700; color: ${MI.navy}; line-height: 1; }
-      .final-time-lbl { font-size: 11px; color: ${MI.textMuted}; margin-top: 4px; }
-      .final-breakdown { background: ${MI.grayHair}; border-radius: 12px; padding: 14px 18px; margin: 16px 0; text-align: left; }
-      .final-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 12px; color: ${MI.text}; }
-      .final-row b { font-weight: 700; color: ${MI.navy}; font-variant-numeric: tabular-nums; }
-      .final-sub { font-size: 13px !important; color: ${MI.textMuted}; margin-top: 16px !important; }
-      .final-sub b { color: ${MI.gold}; font-weight: 700; }
-    `}</style>
   )
 }
