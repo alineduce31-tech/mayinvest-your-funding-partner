@@ -1,8 +1,11 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
+import { AuthStyles, AuthHeader, AuthTitle, AuthTabs, PasswordField, IconPhone, IconMail, IconBriefcase, AlertIcon } from '@/components/AuthUI'
+import { getCommercialToken, setCommercialToken } from '@/lib/session-tokens'
+import { formatPhoneInput } from '@/lib/phone'
 
 export const Route = createFileRoute('/espace-commercial')({
   component: EspaceCommercialPage,
@@ -29,10 +32,12 @@ function EspaceCommercialPage() {
   const [session, setSession] = useState<Session | null>(null)
   const [loading, setLoading] = useState(true)
   const [form, setForm] = useState({ identifiant: '', password: '' })
-  const [showPwd, setShowPwd] = useState(false)
+  const [loginMode, setLoginMode] = useState<'phone' | 'email'>('phone')
+  const [loginPhone, setLoginPhone] = useState('')
   const [loginLoading, setLoginLoading] = useState(false)
   const [error, setError] = useState('')
-  const [tab, setTab] = useState<'dashboard' | 'leads' | 'outils' | 'chat'>('dashboard')
+  const [tab, setTab] = useState<'dashboard' | 'leads' | 'clients' | 'outils' | 'chat'>('dashboard')
+  const [unreadClients, setUnreadClients] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [stats, setStats] = useState<Stats | null>(null)
   const [leads, setLeads] = useState<Lead[]>([])
@@ -42,7 +47,8 @@ function EspaceCommercialPage() {
 
   useEffect(() => {
     const raw = localStorage.getItem('mi_commercial_session')
-    if (raw) { try { setSession(JSON.parse(raw)) } catch {} }
+    if (raw && getCommercialToken()) { try { setSession(JSON.parse(raw)) } catch {} }
+    else if (raw) { localStorage.removeItem('mi_commercial_session') }
     setLoading(false)
   }, [])
 
@@ -51,12 +57,13 @@ function EspaceCommercialPage() {
       loadStats()
       loadLeads()
       loadUnreadChat()
-      // Realtime subscription chat
-      const chan = supabase.channel(`chat-${session.id}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'commercial_chats', filter: `commercial_id=eq.${session.id}` },
-          () => { loadUnreadChat() })
-        .subscribe()
-      return () => { supabase.removeChannel(chan) }
+      loadUnreadClients()
+      // Temps réel : signaux sans données personnelles
+      return onLiveEvent(`ec-${session.id}`, (e) => {
+        if (e.topic === 'cchat' && e.ref === session.id) loadUnreadChat()
+        else if (e.topic === 'msg' && e.extra === 'client') loadUnreadClients()
+        else if (e.topic === 'lead' || e.topic === 'lead_upd') { loadLeads(); loadStats() }
+      })
     }
     return undefined
   }, [session])
@@ -66,6 +73,12 @@ function EspaceCommercialPage() {
     const { count } = await supabase.from('commercial_chats').select('id', { count: 'exact', head: true })
       .eq('commercial_id', session.id).eq('sender_type', 'director').is('read_at', null)
     setUnreadChat(count || 0)
+  }
+
+  async function loadUnreadClients() {
+    const { data } = await supabase.rpc('commercial_conversations')
+    const rows = (data || []) as any[]
+    setUnreadClients(rows.reduce((n, r) => n + Number(r.unread || 0), 0))
   }
 
   async function loadStats() {
@@ -82,23 +95,27 @@ function EspaceCommercialPage() {
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setError('')
-    if (!form.identifiant || !form.password) { setError('Entre ton email/téléphone et ton mot de passe.'); return }
+    const identifiant = loginMode === 'phone' ? loginPhone : form.identifiant.trim()
+    if (loginMode === 'phone' && loginPhone.length !== 9) { setError('Téléphone invalide (9 chiffres).'); return }
+    if (loginMode === 'email' && !identifiant.includes('@')) { setError('Email invalide.'); return }
+    if (!form.password) { setError('Entre ton mot de passe.'); return }
     setLoginLoading(true)
     const { data, error: rpcErr } = await supabase.rpc('connecter_commercial', {
-      p_identifiant: form.identifiant, p_password: form.password,
+      p_identifiant: identifiant, p_password: form.password,
     })
     setLoginLoading(false)
     if (rpcErr) { setError(rpcErr.message || 'Identifiants incorrects.'); return }
     if (data) {
-      // Recharger pour avoir le ref_code (pas dans le RPC de connexion)
-      const { data: full } = await supabase.from('commercial_candidates').select('*').eq('id', (data as any).id).single()
-      const sess = { ...(data as any), ref_code: full?.ref_code }
+      const { token, ...sess } = data as any
+      setCommercialToken(token)
       localStorage.setItem('mi_commercial_session', JSON.stringify(sess))
       setSession(sess as Session)
     }
   }
 
-  function logout() {
+  async function logout() {
+    try { await supabase.rpc('mi_logout', { p_kind: 'commercial' }) } catch {}
+    setCommercialToken(null)
     localStorage.removeItem('mi_commercial_session')
     setSession(null)
     setForm({ identifiant: '', password: '' })
@@ -125,41 +142,42 @@ function EspaceCommercialPage() {
 
       {!session ? (
         // ========== LOGIN ==========
-        <>
-          <header className="ec-header">
-            <Link to="/"><Logo height={56} tone="light"/></Link>
-            <Link to="/" className="ec-nav-link muted">← Retour à l'accueil</Link>
-          </header>
-          <div className="login-wrap">
-            <div className="login-card">
-              <span className="login-pill">Espace commercial</span>
-              <h1>Bon retour parmi nous.</h1>
-              <p className="sub">Connecte-toi avec ton email ou ton téléphone pour accéder à ton espace.</p>
-              {error && <div className="form-err">{error}</div>}
+        <div className="ac-page">
+          <AuthStyles/>
+          <AuthHeader onBack={() => navigate({ to: '/' })} right={<Link to={'/rejoindre-equipe' as any} className="ac-link hide-sm">Rejoindre l'équipe</Link>}/>
+          <div className="ac-wrap">
+            <div className="ac-card">
+              <AuthTitle icon={<IconBriefcase/>} pill="Espace commercial" title="Bon retour parmi nous" subtitle="Connecte-toi avec ton téléphone ou ton email et ton mot de passe."/>
               <form onSubmit={handleLogin}>
-                <div className="field">
-                  <label>Email ou téléphone</label>
-                  <input type="text" placeholder="toi@exemple.com ou 06 xx xx xx xx" value={form.identifiant} onChange={e => setForm({ ...form, identifiant: e.target.value })} autoComplete="username"/>
-                </div>
-                <div className="field">
-                  <label>Mot de passe</label>
-                  <div className="pwd-wrap">
-                    <input type={showPwd ? 'text' : 'password'} value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} autoComplete="current-password" style={{ paddingRight: 44 }}/>
-                    <button type="button" className="pwd-toggle" onClick={() => setShowPwd(!showPwd)} aria-label={showPwd ? 'Masquer' : 'Afficher'}>
-                      {showPwd ? <EyeOff/> : <Eye/>}
-                    </button>
+                <AuthTabs value={loginMode} onChange={(v) => { setLoginMode(v); setError('') }} options={[
+                  { value: 'phone', label: 'Téléphone', icon: <IconPhone/> },
+                  { value: 'email', label: 'Email', icon: <IconMail/> },
+                ]}/>
+                {loginMode === 'phone' ? (
+                  <div className="ac-field">
+                    <label>Téléphone (9 chiffres)</label>
+                    <input type="tel" inputMode="numeric" placeholder="Ex : 06 655 32 18" value={formatPhoneInput(loginPhone)} onChange={e => setLoginPhone(e.target.value.replace(/\D/g, '').slice(0, 9))} autoComplete="tel"/>
                   </div>
-                </div>
-                <button type="submit" className="btn-login" disabled={loginLoading}>
-                  {loginLoading ? 'Connexion…' : 'Se connecter →'}
+                ) : (
+                  <div className="ac-field">
+                    <label>Email</label>
+                    <input type="email" placeholder="Ex : toi@exemple.com" value={form.identifiant} onChange={e => setForm({ ...form, identifiant: e.target.value })} autoComplete="username"/>
+                  </div>
+                )}
+                <PasswordField value={form.password} onChange={v => setForm({ ...form, password: v })} placeholder="Ton mot de passe"/>
+                <button type="submit" className="ac-btn" disabled={loginLoading}>
+                  {loginLoading ? 'Connexion…' : 'Accéder à mon espace'}
+                  {!loginLoading && <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                 </button>
+                {error && <div className="ac-err"><AlertIcon/>{error}</div>}
               </form>
-              <div className="login-footer">
+              <div className="ac-foot">
+                Mot de passe oublié ? <Link to={'/mot-de-passe-oublie' as any} search={{ type: 'commercial' } as any}>Réinitialiser par email</Link><br/>
                 Pas encore inscrit ? <Link to={'/rejoindre-equipe' as any}>Rejoindre l'équipe</Link>
               </div>
             </div>
           </div>
-        </>
+        </div>
       ) : session.status !== 'valide' ? (
         // ========== DASHBOARD PRÉ-VALIDATION ==========
         <>
@@ -198,6 +216,7 @@ function EspaceCommercialPage() {
             <nav className="ws-nav">
               <NavItem icon={<IconGrid/>} label="Dashboard" active={tab === 'dashboard'} onClick={() => { setTab('dashboard'); setSidebarOpen(false) }}/>
               <NavItem icon={<IconUsers/>} label="Mes Leads" count={stats?.leads_actifs} active={tab === 'leads'} onClick={() => { setTab('leads'); setSidebarOpen(false) }}/>
+              <NavItem icon={<IconChat/>} label="Mes clients" count={unreadClients} active={tab === 'clients'} onClick={() => { setTab('clients'); setSidebarOpen(false) }}/>
               <NavItem icon={<IconLink/>} label="Outils" active={tab === 'outils'} onClick={() => { setTab('outils'); setSidebarOpen(false) }}/>
               <NavItem icon={<IconChat/>} label="Chat Mayinvest" count={unreadChat} active={tab === 'chat'} onClick={() => { setTab('chat'); setSidebarOpen(false) }}/>
             </nav>
@@ -221,6 +240,7 @@ function EspaceCommercialPage() {
               <h1 className="ws-page-title">
                 {tab === 'dashboard' && 'Dashboard'}
                 {tab === 'leads' && 'Mes Leads'}
+                {tab === 'clients' && 'Discussions clients'}
                 {tab === 'outils' && 'Mes Outils'}
                 {tab === 'chat' && 'Chat avec Mayinvest'}
               </h1>
@@ -229,6 +249,7 @@ function EspaceCommercialPage() {
             <div className="ws-content">
               {tab === 'dashboard' && <DashboardTab session={session} stats={stats} leads={leads} onOpenLead={setSelectedLead}/>}
               {tab === 'leads' && <LeadsTab leads={leads} onReload={loadLeads} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)}/>}
+              {tab === 'clients' && <ClientChatsTab commercialId={session.id} onRead={loadUnreadClients}/>}
               {tab === 'outils' && <OutilsTab refCode={session.ref_code} refLink={refLink} session={session}/>}
               {tab === 'chat' && <ChatTab commercialId={session.id} onRead={loadUnreadChat}/>}
             </div>
@@ -622,6 +643,174 @@ function CommissionCalc() {
   )
 }
 
+// ============ DISCUSSIONS CLIENTS ============
+type Conversation = { lead_id: string; nom: string; statut: string; last_message: string | null; last_at: string | null; unread: number }
+
+const QUICK_REPLIES: { label: string; text: string }[] = [
+  { label: 'Prise en charge', text: "Bonjour, je suis votre conseiller Mayinvest. J'ai bien reçu votre dossier et je m'en occupe. Avez-vous un moment pour un appel aujourd'hui ?" },
+  { label: 'Pièces à fournir', text: "Pour avancer, merci de déposer dans l'onglet « Mes infos » : votre pièce d'identité, vos 3 derniers bulletins de salaire et vos relevés bancaires des 3 derniers mois." },
+  { label: 'Rendez-vous', text: "Je vous propose un rendez-vous pour finaliser votre dossier. Quel jour et quelle heure vous conviennent cette semaine ?" },
+  { label: 'Relance', text: "Bonjour, je reviens vers vous au sujet de votre dossier. Êtes-vous toujours intéressé ? Je reste disponible pour répondre à vos questions." },
+]
+
+function ClientChatsTab({ commercialId, onRead }: { commercialId: string; onRead: () => void }) {
+  const [convs, setConvs] = useState<Conversation[]>([])
+  const [loadingList, setLoadingList] = useState(true)
+  const [current, setCurrent] = useState<Conversation | null>(null)
+  const [messages, setMessages] = useState<any[]>([])
+  const [input, setInput] = useState('')
+  const [sending, setSending] = useState(false)
+  const [search, setSearch] = useState('')
+
+  async function loadConvs() {
+    const { data } = await supabase.rpc('commercial_conversations')
+    setConvs(((data || []) as any[]).map(r => ({ ...r, unread: Number(r.unread || 0) })))
+    setLoadingList(false)
+  }
+  async function loadThread(leadId: string) {
+    const { data } = await supabase.from('messages').select('*').eq('lead_id', leadId).order('created_at')
+    setMessages(data || [])
+    const { data: marked } = await supabase.rpc('mark_messages_read', { p_lead_id: leadId, p_reader: 'commercial' })
+    if (marked) { loadConvs(); onRead() }
+  }
+
+  useEffect(() => { loadConvs() }, [])
+  useEffect(() => {
+    return onLiveEvent(`cc-${commercialId}`, (e) => {
+      if (e.topic !== 'msg') return
+      loadConvs()
+      if (current && e.ref === current.lead_id) loadThread(current.lead_id)
+    })
+  }, [commercialId, current?.lead_id])
+
+  function open(c: Conversation) {
+    setCurrent(c)
+    setInput('')
+    loadThread(c.lead_id)
+  }
+
+  async function send() {
+    if (!current || !input.trim() || sending) return
+    const text = input.trim()
+    setSending(true)
+    setInput('')
+    const { error } = await supabase.rpc('send_lead_message', { p_lead_id: current.lead_id, p_sender: 'commercial', p_author_id: commercialId, p_content: text })
+    setSending(false)
+    if (error) { setInput(text); alert('Message non envoyé : ' + error.message); return }
+    loadThread(current.lead_id)
+  }
+
+  const filtered = convs.filter(c => !search.trim() || (c.nom || '').toLowerCase().includes(search.trim().toLowerCase()))
+  const fmt = (d: string | null) => {
+    if (!d) return ''
+    const dt = new Date(d)
+    return dt.toDateString() === new Date().toDateString()
+      ? dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      : dt.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+  }
+
+  return (
+    <div className={`cc-wrap ${current ? 'has-current' : ''}`}>
+      <style>{`
+        .cc-wrap { display: grid; grid-template-columns: 300px 1fr; background: #fff; border: 1px solid #F0F0F0; border-radius: 18px; overflow: hidden; height: calc(100vh - 150px); min-height: 480px; }
+        .cc-list { border-right: 1px solid #F0F0F0; display: flex; flex-direction: column; min-height: 0; }
+        .cc-search { margin: 12px; padding: 10px 14px; border: 1.5px solid #E5E7EB; border-radius: 100px; font-family: inherit; font-size: 14px; outline: none; }
+        .cc-search:focus { border-color: #1A6BFF; }
+        .cc-items { overflow-y: auto; flex: 1; }
+        .cc-item { width: 100%; text-align: left; background: none; border: none; border-bottom: 1px solid #F7F7F7; padding: 12px 14px; display: flex; gap: 10px; align-items: center; cursor: pointer; font-family: inherit; }
+        .cc-item:hover, .cc-item.on { background: #EEF4FF; }
+        .cc-ava { width: 38px; height: 38px; border-radius: 50%; background: #0D1B3E; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+        .cc-item-main { flex: 1; min-width: 0; }
+        .cc-item-top { display: flex; justify-content: space-between; gap: 6px; }
+        .cc-name { font-weight: 800; font-size: 13.5px; color: #0D1B3E; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .cc-time { font-size: 11px; color: #9CA3AF; flex-shrink: 0; }
+        .cc-last { font-size: 12px; color: #6B7280; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+        .cc-badge { background: #1A6BFF; color: #fff; font-size: 10px; font-weight: 800; border-radius: 100px; padding: 2px 7px; }
+        .cc-statut { font-size: 10px; font-weight: 800; color: #1A6BFF; background: #EEF4FF; border-radius: 100px; padding: 2px 8px; }
+        .cc-thread { display: flex; flex-direction: column; min-height: 0; background: #F8FAFC; }
+        .cc-thread-head { background: #0D1B3E; color: #fff; padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+        .cc-back { display: none; background: rgba(255,255,255,0.12); border: none; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; align-items: center; justify-content: center; }
+        .cc-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+        .cc-msg { max-width: 78%; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+        .cc-msg.me { align-self: flex-end; background: #1A6BFF; color: #fff; border-bottom-right-radius: 4px; }
+        .cc-msg.client { align-self: flex-start; background: #fff; border: 1px solid #E5E7EB; color: #111; border-bottom-left-radius: 4px; }
+        .cc-msg.staff { align-self: flex-end; background: #0D1B3E; color: #fff; border-bottom-right-radius: 4px; }
+        .cc-meta { font-size: 10.5px; opacity: 0.7; margin-top: 4px; }
+        .cc-quick { display: flex; gap: 6px; overflow-x: auto; padding: 8px 12px 0; }
+        .cc-quick button { flex-shrink: 0; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 100px; padding: 6px 12px; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; font-family: inherit; }
+        .cc-quick button:hover { border-color: #1A6BFF; color: #1A6BFF; }
+        .cc-input { display: flex; gap: 8px; padding: 10px 12px 12px; }
+        .cc-input textarea { flex: 1; resize: none; border: 1.5px solid #E5E7EB; border-radius: 18px; padding: 10px 14px; font-family: inherit; font-size: 14px; outline: none; max-height: 120px; }
+        .cc-input textarea:focus { border-color: #1A6BFF; }
+        .cc-send { background: #1A6BFF; color: #fff; border: none; border-radius: 100px; padding: 0 18px; font-weight: 800; cursor: pointer; font-family: inherit; }
+        .cc-send:disabled { background: #C7D0DB; cursor: not-allowed; }
+        .cc-empty { margin: auto; text-align: center; color: #6B7280; font-size: 13px; padding: 24px; line-height: 1.6; }
+        @media (max-width: 760px) {
+          .cc-wrap { grid-template-columns: 1fr; height: calc(100vh - 130px); }
+          .cc-wrap.has-current .cc-list { display: none; }
+          .cc-wrap:not(.has-current) .cc-thread { display: none; }
+          .cc-back { display: flex; }
+        }
+      `}</style>
+      <div className="cc-list">
+        <input className="cc-search" placeholder="Rechercher un client…" value={search} onChange={e => setSearch(e.target.value)}/>
+        <div className="cc-items">
+          {loadingList && <div className="cc-empty">Chargement…</div>}
+          {!loadingList && filtered.length === 0 && <div className="cc-empty">Aucun client pour l'instant.<br/>Les dossiers qui te sont attribués apparaissent ici.</div>}
+          {filtered.map(c => (
+            <button key={c.lead_id} className={`cc-item ${current?.lead_id === c.lead_id ? 'on' : ''}`} onClick={() => open(c)}>
+              <span className="cc-ava">{(c.nom || '?').trim().charAt(0).toUpperCase() || '?'}</span>
+              <span className="cc-item-main">
+                <span className="cc-item-top"><span className="cc-name">{c.nom || 'Client'}</span><span className="cc-time">{fmt(c.last_at)}</span></span>
+                <span className="cc-item-top" style={{ marginTop: 3 }}>
+                  <span className="cc-last">{c.last_message ? c.last_message.split('\n')[0] : <span className="cc-statut">{c.statut}</span>}</span>
+                  {c.unread > 0 && <span className="cc-badge">{c.unread}</span>}
+                </span>
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="cc-thread">
+        {!current ? (
+          <div className="cc-empty">Choisis un client à gauche pour voir la discussion.</div>
+        ) : (<>
+          <div className="cc-thread-head">
+            <button className="cc-back" onClick={() => setCurrent(null)} aria-label="Retour à la liste">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+            <span className="cc-ava" style={{ background: '#1A6BFF' }}>{(current.nom || '?').charAt(0).toUpperCase()}</span>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontWeight: 800, fontSize: 14 }}>{current.nom || 'Client'}</div>
+              <div style={{ fontSize: 11, opacity: 0.7 }}>Statut : {current.statut}</div>
+            </div>
+          </div>
+          <div className="cc-msgs">
+            {messages.length === 0 && <div className="cc-empty">Aucun message. Présente-toi au client avec un message rapide ci-dessous.</div>}
+            {messages.map(m => (
+              <div key={m.id} className={`cc-msg ${m.sender === 'client' ? 'client' : m.author_id === commercialId ? 'me' : 'staff'}`}>
+                {m.content}
+                <div className="cc-meta">
+                  {m.sender !== 'client' && m.author_id !== commercialId ? `${m.author_name || 'Direction'} · ` : ''}
+                  {new Date(m.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  {m.sender !== 'client' && m.read_at ? ' · Lu' : ''}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="cc-quick">
+            {QUICK_REPLIES.map(q => <button key={q.label} onClick={() => setInput(q.text)}>{q.label}</button>)}
+          </div>
+          <div className="cc-input">
+            <textarea rows={1} placeholder="Écris au client…" value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }}/>
+            <button className="cc-send" onClick={send} disabled={!input.trim() || sending}>{sending ? '…' : 'Envoyer'}</button>
+          </div>
+        </>)}
+      </div>
+    </div>
+  )
+}
+
 // ============ CHAT TAB ============
 type ChatMsg = { id: string; sender_type: 'commercial' | 'director'; body: string; created_at: string; read_at: string | null }
 
@@ -643,14 +832,11 @@ function ChatTab({ commercialId, onRead }: { commercialId: string; onRead: () =>
   useEffect(() => {
     load()
     markRead()
-    const chan = supabase.channel(`chat-tab-${commercialId}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'commercial_chats', filter: `commercial_id=eq.${commercialId}` },
-        (payload: any) => {
-          setMessages(prev => [...prev, payload.new])
-          if (payload.new.sender_type === 'director') markRead()
-        })
-      .subscribe()
-    return () => { supabase.removeChannel(chan) }
+    return onLiveEvent(`chat-tab-${commercialId}`, (e) => {
+      if (e.topic !== 'cchat' || e.ref !== commercialId) return
+      load()
+      if (e.extra === 'director') markRead()
+    })
   }, [commercialId])
 
   async function send() {
@@ -658,8 +844,10 @@ function ChatTab({ commercialId, onRead }: { commercialId: string; onRead: () =>
     setSending(true)
     const body = input.trim()
     setInput('')
-    await supabase.rpc('send_commercial_message', { p_commercial_id: commercialId, p_sender_type: 'commercial', p_body: body })
+    const { error } = await supabase.rpc('send_commercial_message', { p_commercial_id: commercialId, p_sender_type: 'commercial', p_body: body })
     setSending(false)
+    if (error) { setInput(body); alert('Message non envoyé : ' + error.message); return }
+    load()
   }
 
   return (

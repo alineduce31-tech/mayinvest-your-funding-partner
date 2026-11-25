@@ -37,7 +37,7 @@ function MonEspaceAdmin() {
       const raw = localStorage.getItem(ADMIN_SESSION_KEY)
       if (raw) {
         const s = JSON.parse(raw)
-        if (s?.email && s?.expiresAt && s.expiresAt > Date.now()) {
+        if (s?.email && s?.token && s?.expiresAt && s.expiresAt > Date.now()) {
           // Hydrate la ville depuis la session existante pour affichage avant redirect
           if (s.ville) setVille(s.ville)
           navigate({ to: '/admin' })
@@ -64,6 +64,7 @@ function MonEspaceAdmin() {
         nom: row.nom || '',
         prenom: row.prenom || '',
         ville: row.ville || DEFAULT_VILLE,
+        token: row.token,
         expiresAt: Date.now() + 8 * 60 * 60 * 1000,
       }
       localStorage.setItem(ADMIN_SESSION_KEY, JSON.stringify(session))

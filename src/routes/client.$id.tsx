@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase, onLiveEvent } from '@/integrations/supabase/client'
+import { setClientToken } from '@/lib/session-tokens'
+import { requestPasswordReset } from '@/lib/password-reset'
 import SkeletonPage from '@/components/SkeletonPage'
 import { formatPhoneInput } from '@/lib/phone'
 
@@ -249,14 +251,16 @@ function ClientPortal() {
   async function openWithCode(code: string, silent = false) {
     if (!silent) setCodeLoading(true)
     setCodeError('')
-    const { data, error } = await supabase.rpc('get_lead_by_code', { p_id: id, p_code: code })
+    const { data, error } = await supabase.rpc('client_login', { p_id: id, p_code: code.trim() })
     if (!silent) setCodeLoading(false)
-    if (error || !data || (Array.isArray(data) && data.length === 0)) {
+    const res: any = data
+    if (error || !res?.token || !res?.lead) {
       if (silent) { setStage('needsCode'); return }
       setCodeError("Code incorrect. Vérifiez votre code d'accès.")
       return
     }
-    const leadRow = Array.isArray(data) ? data[0] : data
+    setClientToken(res.token)
+    const leadRow = res.lead
     setLead(leadRow)
     try { localStorage.setItem(`mayinvest_code_${id}`, code) } catch {}
     setStage('portal')
@@ -266,14 +270,15 @@ function ClientPortal() {
   async function openWithPassword(password: string, silent = false, identifier?: string, idType?: 'phone'|'email') {
     if (!silent) setCodeLoading(true)
     setCodeError('')
-    const { data, error } = await supabase.rpc('get_lead_by_password', { p_id: id, p_password: password })
+    const { data, error } = await supabase.rpc('client_login', { p_id: id, p_password: password })
     if (!silent) setCodeLoading(false)
-    if (error || !data || (Array.isArray(data) && data.length === 0)) {
+    const res: any = data
+    if (error || !res?.token || !res?.lead) {
       if (silent) { setStage('needsCode'); return }
       setCodeError("Mot de passe incorrect.")
       return
     }
-    const leadRow = Array.isArray(data) ? data[0] : data
+    const leadRow = res.lead
     // Vérification supplémentaire : l'identifiant (phone/email) doit correspondre au dossier
     if (identifier && idType) {
       const expected = idType === 'phone' ? (leadRow.identite?.tel || '') : (leadRow.identite?.email || '').toLowerCase()
@@ -283,6 +288,7 @@ function ClientPortal() {
         return
       }
     }
+    setClientToken(res.token)
     setLead(leadRow)
     try { localStorage.setItem(`mayinvest_pwd_${id}`, password) } catch {}
     setStage('portal')
@@ -291,33 +297,10 @@ function ClientPortal() {
 
   async function askRecovery() {
     setRecoveryMsg(''); setRecoveryLink(''); setRecoveryBusy(true)
-    const email = recoveryEmail.trim().toLowerCase()
-    if (!email || !/\S+@\S+\.\S+/.test(email)) {
-      setRecoveryMsg('Email invalide'); setRecoveryBusy(false); return
-    }
-    const { data, error } = await supabase.rpc('request_password_reset', { p_email: email })
+    const res = await requestPasswordReset(recoveryEmail, 'client')
     setRecoveryBusy(false)
-    const row: any = Array.isArray(data) ? data[0] : data
-    if (error || !row?.success) {
-      setRecoveryMsg(row?.message || "Aucun dossier trouvé avec cet email")
-      return
-    }
-    // On a un token. Appel Edge Function pour envoyer l'email via Resend.
-    // Fallback : si l'Edge Function n'est pas déployée, on affiche le lien directement.
-    const resetUrl = `${window.location.origin}/reset-password?token=${row.token}`
-    try {
-      const { error: fnErr } = await supabase.functions.invoke('send-reset-email', {
-        body: { email, link: resetUrl }
-      })
-      if (fnErr) throw fnErr
-      setRecoveryStep('sent')
-      setRecoveryMsg(`✓ Email envoyé à ${email}. Vérifiez votre boîte (et les spams).`)
-    } catch {
-      // Fallback : affiche directement le lien (en attendant Resend)
-      setRecoveryStep('sent')
-      setRecoveryLink(resetUrl)
-      setRecoveryMsg(`Email automatique indisponible. Cliquez sur le lien ci-dessous pour réinitialiser.`)
-    }
+    if (res.ok) setRecoveryStep('sent')
+    setRecoveryMsg((res.ok ? '✓ ' : '') + res.message)
   }
   function startRecovery() { setRecoveryStep('ask'); setRecoveryEmail(''); setRecoveryMsg(''); setRecoveryLink('') }
 
@@ -328,14 +311,15 @@ function ClientPortal() {
 
   useEffect(() => {
     if (stage !== 'portal') return
-    const chan = supabase.channel(`client-${id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `lead_id=eq.${id}` },
-        (p) => {
-          const m = p.new as any
-          setMessages(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m])
-        })
-      .subscribe()
-    return () => { supabase.removeChannel(chan) }
+    return onLiveEvent(`client-${id}`, async (e) => {
+      if (e.ref !== id) return
+      if (e.topic === 'msg') loadMessages()
+      else if (e.topic === 'doc') loadDocuments()
+      else if (e.topic === 'lead_upd') {
+        const { data } = await supabase.from('leads').select('*').eq('id', id).maybeSingle()
+        if (data) setLead(data)
+      }
+    })
   }, [stage, id])
 
   // Quand le client lit la discussion, les messages du conseiller passent en "lu"
@@ -390,9 +374,11 @@ function ClientPortal() {
     setSending(true)
     const msg = newMsg.trim()
     setNewMsg('')
-    const { error } = await supabase.from('messages').insert({ lead_id: id, sender: 'client', content: msg })
+    const { data, error } = await supabase.rpc('client_send_message', { p_content: msg })
     setSending(false)
-    if (error) { setNewMsg(msg); alert("Impossible d'envoyer : " + error.message) }
+    if (error) { setNewMsg(msg); alert("Impossible d'envoyer : " + error.message); return }
+    const m = data as any
+    if (m?.id) setMessages(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m])
   }
 
   async function uploadFileToChat(file: File) {
@@ -404,11 +390,9 @@ function ClientPortal() {
       const { error: upErr } = await supabase.storage.from('lead-documents').upload(path, file, { contentType: file.type, upsert: false })
       if (upErr) throw upErr
       const { data: pub } = supabase.storage.from('lead-documents').getPublicUrl(path)
-      await supabase.from('messages').insert({
-        lead_id: id,
-        sender: 'client',
-        content: `📎 ${file.name}\n${pub.publicUrl}`,
-      })
+      const { error: msgErr } = await supabase.rpc('client_send_message', { p_content: `📎 ${file.name}\n${pub.publicUrl}` })
+      if (msgErr) throw msgErr
+      await loadMessages()
     } catch (e: any) {
       alert("Impossible d'uploader : " + (e?.message || 'erreur'))
     }
@@ -451,7 +435,9 @@ function ClientPortal() {
     }
   }, [stage, activeTab])
 
-  function deconnecter() {
+  async function deconnecter() {
+    try { await supabase.rpc('mi_logout', { p_kind: 'client' }) } catch {}
+    setClientToken(null)
     try {
       localStorage.removeItem(`mayinvest_code_${id}`)
       localStorage.removeItem(`mayinvest_pwd_${id}`)

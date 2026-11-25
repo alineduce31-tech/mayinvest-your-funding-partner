@@ -3,6 +3,10 @@ import { useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 import { formatPhoneInput } from '@/lib/phone'
+import { AuthStyles, AuthHeader, AuthTitle, PasswordField, IconUserPlus, AlertIcon } from '@/components/AuthUI'
+import { setCommercialToken } from '@/lib/session-tokens'
+
+const VILLES = ['Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Ouesso', 'Owando', 'Mossendjo', 'Autre']
 
 export const Route = createFileRoute('/rejoindre-equipe')({
   component: RejoindreEquipePage,
@@ -27,7 +31,6 @@ function RejoindreEquipePage() {
   const navigate = useNavigate()
   const [step, setStep] = useState<'landing' | 'form' | 'success'>('landing')
   const [form, setForm] = useState({ prenom: '', nom: '', telephone: '', email: '', password: '', ville: '', motivation: '' })
-  const [showPwd, setShowPwd] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -38,8 +41,12 @@ function RejoindreEquipePage() {
       setError('Les champs marqués d\'une étoile sont obligatoires.')
       return
     }
-    if (form.password.length < 6) {
-      setError('Le mot de passe doit faire au moins 6 caractères.')
+    if (form.telephone.replace(/\D/g, '').length !== 9) {
+      setError('Téléphone invalide (9 chiffres).')
+      return
+    }
+    if (form.password.length < 8) {
+      setError('Le mot de passe doit faire au moins 8 caractères.')
       return
     }
     setLoading(true)
@@ -51,6 +58,8 @@ function RejoindreEquipePage() {
     setLoading(false)
     if (rpcErr) { setError(rpcErr.message || 'Erreur d\'inscription.'); return }
     if (data?.id) {
+      setCommercialToken((data as any).token)
+      localStorage.setItem('mi_commercial_session', JSON.stringify({ id: data.id, nom: form.nom, prenom: form.prenom, email: form.email, telephone: form.telephone, ville: form.ville, status: 'formation', activated_at: null }))
       localStorage.setItem('mi_candidate_id', data.id)
       localStorage.setItem('mi_candidate_name', form.prenom)
       setStep('success')
@@ -67,6 +76,8 @@ function RejoindreEquipePage() {
         @media (max-width: 640px) { .mi-nav-actions { gap: 6px; } }
         .mi-nav-link { color: #111; font-family: inherit; font-size: 14px; font-weight: 600; text-decoration: none; padding: 10px 16px; border-radius: 100px; display: flex; align-items: center; gap: 6px; white-space: nowrap; cursor: pointer; background: none; border: none; }
         .mi-nav-link:hover { background: #F5F5F5; }
+        .mi-back-pill { background: #0D1B3E; color: #fff; border: none; padding: 10px 18px; border-radius: 100px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit; }
+        .mi-back-pill:hover { background: #000; }
         .mi-nav-link.muted { color: #666; font-size: 13px; font-weight: 500; padding: 10px 12px; }
         @media (max-width: 640px) {
           .mi-nav-link { padding: 7px 12px; font-size: 13px; gap: 5px; }
@@ -164,15 +175,15 @@ function RejoindreEquipePage() {
       <header className="mi-header">
         <Link to="/"><Logo height={56} tone="light"/></Link>
         <div className="mi-nav-actions">
-          <Link to="/" className="mi-nav-link muted hide-mobile">Accueil</Link>
+
           <Link to={'/espace-commercial' as any} className="mi-nav-link muted">
             <svg width="15" height="15" viewBox="0 0 20 20" fill="none"><rect x="4" y="3" width="12" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.8"/><path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
             Déjà commercial ?
           </Link>
-          <Link to="/" className="mi-btn-primary">
-            Devenir client
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </Link>
+          <button className="mi-back-pill" onClick={() => navigate({ to: '/' })}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4L3 7l3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Accueil
+          </button>
         </div>
       </header>
 
@@ -223,65 +234,53 @@ function RejoindreEquipePage() {
       </>}
 
       {step === 'form' && (
-        <div className="form-wrap">
-          <div className="form-card">
-            <h2>Postule en 2 minutes</h2>
-            <p className="sub">On revient vers toi sous 24h avec le lien d'accès à la formation.</p>
-            {error && <div className="form-err">{error}</div>}
-            <form onSubmit={handleSubmit}>
-              <div className="field-row">
-                <div className="field">
-                  <label>Prénom <span className="req">*</span></label>
-                  <input value={form.prenom} onChange={e => setForm({ ...form, prenom: e.target.value })} required/>
+        <div className="ac-page" style={{ position: 'fixed', inset: 0, overflowY: 'auto', zIndex: 50 }}>
+          <AuthStyles/>
+          <AuthHeader onBack={() => setStep('landing')} backLabel="Retour" right={<Link to={'/espace-commercial' as any} className="ac-link hide-sm">Déjà commercial ?</Link>}/>
+          <div className="ac-wrap">
+            <div className="ac-card">
+              <AuthTitle icon={<IconUserPlus/>} pill="Recrutement commercial" title="Postule en 2 minutes" subtitle="Crée ton compte, puis commence la formation tout de suite."/>
+              <form onSubmit={handleSubmit}>
+                <div className="ac-row">
+                  <div className="ac-field">
+                    <label>Prénom<span className="req"> *</span></label>
+                    <input value={form.prenom} onChange={e => setForm({ ...form, prenom: e.target.value })} autoComplete="given-name" placeholder="Ex : Jean"/>
+                  </div>
+                  <div className="ac-field">
+                    <label>Nom<span className="req"> *</span></label>
+                    <input value={form.nom} onChange={e => setForm({ ...form, nom: e.target.value })} autoComplete="family-name" placeholder="Ex : Mabiala"/>
+                  </div>
                 </div>
-                <div className="field">
-                  <label>Nom <span className="req">*</span></label>
-                  <input value={form.nom} onChange={e => setForm({ ...form, nom: e.target.value })} required/>
+                <div className="ac-field">
+                  <label>Téléphone WhatsApp (9 chiffres)<span className="req"> *</span></label>
+                  <input type="tel" inputMode="numeric" placeholder="Ex : 06 655 32 18" value={form.telephone} onChange={e => setForm({ ...form, telephone: formatPhoneInput(e.target.value) })} autoComplete="tel"/>
                 </div>
-              </div>
-              <div className="field">
-                <label>Téléphone (WhatsApp) <span className="req">*</span></label>
-                <input type="tel" inputMode="numeric" placeholder="06 655 32 18" value={form.telephone} onChange={e => setForm({ ...form, telephone: formatPhoneInput(e.target.value) })} required/>
-              </div>
-              <div className="field">
-                <label>Email <span className="req">*</span></label>
-                <input type="email" placeholder="toi@exemple.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} required/>
-              </div>
-              <div className="field">
-                <label>Mot de passe <span className="req">*</span> <span style={{ color: MI.textMuted, fontWeight: 400 }}>(6 caractères minimum)</span></label>
-                <div style={{ position: 'relative' }}>
-                  <input type={showPwd ? 'text' : 'password'} value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} required minLength={6} style={{ paddingRight: 44 }}/>
-                  <button type="button" onClick={() => setShowPwd(!showPwd)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: MI.textMuted, padding: 6 }} aria-label={showPwd ? 'Masquer' : 'Afficher'}>
-                    {showPwd ? (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                    ) : (
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                    )}
-                  </button>
+                <div className="ac-field">
+                  <label>Email<span className="req"> *</span></label>
+                  <input type="email" placeholder="Ex : toi@exemple.com" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} autoComplete="email"/>
                 </div>
-              </div>
-              <div className="field">
-                <label>Ville <span className="req">*</span></label>
-                <select value={form.ville} onChange={e => setForm({ ...form, ville: e.target.value })} required>
-                  <option value="">Choisir…</option>
-                  <option>Brazzaville</option>
-                  <option>Pointe-Noire</option>
-                  <option>Dolisie</option>
-                  <option>Nkayi</option>
-                  <option>Ouesso</option>
-                  <option>Owando</option>
-                  <option>Mossendjo</option>
-                  <option>Autre</option>
-                </select>
-              </div>
-              <div className="field">
-                <label>Pourquoi tu veux rejoindre Mayinvest ? (facultatif)</label>
-                <textarea placeholder="En quelques phrases…" value={form.motivation} onChange={e => setForm({ ...form, motivation: e.target.value })}/>
-              </div>
-              <button type="submit" className="btn-submit" disabled={loading}>
-                {loading ? 'Envoi en cours…' : 'Envoyer ma candidature →'}
-              </button>
-            </form>
+                <PasswordField label="Mot de passe (8 caractères minimum)" required value={form.password} onChange={v => setForm({ ...form, password: v })} autoComplete="new-password" placeholder="Choisis un mot de passe"/>
+                {form.password.length > 0 && form.password.length < 8 && <div className="ac-hint">Encore {8 - form.password.length} caractère(s)</div>}
+                <div className="ac-field">
+                  <label>Ville<span className="req"> *</span></label>
+                  <div className="ac-chips">
+                    {VILLES.map(v => (
+                      <button type="button" key={v} className={'ac-chip ' + (form.ville === v ? 'on' : '')} onClick={() => setForm({ ...form, ville: v })}>{v}</button>
+                    ))}
+                  </div>
+                </div>
+                <div className="ac-field">
+                  <label>Pourquoi rejoindre Mayinvest ? (facultatif)</label>
+                  <textarea placeholder="En quelques phrases…" value={form.motivation} onChange={e => setForm({ ...form, motivation: e.target.value })}/>
+                </div>
+                <button type="submit" className="ac-btn" disabled={loading}>
+                  {loading ? 'Envoi en cours…' : 'Envoyer ma candidature'}
+                  {!loading && <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M4 9h10M10 5l4 4-4 4" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                </button>
+                {error && <div className="ac-err"><AlertIcon/>{error}</div>}
+              </form>
+              <div className="ac-foot">Déjà inscrit ? <Link to={'/espace-commercial' as any}>Se connecter</Link></div>
+            </div>
           </div>
         </div>
       )}

@@ -18,6 +18,7 @@ import { Route as EspaceCommercialRouteImport } from './routes/espace-commercial
 import { Route as FormationRouteImport } from './routes/formation'
 import { Route as MonDossierRouteImport } from './routes/mon-dossier'
 import { Route as MonEspaceRouteImport } from './routes/mon-espace'
+import { Route as MotDePasseOublieRouteImport } from './routes/mot-de-passe-oublie'
 import { Route as PreselectionRouteImport } from './routes/preselection'
 import { Route as RejoindreEquipeRouteImport } from './routes/rejoindre-equipe'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
@@ -70,6 +71,11 @@ const MonEspaceRoute = MonEspaceRouteImport.update({
   path: '/mon-espace',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MotDePasseOublieRoute = MotDePasseOublieRouteImport.update({
+  id: '/mot-de-passe-oublie',
+  path: '/mot-de-passe-oublie',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PreselectionRoute = PreselectionRouteImport.update({
   id: '/preselection',
   path: '/preselection',
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/formation': typeof FormationRoute
   '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/preselection': typeof PreselectionRoute
   '/rejoindre-equipe': typeof RejoindreEquipeRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/formation': typeof FormationRoute
   '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/preselection': typeof PreselectionRoute
   '/rejoindre-equipe': typeof RejoindreEquipeRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/formation': typeof FormationRoute
   '/mon-dossier': typeof MonDossierRoute
   '/mon-espace': typeof MonEspaceRoute
+  '/mot-de-passe-oublie': typeof MotDePasseOublieRoute
   '/preselection': typeof PreselectionRoute
   '/rejoindre-equipe': typeof RejoindreEquipeRoute
   '/reset-password': typeof ResetPasswordRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/formation'
     | '/mon-dossier'
     | '/mon-espace'
+    | '/mot-de-passe-oublie'
     | '/preselection'
     | '/rejoindre-equipe'
     | '/reset-password'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/formation'
     | '/mon-dossier'
     | '/mon-espace'
+    | '/mot-de-passe-oublie'
     | '/preselection'
     | '/rejoindre-equipe'
     | '/reset-password'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/formation'
     | '/mon-dossier'
     | '/mon-espace'
+    | '/mot-de-passe-oublie'
     | '/preselection'
     | '/rejoindre-equipe'
     | '/reset-password'
@@ -217,6 +229,7 @@ export interface RootRouteChildren {
   FormationRoute: typeof FormationRoute
   MonDossierRoute: typeof MonDossierRoute
   MonEspaceRoute: typeof MonEspaceRoute
+  MotDePasseOublieRoute: typeof MotDePasseOublieRoute
   PreselectionRoute: typeof PreselectionRoute
   RejoindreEquipeRoute: typeof RejoindreEquipeRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
@@ -290,6 +303,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MonEspaceRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mot-de-passe-oublie': {
+      id: '/mot-de-passe-oublie'
+      path: '/mot-de-passe-oublie'
+      fullPath: '/mot-de-passe-oublie'
+      preLoaderRoute: typeof MotDePasseOublieRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/preselection': {
       id: '/preselection'
       path: '/preselection'
@@ -345,6 +365,7 @@ const rootRouteChildren: RootRouteChildren = {
   FormationRoute: FormationRoute,
   MonDossierRoute: MonDossierRoute,
   MonEspaceRoute: MonEspaceRoute,
+  MotDePasseOublieRoute: MotDePasseOublieRoute,
   PreselectionRoute: PreselectionRoute,
   RejoindreEquipeRoute: RejoindreEquipeRoute,
   ResetPasswordRoute: ResetPasswordRoute,

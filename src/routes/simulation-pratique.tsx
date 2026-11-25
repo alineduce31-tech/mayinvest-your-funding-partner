@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { getCommercialToken } from '@/lib/session-tokens'
 import SkeletonPage from '@/components/SkeletonPage'
 
 export const Route = createFileRoute('/simulation-pratique')({
@@ -43,6 +44,7 @@ function SimulationPage() {
     const cid = localStorage.getItem('mi_candidate_id')
     const cname = localStorage.getItem('mi_candidate_name') || ''
     if (!cid) { navigate({ to: '/rejoindre-equipe' as any }); return }
+    if (!getCommercialToken()) { navigate({ to: '/espace-commercial' as any }); return }
     setCandidateId(cid)
     setCandidateName(cname)
 

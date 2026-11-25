@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 import { formatPhoneInput } from '@/lib/phone'
+import { requestPasswordReset } from '@/lib/password-reset'
 
 export const Route = createFileRoute('/mon-dossier')({
   component: MonDossier,
@@ -248,30 +249,8 @@ function MonDossier() {
   async function sendResetEmail() {
     setForgotMsg('')
     setForgotLoading(true)
-    try {
-      const { data } = await supabase.rpc('request_password_reset', { p_email: forgotEmail })
-      const row: any = Array.isArray(data) ? data[0] : data
-      if (!row?.success) {
-        setForgotMsg('Erreur: ' + (row?.message || 'Aucun dossier avec cet email'))
-        setForgotLoading(false)
-        return
-      }
-      const link = window.location.origin + '/reset-password?token=' + row.token
-      const supaUrl = (supabase as any).supabaseUrl || ''
-      const supaKey = (supabase as any).supabaseKey || ''
-      const resp = await fetch(supaUrl + '/functions/v1/send-reset-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'apikey': supaKey, 'Authorization': 'Bearer ' + supaKey },
-        body: JSON.stringify({ email: forgotEmail, link }),
-      })
-      if (!resp.ok) {
-        setForgotMsg('Erreur envoi email. Contactez le support WhatsApp.')
-      } else {
-        setForgotMsg('OK Email envoyé ! Vérifiez votre boîte (et spams). Lien valable 1h.')
-      }
-    } catch {
-      setForgotMsg('Erreur. Contactez le support WhatsApp.')
-    }
+    const res = await requestPasswordReset(forgotEmail, 'client')
+    setForgotMsg((res.ok ? 'OK ' : 'Erreur : ') + res.message)
     setForgotLoading(false)
   }
 

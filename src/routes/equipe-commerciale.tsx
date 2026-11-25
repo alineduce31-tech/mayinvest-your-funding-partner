@@ -34,7 +34,7 @@ function EquipeCommercialePage() {
       const raw = localStorage.getItem(ADMIN_SESSION_KEY)
       if (!raw) { navigate({ to: '/mon-espace' as any }); return }
       const s = JSON.parse(raw)
-      if (!s?.email || !s?.expiresAt || s.expiresAt < Date.now()) {
+      if (!s?.email || !s?.token || !s?.expiresAt || s.expiresAt < Date.now()) {
         navigate({ to: '/mon-espace' as any }); return
       }
       setAuthChecked(true)

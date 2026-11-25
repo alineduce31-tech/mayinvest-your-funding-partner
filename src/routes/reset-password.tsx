@@ -34,12 +34,15 @@ function ResetPassword() {
   const [newPwd, setNewPwd] = useState('')
   const [newPwdConfirm, setNewPwdConfirm] = useState('')
   const [busy, setBusy] = useState(false)
+  const [kind, setKind] = useState<'client' | 'commercial' | null>(null)
+  const loginPath = kind === 'commercial' ? '/espace-commercial' : '/mon-dossier'
 
   useEffect(() => {
     (async () => {
       if (!token) { setStage('invalid'); setError('Lien manquant'); return }
       const { data } = await supabase.rpc('verify_reset_token', { p_token: token })
       const row: any = Array.isArray(data) ? data[0] : data
+      if (row?.kind) setKind(row.kind)
       if (row?.valid) { setEmail(row.email); setStage('valid') }
       else { setStage('invalid'); setError(row?.message || 'Lien invalide ou expiré') }
     })()
@@ -52,6 +55,7 @@ function ResetPassword() {
     const { data, error: err } = await supabase.rpc('reset_password_with_token', { p_token: token, p_new_password: newPwd })
     setBusy(false)
     const row: any = Array.isArray(data) ? data[0] : data
+    if (row?.kind) setKind(row.kind)
     if (err || !row?.success) { setError(row?.message || 'Erreur'); return }
     setStage('done')
   }
@@ -100,10 +104,11 @@ function ResetPassword() {
             <div className="r-haki-msg">
               ⚠ <strong>Ce lien n'est plus valide.</strong><br/><br/>
               Il a peut-être expiré (durée de vie 1 heure) ou déjà été utilisé. Demandez un nouveau lien depuis la page de connexion.
+              <div style={{ marginTop: 10 }}><a className="r-link" style={{ marginTop: 0 }} href={`/mot-de-passe-oublie?type=${kind || 'client'}`}>Demander un nouveau lien</a></div>
             </div>
             <h1 className="r-h">Lien invalide</h1>
             <div className="r-err">{error}</div>
-            <button className="r-btn" style={{ marginTop: 14 }} onClick={() => navigate({ to: '/mon-espace' })}>
+            <button className="r-btn" style={{ marginTop: 14 }} onClick={() => navigate({ to: loginPath as any })}>
               Retour à la connexion
             </button>
           </>
@@ -112,7 +117,7 @@ function ResetPassword() {
         {stage === 'valid' && (
           <>
             <div className="r-haki-msg">
-              👋 Bonjour ! Je vous aide à réinitialiser votre mot de passe pour le dossier associé à <strong>{email}</strong>.<br/><br/>
+              👋 Bonjour ! Je vous aide à réinitialiser votre mot de passe pour le compte associé à <strong>{email}</strong>.<br/><br/>
               Choisissez un nouveau mot de passe de <strong>8 caractères minimum</strong> (lettres et chiffres recommandés).
             </div>
             <h1 className="r-h">Nouveau mot de passe</h1>
@@ -141,9 +146,9 @@ function ResetPassword() {
               </div>
               <h1 className="r-h">Mot de passe réinitialisé ✓</h1>
               <div className="r-haki-msg">
-                🎉 <strong>Parfait !</strong> Votre nouveau mot de passe est enregistré. Vous pouvez maintenant vous connecter à votre dossier.
+                🎉 <strong>Parfait !</strong> Votre nouveau mot de passe est enregistré. Vous pouvez maintenant vous connecter.
               </div>
-              <button className="r-btn" onClick={() => navigate({ to: '/mon-espace' })}>
+              <button className="r-btn" onClick={() => navigate({ to: loginPath as any })}>
                 Me connecter maintenant
               </button>
             </div>

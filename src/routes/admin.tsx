@@ -5,7 +5,7 @@ import { useSuspenseQuery } from '@tanstack/react-query'
 import { ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
-import { supabase } from '@/integrations/supabase/client'
+import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
 import { LEAD_ACTIONS, buildWhatsappUrl, fillTemplate, LIFECYCLE_STATUTS, STATUT_COLORS } from '@/lib/lead-templates'
@@ -86,7 +86,7 @@ function AdminGate() {
         return
       }
       const s = JSON.parse(raw)
-      if (!s?.email || !s?.expiresAt || s.expiresAt < Date.now()) {
+      if (!s?.email || !s?.token || !s?.expiresAt || s.expiresAt < Date.now()) {
         localStorage.removeItem(ADMIN_SESSION_KEY)
         navigate({ to: '/mon-espace' })
         return
@@ -228,31 +228,30 @@ function Admin({ session }: { session: any }) {
 
   useEffect(() => {
     if (page !== 'general') loadLeads()
-    // Realtime : nouveaux leads + nouveaux messages
-    const leadsChan = supabase.channel('admin-leads')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'leads' }, (payload) => {
-        const n = payload.new as any
-        setLeads(prev => [n, ...prev])
+    // Temps réel : signaux sans données personnelles, puis lecture sécurisée
+    const stop = onLiveEvent('admin-live', async (e) => {
+      if (e.topic === 'lead' && e.ref) {
+        const { data } = await supabase.from('leads').select('*').eq('id', e.ref).maybeSingle()
+        const n = data as any
+        if (!n) return
+        setLeads(prev => prev.some(l => l.id === n.id) ? prev : [n, ...prev])
         setToast({ msg: `Nouveau lead · ${n.activite || '?'} · ${n.ville || '?'}`, score: n.score || 0 })
         playBeep()
         if ('Notification' in window && Notification.permission === 'granted') {
           new Notification('Mayinvest · Nouveau lead', { body: `${n.activite} · Score ${n.score}/100` })
         }
         setTimeout(() => setToast(null), 5000)
-      })
-      .subscribe()
-    const msgChan = supabase.channel('admin-msgs')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, (payload) => {
-        const m = payload.new as any
-        if (m.sender === 'client') {
-          setMsgCounts(c => ({ ...c, [m.lead_id]: (c[m.lead_id] || 0) + 1 }))
-          playBeep()
-        }
-      })
-      .subscribe()
+      } else if (e.topic === 'msg' && e.ref && e.extra === 'client') {
+        setMsgCounts(c => ({ ...c, [e.ref as string]: (c[e.ref as string] || 0) + 1 }))
+        playBeep()
+      } else if (e.topic === 'lead_upd' && e.ref) {
+        const { data } = await supabase.from('leads').select('*').eq('id', e.ref).maybeSingle()
+        if (data) setLeads(prev => prev.map(l => l.id === (data as any).id ? data : l))
+      }
+    })
     // Demander permission notifications
     if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission()
-    return () => { supabase.removeChannel(leadsChan); supabase.removeChannel(msgChan) }
+    return stop
   }, [])
 
   useEffect(() => { if (page !== 'general') loadLeads() }, [page])
@@ -263,7 +262,8 @@ function Admin({ session }: { session: any }) {
     setLeads(prev => prev.map(l => l.id === id ? { ...l, statut } : l))
   }
 
-  function logout() {
+  async function logout() {
+    try { await supabase.rpc('mi_logout', { p_kind: 'admin' }) } catch {}
     try { localStorage.removeItem('mayinvest_admin_session') } catch {}
     navigate({ to: '/mon-espace' })
   }
@@ -2352,17 +2352,11 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
   useEffect(() => {
     loadMessages()
     loadDocuments()
-    const chan = supabase.channel(`drawer-${lead.id}`)
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `lead_id=eq.${lead.id}` },
-        (payload) => {
-          const m = payload.new as any
-          setMessages(p => p.some(x => x.id === m.id) ? p : [...p, m])
-          if (m.sender === 'client') supabase.rpc('mark_messages_read', { p_lead_id: lead.id, p_reader: 'admin' })
-        })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents', filter: `lead_id=eq.${lead.id}` },
-        () => loadDocuments())
-      .subscribe()
-    return () => { supabase.removeChannel(chan) }
+    return onLiveEvent(`drawer-${lead.id}`, (e) => {
+      if (e.ref !== lead.id) return
+      if (e.topic === 'msg') loadMessages()
+      else if (e.topic === 'doc') loadDocuments()
+    })
   }, [lead.id])
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
