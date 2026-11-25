@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
+import { formatPhoneInput } from '@/lib/phone'
 
 export const Route = createFileRoute('/rejoindre-equipe')({
   component: RejoindreEquipePage,
@@ -133,7 +134,7 @@ function RejoindreEquipePage() {
           font-size: 14px; font-family: inherit; color: ${MI.text};
           transition: border-color 0.15s, box-shadow 0.15s;
         }
-        .field input::placeholder, .field textarea::placeholder { color: ${MI.textFaint}; }
+        .field input::placeholder, .field textarea::placeholder { color: ${MI.textMuted}; }
         .field input:hover, .field select:hover, .field textarea:hover { border-color: #C4C9D1; }
         .field input:focus, .field select:focus, .field textarea:focus {
           outline: none; border-color: ${MI.blue};
@@ -240,7 +241,7 @@ function RejoindreEquipePage() {
               </div>
               <div className="field">
                 <label>Téléphone (WhatsApp) <span className="req">*</span></label>
-                <input type="tel" placeholder="06 xx xx xx xx" value={form.telephone} onChange={e => setForm({ ...form, telephone: e.target.value })} required/>
+                <input type="tel" inputMode="numeric" placeholder="06 655 32 18" value={form.telephone} onChange={e => setForm({ ...form, telephone: formatPhoneInput(e.target.value) })} required/>
               </div>
               <div className="field">
                 <label>Email <span className="req">*</span></label>
