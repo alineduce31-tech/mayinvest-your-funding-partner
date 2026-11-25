@@ -310,7 +310,14 @@ function CandidaturesPage() {
         </div>
 
         {selected && (() => {
-          const score = selected.score_total || 0
+          // Score global calculé : moyenne pondérée de la simu théorique (/100) et pratique (/60 ramené sur 100)
+          const theo = Number(selected.score_simulation_theo) || 0
+          const pratRaw = Number(selected.score_simulation_prat) || 0
+          const pratPct = Math.min(100, (pratRaw / 60) * 100)
+          const hasAny = theo > 0 || pratRaw > 0
+          const score = hasAny
+            ? Math.round((theo + pratPct) / 2)
+            : (selected.score_total || 0)
           const verdictCls = score >= 70 ? '' : score >= 50 ? ' warn' : ' danger'
           const verdictWord = score >= 70 ? 'Profil recommandé pour validation.' : score >= 50 ? 'Profil limite, à examiner.' : 'Profil en-dessous des attentes.'
           const refNum = `MI-C-${new Date(selected.created_at).getFullYear()}-${selected.id.slice(0, 4).toUpperCase()}`
