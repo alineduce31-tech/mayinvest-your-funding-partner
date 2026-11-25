@@ -259,15 +259,13 @@ function AddAdminModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (
           </div>
           <Field label="Email" type="email" value={form.email} onChange={v => setForm({ ...form, email: v })}/>
           <Field label="Mot de passe temporaire (min. 8 caractères)" type="text" value={form.password} onChange={v => setForm({ ...form, password: v })}/>
-          <div className="field-row">
-            <FieldSelect label="Ville" value={form.ville} onChange={v => setForm({ ...form, ville: v })} options={VILLES}/>
-            <FieldSelect label="Rôle" value={form.role} onChange={v => setForm({ ...form, role: v })} options={ROLES.map(r => r.k)} labels={Object.fromEntries(ROLES.map(r => [r.k, r.label]))}/>
-          </div>
+          <FieldSelect label="Ville" value={form.ville} onChange={v => setForm({ ...form, ville: v })} options={VILLES}/>
+          <FieldSelect label="Rôle" value={form.role} onChange={v => setForm({ ...form, role: v })} options={ROLES.map(r => r.k)} labels={Object.fromEntries(ROLES.map(r => [r.k, r.label]))}/>
           {err && <div className="field-err">⚠ {err}</div>}
         </div>
-        <div className="modal-actions">
-          <button type="button" className="btn-sec" onClick={onClose}>Annuler</button>
-          <button type="submit" className="btn-pri" disabled={submitting}>{submitting ? 'Création…' : 'Créer l\'admin'}</button>
+        <div className="modal-actions stacked">
+          <PillBtn type="submit" disabled={submitting}>{submitting ? 'Création…' : 'Créer l\'admin'}</PillBtn>
+          <PillBtn type="button" variant="ghost" onClick={onClose}>Annuler</PillBtn>
         </div>
       </form>
     </div>
@@ -297,14 +295,12 @@ function EditAdminModal({ admin, onClose, onSubmit }: { admin: Admin; onClose: (
             <Field label="Prénom" value={form.prenom} onChange={v => setForm({ ...form, prenom: v })}/>
             <Field label="Nom" value={form.nom} onChange={v => setForm({ ...form, nom: v })}/>
           </div>
-          <div className="field-row">
-            <FieldSelect label="Ville" value={form.ville} onChange={v => setForm({ ...form, ville: v })} options={VILLES}/>
-            <FieldSelect label="Rôle" value={form.role} onChange={v => setForm({ ...form, role: v })} options={ROLES.map(r => r.k)} labels={Object.fromEntries(ROLES.map(r => [r.k, r.label]))}/>
-          </div>
+          <FieldSelect label="Ville" value={form.ville} onChange={v => setForm({ ...form, ville: v })} options={VILLES}/>
+          <FieldSelect label="Rôle" value={form.role} onChange={v => setForm({ ...form, role: v })} options={ROLES.map(r => r.k)} labels={Object.fromEntries(ROLES.map(r => [r.k, r.label]))}/>
         </div>
-        <div className="modal-actions">
-          <button type="button" className="btn-sec" onClick={onClose}>Annuler</button>
-          <button type="submit" className="btn-pri" disabled={submitting}>{submitting ? 'Sauvegarde…' : 'Enregistrer'}</button>
+        <div className="modal-actions stacked">
+          <PillBtn type="submit" disabled={submitting}>{submitting ? 'Sauvegarde…' : 'Enregistrer les modifications'}</PillBtn>
+          <PillBtn type="button" variant="ghost" onClick={onClose}>Annuler</PillBtn>
         </div>
       </form>
     </div>
@@ -337,9 +333,9 @@ function ResetPwdModal({ admin, onClose, onSubmit }: { admin: Admin; onClose: ()
           <Field label="Nouveau mot de passe (min. 8 caractères)" type="text" value={pwd} onChange={setPwd}/>
           {err && <div className="field-err">⚠ {err}</div>}
         </div>
-        <div className="modal-actions">
-          <button type="button" className="btn-sec" onClick={onClose}>Annuler</button>
-          <button type="submit" className="btn-pri" disabled={submitting}>{submitting ? 'Reset…' : 'Réinitialiser'}</button>
+        <div className="modal-actions stacked">
+          <PillBtn type="submit" variant="danger" disabled={submitting}>{submitting ? 'Reset…' : 'Réinitialiser le mot de passe'}</PillBtn>
+          <PillBtn type="button" variant="ghost" onClick={onClose}>Annuler</PillBtn>
         </div>
       </form>
     </div>
@@ -360,12 +356,45 @@ function Field({ label, value, onChange, type = 'text' }: { label: string; value
 
 function FieldSelect({ label, value, onChange, options, labels }: { label: string; value: string; onChange: (v: string) => void; options: string[]; labels?: Record<string, string> }) {
   return (
-    <div className="field">
+    <div className="field chips-field">
       <label>{label}</label>
-      <select value={value} onChange={e => onChange(e.target.value)}>
-        {options.map(o => <option key={o} value={o}>{labels?.[o] || o}</option>)}
-      </select>
+      <div className="chips">
+        {options.map(o => (
+          <button
+            key={o}
+            type="button"
+            className={`chip${value === o ? ' active' : ''}`}
+            onClick={() => onChange(o)}
+          >
+            {labels?.[o] || o}
+          </button>
+        ))}
+      </div>
     </div>
+  )
+}
+
+/** Petit composant bouton pill (icône + texte + flèche) — style landing page */
+function PillBtn({ children, type = 'button', onClick, disabled, variant = 'primary' }:
+  { children: React.ReactNode; type?: 'button' | 'submit'; onClick?: () => void; disabled?: boolean; variant?: 'primary' | 'ghost' | 'danger' }) {
+  return (
+    <button type={type} onClick={onClick} disabled={disabled} className={`pill-btn pill-${variant}`}>
+      <span className="pill-ic">
+        {variant === 'ghost' ? (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        ) : variant === 'danger' ? (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        ) : (
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        )}
+      </span>
+      <span className="pill-tx">{children}</span>
+      {!disabled && (
+        <span className="pill-ar">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </span>
+      )}
+    </button>
   )
 }
 
@@ -450,18 +479,37 @@ const CSS = `
   .modal-body { padding: 18px 24px; }
   .modal-body .hint { font-size: 13px; color: #6B7280; margin: 0 0 14px; line-height: 1.5; }
   .modal-body .hint b { color: #0F1729; font-weight: 600; }
-  .modal-actions { padding: 14px 24px 20px; display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #F3F3F1; }
-  .btn-sec { padding: 10px 18px; background: #F3F3F1; color: #6B7280; border: none; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
-  .btn-sec:hover { background: #ECECEA; color: #0F1729; }
-  .btn-pri { padding: 10px 20px; background: #0F6E3E; color: white; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 4px 12px rgba(15,110,62,0.2); }
-  .btn-pri:hover:not(:disabled) { background: #0A4E2C; }
-  .btn-pri:disabled { opacity: 0.6; cursor: not-allowed; }
+  .modal-actions { padding: 18px 24px 22px; display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid #F3F3F1; background: #FAFAF8; }
+  .modal-actions.stacked { flex-direction: column; }
 
-  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+  /* === Pill buttons (icône + texte + flèche), style landing === */
+  .pill-btn { width: 100%; padding: 13px 20px; border-radius: 999px; border: none; font-size: 13.5px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px; text-align: left; font-family: inherit; transition: all 0.15s; }
+  .pill-ic { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.18); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .pill-tx { flex: 1; }
+  .pill-ar { width: 22px; height: 22px; border-radius: 50%; background: rgba(255,255,255,0.18); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .pill-primary { background: #0F6E3E; color: #fff; box-shadow: 0 6px 16px rgba(15,110,62,0.25); }
+  .pill-primary:hover:not(:disabled) { background: #0A4E2C; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(15,110,62,0.32); }
+  .pill-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+  .pill-ghost { background: transparent; color: #0F1729; border: 1.5px solid #ECECEA; }
+  .pill-ghost .pill-ic { background: #F3F3F1; color: #6B7280; }
+  .pill-ghost .pill-ar { background: #F3F3F1; color: #6B7280; }
+  .pill-ghost:hover:not(:disabled) { background: #F3F3F1; border-color: #E5E5E3; }
+  .pill-danger { background: #B42318; color: #fff; box-shadow: 0 6px 16px rgba(180,35,24,0.22); }
+  .pill-danger:hover:not(:disabled) { background: #951810; transform: translateY(-1px); }
+  .pill-danger:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
   @media (max-width: 480px) { .field-row { grid-template-columns: 1fr; } }
-  .field { margin-bottom: 10px; }
-  .field label { display: block; font-size: 11px; font-weight: 600; color: #6B7280; margin-bottom: 4px; }
-  .field input, .field select { width: 100%; padding: 10px 12px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 8px; font-size: 13px; font-family: inherit; color: #0F1729; }
-  .field input:focus, .field select:focus { outline: none; border-color: #0F6E3E; box-shadow: 0 0 0 3px rgba(15,110,62,0.12); }
-  .field-err { background: #FEE2E2; color: #991B1B; padding: 8px 12px; border-radius: 8px; font-size: 12px; margin-top: 8px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 11px; font-weight: 600; color: #6B7280; margin-bottom: 6px; letter-spacing: 0.02em; }
+  .field input { width: 100%; padding: 11px 14px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; font-size: 13px; font-family: inherit; color: #0F1729; transition: all 0.15s; }
+  .field input:focus { outline: none; border-color: #0F6E3E; box-shadow: 0 0 0 3px rgba(15,110,62,0.12); }
+  .field-err { background: #FEE2E2; color: #991B1B; padding: 9px 12px; border-radius: 8px; font-size: 12px; margin-top: 8px; display: flex; align-items: center; gap: 6px; }
+
+  /* === Chips segmentés (remplace les selects) === */
+  .chips-field { grid-column: 1 / -1; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { padding: 8px 14px; background: #F3F3F1; border: 1px solid transparent; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: #6B7280; cursor: pointer; transition: all 0.15s; font-family: inherit; }
+  .chip:hover { background: #ECECEA; color: #0F1729; }
+  .chip.active { background: #0F6E3E; color: #fff; border-color: #0F6E3E; box-shadow: 0 4px 10px rgba(15,110,62,0.2); }
 `
