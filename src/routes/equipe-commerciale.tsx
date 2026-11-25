@@ -125,6 +125,12 @@ function EquipeCommercialePage() {
         .fs-opt:hover { background: #E6F2EB; color: #0A4E2C; }
         .fs-opt.selected { background: #E6F2EB; color: #0F6E3E; font-weight: 700; }
 
+        /* Flèche de tri propre (remplace le ↓ Unicode moche) */
+        .sort-lbl { display: inline-flex; align-items: center; gap: 6px; }
+        .sort-arrow { opacity: 0.6; flex-shrink: 0; }
+        .fs-opt.selected .sort-arrow,
+        .fs-btn .sort-arrow { opacity: 0.85; }
+
         .list { background: #fff; border: 1px solid #ECECEA; border-radius: 12px; overflow: hidden; }
         .row { display: grid; grid-template-columns: 2fr 1fr 110px 110px 130px 90px; gap: 12px; align-items: center; padding: 14px 18px; border-bottom: 1px solid #F3F3F1; font-size: 12px; }
         .row-head { background: #F9FAFB; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #6B7280; }
@@ -197,9 +203,9 @@ function EquipeCommercialePage() {
             value={sort}
             onChange={(v) => setSort(v as any)}
             options={[
-              { k: 'activated_desc', label: 'Plus récents' },
-              { k: 'gains_desc', label: 'Gains ↓' },
-              { k: 'leads_desc', label: 'Leads ↓' },
+              { k: 'activated_desc', label: <SortLabel text="Plus récents" direction="desc"/> },
+              { k: 'gains_desc',     label: <SortLabel text="Gains"        direction="desc"/> },
+              { k: 'leads_desc',     label: <SortLabel text="Leads"        direction="desc"/> },
             ]}
           />
 
@@ -310,7 +316,7 @@ function SkeletonPage() {
 // ============================================================
 // FilterSelect : custom dropdown Mayinvest (chevron rotate + options en vert soft)
 // ============================================================
-function FilterSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { k: string; label: string }[] }) {
+function FilterSelect({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: { k: string; label: React.ReactNode }[] }) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -343,5 +349,29 @@ function FilterSelect({ value, onChange, options }: { value: string; onChange: (
         </div>
       )}
     </div>
+  )
+}
+
+// ============================================================
+// SortLabel : texte + petit SVG flèche (remplace le "↓" Unicode moche)
+// ============================================================
+function SortLabel({ text, direction }: { text: string; direction: 'asc' | 'desc' }) {
+  return (
+    <span className="sort-lbl">
+      <span>{text}</span>
+      <svg className="sort-arrow" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        {direction === 'desc' ? (
+          <>
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <polyline points="19 12 12 19 5 12"/>
+          </>
+        ) : (
+          <>
+            <line x1="12" y1="19" x2="12" y2="5"/>
+            <polyline points="5 12 12 5 19 12"/>
+          </>
+        )}
+      </svg>
+    </span>
   )
 }
