@@ -221,6 +221,7 @@ function MonDossier() {
           setLoading(false)
           return
         }
+        try { localStorage.setItem(`mayinvest_pwd_${row.id}`, password) } catch {}
         navigate({ to: '/client/$id', params: { id: row.id } })
       } else {
         if (!email.includes('@')) {
@@ -228,21 +229,14 @@ function MonDossier() {
           setLoading(false)
           return
         }
-        const { data: leadRows } = await supabase
-          .from('leads').select('id, identite').ilike('identite->>email', email.trim()).limit(5)
-        const match = (leadRows || []).find((l: any) => (l.identite?.email || '').toLowerCase().trim() === email.toLowerCase().trim())
-        if (!match) {
-          setError('Aucun dossier avec cet email')
-          setLoading(false)
-          return
-        }
-        const { data: lead } = await supabase.rpc('get_lead_by_password', { p_id: match.id, p_password: password })
-        const row: any = Array.isArray(lead) && lead[0] ? lead[0] : null
+        const { data } = await supabase.rpc('verify_lead_password_by_email', { p_email: email.trim(), p_password: password })
+        const row: any = Array.isArray(data) && data[0] ? data[0] : null
         if (!row) {
           setError('Email ou mot de passe incorrect')
           setLoading(false)
           return
         }
+        try { localStorage.setItem(`mayinvest_pwd_${row.id}`, password) } catch {}
         navigate({ to: '/client/$id', params: { id: row.id } })
       }
     } catch (e) {

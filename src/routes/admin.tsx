@@ -258,8 +258,9 @@ function Admin({ session }: { session: any }) {
   useEffect(() => { if (page !== 'general') loadLeads() }, [page])
 
   async function updateStatut(id: string, statut: string) {
-    const { error } = await supabase.from('leads').update({ statut, updated_at: new Date().toISOString() }).eq('id', id)
-    if (!error) setLeads(prev => prev.map(l => l.id === id ? { ...l, statut } : l))
+    const { error } = await supabase.rpc('admin_update_lead_status', { p_admin_id: session?.id, p_lead_id: id, p_statut: statut })
+    if (error) { alert("Statut non enregistré : " + error.message); loadLeads(); return }
+    setLeads(prev => prev.map(l => l.id === id ? { ...l, statut } : l))
   }
 
   function logout() {
@@ -1019,6 +1020,7 @@ function Admin({ session }: { session: any }) {
           teamMembers={teamMembers}
           onAssignAgent={(agentId: string | null) => assignLead(selectedLead.id, agentId)}
           isDirector={isDirector}
+          adminId={session?.id}
         />
       )}
 
@@ -2292,7 +2294,7 @@ function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
 /* ============================================================
  * DRAWER DÉTAIL + CHAT
  * ============================================================ */
-function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMembers, onAssignAgent, isDirector }: any) {
+function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMembers, onAssignAgent, isDirector, adminId }: any) {
   const [tab, setTab] = useState<'infos' | 'chat' | 'docs'>('infos')
   const [messages, setMessages] = useState<any[]>([])
   const [newMsg, setNewMsg] = useState('')
@@ -2321,12 +2323,8 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
   async function requestDocument() {
     const label = prompt('Nom du document à demander :')
     if (!label) return
-    await supabase.from('documents').insert({
-      lead_id: lead.id,
-      doc_type: 'autre',
-      doc_label: label,
-      status: 'pending',
-    })
+    const { error } = await supabase.rpc('admin_request_document', { p_admin_id: adminId, p_lead_id: lead.id, p_label: label })
+    if (error) alert("Demande non enregistrée : " + error.message)
     loadDocuments()
   }
 
@@ -2356,7 +2354,11 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     loadDocuments()
     const chan = supabase.channel(`drawer-${lead.id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `lead_id=eq.${lead.id}` },
-        (payload) => setMessages(p => [...p, payload.new]))
+        (payload) => {
+          const m = payload.new as any
+          setMessages(p => p.some(x => x.id === m.id) ? p : [...p, m])
+          if (m.sender === 'client') supabase.rpc('mark_messages_read', { p_lead_id: lead.id, p_reader: 'admin' })
+        })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'documents', filter: `lead_id=eq.${lead.id}` },
         () => loadDocuments())
       .subscribe()
@@ -2370,8 +2372,9 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     setSending(true)
     const t = newMsg.trim()
     setNewMsg('')
-    await supabase.from('messages').insert({ lead_id: lead.id, sender: 'admin', content: t })
+    const { error } = await supabase.rpc('send_lead_message', { p_lead_id: lead.id, p_sender: 'admin', p_author_id: adminId, p_content: t })
     setSending(false)
+    if (error) { setNewMsg(t); alert("Message non envoyé : " + error.message) }
   }
 
   return (
@@ -2568,9 +2571,12 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
             <div className="chat-scroll">
               {messages.length === 0 && <div className="chat-empty">Aucun message. Démarrez la conversation.</div>}
               {messages.map(m => (
-                <div key={m.id} className={`msg ${m.sender === 'admin' ? 'admin' : 'client'}`}>
-                  <div>{m.content}</div>
-                  <div className="msg-meta">{new Date(m.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
+                <div key={m.id} className={`msg ${m.sender === 'client' ? 'client' : 'admin'}`}>
+                  <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{m.content}</div>
+                  <div className="msg-meta">
+                    {m.sender !== 'client' && m.author_name ? `${m.author_name} · ` : ''}
+                    {new Date(m.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
               ))}
               <div ref={chatEnd}/>

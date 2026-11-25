@@ -847,7 +847,7 @@ function Simulation() {
         body: `Votre dossier a bien été envoyé. Voici les 3 prochaines étapes :\n\n1️⃣ **Notez votre code** : ${accessCode}\n2️⃣ **Préparez vos documents** :\n${docs}\n3️⃣ **Un conseiller vous appelle sous 24h** pour la suite.`,
         success: true,
         actions: [
-          { label: 'Parler à un conseiller maintenant', onClick: () => { window.open(`https://wa.me/24265313187?text=Bonjour Mayinvest, mon code: ${accessCode}. Mon score: ${score}/100.`, '_blank') }, primary: true },
+          { label: 'Parler à un conseiller maintenant', onClick: () => { window.location.href = `/client/${leadId}?tab=chat` }, primary: true },
           { label: 'Suivre mon dossier', onClick: () => { if (leadId) navigate({ to: '/client/$id', params: { id: leadId } }) } },
           { label: "Retour à l'accueil", onClick: () => { navigate({ to: '/' }) } },
         ],
@@ -1047,6 +1047,8 @@ function Simulation() {
         .btn-back:hover { background: #EAEAEA; }
         .score-final { background: #0D1B3E; border-radius: 24px; padding: 36px 28px; color: #fff; box-shadow: 0 30px 60px rgba(13,27,62,0.3); position: relative; overflow: hidden; text-align: center; margin-top: 20px; }
         .score-final::before { content: ''; position: absolute; top: -80px; right: -80px; width: 260px; height: 260px; background: radial-gradient(circle, rgba(26,107,255,0.3) 0%, transparent 65%); pointer-events: none; }
+        .badge-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px; margin-bottom: 20px; position: relative; z-index: 1; }
+        .badge-row .score-badge, .badge-row .elig-badge { margin-bottom: 0; }
         .score-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(52,208,88,0.15); color: #34D058; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 100px; margin-bottom: 20px; position: relative; z-index: 1; }
         .credit-meter { position: relative; margin: 0 auto 24px; z-index: 1; max-width: 280px; }
         .credit-value { font-size: 56px; font-weight: 800; line-height: 1; margin-top: 10px; letter-spacing: -2px; font-variant-numeric: tabular-nums; }
@@ -1077,6 +1079,7 @@ function Simulation() {
         .code-copy:hover { background: rgba(255,255,255,0.25); }
         .code-copy.copied { background: #34D058; border-color: #34D058; }
         .code-warn { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 10px; line-height: 1.4; }
+        .btn-chat { background: #34D058 !important; }
         .btn-wa { width: 100%; background: #25D366; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; position: relative; z-index: 1; }
         .btn-home { width: 100%; background: transparent; color: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 100px; cursor: pointer; position: relative; z-index: 1; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
         .btn-home:hover { color: #fff; border-color: rgba(255,255,255,0.4); }
@@ -1452,13 +1455,15 @@ function Simulation() {
 
         {step === 4 && <div className="score-final">
           {score >= 70 && <Confetti/>}
-          <div className="score-badge">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6l2 2 4-4" stroke="#34D058" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            Dossier reçu · Score crédit
-          </div>
+          <div className="badge-row">
+            <div className="score-badge">
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M3 6l2 2 4-4" stroke="#34D058" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              Dossier reçu · Score crédit
+            </div>
 
-          {/* Badge d'éligibilité (Gold / Silver / Bronze) */}
-          <EligibilityBadge score={score} />
+            {/* Badge d'éligibilité (Gold / Silver / Bronze) */}
+            <EligibilityBadge score={score} />
+          </div>
 
           <CreditScoreMeter score={score} />
           <div className="verdict" style={{ color: score>=70?'#34D058':score>=50?'#FFB020':'#FF6B6B' }}>
@@ -1491,7 +1496,12 @@ function Simulation() {
             const text = `Mon dossier Mayinvest : code d'accès ${accessCode} · Score ${score}/100. Suivre : ${window.location.origin}/client/${leadId}`
             window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
           }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 8a3 3 0 10-2.83-4H9.83A3 3 0 106 8a3 3 0 00-3 3v5h2v6h4v-6h2v6h4v-6h2v-5a3 3 0 00-3-3z" opacity="0.3"/><path d="M12 2l3 3h-2v4h-2V5H9l3-3zm-6 10v5l-3 3h18l-3-3v-5h-3v3h-6v-3H6z"/></svg>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="2"/>
+              <circle cx="6" cy="12" r="3" stroke="currentColor" strokeWidth="2"/>
+              <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="2"/>
+              <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+            </svg>
             Partager mon code avec un proche
           </button>
 
@@ -1499,9 +1509,9 @@ function Simulation() {
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M2 6a2 2 0 012-2h4l2 2h6a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" stroke="#fff" strokeWidth="1.8"/></svg>
             Accéder à mon dossier
           </button>
-          <button className="btn-wa" onClick={() => window.open(`https://wa.me/24265313187?text=Bonjour Mayinvest, j'ai soumis mon dossier. Code: ${accessCode}`,'_blank')}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
-            Discuter avec un conseiller sur WhatsApp
+          <button className="btn-wa btn-chat" onClick={() => { window.location.href = `/client/${leadId}?tab=chat` }}>
+            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
+            Discuter avec un conseiller
           </button>
           <a className="btn-home" href="/" onClick={(e) => { e.preventDefault(); navigate({ to: '/' }) }}>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ marginRight: 8, verticalAlign: 'middle' }}>

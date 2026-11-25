@@ -217,6 +217,11 @@ function ClientPortal() {
   const [newMsg, setNewMsg] = useState('')
   const [sending, setSending] = useState(false)
   const [activeTab, setActiveTab] = useState<'suivi' | 'chat' | 'infos'>('suivi')
+  // Lien direct vers un onglet : /client/<id>?tab=chat
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get('tab')
+    if (t === 'chat' || t === 'infos') setActiveTab(t)
+  }, [])
   const chatEnd = useRef<HTMLDivElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const [attachOpen, setAttachOpen] = useState(false)
@@ -325,10 +330,42 @@ function ClientPortal() {
     if (stage !== 'portal') return
     const chan = supabase.channel(`client-${id}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `lead_id=eq.${id}` },
-        (p) => setMessages(prev => [...prev, p.new]))
+        (p) => {
+          const m = p.new as any
+          setMessages(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m])
+        })
       .subscribe()
     return () => { supabase.removeChannel(chan) }
   }, [stage, id])
+
+  // Quand le client lit la discussion, les messages du conseiller passent en "lu"
+  useEffect(() => {
+    if (stage !== 'portal' || activeTab !== 'chat') return
+    if (!messages.some(m => m.sender !== 'client' && !m.read_at)) return
+    supabase.rpc('mark_messages_read', { p_lead_id: id, p_reader: 'client' }).then(() => {
+      const now = new Date().toISOString()
+      setMessages(prev => prev.map(m => m.sender !== 'client' && !m.read_at ? { ...m, read_at: now } : m))
+    })
+  }, [stage, activeTab, messages, id])
+
+  // Menu "Partager un fichier" : se ferme au clic n'importe où ailleurs ou avec Échap
+  useEffect(() => {
+    if (!attachOpen) return
+    function onDown(e: MouseEvent | TouchEvent) {
+      const t = e.target as HTMLElement | null
+      if (t && t.closest('.c-msg-attach-wrap')) return
+      setAttachOpen(false)
+    }
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setAttachOpen(false) }
+    document.addEventListener('mousedown', onDown)
+    document.addEventListener('touchstart', onDown)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDown)
+      document.removeEventListener('touchstart', onDown)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [attachOpen])
 
   useEffect(() => { chatEnd.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
@@ -415,8 +452,22 @@ function ClientPortal() {
   }, [stage, activeTab])
 
   function deconnecter() {
-    try { localStorage.removeItem(`mayinvest_code_${id}`) } catch {}
-    navigate({ to: '/mon-espace' })
+    try {
+      localStorage.removeItem(`mayinvest_code_${id}`)
+      localStorage.removeItem(`mayinvest_pwd_${id}`)
+    } catch {}
+    navigate({ to: '/mon-dossier' })
+  }
+
+  // Ouvre la discussion avec le conseiller, avec un message pré-rempli si besoin
+  function openAdvisorChat(prefill?: string) {
+    setActiveTab('chat')
+    setHakiOpen(false)
+    if (prefill) setNewMsg(prefill)
+    setTimeout(() => {
+      const ta = document.querySelector('.c-msg-input-field textarea') as HTMLTextAreaElement | null
+      if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length) }
+    }, 250)
   }
 
   /* ---------- Message Haki selon contexte ---------- */
@@ -450,13 +501,13 @@ function ClientPortal() {
         body: `Votre dossier est au statut : « ${lead.statut} » (étape ${statutIdx + 1} sur 6).\n\n${explanations[lead.statut] || "Suivez l'avancement dans la timeline."}`,
         success: ['Éligible','Financé'].includes(lead.statut),
         actions: [
-          { label: 'Discuter sur WhatsApp', onClick: () => window.open(`https://wa.me/24265313187?text=Bonjour%2C%20mon%20dossier%20${lead.access_code || id}`, '_blank'), primary: true },
-          ...(packNeeded ? [{ label: '📄 Je veux le Pack Formalisation', onClick: () => window.open(`https://wa.me/24265313187?text=Pack%20Formalisation%20${lead.access_code || id}`, '_blank') }] : []),
+          { label: 'Écrire à mon conseiller', onClick: () => openAdvisorChat(), primary: true },
+          ...(packNeeded ? [{ label: '📄 Je veux le Pack Formalisation', onClick: () => openAdvisorChat('Bonjour, je suis intéressé par le Pack Formalisation pour ma société.') }] : []),
         ],
       }
     }
     if (activeTab === 'chat') {
-      const unread = messages.filter(m => m.sender === 'admin' && !m.read_at).length
+      const unread = messages.filter(m => m.sender !== 'client' && !m.read_at).length
       // Messages prédéfinis selon le statut du dossier
       const quickReplies: string[] = (() => {
         if (lead.statut === 'Nouveau') return [
@@ -648,7 +699,7 @@ function ClientPortal() {
           white-space: nowrap;
         }
         @media (min-width: 420px) { .c-btn-chat-head, .c-btn-logout { flex: 1; } }
-        .c-btn-chat-head { background: #25D366; border: none; color: #fff; }
+        .c-btn-chat-head { background: #1A6BFF; border: none; color: #fff; }
         .c-btn-chat-head:hover { background: #1EB354; }
         .c-btn-logout { background: #000; color: #fff; border: 1.5px solid #000; }
         .c-btn-logout:hover { background: #1a1a1a; }
@@ -690,10 +741,11 @@ function ClientPortal() {
         .c-btn-pack { background: #B45309; color: #fff; font-size: 13px; font-weight: 700; padding: 11px 18px; border-radius: 100px; border: none; cursor: pointer; }
 
         /* ----- Contact expert ----- */
-        .c-contact { background: linear-gradient(135deg, #E7F8EC, #D5F4DD); border: 1.5px solid #25D366; border-radius: 18px; padding: 18px; }
-        .c-contact-h { font-size: 14px; font-weight: 800; color: #0C4A1E; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
-        .c-contact-sub { font-size: 12px; color: #166534; line-height: 1.5; margin-bottom: 12px; }
-        .c-btn-wa { width: 100%; background: #25D366; color: #fff; border: none; padding: 13px 20px; border-radius: 100px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .c-contact { background: linear-gradient(135deg, #EEF4FF, #E0EBFF); border: 1.5px solid #BFD4FF; border-radius: 18px; padding: 18px; }
+        .c-contact-h { font-size: 14px; font-weight: 800; color: #0D1B3E; display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .c-contact-sub { font-size: 12px; color: #3B4A6B; line-height: 1.5; margin-bottom: 12px; }
+        .c-btn-wa-badge { background: #fff; color: #1A6BFF; font-size: 11px; font-weight: 800; padding: 1px 7px; border-radius: 100px; }
+        .c-btn-wa { width: 100%; background: #1A6BFF; color: #fff; border: none; padding: 13px 20px; border-radius: 100px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; }
 
         /* ----- Chat PLEIN ÉCRAN (mobile + PC) type Messenger ----- */
         .c-messenger { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 50; height: 100dvh; background: #fff; display: flex; flex-direction: column; overflow: hidden; }
@@ -764,6 +816,9 @@ function ClientPortal() {
         .c-attach-menu { position: absolute; bottom: calc(100% + 8px); left: 0; width: 290px; max-height: 420px; overflow-y: auto; background: #fff; border: 1.5px solid #E5E7EB; border-radius: 16px; box-shadow: 0 20px 40px rgba(13,27,62,0.15); padding: 8px; animation: c-fade 0.15s ease-out; z-index: 20; }
         .c-attach-head { display: flex; align-items: center; gap: 8px; padding: 10px 8px; border-bottom: 1px solid #F0F2F5; margin-bottom: 6px; font-size: 12px; font-weight: 800; color: #0D1B3E; }
         .c-attach-haki-ic { display: inline-flex; width: 22px; height: 22px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+        .c-msg-author { font-size: 11px; font-weight: 800; color: #1A6BFF; margin-bottom: 3px; }
+        .c-attach-x { background: #F3F4F6; border: none; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #555; padding: 0; flex-shrink: 0; }
+        .c-attach-x:hover { background: #E5E7EB; color: #111; }
         .c-attach-back { background: #F3F4F6; border: none; width: 22px; height: 22px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: #666; padding: 0; margin-right: 4px; }
         .c-attach-back:hover { background: #E5E7EB; color: #111; }
         .c-attach-opt { width: 100%; background: transparent; border: none; padding: 10px 10px; display: flex; align-items: center; gap: 12px; cursor: pointer; border-radius: 10px; text-align: left; font-family: inherit; }
@@ -982,7 +1037,7 @@ function ClientPortal() {
   const col = statutColor(lead?.statut)
   const packNeeded = !isP && lead?.situation?.rccm === 'Non'
   const tel = lead?.identite?.tel || ''
-  const unreadMsgs = messages.filter(m => m.sender === 'admin' && !m.read_at).length
+  const unreadMsgs = messages.filter(m => m.sender !== 'client' && !m.read_at).length
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#F8FAFC', color: '#111', minHeight: '100vh' }}>
@@ -1011,7 +1066,7 @@ function ClientPortal() {
               <button className="c-btn-chat-head" onClick={() => setActiveTab('chat')}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
                 Mon conseiller
-                {unreadMsgs > 0 && <span style={{ background: '#fff', color: '#25D366', fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 100, marginLeft: 4 }}>{unreadMsgs}</span>}
+                {unreadMsgs > 0 && <span style={{ background: '#fff', color: '#1A6BFF', fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 100, marginLeft: 4 }}>{unreadMsgs}</span>}
               </button>
               <button className="c-btn-logout" onClick={deconnecter}>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 1h3v12H9M5 10l-3-3 3-3M2 7h8" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -1050,7 +1105,7 @@ function ClientPortal() {
               <div className="c-pack">
                 <div className="c-pack-h">📄 Pack Formalisation Mayinvest</div>
                 <div className="c-pack-p">Votre société n'a pas encore de RCCM. Nous pouvons nous charger de la création : statuts, immatriculation, NIU et compte bancaire.</div>
-                <button className="c-btn-pack" onClick={() => window.open('https://wa.me/24265313187?text=Pack%20Formalisation', '_blank')}>Je suis intéressé</button>
+                <button className="c-btn-pack" onClick={() => openAdvisorChat('Bonjour, je suis intéressé par le Pack Formalisation pour ma société.')}>Je suis intéressé</button>
               </div>
             </div>
           )}
@@ -1059,13 +1114,14 @@ function ClientPortal() {
             <div className="c-card-h">Besoin d'aide ?</div>
             <div className="c-contact">
               <div className="c-contact-h">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#166534"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
-                Discuter avec un expert
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#1A6BFF" strokeWidth="2" strokeLinejoin="round"/></svg>
+                Discuter avec un conseiller
               </div>
-              <div className="c-contact-sub">Un conseiller Mayinvest vous répond directement sur WhatsApp sous 24h.</div>
-              <button className="c-btn-wa" onClick={() => window.open(`https://wa.me/24265313187?text=Bonjour%20Mayinvest%2C%20mon%20dossier%20${lead?.access_code || id}`, '_blank')}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M17.5 14.4l-2.4-1.2c-.3-.2-.7-.1-1 .2l-.7.8c-.2.2-.5.3-.8.1-.9-.4-1.8-1-2.6-1.7-.7-.8-1.3-1.7-1.7-2.6-.1-.3 0-.6.2-.8l.8-.7c.3-.2.4-.6.2-1L8.3 5c-.2-.4-.7-.5-1-.3L5.5 6c-.5.2-.8.7-.7 1.2.4 2.8 1.7 5.4 3.6 7.4 2 2 4.6 3.3 7.4 3.6.5.1 1-.2 1.2-.7l1.3-1.8c.2-.4.1-.9-.3-1.1l-.5-.2z"/></svg>
-                Ouvrir WhatsApp
+              <div className="c-contact-sub">Écrivez à votre conseiller Mayinvest directement ici. Il vous répond sous 24h et vous pouvez lui envoyer vos documents.</div>
+              <button className="c-btn-wa" onClick={() => openAdvisorChat()}>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
+                Écrire à mon conseiller
+                {unreadMsgs > 0 && <span className="c-btn-wa-badge">{unreadMsgs}</span>}
               </button>
             </div>
           </div>
@@ -1116,6 +1172,7 @@ function ClientPortal() {
                   <div key={m.id} style={{ display: 'contents' }}>
                     {showDate && <div className="c-msg-date-sep">{dateLabel}</div>}
                     <div className={`c-msg ${m.sender === 'client' ? 'client' : 'admin'}`}>
+                      {m.sender !== 'client' && m.author_name && <div className="c-msg-author">{m.author_name}</div>}
                       <MessageContent content={m.content} isClient={m.sender === 'client'}/>
                       <div className="c-msg-meta">
                         {new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
@@ -1144,7 +1201,10 @@ function ClientPortal() {
                   <div className="c-attach-menu">
                     <div className="c-attach-head">
                       <span className="c-attach-haki-ic">{hakiAvatar(22)}</span>
-                      <span>Haki · Partager un fichier</span>
+                      <span style={{ flex: 1 }}>Haki · Partager un fichier</span>
+                      <button className="c-attach-x" onClick={closeAttach} aria-label="Fermer">
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
+                      </button>
                     </div>
                     <button className="c-attach-opt" onClick={() => { fileInput.current?.click() }}>
                       <span className="c-attach-ic" style={{ background: '#DCFCE7', color: '#166534' }}>
