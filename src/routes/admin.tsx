@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
+import { LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
@@ -1205,11 +1205,11 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
         </div>
       </div>
     )}
-    <section className="sd-pole bloc1"><h2>Bloc 1 · KPI généraux <span>· Impact + Commission 2% sur crédits</span></h2>
+    <section className="sd-pole bloc1"><h2><LayoutGrid size={14} strokeWidth={2}/>Bloc 1 · KPI généraux <span>· Impact + Commission 2% sur crédits</span></h2>
       <div className="sd-grid">{bloc1Cards.map(card => <StrategicKPI key={card.label} {...card} periodLabel={period}/>)}</div>
     </section>
 
-    <section className="sd-pole bloc2"><h2>Bloc 2 · Analyse des non-éligibles <span>· Monétiser le Pack Formalisation</span></h2>
+    <section className="sd-pole bloc2"><h2><PieChart size={14} strokeWidth={2}/>Bloc 2 · Analyse des non-éligibles <span>· Monétiser le Pack Formalisation</span></h2>
       <div className="sd-ne">
         {m.bloc2.map(row => (
           <div className="sd-ne-row" key={row.key}>
@@ -1223,7 +1223,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
       <p className="sd-hint">Potentiel = nombre de dossiers × prix du service (Ouverture compte 30 000 XAF, Pack formalisation et Restructuration 50 000 XAF).</p>
     </section>
 
-    <section className="sd-section"><h2>Actions prioritaires</h2><div className="sd-alerts">
+    <section className="sd-section"><h2><Zap size={14} strokeWidth={2}/>Actions prioritaires</h2><div className="sd-alerts">
       <article className="sd-alert-row r">
         <div className="sd-alert-icon sd-alert-n">{prio.ready}</div>
         <div className="sd-alert-body">
@@ -1250,7 +1250,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
       </article>
     </div></section>
 
-    <section className="sd-pole bloc3"><h2>Bloc 3 · Impact Mayinvest <span>· Avant / Après</span></h2>
+    <section className="sd-pole bloc3"><h2><TrendingUp size={14} strokeWidth={2}/>Bloc 3 · Impact Mayinvest <span>· Avant / Après</span></h2>
       <div className="sd-impact-grid">
         <article className="sd-impact-card">
           <div className="sd-impact-head">
@@ -1277,7 +1277,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
 
         <article className="sd-impact-card">
           <div className="sd-impact-head">
-            <span className="sd-impact-ico"><FileText size={16} strokeWidth={1.75}/></span>
+            <span className="sd-impact-ico o"><FileText size={16} strokeWidth={1.75}/></span>
             <div className="sd-impact-head-body"><h3>Taux de RCCM (PME)</h3><span>sur {bloc3?.rccm.baseCount || 0} PME{(bloc3?.rccm.baseCount || 0) > 1 ? 's' : ''}</span></div>
           </div>
           {bloc3 && bloc3.rccm.baseCount > 0 ? (
@@ -1300,7 +1300,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
 
         <article className="sd-impact-card sd-impact-wide">
           <div className="sd-impact-head">
-            <span className="sd-impact-ico"><Target size={16} strokeWidth={1.75}/></span>
+            <span className="sd-impact-ico n"><Target size={16} strokeWidth={1.75}/></span>
             <div className="sd-impact-head-body"><h3>Conversion « Sans compte »</h3><span>Pipeline de bancarisation</span></div>
           </div>
           {bloc3 && bloc3.funnel.detectes > 0 ? (
@@ -1328,9 +1328,9 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
       </div>
     </section>
 
-    <section className="sd-pole bloc4"><h2>Bloc 4 · Performance par segment <span>· Par Banque · Par Secteur · Par Montant</span></h2><div className="sd-double">
+    <section className="sd-pole bloc4"><h2><BarChart3 size={14} strokeWidth={2}/>Bloc 4 · Performance par segment <span>· Par Banque · Par Secteur · Par Montant</span></h2><div className="sd-double">
       <article className="sd-seg-panel">
-        <div className="sd-seg-head"><span className="sd-seg-title">Par Banque</span><span className="sd-seg-sub">Top acceptations</span></div>
+        <div className="sd-seg-head"><span className="sd-seg-title"><span className="sd-ic b"><Landmark size={15} strokeWidth={1.75}/></span>Par banque</span><span className="sd-seg-sub">Top acceptations</span></div>
         {m.bloc4.banques.length === 0 ? (
           <div className="sd-seg-skeleton">
             {[0,1,2].map(i => (
@@ -1357,7 +1357,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
       </article>
 
       <article className="sd-seg-panel">
-        <div className="sd-seg-head"><span className="sd-seg-title">Par Secteur</span><span className="sd-seg-sub">% éligibles</span></div>
+        <div className="sd-seg-head"><span className="sd-seg-title"><span className="sd-ic b"><Briefcase size={15} strokeWidth={1.75}/></span>Par secteur</span><span className="sd-seg-sub">% éligibles</span></div>
         {m.bloc4.secteurs.length === 0 ? (
           <div className="sd-seg-skeleton">
             {[0,1,2].map(i => (
@@ -1384,7 +1384,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
       </article>
 
       <article className="sd-seg-panel">
-        <div className="sd-seg-head"><span className="sd-seg-title">Par Montant</span><span className="sd-seg-sub">Taux de transformation</span></div>
+        <div className="sd-seg-head"><span className="sd-seg-title"><span className="sd-ic b"><Coins size={15} strokeWidth={1.75}/></span>Par montant</span><span className="sd-seg-sub">Taux de transformation</span></div>
         {bloc4Montants.length === 0 ? (
           <div className="sd-seg-skeleton">
             {[0,1,2].map(i => (
@@ -1411,7 +1411,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
       </article>
     </div></section>
 
-    <section className="sd-section"><h2>Derniers leads</h2>
+    <section className="sd-section"><h2><Clock size={14} strokeWidth={2}/>Derniers leads</h2>
       {m.current.length === 0 ? (
         <div className="sd-leads-empty">
           <div className="sd-leads-empty-icon">
@@ -1449,7 +1449,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
                       <span><strong>{name}</strong>
                       <small>{typeLbl} · {l.activite || 'Non renseignée'} · {ville}</small></span></span>
                     </td>
-                    <td><span className={`dl-ring ${scoreCls}`} title="Score sur 100">{l.score ?? 0}</span></td>
+                    <td><span className={`dl-sc ${scoreCls}`} title="Score sur 100">{l.score ?? 0}</span></td>
                     <td><span className="dl-statut" style={{ background: color.bg, color: color.fg }}>{l.statut}</span></td>
                     <td><span className={`dl-op ${opCls}`}>{op || 'À qualifier'}</span></td>
                     <td className="r dl-amt">{xaf(amount(l.montant_demande))}</td>
