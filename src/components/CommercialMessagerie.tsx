@@ -1,3 +1,4 @@
+import CloseIcon from '@/components/CloseIcon'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { messageRdv, initiales, heureCourte } from '@/lib/messagerie'
@@ -312,7 +313,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
       {sideOpen && <div className="cm-sheet-bg" onClick={() => setSideOpen(false)}/>}
       <aside className={`cm-side ${sideOpen ? 'open' : ''}`}>
         <div className="cm-grab" aria-hidden="true"/>
-        <div className="cm-side-h"><span>Mon client</span><button className="cm-x" onClick={() => setSideOpen(false)} aria-label="Fermer">×</button></div>
+        <div className="cm-side-h"><span>Mon client</span><button className="cm-x" onClick={() => setSideOpen(false)} aria-label="Fermer"><CloseIcon size={13}/></button></div>
         <div className="cm-id">
           <span className="cm-score">{row.score ?? '—'}</span>
           <div><b>{row.nom || 'Client'}</b><small>{[row.activite, row.ville].filter(Boolean).join(' · ')}</small></div>
@@ -368,7 +369,7 @@ function PiecesModal({ docs, onClose, onSend }: { docs: any[]; onClose: () => vo
   return (
     <div className="cm-modal-bg" onClick={onClose}>
       <div className="cm-modal" onClick={e => e.stopPropagation()}>
-        <div className="cm-side-h"><span>Demander des pièces</span><button className="cm-x show" onClick={onClose} aria-label="Fermer">×</button></div>
+        <div className="cm-side-h"><span>Demander des pièces</span><button className="cm-x show" onClick={onClose} aria-label="Fermer"><CloseIcon size={13}/></button></div>
         {manquantes.length === 0 && <div className="cm-empty sm">Toutes les pièces prévues sont déjà envoyées.</div>}
         {manquantes.map(d => (
           <label key={d.id} className="cm-check">
@@ -586,8 +587,8 @@ function CmStyles() {
     .cm-grab { display: none; }
     .cm-side-h { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 800; color: #64748B; letter-spacing: 0.08em; text-transform: uppercase; }
     .cm-side-h small { font-size: 12px; letter-spacing: 0; text-transform: none; color: #0D1B3E; }
-    .cm-x { display: none; border: none; background: #F1F5F9; width: 30px; height: 30px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #0D1B3E; }
-    .cm-x.show { display: inline-block; }
+    .cm-x { display: none; border: none; background: #F1F5F9; width: 30px; height: 30px; border-radius: 50%; padding: 0; align-items: center; justify-content: center; cursor: pointer; color: #0D1B3E; }
+    .cm-x.show { display: inline-flex; }
     .cm-id { display: flex; gap: 12px; align-items: center; }
     .cm-id b { display: block; font-size: 14.5px; color: #0D1B3E; }
     .cm-id small { font-size: 12px; color: #64748B; }
@@ -620,7 +621,7 @@ function CmStyles() {
     @media (max-width: 1180px) {
       .cm-side { position: absolute; right: 0; top: 0; bottom: 0; z-index: 40; box-shadow: -12px 0 32px rgba(13,27,62,0.15); transform: translateX(105%); transition: transform 0.22s ease; }
       .cm-side.open { transform: translateX(0); }
-      .cm-side .cm-x { display: inline-block; }
+      .cm-side .cm-x { display: inline-flex; }
       .cm-side-btn { display: inline-block; }
     }
     @media (max-width: 900px) { .cm-root { grid-template-columns: 280px minmax(0, 1fr); height: calc(100dvh - 56px - var(--bnav-h, 0px)); } }

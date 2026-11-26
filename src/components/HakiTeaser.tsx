@@ -1,3 +1,4 @@
+import CloseIcon from '@/components/CloseIcon'
 import { useEffect, useRef, useState } from 'react'
 import { DELAIS, SCROLL_TRIGGER_PX, TEASER_AUTO_HIDE_MS, TEXTES, cleSession, doitFermerParGlisse, estMobile, modeApparition, type HakiPage } from '@/lib/haki-teaser'
 
@@ -94,14 +95,15 @@ export function HakiBulle({ texte, onOuvrir, onFermer, bottom = 92 }: { texte: s
         <span className="hkb-name">Haki</span>
         <span className="hkb-txt">{texte}</span>
       </button>
-      <button className="hkb-x" onClick={onFermer} aria-label="Fermer la bulle">×</button>
+      <button className="hkb-x" onClick={onFermer} aria-label="Fermer la bulle"><CloseIcon size={11}/></button>
       <style>{`
         .hkb { position: fixed; right: 16px; z-index: 1001; max-width: min(300px, calc(100vw - 32px)); display: flex; align-items: flex-start; gap: 4px; background: #fff; border: 1px solid #E5E7EB; border-radius: 18px 18px 6px 18px; box-shadow: 0 16px 36px rgba(13,27,62,0.18); padding: 4px 4px 4px 0; animation: hkb-in 0.28s cubic-bezier(0.2,0.9,0.3,1.2); font-family: inherit; }
         @keyframes hkb-in { from { opacity: 0; transform: translateY(10px) scale(0.96); } to { opacity: 1; transform: none; } }
         .hkb-main { flex: 1; border: none; background: none; text-align: left; padding: 9px 4px 10px 14px; cursor: pointer; font-family: inherit; display: flex; flex-direction: column; gap: 2px; }
         .hkb-name { font-size: 11px; font-weight: 800; color: #1A6BFF; letter-spacing: 0.04em; }
         .hkb-txt { font-size: 13.5px; font-weight: 600; color: #0D1B3E; line-height: 1.4; }
-        .hkb-x { border: none; background: #F1F5F9; color: #475569; width: 26px; height: 26px; border-radius: 50%; font-size: 16px; line-height: 1; cursor: pointer; flex-shrink: 0; margin-top: 4px; }
+        .hkb-x { border: none; background: #F1F5F9; color: #475569; width: 26px; height: 26px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; margin-top: 4px; }
+        .hkb-x:hover { background: #E2E8F0; color: #0D1B3E; }
       `}</style>
     </div>
   )

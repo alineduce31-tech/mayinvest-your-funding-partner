@@ -1,3 +1,4 @@
+import CloseIcon from '@/components/CloseIcon'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { LIFECYCLE_STATUTS } from '@/lib/lead-templates'
@@ -332,7 +333,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
       </div>
 
       <aside className={`am-side ${infoOpen ? 'open' : ''}`}>
-        <div className="am-side-head"><span>Le dossier</span><button className="am-x" onClick={() => setInfoOpen(false)} aria-label="Fermer">×</button></div>
+        <div className="am-side-head"><span>Le dossier</span><button className="am-x" onClick={() => setInfoOpen(false)} aria-label="Fermer"><CloseIcon size={13}/></button></div>
         <div className="am-side-id">
           <span className="am-score">{lead?.score ?? '—'}</span>
           <div><b>{nom}</b><small>{lead?.activite || ''}{lead?.ville ? ` · ${lead.ville}` : ''}</small></div>
@@ -564,7 +565,7 @@ function NouvelleConversation({ onClose, onPick }: { onClose: () => void; onPick
   return (
     <div className="am-modal-bg" onClick={onClose}>
       <div className="am-modal" onClick={e => e.stopPropagation()}>
-        <div className="am-side-head"><span>Nouvelle conversation</span><button className="am-x" onClick={onClose} aria-label="Fermer">×</button></div>
+        <div className="am-side-head"><span>Nouvelle conversation</span><button className="am-x" onClick={onClose} aria-label="Fermer"><CloseIcon size={13}/></button></div>
         <input className="am-search" autoFocus placeholder="Nom, ville ou téléphone du client…" value={q} onChange={e => setQ(e.target.value)}/>
         <div className="am-modal-list">
           {rows.map(l => (
@@ -701,8 +702,8 @@ function MessagerieStyles() {
     .am-ok { background: #DCFCE7; color: #166534; border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 700; }
     .am-side { width: 300px; flex-shrink: 0; background: #fff; border-left: 1px solid #E8ECF3; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; }
     .am-side-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 800; color: #64748B; letter-spacing: 0.08em; text-transform: uppercase; }
-    .am-x { display: none; border: none; background: #F1F5F9; width: 28px; height: 28px; border-radius: 50%; font-size: 18px; cursor: pointer; color: #0D1B3E; }
-    .am-modal .am-x { display: inline-block; }
+    .am-x { display: none; border: none; background: #F1F5F9; width: 28px; height: 28px; border-radius: 50%; padding: 0; align-items: center; justify-content: center; cursor: pointer; color: #0D1B3E; }
+    .am-modal .am-x { display: inline-flex; }
     .am-side-id { display: flex; gap: 12px; align-items: center; }
     .am-side-id b { display: block; font-size: 14px; color: #0D1B3E; }
     .am-side-id small { font-size: 12px; color: #64748B; }
@@ -742,7 +743,7 @@ function MessagerieStyles() {
     @media (max-width: 1180px) {
       .am-side:not(.static) { position: absolute; right: 0; top: 0; bottom: 0; z-index: 30; box-shadow: -12px 0 32px rgba(13,27,62,0.15); transform: translateX(100%); transition: transform 0.2s; }
       .am-side.open { transform: translateX(0); }
-      .am-side:not(.static) .am-x { display: inline-block; }
+      .am-side:not(.static) .am-x { display: inline-flex; }
       .am-info-btn { display: inline-block; }
       .am-side.static { display: none; }
     }

@@ -1,3 +1,4 @@
+import CloseIcon from '@/components/CloseIcon'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '@/integrations/supabase/client'
@@ -100,7 +101,7 @@ function CallSheet({ tel, nom, canLog, onClose, onLog }: { tel: string; nom?: st
             <div className="cs-kicker">Appeler</div>
             <div className="cs-name">{nom || 'Le client'}</div>
           </div>
-          <button className="cs-x" onClick={onClose} aria-label="Fermer">×</button>
+          <button className="cs-x" onClick={onClose} aria-label="Fermer"><CloseIcon size={13}/></button>
         </div>
 
         <div className="cs-num">
@@ -144,7 +145,7 @@ function CallSheet({ tel, nom, canLog, onClose, onLog }: { tel: string; nom?: st
         .cs-head { display: flex; justify-content: space-between; align-items: flex-start; }
         .cs-kicker { font-size: 11px; font-weight: 800; color: #64748B; letter-spacing: 0.08em; text-transform: uppercase; }
         .cs-name { font-size: 18px; font-weight: 800; color: #0D1B3E; margin-top: 2px; }
-        .cs-x { border: none; background: #F1F5F9; width: 32px; height: 32px; border-radius: 50%; font-size: 19px; cursor: pointer; color: #0D1B3E; flex-shrink: 0; }
+        .cs-x { border: none; background: #F1F5F9; width: 32px; height: 32px; border-radius: 50%; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #0D1B3E; flex-shrink: 0; }
         .cs-num { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: #F8FAFC; border: 1px solid #E8ECF3; border-radius: 14px; padding: 12px 12px 12px 16px; }
         .cs-num span { font-size: 24px; font-weight: 800; letter-spacing: 0.02em; color: #0D1B3E; font-variant-numeric: tabular-nums; }
         .cs-copy { border: 1.5px solid #E5E7EB; background: #fff; border-radius: 100px; padding: 7px 14px; font-family: inherit; font-size: 12.5px; font-weight: 800; color: #1A6BFF; cursor: pointer; }
