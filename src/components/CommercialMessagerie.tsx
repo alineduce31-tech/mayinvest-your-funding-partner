@@ -49,14 +49,14 @@ function useRappels(commercialId: string) {
   return { rappels, toggle }
 }
 
-export default function CommercialMessagerie({ commercialId, onCountsChange, onThreadOpen }: { commercialId: string; onCountsChange: () => void; onThreadOpen?: ((open: boolean) => void) | undefined }) {
+export default function CommercialMessagerie({ commercialId, onCountsChange, onThreadOpen, initialLeadId }: { commercialId: string; onCountsChange: () => void; onThreadOpen?: ((open: boolean) => void) | undefined; initialLeadId?: string | null | undefined }) {
   const [rows, setRows] = useState<ComRow[]>([])
   const [loading, setLoading] = useState(true)
   const [dirLast, setDirLast] = useState<{ body: string; sender_type: string; created_at: string } | null>(null)
   const [dirUnread, setDirUnread] = useState(0)
   const [filtre, setFiltre] = useState<FiltreCom>('tous')
   const [q, setQ] = useState('')
-  const [sel, setSel] = useState<Sel>(null)
+  const [sel, setSel] = useState<Sel>(initialLeadId ? { kind: 'lead', id: initialLeadId } : null)
   const [tick, setTick] = useState(0)
   const [now, setNow] = useState(Date.now())
   const { rappels, toggle } = useRappels(commercialId)

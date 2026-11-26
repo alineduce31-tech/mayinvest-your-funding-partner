@@ -42,6 +42,8 @@ function EspaceCommercialPage() {
   const [loginLoading, setLoginLoading] = useState(false)
   const [error, setError] = useState('')
   const [tab, setTab] = useState<'dashboard' | 'leads' | 'messagerie' | 'outils'>('dashboard')
+  const [openLeadId, setOpenLeadId] = useState<string | null>(null)
+  useEffect(() => { if (tab !== 'messagerie') setOpenLeadId(null) }, [tab])
   const [unreadClients, setUnreadClients] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [threadOpen, setThreadOpen] = useState(false)
@@ -217,7 +219,7 @@ function EspaceCommercialPage() {
           {sidebarOpen && <div className="sidebar-ovr" onClick={() => setSidebarOpen(false)}/>}
           <aside className={`ws-sidebar ${sidebarOpen ? 'open' : ''}`}>
             <div className="ws-logo">
-              <Link to="/"><Logo height={48} tone="light"/></Link>
+              <span className="ws-mark">M</span><span className="ws-brand">Mayinvest</span>
             </div>
             <nav className="ws-nav">
               <NavItem icon={<IconGrid/>} label="Accueil" active={tab === 'dashboard'} onClick={() => { setTab('dashboard'); setSidebarOpen(false) }}/>
@@ -253,7 +255,7 @@ function EspaceCommercialPage() {
             <div className={`ws-content ${tab === 'messagerie' ? 'flush' : ''}`}>
               {tab === 'dashboard' && <DashboardTab session={session} stats={stats} leads={leads} refLink={refLink} unreadClients={unreadClients} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)} onGo={setTab}/>}
               {tab === 'leads' && <LeadsTab leads={leads} onReload={loadLeads} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)}/>}
-              {tab === 'messagerie' && <CommercialMessagerie commercialId={session.id} onThreadOpen={setThreadOpen} onCountsChange={() => { loadUnreadClients(); loadUnreadChat() }}/>}
+              {tab === 'messagerie' && <CommercialMessagerie key={openLeadId || 'inbox'} commercialId={session.id} initialLeadId={openLeadId} onThreadOpen={setThreadOpen} onCountsChange={() => { loadUnreadClients(); loadUnreadChat() }}/>}
               {tab === 'outils' && <OutilsTab refCode={session.ref_code} refLink={refLink} session={session}/>}
             </div>
           </main>
@@ -278,6 +280,7 @@ function EspaceCommercialPage() {
               commercialId={session.id}
               onClose={() => setSelectedLead(null)}
               onUpdated={() => { loadLeads(); loadStats() }}
+              onOpenThread={(id) => { setSelectedLead(null); setOpenLeadId(id); setTab('messagerie'); window.scrollTo(0, 0) }}
             />
           )}
           {newLeadOpen && (
@@ -498,7 +501,7 @@ function LeadsTab({ leads, onReload, onOpenLead, onNewLead }: { leads: Lead[]; o
 // ============ LEAD DRAWER ============
 const STATUTS_DISPO = ['Nouveau', 'Contacté', 'RDV', 'Éligible', 'Non Éligible', 'Dossier Déposé', 'Financé', 'Perdu']
 
-function LeadDrawer({ lead, commercialId, onClose, onUpdated }: { lead: Lead; commercialId: string; onClose: () => void; onUpdated: () => void }) {
+function LeadDrawer({ lead, commercialId, onClose, onUpdated, onOpenThread }: { lead: Lead; commercialId: string; onClose: () => void; onUpdated: () => void; onOpenThread: (leadId: string) => void }) {
   const [statut, setStatut] = useState(lead.statut)
   const [saving, setSaving] = useState(false)
   async function changeStatut(newS: string) {
@@ -539,7 +542,7 @@ function LeadDrawer({ lead, commercialId, onClose, onUpdated }: { lead: Lead; co
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
                 Appeler
               </CallButton>}
-              <button className="btn-mini" onClick={() => alert('La messagerie avec les prospects sera disponible dans la prochaine vague.')} style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
+              <button className="btn-mini" onClick={() => onOpenThread(lead.id)} style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 Messagerie
               </button>
@@ -798,8 +801,9 @@ function GlobalStyles() {
         .ws-sidebar.open { transform: translateX(0); }
       }
       .sidebar-ovr { position: fixed; inset: 0; background: rgba(13,27,62,0.6); z-index: 99; backdrop-filter: blur(4px); }
-      .ws-logo { padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-      .ws-logo a { display: inline-block; filter: brightness(1.5) saturate(0); mix-blend-mode: screen; }
+      .ws-logo { padding: 0 20px 20px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; gap: 12px; }
+      .ws-mark { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(135deg, #1A6BFF 0%, #0051D4 100%); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #fff; letter-spacing: -0.02em; box-shadow: 0 10px 24px rgba(26,107,255,0.5), inset 0 1px 0 rgba(255,255,255,0.3); flex: none; }
+      .ws-brand { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; color: #fff; }
       .ws-nav { flex: 1; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px; }
       .ws-nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 14px; background: transparent; border: none; cursor: pointer; border-radius: 10px; color: rgba(255,255,255,0.65); font-family: inherit; font-size: 13px; font-weight: 600; text-align: left; }
       .ws-nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
