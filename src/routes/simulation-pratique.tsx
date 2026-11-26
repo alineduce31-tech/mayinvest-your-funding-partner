@@ -20,11 +20,11 @@ const MI = {
   text: '#111827', textMuted: '#6B7280', textFaint: '#9CA3AF',
 }
 
-type Choice = { id: string; text: string; points: number }
+type Choice = { id: string; text: string; points?: number }
 type Scenario = {
   id: string; position: number; title: string; tag: string;
   context: string; prospect_message: string | null;
-  question: string; choices: Choice[]; best_choice_id: string; feedback: string;
+  question: string; choices: Choice[]; best_choice_id?: string; feedback?: string;
 }
 
 function SimulationPage() {
@@ -59,7 +59,7 @@ function SimulationPage() {
         }
       }
 
-      const { data } = await supabase.from('simulation_scenarios').select('*').eq('is_active', true).order('position')
+      const { data } = await supabase.rpc('commercial_scenarios')
       if (data) setScenarios(data as Scenario[])
       setStartTime(Date.now())
       setLoading(false)
@@ -70,23 +70,17 @@ function SimulationPage() {
   const totalScore = scores.reduce((s, n) => s + n, 0)
 
   async function pickChoice(choiceId: string) {
-    if (showFeedback) return
+    if (showFeedback || !candidateId || !current) return
     setSelected(choiceId)
-    setShowFeedback(true)
-    if (!candidateId || !current) return
-
-    const chosen = current.choices.find(c => c.id === choiceId)
-    const pts = chosen?.points || 0
     const timeSeconds = Math.round((Date.now() - startTime) / 1000)
-    setScores([...scores, pts])
-
-    await supabase.from('simulation_attempts').insert({
-      candidate_id: candidateId,
-      scenario_id: current.id,
-      choice_id: choiceId,
-      points_earned: pts,
-      time_seconds: timeSeconds,
-    })
+    // Le serveur calcule les points et renvoie la correction seulement après la réponse
+    const { data, error } = await supabase.rpc('commercial_pick_choice', { p_scenario_id: current.id, p_choice_id: choiceId, p_time_seconds: timeSeconds })
+    if (error || !data) { setSelected(null); alert('Réponse non enregistrée : ' + (error?.message || 'réessayez.')); return }
+    const r = data as { points: number; choice_id: string; choices: Choice[]; best_choice_id: string; feedback: string }
+    setScenarios(list => list.map(sc => sc.id === current.id ? { ...sc, choices: r.choices, best_choice_id: r.best_choice_id, feedback: r.feedback } : sc))
+    setSelected(r.choice_id)
+    setScores([...scores, r.points])
+    setShowFeedback(true)
   }
 
   async function next() {
@@ -98,11 +92,8 @@ function SimulationPage() {
     } else {
       // Fin de la simu théorique → persiste le score dans commercial_candidates
       if (candidateId) {
-        const finalScore = scores.reduce((s, n) => s + n, 0)  // /100
-        await supabase.from('commercial_candidates').update({
-          score_simulation_theo: finalScore,
-          updated_at: new Date().toISOString(),
-        }).eq('id', candidateId)
+        const { error } = await supabase.rpc('commercial_finish_theo')
+        if (error) { alert('Score non enregistré : ' + error.message); return }
       }
       setDone(true)
     }
@@ -212,13 +203,13 @@ function SimulationPage() {
                   const letter = String.fromCharCode(65 + i)
                   let cls = ''
                   if (showFeedback) {
-                    if (c.id === selected) cls = c.points >= 20 ? 'selected-good' : c.points > 0 ? 'selected-good' : 'selected-bad'
+                    if (c.id === selected) cls = (c.points ?? 0) > 0 ? 'selected-good' : 'selected-bad'
                     else if (c.id === current.best_choice_id) cls = 'correct'
                   }
                   return (
                     <button key={c.id} className={`sm-choice ${cls}`}
                       disabled={showFeedback} onClick={() => pickChoice(c.id)}>
-                      <b>{letter} {showFeedback && <span className="sm-points">+{c.points} pts</span>}</b>
+                      <b>{letter} {showFeedback && <span className="sm-points">+{c.points ?? 0} pts</span>}</b>
                       {c.text}
                     </button>
                   )

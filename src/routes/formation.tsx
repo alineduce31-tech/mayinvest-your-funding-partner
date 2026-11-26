@@ -20,7 +20,7 @@ const MI = {
 }
 
 type Module = { id: string; position: number; title: string; subtitle: string; duration_minutes: number; content_md: string; objectifs: string }
-type Question = { id: string; position: number; question: string; options: { id: string; text: string }[]; correct_option_id: string; explanation: string }
+type Question = { id: string; position: number; question: string; options: { id: string; text: string }[] }
 
 function FormationPage() {
   const navigate = useNavigate()
@@ -66,7 +66,7 @@ function FormationPage() {
 
   async function startQuiz() {
     if (!currentModule) return
-    const { data } = await supabase.from('quiz_questions').select('*').eq('module_id', currentModule.id).order('position')
+    const { data } = await supabase.from('quiz_questions').select('id, position, question, options').eq('module_id', currentModule.id).order('position')
     if (data) setQuestions(data as Question[])
     setAnswers({})
     setQuizStartTime(Date.now())
@@ -75,24 +75,15 @@ function FormationPage() {
 
   async function submitQuiz() {
     if (!candidateId || !currentModule) return
-    let score = 0
-    questions.forEach(q => { if (answers[q.id] === q.correct_option_id) score++ })
-    const passed = score >= 4
     const timeSeconds = Math.round((Date.now() - quizStartTime) / 1000)
-
-    await supabase.from('quiz_attempts').insert({
-      candidate_id: candidateId,
-      module_id: currentModule.id,
-      answers: answers,
-      score,
-      passed,
-      time_seconds: timeSeconds,
-    })
-
-    if (passed) {
+    // La correction se fait sur le serveur : les bonnes réponses ne sont jamais envoyées au navigateur.
+    const { data, error } = await supabase.rpc('commercial_submit_quiz', { p_module_id: currentModule.id, p_answers: answers, p_time_seconds: timeSeconds })
+    if (error || !data) { alert('Quiz non enregistré : ' + (error?.message || 'réessayez.')); return }
+    const r = data as { score: number; passed: boolean }
+    if (r.passed) {
       setCompletedModules(new Set([...completedModules, currentModule.id]))
     }
-    setLastScore({ score, passed })
+    setLastScore({ score: r.score, passed: r.passed })
     setMode('result')
   }
 

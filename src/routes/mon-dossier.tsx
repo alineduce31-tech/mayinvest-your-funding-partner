@@ -215,10 +215,10 @@ function MonDossier() {
           setLoading(false)
           return
         }
-        const { data } = await supabase.rpc('verify_lead_password_by_phone', { p_phone: phone, p_password: password })
+        const { data, error: rpcErr } = await supabase.rpc('verify_lead_password_by_phone', { p_phone: phone, p_password: password })
         const row: any = Array.isArray(data) && data[0] ? data[0] : null
         if (!row) {
-          setError('Téléphone ou mot de passe incorrect')
+          setError(rpcErr?.message?.includes('Trop de tentatives') ? rpcErr.message : 'Téléphone ou mot de passe incorrect')
           setLoading(false)
           return
         }
@@ -230,10 +230,10 @@ function MonDossier() {
           setLoading(false)
           return
         }
-        const { data } = await supabase.rpc('verify_lead_password_by_email', { p_email: email.trim(), p_password: password })
+        const { data, error: rpcErr } = await supabase.rpc('verify_lead_password_by_email', { p_email: email.trim(), p_password: password })
         const row: any = Array.isArray(data) && data[0] ? data[0] : null
         if (!row) {
-          setError('Email ou mot de passe incorrect')
+          setError(rpcErr?.message?.includes('Trop de tentatives') ? rpcErr.message : 'Email ou mot de passe incorrect')
           setLoading(false)
           return
         }

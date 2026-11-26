@@ -49,10 +49,10 @@ function MonEspaceAdmin() {
   async function tryLogin() {
     setError(''); setLoading(true)
     try {
-      const { data } = await supabase.rpc('verify_admin_login', { p_email: email, p_password: password })
+      const { data, error: rpcErr } = await supabase.rpc('verify_admin_login', { p_email: email, p_password: password })
       const row: any = Array.isArray(data) ? data[0] : data
       if (!row?.success) {
-        setError('Identifiants invalides')
+        setError(rpcErr?.message?.includes('Trop de tentatives') ? rpcErr.message : 'Identifiants invalides')
         setLoading(false)
         return
       }

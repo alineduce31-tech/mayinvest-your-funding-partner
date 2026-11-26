@@ -121,6 +121,7 @@ function EspaceCommercialPage() {
     })
     setLoginLoading(false)
     if (rpcErr) { setError(rpcErr.message || 'Identifiants incorrects.'); return }
+    if ((data as any)?.error) { setError((data as any).error); return }
     if (data) {
       const { token, ...sess } = data as any
       setCommercialToken(token)

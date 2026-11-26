@@ -43,42 +43,24 @@ function SimulationPratiquePage() {
     setLoading(false)
   }, [navigate])
 
-  async function completeEpreuve(num: Epreuve, score: number, time: number, data: any) {
-    setScores({ ...scores, [num]: score })
-    setTimes({ ...times, [num]: time })
-    if (candidateId) {
-      await supabase.from('practical_attempts').insert({
-        candidate_id: candidateId, epreuve: num, score, time_seconds: time, data,
-      })
-    }
+  // Le serveur rejoue l'épreuve et renvoie la note. Renvoie un message d'erreur, ou null si c'est bon.
+  async function completeEpreuve(num: Epreuve, time: number, data: any): Promise<string | null> {
+    if (!candidateId) return 'Session expirée, reconnecte-toi.'
+    const { data: res, error } = await supabase.rpc('commercial_submit_epreuve', { p_epreuve: num, p_time_seconds: time, p_data: data })
+    if (error) return 'Épreuve non enregistrée : ' + error.message
+    const r = res as { ok: boolean; score?: number; error?: string }
+    if (!r?.ok) return r?.error || 'Épreuve non enregistrée, réessaie.'
+    setScores(prev => ({ ...prev, [num]: r.score ?? 0 }))
+    setTimes(prev => ({ ...prev, [num]: time }))
     if (num < 3) {
       setEpreuve((num + 1) as Epreuve)
     } else {
-      // Totalisation finale pratique
-      const totalPts = scores[1] + scores[2] + score  // /60 (3 épreuves × 20)
-      const totalTime = times[1] + times[2] + time
-      if (candidateId) {
-        // Récupère le score théorique déjà en base pour calculer le score global /100
-        const { data: candRow } = await supabase
-          .from('commercial_candidates')
-          .select('score_simulation_theo, score_quiz')
-          .eq('id', candidateId)
-          .maybeSingle()
-
-        const theo = Number(candRow?.score_simulation_theo) || 0  // /100
-        const pratPct = Math.min(100, (totalPts / 60) * 100)      // ramène prat /60 → /100
-        const scoreTotal = Math.round((theo + pratPct) / 2)       // moyenne → /100
-
-        await supabase.from('commercial_candidates').update({
-          score_simulation_prat: totalPts,
-          score_total: scoreTotal,
-          time_total_seconds: totalTime,
-          status: 'en_attente_validation',
-          updated_at: new Date().toISOString(),
-        }).eq('id', candidateId)
-      }
+      // Le serveur additionne les épreuves enregistrées et calcule le score global /100
+      const { error: e2 } = await supabase.rpc('commercial_finish_prat')
+      if (e2) return 'Score non enregistré : ' + e2.message
       setDone(true)
     }
+    return null
   }
 
   if (loading) return <SkeletonPage label="Chargement…" />
@@ -97,9 +79,9 @@ function SimulationPratiquePage() {
       </header>
 
       <div className="sp-wrap">
-        {!done && epreuve === 1 && <Epreuve1Chat onComplete={(s, t, d) => completeEpreuve(1, s, t, d)}/>}
-        {!done && epreuve === 2 && <Epreuve2Lead onComplete={(s, t, d) => completeEpreuve(2, s, t, d)}/>}
-        {!done && epreuve === 3 && <Epreuve3Pilotage onComplete={(s, t, d) => completeEpreuve(3, s, t, d)}/>}
+        {!done && epreuve === 1 && <Epreuve1Chat onComplete={(t, d) => completeEpreuve(1, t, d)}/>}
+        {!done && epreuve === 2 && <Epreuve2Lead onComplete={(t, d) => completeEpreuve(2, t, d)}/>}
+        {!done && epreuve === 3 && <Epreuve3Pilotage onComplete={(t, d) => completeEpreuve(3, t, d)}/>}
         {done && <FinalRecap candidateName={candidateName} scores={scores} times={times}/>}
       </div>
     </div>
@@ -109,7 +91,7 @@ function SimulationPratiquePage() {
 // ============================================================
 // ÉPREUVE 1 — Chat avec client virtuel
 // ============================================================
-function Epreuve1Chat({ onComplete }: { onComplete: (score: number, time: number, data: any) => void }) {
+function Epreuve1Chat({ onComplete }: { onComplete: (time: number, data: any) => Promise<string | null> }) {
   const [messages, setMessages] = useState<Msg[]>([
     { from: 'them', text: 'Bonjour, j\'ai vu votre annonce sur Facebook. Vous faites des crédits ?' },
   ])
@@ -154,14 +136,15 @@ function Epreuve1Chat({ onComplete }: { onComplete: (score: number, time: number
     setMsgSent(msgSent + 1)
   }
 
-  function finish() {
-    // Score : 20 si tout extrait en <=8 messages, dégressif
-    const extractedCount = Object.values(extracted).filter(Boolean).length
-    let score = Math.round((extractedCount / 4) * 20)
-    if (msgSent > 10) score = Math.max(0, score - 4)
-    if (msgSent > 15) score = Math.max(0, score - 4)
+  const [envoi, setEnvoi] = useState(false)
+  async function finish() {
+    // La note est calculée par le serveur à partir des messages
+    if (envoi) return
+    setEnvoi(true)
     const time = Math.round((Date.now() - startTime) / 1000)
-    onComplete(score, time, { messages, extracted, msgSent })
+    const e = await onComplete(time, { messages })
+    setEnvoi(false)
+    if (e) alert(e)
   }
 
   return (
@@ -203,7 +186,7 @@ function Epreuve1Chat({ onComplete }: { onComplete: (score: number, time: number
             Pose une question à la fois, reste poli, conclus poliment quand tu as tout.
           </div>
           {allExtracted && (
-            <button className="btn-finish" onClick={finish}>
+            <button className="btn-finish" onClick={finish} disabled={envoi}>
               Terminer cette épreuve →
             </button>
           )}
@@ -217,7 +200,7 @@ function Epreuve1Chat({ onComplete }: { onComplete: (score: number, time: number
 // ============================================================
 // ÉPREUVE 2 — Créer un lead
 // ============================================================
-function Epreuve2Lead({ onComplete }: { onComplete: (score: number, time: number, data: any) => void }) {
+function Epreuve2Lead({ onComplete }: { onComplete: (time: number, data: any) => Promise<string | null> }) {
   const [startTime] = useState(Date.now())
   const [form, setForm] = useState({
     type: '', activite: '', raison: '', dirigeant: '', tel: '', email: '',
@@ -225,16 +208,15 @@ function Epreuve2Lead({ onComplete }: { onComplete: (score: number, time: number
   })
   const [err, setErr] = useState('')
 
-  const expected = {
-    type: 'PME', activite: 'Commerce', raison: 'Boutique Marie Ntoumi', dirigeant: 'Marie Ntoumi',
-    tel: '0665532', ville: 'Dolisie', rccm: 'Oui', ca_min: 15000000, montant: 2000000, banque: 'BOA',
-  }
-
-  function validate() {
-    const score = computeScore(form, expected)
-    if (score < 10) { setErr('Tu as trop d\'erreurs. Relis bien le brief et corrige les champs.'); return }
+  const [envoi, setEnvoi] = useState(false)
+  async function validate() {
+    // Le serveur vérifie les champs et calcule la note
+    if (envoi) return
+    setEnvoi(true); setErr('')
     const time = Math.round((Date.now() - startTime) / 1000)
-    onComplete(score, time, { form })
+    const e = await onComplete(time, { form })
+    setEnvoi(false)
+    if (e) setErr(e)
   }
 
   return (
@@ -283,7 +265,7 @@ function Epreuve2Lead({ onComplete }: { onComplete: (score: number, time: number
         </div>
 
         <div className="form-actions">
-          <button className="btn-submit" onClick={validate}>Enregistrer le lead →</button>
+          <button className="btn-submit" onClick={validate} disabled={envoi}>Enregistrer le lead →</button>
         </div>
       </div>
     </>
@@ -337,28 +319,10 @@ function CustomSelect({ value, onChange, options }: { value: string; onChange: (
   )
 }
 
-function computeScore(form: any, exp: any): number {
-  let pts = 0
-  // 2 pts par champ correct, 20 max
-  if (form.type === exp.type) pts += 2
-  if (form.activite === exp.activite) pts += 2
-  if (form.raison.toLowerCase().includes('marie') || form.raison.toLowerCase().includes('ntoumi') || form.raison.toLowerCase().includes('boutique')) pts += 2
-  if (form.dirigeant.toLowerCase().includes('marie') && form.dirigeant.toLowerCase().includes('ntoumi')) pts += 2
-  if (form.tel.replace(/\s/g, '').includes(exp.tel)) pts += 2
-  if (form.ville === exp.ville) pts += 2
-  if (form.rccm === exp.rccm) pts += 1
-  const caNum = parseInt(form.ca.replace(/\D/g, ''))
-  if (caNum >= exp.ca_min * 0.9 && caNum <= exp.ca_min * 1.2) pts += 2
-  const mntNum = parseInt(form.montant.replace(/\D/g, ''))
-  if (mntNum === exp.montant) pts += 3
-  if (form.banque.toUpperCase().includes(exp.banque)) pts += 2
-  return pts
-}
-
 // ============================================================
 // ÉPREUVE 3 — Pilotage d'un dossier complet
 // ============================================================
-function Epreuve3Pilotage({ onComplete }: { onComplete: (score: number, time: number, data: any) => void }) {
+function Epreuve3Pilotage({ onComplete }: { onComplete: (time: number, data: any) => Promise<string | null> }) {
   const [startTime] = useState(Date.now())
   const [tab, setTab] = useState<'infos' | 'chat' | 'docs'>('infos')
   const [statut, setStatut] = useState<'Nouveau' | 'Contacté' | 'RDV' | 'Dossier Déposé'>('Nouveau')
@@ -366,6 +330,8 @@ function Epreuve3Pilotage({ onComplete }: { onComplete: (score: number, time: nu
   const [chatInput, setChatInput] = useState('')
   const [docsRequested, setDocsRequested] = useState<string[]>([])
   const [steps, setSteps] = useState({ lu: false, contacte: false, rdv: false, docs: false, depose: false })
+  const [statutsVus, setStatutsVus] = useState<string[]>([])
+  const [envoi, setEnvoi] = useState(false)
 
   function markRead() { setSteps({ ...steps, lu: true }) }
 
@@ -392,6 +358,7 @@ function Epreuve3Pilotage({ onComplete }: { onComplete: (score: number, time: nu
 
   function changeStatut(newS: typeof statut) {
     setStatut(newS)
+    setStatutsVus(prev => prev.includes(newS) ? prev : [...prev, newS])
     if (newS === 'Contacté') setSteps(prev => ({ ...prev, contacte: true }))
     if (newS === 'RDV') setSteps(prev => ({ ...prev, rdv: true }))
     if (newS === 'Dossier Déposé') {
@@ -407,16 +374,14 @@ function Epreuve3Pilotage({ onComplete }: { onComplete: (score: number, time: nu
 
   const allDone = Object.values(steps).every(Boolean) && statut === 'Dossier Déposé'
 
-  function finish() {
-    let score = 0
-    if (steps.lu) score += 2
-    if (steps.contacte) score += 4
-    if (steps.rdv) score += 4
-    if (steps.docs) score += 4
-    if (steps.depose) score += 4
-    if (docsRequested.length >= 3) score += 2
+  async function finish() {
+    // Le serveur rejoue le dossier (messages, statuts, pièces) et calcule la note
+    if (envoi) return
+    setEnvoi(true)
     const time = Math.round((Date.now() - startTime) / 1000)
-    onComplete(score, time, { statut, chatMsgs, docsRequested, steps })
+    const e = await onComplete(time, { lu: steps.lu, statut, statuts: statutsVus, messages: chatMsgs, docsRequested })
+    setEnvoi(false)
+    if (e) alert(e)
   }
 
   return (
@@ -491,7 +456,7 @@ function Epreuve3Pilotage({ onComplete }: { onComplete: (score: number, time: nu
       </div>
 
       {allDone && (
-        <button className="btn-finish wide" onClick={finish}>
+        <button className="btn-finish wide" onClick={finish} disabled={envoi}>
           Terminer la simulation →
         </button>
       )}
