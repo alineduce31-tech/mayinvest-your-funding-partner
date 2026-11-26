@@ -1,3 +1,4 @@
+import EquipeNav from '@/components/EquipeNav'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/integrations/supabase/client'
@@ -112,7 +113,7 @@ function CandidaturesPage() {
   if (loading) return <SkeletonPage/>
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, system-ui, sans-serif', color: '#111827' }}>
+    <div className="eq-page" style={{ minHeight: '100vh', background: '#F5F5F7', color: '#1D1D1F' }}>
       <style>{`
         * { box-sizing: border-box; }
         .cd-header { padding: 20px 32px; background: #FFFFFF; border-bottom: 1px solid #ECECEA; margin: 20px 32px 0; border-radius: 16px; box-shadow: 0 2px 4px rgba(13,23,41,0.03); border: 1px solid #ECECEA; display: flex; align-items: center; gap: 20px; }
@@ -259,14 +260,7 @@ function CandidaturesPage() {
 
       <header className="cd-header">
         <div className="cd-header-left">
-          <Link to="/admin" className="back-round" aria-label="Retour à l'admin">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          </Link>
-          <nav style={{ display: 'flex', gap: 6 }}>
-            <Link to={'/candidatures' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, textDecoration: 'none', background: '#1A6BFF', color: '#fff' }}>Candidatures</Link>
-            <Link to={'/equipe-commerciale' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, color: '#6B7280', textDecoration: 'none' }}>Commerciaux</Link>
-            <Link to={'/equipe-admin' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, color: '#6B7280', textDecoration: 'none' }}>Admins</Link>
-          </nav>
+          <EquipeNav actif="candidatures"/>
         </div>
         <div className="cd-header-right">
           <h1>Candidatures commerciales</h1>

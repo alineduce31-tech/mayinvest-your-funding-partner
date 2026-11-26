@@ -1,3 +1,5 @@
+import EquipeNav from '@/components/EquipeNav'
+import { Users, Inbox, Landmark, Wallet } from 'lucide-react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
@@ -81,7 +83,7 @@ function EquipeCommercialePage() {
   if (!authChecked || loading) return <SkeletonPage/>
 
   return (
-    <div style={{ minHeight: '100vh', background: '#FAFAF8', fontFamily: 'Inter, system-ui, sans-serif', color: '#111827' }}>
+    <div className="eq-page" style={{ minHeight: '100vh', background: '#F5F5F7', color: '#1D1D1F' }}>
       <style>{`
         * { box-sizing: border-box; }
         .ec-header { padding: 20px 32px; background: #FFFFFF; margin: 20px 32px 0; border-radius: 16px; box-shadow: 0 2px 4px rgba(13,23,41,0.03); border: 1px solid #ECECEA; display: flex; align-items: center; gap: 20px; }
@@ -172,14 +174,7 @@ function EquipeCommercialePage() {
 
       <header className="ec-header">
         <div className="ec-header-left">
-          <Link to="/admin" className="back-round" aria-label="Retour à l'admin">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          </Link>
-          <nav className="ec-nav">
-            <Link to={'/candidatures' as any}>Candidatures</Link>
-            <Link to={'/equipe-commerciale' as any} className="active">Commerciaux</Link>
-            <Link to={'/equipe-admin' as any}>Admins</Link>
-          </nav>
+          <EquipeNav actif="commerciaux"/>
         </div>
         <div className="ec-header-right">
           <h1>Équipe commerciale</h1>
@@ -189,10 +184,10 @@ function EquipeCommercialePage() {
 
       <div className="wrap">
         <div className="kpi-row">
-          <div className="kpi"><div className="kpi-lbl">Commerciaux actifs</div><div className="kpi-val">{totals.nb}</div></div>
-          <div className="kpi"><div className="kpi-lbl">Leads attribués</div><div className="kpi-val">{totals.totalLeads}</div></div>
-          <div className="kpi"><div className="kpi-lbl">Dossiers financés</div><div className="kpi-val">{totals.totalFinances}</div></div>
-          <div className="kpi"><div className="kpi-lbl">Commissions versées</div><div className="kpi-val">{xaf(totals.totalGains)}</div></div>
+          <div className="kpi"><i className="eq-ic b"><Users size={16}/></i><div className="kpi-lbl">Commerciaux actifs</div><div className="kpi-val">{totals.nb}</div></div>
+          <div className="kpi"><i className="eq-ic n"><Inbox size={16}/></i><div className="kpi-lbl">Leads attribués</div><div className="kpi-val">{totals.totalLeads}</div></div>
+          <div className="kpi"><i className="eq-ic g"><Landmark size={16}/></i><div className="kpi-lbl">Dossiers financés</div><div className="kpi-val">{totals.totalFinances}</div></div>
+          <div className="kpi"><i className="eq-ic o"><Wallet size={16}/></i><div className="kpi-lbl">Commissions versées</div><div className="kpi-val">{xaf(totals.totalGains)}</div></div>
         </div>
 
         <div className="toolbar">

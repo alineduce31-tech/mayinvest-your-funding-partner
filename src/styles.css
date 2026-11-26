@@ -2041,3 +2041,78 @@ button:active, .lap-btn:active {
 .rep-legend-lbl { color: #1D1D1F; }
 .rep-legend-pct { color: #86868B; font-size: 12px; font-variant-numeric: tabular-nums; min-width: 38px; text-align: right; }
 .rep-legend-val { color: #1D1D1F; font-weight: 600; min-width: 22px; text-align: right; }
+
+/* ============================================================
+   PAGES ÉQUIPE (Candidatures, Commerciaux, Admins) · style Apple
+   ============================================================ */
+.eq-page { font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif !important; background: #F5F5F7 !important; }
+.eq-navbar { display: flex; align-items: center; gap: 12px; }
+.eq-back { width: 36px; height: 36px; border-radius: 50%; background: #F5F5F7; color: #1D1D1F; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.eq-back:hover { background: #E8E8ED; }
+.eq-seg { display: inline-flex; background: #E8E8ED; border-radius: 11px; padding: 3px; gap: 2px; }
+.eq-seg a { display: inline-flex; align-items: center; gap: 7px; padding: 7px 14px; border-radius: 9px; font-size: 13px; font-weight: 500; color: #6E6E73; text-decoration: none; white-space: nowrap; }
+.eq-seg a:hover:not(.on) { color: #1D1D1F; }
+.eq-seg a.on { background: #fff; color: #1D1D1F; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+.eq-seg a.on svg { color: #1A6BFF; }
+.eq-page .cd-header, .eq-page .ea-header, .eq-page .ec-header { background: #fff !important; border: none !important; border-radius: 18px !important; box-shadow: 0 1px 2px rgba(0,0,0,.04) !important; }
+.eq-page h1 { color: #1D1D1F !important; letter-spacing: -0.02em; }
+.eq-page .kpi { background: #fff !important; border: none !important; border-radius: 18px !important; box-shadow: 0 1px 2px rgba(0,0,0,.04) !important; padding: 18px 20px !important; }
+.eq-page .kpi-lbl { text-transform: none !important; letter-spacing: 0 !important; font-size: 13px !important; font-weight: 500 !important; color: #86868B !important; margin-top: 12px; }
+.eq-page .kpi-val { font-size: 28px !important; font-weight: 700 !important; letter-spacing: -0.03em; color: #1D1D1F !important; }
+.eq-ic { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-style: normal; }
+.eq-ic.b { background: #EAF1FF; color: #1A6BFF; } .eq-ic.g { background: #E8F8EE; color: #16A34A; } .eq-ic.n { background: #EDEFF4; color: #0D1B3E; } .eq-ic.o { background: #FFF3E0; color: #C2410C; }
+.eq-page .toolbar, .eq-page .table-wrap, .eq-page .cd-list, .eq-page .cd-empty { background: #fff !important; border: none !important; border-radius: 18px !important; box-shadow: 0 1px 2px rgba(0,0,0,.04) !important; }
+.eq-page .toolbar input, .eq-page .toolbar select { background: #F5F5F7 !important; border: none !important; border-radius: 999px !important; }
+.eq-page table thead th { background: #fff !important; text-transform: none !important; letter-spacing: 0 !important; font-size: 12px !important; font-weight: 500 !important; color: #86868B !important; }
+.eq-page .cd-tab { background: #fff; border: none !important; box-shadow: 0 1px 2px rgba(0,0,0,.04); font-weight: 500; color: #3A3A3C; }
+.eq-page .cd-tab.active { background: #0D1B3E !important; color: #fff !important; box-shadow: none !important; }
+.eq-page .btn-add { background: #1A6BFF !important; border-radius: 999px !important; font-weight: 600 !important; }
+.eq-page .btn-add:hover { background: #0D1B3E !important; transform: none !important; }
+@media (max-width: 640px) { .eq-seg a span { display: none; } .eq-seg a { padding: 8px 12px; } }
+
+/* Rapports · style Apple */
+.rap2 { font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; color: #1D1D1F; }
+.rap2 .rap-grid { gap: 14px; }
+.rap2 .rap-kpi { background: #fff; border: none; border-radius: 18px; box-shadow: 0 1px 2px rgba(0,0,0,.04); padding: 18px 20px; }
+.rap2 .rap-kpi-lbl { text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; color: #86868B; margin-top: 12px; }
+.rap2 .rap-kpi-val { font-size: 26px; font-weight: 700; letter-spacing: -0.03em; color: #1D1D1F; }
+.rap2 .rap-kpi-unit { font-size: 14px; color: #86868B; font-weight: 500; }
+.rap2 .rap-kpi-sub { color: #86868B; }
+.rap2 .rap-pan { background: #fff; border: none; border-radius: 18px; box-shadow: 0 1px 2px rgba(0,0,0,.04); overflow: visible; }
+.rap2 .rap-pan-head { padding: 14px 20px; border-bottom: 1px solid #F0F0F2; }
+.rap2 .rap-pan-t { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; color: #1D1D1F; }
+.rap2 .rap-pan-t span { color: #86868B; font-weight: 400; font-size: 13px; }
+.rap2 .rap-tbl thead th { background: #fff; text-transform: none; letter-spacing: 0; font-size: 12px; font-weight: 500; color: #86868B; border-bottom: 1px solid #F0F0F2; padding: 10px 20px; }
+.rap2 .rap-tbl td { padding: 12px 20px; border-bottom: 1px solid #F5F5F7; font-size: 13.5px; }
+.rap2 .rap-tbl tr:last-child td { border-bottom: none; }
+.rap2 .rap-tbl .r { text-align: right; }
+.rap-st { display: inline-block; padding: 4px 11px; border-radius: 999px; font-size: 12.5px; font-weight: 600; }
+.rap-n { display: flex; align-items: center; gap: 10px; max-width: 260px; }
+.rap-bar { flex: 1; height: 5px; border-radius: 5px; background: #F0F0F2; overflow: hidden; }
+.rap-bar i { display: block; height: 100%; background: #1A6BFF; border-radius: 5px; }
+.rap-sur { color: #86868B; font-size: 12px; }
+/* Listes des pages Équipe */
+.eq-page .list { background: #fff !important; border: none !important; border-radius: 18px !important; box-shadow: 0 1px 2px rgba(0,0,0,.04) !important; padding: 4px 8px; }
+.eq-page .row { border-bottom: 1px solid #F0F0F2 !important; font-size: 13px !important; border-radius: 12px; }
+.eq-page .row:not(.row-head):hover { background: #F5F5F7; }
+.eq-page .row-head { background: #fff !important; text-transform: none !important; letter-spacing: 0 !important; font-size: 12px !important; font-weight: 500 !important; color: #86868B !important; }
+.eq-page .row-name strong { font-size: 14px !important; font-weight: 600 !important; color: #1D1D1F !important; }
+.eq-page .row-name small, .eq-page .row-ville { color: #86868B !important; }
+.eq-page .ava, .eq-page .avatar { width: 36px !important; height: 36px !important; border-radius: 50% !important; background: #EAF1FF !important; color: #1A6BFF !important; font-weight: 700 !important; }
+.eq-page .row-finance { color: #16A34A !important; }
+.eq-page .btn-deact { background: transparent !important; border: none !important; color: #DC2626 !important; font-size: 13px !important; font-weight: 500 !important; padding: 6px 4px !important; }
+.eq-page .btn-deact:hover { color: #0D1B3E !important; }
+.eq-page .fs-btn { background: #F5F5F7 !important; border: none !important; border-radius: 999px !important; font-size: 13px !important; }
+.eq-page .empty, .eq-page .ea-empty { border: none !important; color: #86868B !important; font-style: normal !important; }
+.eq-page table { border-collapse: collapse; }
+.eq-page table td { border-bottom: 1px solid #F0F0F2 !important; font-size: 13.5px; }
+.eq-page table tbody tr:hover td { background: #F5F5F7; }
+.eq-page .role-pill { border-radius: 999px !important; font-weight: 600 !important; }
+.eq-page td.actions button { border: none !important; background: #F5F5F7 !important; border-radius: 50% !important; }
+.eq-page td.actions button:hover:not(:disabled) { background: #EAF1FF !important; color: #1A6BFF !important; }
+.eq-page .cd-row { border-bottom: 1px solid #F0F0F2 !important; }
+.eq-page .cd-row:hover, .eq-page .cd-row.selected { background: #F5F5F7 !important; }
+.eq-page .cd-panel-head { background: #0D1B3E !important; }
+.eq-page .cd-verdict { background: #F5F9FF !important; color: #0D1B3E !important; }
+.eq-page .cd-ava { background: #EAF1FF !important; color: #1A6BFF !important; }
+.eq-page .cd-list { padding: 4px 8px; }

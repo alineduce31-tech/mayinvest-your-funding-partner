@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { MapPin, Download, FileSpreadsheet, FileDown, UserPlus, LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
+import { Star, MapPin, Download, FileSpreadsheet, FileDown, UserPlus, LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
@@ -2148,6 +2148,7 @@ function Donut({ items, capLabel }: { items: { label: string; value: number }[];
 
 
 function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
+  const [expOpen, setExpOpen] = useState(false)
   const totalMontant = leads.reduce((s: number, l: any) => s + (l.montant_demande || 0), 0)
   const avgMontant = leads.length ? Math.round(totalMontant / leads.length) : 0
   const scoreAvg = leads.length ? Math.round(leads.reduce((s: number, l: any) => s + (l.score || 0), 0) / leads.length) : 0
@@ -2178,21 +2179,25 @@ function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
     empty: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>,
   }
 
-  return <>
+  const maxN = Math.max(1, ...byStatut.map(r => r.n))
+  return <div className="rap2">
     <div className="rap-grid">
-      <div className="rap-kpi"><div className="rap-kpi-lbl">Total demandé</div><div className="rap-kpi-val">{leads.length ? xaf(totalMontant) : '—'}</div><div className="rap-kpi-sub">sur {leads.length} dossier{leads.length > 1 ? 's' : ''}</div></div>
-      <div className="rap-kpi"><div className="rap-kpi-lbl">Panier moyen</div><div className="rap-kpi-val">{leads.length ? xaf(avgMontant) : '—'}</div><div className="rap-kpi-sub">par dossier</div></div>
-      <div className="rap-kpi"><div className="rap-kpi-lbl">Score moyen</div><div className="rap-kpi-val">{scoreAvg}<span className="rap-kpi-unit">/100</span></div><div className="rap-kpi-sub">tous dossiers</div></div>
-      <div className="rap-kpi"><div className="rap-kpi-lbl">Taux éligibilité</div><div className="rap-kpi-val">{leads.length ? tauxEligibilite + '%' : '—'}</div><div className="rap-kpi-sub">{eligibles} dossier{eligibles > 1 ? 's' : ''} éligible{eligibles > 1 ? 's' : ''}</div></div>
+      <div className="rap-kpi"><i className="eq-ic b"><Wallet size={16}/></i><div className="rap-kpi-lbl">Total demandé</div><div className="rap-kpi-val">{leads.length ? xaf(totalMontant) : '—'}</div><div className="rap-kpi-sub">sur {leads.length} dossier{leads.length > 1 ? 's' : ''}</div></div>
+      <div className="rap-kpi"><i className="eq-ic n"><Coins size={16}/></i><div className="rap-kpi-lbl">Panier moyen</div><div className="rap-kpi-val">{leads.length ? xaf(avgMontant) : '—'}</div><div className="rap-kpi-sub">par dossier</div></div>
+      <div className="rap-kpi"><i className="eq-ic o"><Star size={16}/></i><div className="rap-kpi-lbl">Score moyen</div><div className="rap-kpi-val">{scoreAvg}<span className="rap-kpi-unit"> /100</span></div><div className="rap-kpi-sub">tous dossiers</div></div>
+      <div className="rap-kpi"><i className="eq-ic g"><CheckCircle2 size={16}/></i><div className="rap-kpi-lbl">Taux d'éligibilité</div><div className="rap-kpi-val">{leads.length ? tauxEligibilite + ' %' : '—'}</div><div className="rap-kpi-sub">{eligibles} dossier{eligibles > 1 ? 's' : ''} éligible{eligibles > 1 ? 's' : ''}</div></div>
     </div>
 
     <div className="rap-pan">
       <div className="rap-pan-head">
-        <div className="rap-pan-t">Résumé par statut <span>· {leads.length} dossier{leads.length > 1 ? 's' : ''}</span></div>
-        <div className="rap-pan-exp" role="group" aria-label="Exporter">
-          <button type="button" onClick={exportCSV} title="Exporter en CSV">{ICO.download}CSV</button>
-          <button type="button" onClick={exportExcel} title="Exporter en Excel (.xlsx)">{ICO.download}Excel</button>
-          <button type="button" onClick={exportPDF} title="Exporter en PDF">{ICO.download}PDF</button>
+        <div className="rap-pan-t"><i className="eq-ic b"><BarChart3 size={16}/></i>Résumé par statut <span>· {leads.length} dossier{leads.length > 1 ? 's' : ''}</span></div>
+        <div className="crm-exp">
+          <button type="button" className="crm-exp-btn" onClick={() => setExpOpen(o => !o)} aria-expanded={expOpen}><Download size={14}/>Exporter<ChevronDown size={13}/></button>
+          {expOpen && <div className="crm-exp-menu" onMouseLeave={() => setExpOpen(false)}>
+            <button type="button" onClick={() => { setExpOpen(false); exportExcel() }}><FileSpreadsheet size={15}/>Excel (.xlsx)</button>
+            <button type="button" onClick={() => { setExpOpen(false); exportCSV() }}><FileText size={15}/>CSV</button>
+            <button type="button" onClick={() => { setExpOpen(false); exportPDF() }}><FileDown size={15}/>PDF</button>
+          </div>}
         </div>
       </div>
       {byStatut.length === 0 ? (
@@ -2203,21 +2208,24 @@ function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
         </div>
       ) : (
         <table className="rap-tbl">
-          <thead><tr><th>Statut</th><th>Dossiers</th><th>Montant total</th><th>Score moyen</th></tr></thead>
+          <thead><tr><th>Statut</th><th>Dossiers</th><th className="r">Montant total</th><th className="r">Score moyen</th></tr></thead>
           <tbody>
-            {byStatut.map(r => (
-              <tr key={r.statut}>
-                <td><strong>{r.statut}</strong></td>
-                <td>{r.n}</td>
-                <td>{xaf(r.montant)}</td>
-                <td>{r.scoreAvg}/100</td>
-              </tr>
-            ))}
+            {byStatut.map(r => {
+              const c = STATUS_COLORS[r.statut] || { bg: '#F1F5F9', fg: '#475569' }
+              return (
+                <tr key={r.statut}>
+                  <td><span className="rap-st" style={{ background: c.bg, color: c.fg }}>{r.statut}</span></td>
+                  <td><span className="rap-n"><span className="rap-bar"><i style={{ width: `${Math.round(r.n / maxN * 100)}%` }}/></span><b>{r.n}</b></span></td>
+                  <td className="r"><b>{xaf(r.montant)}</b></td>
+                  <td className="r"><span className={`dl-sc ${r.scoreAvg >= 70 ? 'hi' : r.scoreAvg < 40 ? 'lo' : 'mid'}`}>{r.scoreAvg}</span><span className="rap-sur"> /100</span></td>
+                </tr>
+              )
+            })}
           </tbody>
         </table>
       )}
     </div>
-  </>
+  </div>
 }
 
 /* ============================================================

@@ -66,11 +66,13 @@ export const hasRefus = (l: DashboardLead) => {
 export const amount = (v: unknown) =>
   Number.isFinite(Number(v)) ? Number(v) : 0
 
+// L'espace fine insécable de fr-FR ne s'affiche pas avec toutes les polices : on la remplace.
+const espaces = (t: string) => t.replace(/[\u202F\u00A0]/g, '\u00A0')
 export const xaf = (v: number) =>
-  new Intl.NumberFormat('fr-FR').format(v) + ' XAF'
+  espaces(new Intl.NumberFormat('fr-FR').format(v)) + ' XAF'
 
 export const pct = (v: number) =>
-  new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(v) + ' %'
+  espaces(new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 1 }).format(v)) + ' %'
 
 export function raisonsNonEligibilite(l: DashboardLead): RaisonNonEligible[] {
   const raisons: RaisonNonEligible[] = []

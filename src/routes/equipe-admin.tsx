@@ -1,3 +1,5 @@
+import EquipeNav from '@/components/EquipeNav'
+import { Users, CircleCheck, Crown, UserCog } from 'lucide-react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
@@ -17,7 +19,7 @@ type Admin = {
 
 const VILLES = ['Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Ouesso', 'Owando', 'Mossendjo']
 const ROLES = [
-  { k: 'director', label: 'Directeur', color: '#1A6BFF' },
+  { k: 'director', label: 'Directeur', color: '#0D1B3E' },
   { k: 'operator', label: 'Opérateur', color: '#1A6BFF' },
   { k: 'viewer',   label: 'Lecteur',   color: '#6B7280' },
 ]
@@ -135,19 +137,12 @@ function EquipeAdminPage() {
   if (loading) return <SkeletonPage label="Chargement des administrateurs…" />
 
   return (
-    <div className="ea-root">
+    <div className="ea-root eq-page">
       <style>{CSS}</style>
 
       <header className="ea-header">
         <div className="ea-header-left">
-          <Link to="/admin" className="back-round" aria-label="Retour à l'admin">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-          </Link>
-          <nav className="ea-nav">
-            <Link to={'/candidatures' as any}>Candidatures</Link>
-            <Link to={'/equipe-commerciale' as any}>Commerciaux</Link>
-            <Link to={'/equipe-admin' as any} className="active">Admins</Link>
-          </nav>
+          <EquipeNav actif="admins"/>
         </div>
         <div className="ea-header-right">
           <h1>Équipe administration</h1>
@@ -164,10 +159,10 @@ function EquipeAdminPage() {
         )}
 
         <div className="kpi-row">
-          <div className="kpi"><div className="kpi-lbl">Total</div><div className="kpi-val">{stats.total}</div></div>
-          <div className="kpi"><div className="kpi-lbl">Actifs</div><div className="kpi-val" style={{ color: '#1A6BFF' }}>{stats.actifs}</div></div>
-          <div className="kpi"><div className="kpi-lbl">Directeurs</div><div className="kpi-val">{stats.directors}</div></div>
-          <div className="kpi"><div className="kpi-lbl">Opérateurs</div><div className="kpi-val">{stats.operators}</div></div>
+          <div className="kpi"><i className="eq-ic b"><Users size={16}/></i><div className="kpi-lbl">Total</div><div className="kpi-val">{stats.total}</div></div>
+          <div className="kpi"><i className="eq-ic g"><CircleCheck size={16}/></i><div className="kpi-lbl">Actifs</div><div className="kpi-val">{stats.actifs}</div></div>
+          <div className="kpi"><i className="eq-ic n"><Crown size={16}/></i><div className="kpi-lbl">Directeurs</div><div className="kpi-val">{stats.directors}</div></div>
+          <div className="kpi"><i className="eq-ic o"><UserCog size={16}/></i><div className="kpi-lbl">Opérateurs</div><div className="kpi-val">{stats.operators}</div></div>
         </div>
 
         <div className="toolbar">
