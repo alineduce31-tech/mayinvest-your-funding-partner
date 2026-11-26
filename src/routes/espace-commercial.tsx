@@ -10,8 +10,8 @@ import CommercialMessagerie from '@/components/CommercialMessagerie'
 import CallButton from '@/components/CallButton'
 import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
 import { RappelAlarme } from '@/components/Rappels'
-import { UserPlus, LogOut } from 'lucide-react'
-import { ETAPES, COMMISSION_PAR_DOSSIER, grouperParEtape, financesCeMois, progressionObjectif, gainsPour, tachesDuJour } from '@/lib/commercial-dashboard'
+import { UserPlus, LogOut, RefreshCw } from 'lucide-react'
+import { aJourDepuis, ETAPES, COMMISSION_PAR_DOSSIER, grouperParEtape, financesCeMois, progressionObjectif, gainsPour, tachesDuJour } from '@/lib/commercial-dashboard'
 
 export const Route = createFileRoute('/espace-commercial')({
   component: EspaceCommercialPage,
@@ -44,6 +44,7 @@ function EspaceCommercialPage() {
   const [error, setError] = useState('')
   const [tab, setTab] = useState<'dashboard' | 'leads' | 'messagerie' | 'outils'>('dashboard')
   const [openLeadId, setOpenLeadId] = useState<string | null>(null)
+  const [leadsMajA, setLeadsMajA] = useState(Date.now())
   useEffect(() => { if (tab !== 'messagerie') setOpenLeadId(null) }, [tab])
   const [unreadClients, setUnreadClients] = useState(0)
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -98,7 +99,7 @@ function EspaceCommercialPage() {
   async function loadLeads() {
     if (!session) return
     const { data } = await supabase.rpc('get_commercial_leads', { p_commercial_id: session.id })
-    if (data) setLeads(data as Lead[])
+    if (data) { setLeads(data as Lead[]); setLeadsMajA(Date.now()) }
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -255,7 +256,7 @@ function EspaceCommercialPage() {
 
             <div className={`ws-content ${tab === 'messagerie' ? 'flush' : ''}`}>
               {tab === 'dashboard' && <DashboardTab session={session} stats={stats} leads={leads} refLink={refLink} unreadClients={unreadClients} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)} onGo={setTab}/>}
-              {tab === 'leads' && <LeadsTab leads={leads} onReload={loadLeads} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)}/>}
+              {tab === 'leads' && <LeadsTab leads={leads} majA={leadsMajA} onReload={loadLeads} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)}/>}
               {tab === 'messagerie' && <CommercialMessagerie key={openLeadId || 'inbox'} commercialId={session.id} initialLeadId={openLeadId} onThreadOpen={setThreadOpen} onCountsChange={() => { loadUnreadClients(); loadUnreadChat() }}/>}
               {tab === 'outils' && <OutilsTab refCode={session.ref_code} refLink={refLink} session={session}/>}
             </div>
@@ -461,7 +462,11 @@ function KpiCard({ tone, label, value, sub, alert, onClick }: { tone?: 'primary'
 }
 
 // ============ LEADS TAB ============
-function LeadsTab({ leads, onReload, onOpenLead, onNewLead }: { leads: Lead[]; onReload: () => void; onOpenLead: (l: Lead) => void; onNewLead: () => void }) {
+function LeadsTab({ leads, majA, onReload, onOpenLead, onNewLead }: { leads: Lead[]; majA: number; onReload: () => Promise<void> | void; onOpenLead: (l: Lead) => void; onNewLead: () => void }) {
+  const [tourne, setTourne] = useState(false)
+  const [now, setNow] = useState(Date.now())
+  useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(t) }, [])
+  useEffect(() => { setNow(Date.now()) }, [majA])
   if (leads.length === 0) {
     return (
       <>
@@ -477,10 +482,17 @@ function LeadsTab({ leads, onReload, onOpenLead, onNewLead }: { leads: Lead[]; o
   return (
     <div className="section-card">
       <div className="section-head">
-        <h3>Tous tes leads</h3>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn-reload" onClick={onReload}>↻ Actualiser</button>
-          <button className="btn-primary-sm" onClick={onNewLead}>+ Nouveau lead</button>
+        <div className="lt-title">
+          <h3>Tous tes leads</h3>
+          <button className="lt-fresh" onClick={async () => { setTourne(true); await onReload(); setTimeout(() => setTourne(false), 500) }} title="Actualiser la liste">
+            <span className="lt-dot"/>à jour · {aJourDepuis(majA, now)}
+          </button>
+        </div>
+        <div className="lt-actions">
+          <button className={`btn-refresh ${tourne ? 'spin' : ''}`} onClick={async () => { setTourne(true); await onReload(); setTimeout(() => setTourne(false), 500) }} aria-label="Actualiser" title="Actualiser">
+            <RefreshCw size={16} strokeWidth={2.2}/>
+          </button>
+          <button className="btn-new-lead" onClick={onNewLead}><UserPlus size={17} strokeWidth={2.2}/>Nouveau lead</button>
         </div>
       </div>
       <div className="leads-table">
@@ -928,6 +940,17 @@ function GlobalStyles() {
       .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
       .section-head h3 { font-size: 15px; font-weight: 800; color: ${MI.navy}; margin: 0; }
       .section-sub { font-size: 11px; color: ${MI.textMuted}; }
+      .lt-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+      .lt-fresh { display: inline-flex; align-items: center; gap: 6px; border: none; background: none; padding: 2px 0; font-family: inherit; font-size: 12px; font-weight: 500; color: #94A3B8; cursor: pointer; }
+      .lt-fresh:hover { color: ${MI.blue}; }
+      .lt-dot { width: 7px; height: 7px; border-radius: 50%; background: #22C55E; box-shadow: 0 0 0 3px rgba(34,197,94,0.15); }
+      .lt-actions { display: flex; align-items: center; gap: 8px; }
+      .btn-refresh { width: 38px; height: 38px; border-radius: 50%; border: 1px solid ${MI.grayBorder}; background: #fff; color: #64748B; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: border-color .15s, color .15s; }
+      .btn-refresh:hover { border-color: #BFD4FF; color: ${MI.blue}; }
+      .btn-refresh.spin svg { animation: ltSpin .6s linear infinite; }
+      @keyframes ltSpin { to { transform: rotate(360deg); } }
+      .btn-new-lead { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px 0 14px; background: ${MI.blue}; color: #fff; border: none; border-radius: 100px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; box-shadow: 0 6px 16px rgba(26,107,255,0.25); }
+      .btn-new-lead:hover { background: ${MI.blueDark}; }
       .btn-reload { padding: 6px 12px; background: ${MI.grayHair}; color: ${MI.text}; border: 1px solid ${MI.grayBorder}; border-radius: 100px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
 
       .empty { text-align: center; padding: 30px 20px; color: ${MI.textMuted}; }

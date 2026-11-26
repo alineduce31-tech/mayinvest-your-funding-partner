@@ -70,3 +70,11 @@ export function tachesDuJour(leads: CommercialLead[], clientsEnAttente: number, 
   if (deposes > 0) t.push({ key: 'suivi', label: 'Suivre les dossiers en banque', detail: `${deposes} déposé${deposes > 1 ? 's' : ''}`, nb: deposes, cible: 'leads' })
   return t
 }
+
+/** Fraîcheur de la liste : "à l'instant", "il y a 3 min", "il y a 2 h". */
+export function aJourDepuis(majA: number, now: number): string {
+  const min = Math.floor(Math.max(0, now - majA) / 60_000)
+  if (min < 1) return "à l'instant"
+  if (min < 60) return `il y a ${min} min`
+  return `il y a ${Math.floor(min / 60)} h`
+}

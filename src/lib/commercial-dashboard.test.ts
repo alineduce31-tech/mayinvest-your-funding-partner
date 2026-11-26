@@ -70,3 +70,13 @@ describe('ma journée', () => {
     expect(tachesDuJour([], 0, now)).toEqual([])
   })
 })
+
+describe('fraîcheur de la liste', () => {
+  test('libellés selon l\'ancienneté', async () => {
+    const { aJourDepuis } = await import('./commercial-dashboard')
+    const t = 1_800_000_000_000
+    expect(aJourDepuis(t, t + 20_000)).toBe("à l'instant")
+    expect(aJourDepuis(t, t + 3 * 60_000)).toBe('il y a 3 min')
+    expect(aJourDepuis(t, t + 125 * 60_000)).toBe('il y a 2 h')
+  })
+})
