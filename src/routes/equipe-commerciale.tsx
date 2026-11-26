@@ -97,7 +97,7 @@ function EquipeCommercialePage() {
         .ec-nav { display: flex; gap: 6px; }
         .ec-nav a { padding: 7px 14px; border-radius: 100px; font-size: 12px; font-weight: 600; color: #6B7280; text-decoration: none; }
         .ec-nav a:hover { background: #F3F3F1; color: #111827; }
-        .ec-nav a.active { background: #0F6E3E; color: #fff; }
+        .ec-nav a.active { background: #1A6BFF; color: #fff; }
 
         .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 32px; }
         @media (max-width: 640px) { .wrap { padding: 20px 16px; } .ec-header { padding: 14px 16px; } }
@@ -110,22 +110,22 @@ function EquipeCommercialePage() {
 
         .toolbar { background: #fff; border: 1px solid #ECECEA; border-radius: 12px; padding: 10px 14px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
         .toolbar input { flex: 1; min-width: 180px; padding: 9px 13px; background: #F9FAFB; border: 1px solid #ECECEA; border-radius: 10px; font-size: 12.5px; font-family: inherit; color: #111827; }
-        .toolbar input:focus { outline: none; border-color: #0F6E3E; background: #fff; box-shadow: 0 0 0 3px rgba(15,110,62,0.1); }
+        .toolbar input:focus { outline: none; border-color: #1A6BFF; background: #fff; box-shadow: 0 0 0 3px rgba(26,107,255,0.1); }
 
         /* === FilterSelect (custom dropdown) === */
         .fs-wrap { position: relative; }
         .fs-btn { padding: 9px 12px 9px 14px; background: #F9FAFB; border: 1px solid #ECECEA; border-radius: 10px; font-size: 12.5px; font-family: inherit; color: #111827; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; min-width: 150px; justify-content: space-between; transition: all 0.15s; font-weight: 500; }
         .fs-btn:hover { background: #fff; border-color: #D1D5DB; }
-        .fs-btn.open { background: #fff; border-color: #0F6E3E; box-shadow: 0 0 0 3px rgba(15,110,62,0.1); }
+        .fs-btn.open { background: #fff; border-color: #1A6BFF; box-shadow: 0 0 0 3px rgba(26,107,255,0.1); }
         .fs-lbl { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .fs-chev { color: #6B7280; transition: transform 0.2s; flex-shrink: 0; }
-        .fs-btn.open .fs-chev { transform: rotate(180deg); color: #0F6E3E; }
+        .fs-btn.open .fs-chev { transform: rotate(180deg); color: #1A6BFF; }
 
         .fs-panel { position: absolute; top: calc(100% + 6px); left: 0; min-width: 100%; background: #fff; border: 1px solid #ECECEA; border-radius: 12px; box-shadow: 0 20px 40px rgba(13,23,41,0.12), 0 2px 6px rgba(13,23,41,0.05); padding: 6px; z-index: 50; max-height: 320px; overflow-y: auto; animation: fsFadeIn 0.14s ease; }
         @keyframes fsFadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
         .fs-opt { padding: 9px 12px; border-radius: 8px; cursor: pointer; font-size: 13px; color: #111827; display: flex; align-items: center; justify-content: space-between; gap: 10px; white-space: nowrap; }
-        .fs-opt:hover { background: #E6F2EB; color: #0A4E2C; }
-        .fs-opt.selected { background: #E6F2EB; color: #0F6E3E; font-weight: 700; }
+        .fs-opt:hover { background: #EAF1FF; color: #0D1B3E; }
+        .fs-opt.selected { background: #EAF1FF; color: #1A6BFF; font-weight: 700; }
 
         /* Flèche de tri propre (remplace le ↓ Unicode moche) */
         .sort-lbl { display: inline-flex; align-items: center; gap: 6px; }
@@ -149,7 +149,7 @@ function EquipeCommercialePage() {
         .row-name small { font-size: 11px; color: #6B7280; display: block; margin-top: 1px; }
         .row-ville { color: #374151; font-weight: 500; }
         .row-count { font-weight: 700; font-variant-numeric: tabular-nums; color: #0F1729; }
-        .row-finance { font-weight: 700; font-variant-numeric: tabular-nums; color: #0F6E3E; }
+        .row-finance { font-weight: 700; font-variant-numeric: tabular-nums; color: #1A6BFF; }
         .row-gains { font-weight: 700; font-variant-numeric: tabular-nums; color: #111827; text-align: right; }
         .row-action { text-align: right; }
         .btn-deact { background: #FEE2E2; color: #B42318; border: 1px solid #FCA5A5; border-radius: 100px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
@@ -244,7 +244,7 @@ function EquipeCommercialePage() {
                 <div className="row-finance">{c.dossiers_finances}</div>
                 <div className="row-gains">
                   {xaf(c.gains_total_xaf)}
-                  {c.gains_mois_xaf > 0 && <><br/><small style={{ fontSize: 10, color: '#0F6E3E', fontWeight: 500 }}>+{xaf(c.gains_mois_xaf)} ce mois</small></>}
+                  {c.gains_mois_xaf > 0 && <><br/><small style={{ fontSize: 10, color: '#1A6BFF', fontWeight: 500 }}>+{xaf(c.gains_mois_xaf)} ce mois</small></>}
                 </div>
                 <div className="row-action">
                   <button className="btn-deact" onClick={() => setDeactivateModal(c)}>Désactiver</button>

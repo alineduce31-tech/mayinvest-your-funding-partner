@@ -24,9 +24,9 @@
   --mi-hairline: #F3F3F1;
 
   /* Signature Mayinvest */
-  --mi-primary: #0F6E3E;        /* vert Mayinvest */
-  --mi-primary-dark: #0A4E2C;
-  --mi-primary-soft: #E6F2EB;
+  --mi-primary: #1A6BFF;        /* bleu Mayinvest */
+  --mi-primary-dark: #0D1B3E;
+  --mi-primary-soft: #EAF1FF;
 
   --mi-gold: #B4871F;            /* or/ambre Mayinvest */
   --mi-gold-dark: #8A6617;
@@ -153,7 +153,7 @@
   transition: background .15s ease;
   box-shadow: none !important;
 }
-.sd-chip-action:hover { background: #D5E8DD; }
+.sd-chip-action:hover { background: #D6E4FF; }
 .sd-chip-action svg { transition: transform .15s ease; }
 .sd-chip-action:hover svg { transform: translate(1px, -1px); }
 
@@ -2022,3 +2022,22 @@ button:active, .lap-btn:active {
 .crm-stats.crm-v2 .pill.warn { background: #FFF3E0; color: #C2410C; }
 .crm-stats.crm-v2 .pill.warn b { color: #C2410C; }
 .crm-stats.crm-v2 span.pill { cursor: default; }
+
+/* Répartitions (Segments, Rapports) · style Apple */
+.rep-grid { gap: 14px; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; }
+.rep-panel { background: #fff; border: none; border-radius: 18px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.rep-panel-head { padding: 16px 20px; border-bottom: 1px solid #F0F0F2; gap: 10px; }
+.rep-panel-ico { width: 32px; height: 32px; border-radius: 10px; background: #EAF1FF; color: #1A6BFF; }
+.rep-panel-title { font-size: 14px; font-weight: 600; color: #1D1D1F; }
+.rep-donut-wrap { padding: 22px 20px 20px; gap: 18px; }
+.rep-donut { width: 140px; height: 140px; }
+.rep-donut svg { width: 140px; height: 140px; }
+.rep-donut-num { font-size: 28px; color: #1D1D1F; }
+.rep-donut-cap { font-size: 11px; letter-spacing: 0; text-transform: none; color: #86868B; font-weight: 500; }
+.rep-legend { gap: 0; }
+.rep-legend-row { font-size: 13px; padding: 8px 0; border-top: 1px solid #F5F5F7; gap: 10px; }
+.rep-legend-row:first-child { border-top: none; }
+.rep-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+.rep-legend-lbl { color: #1D1D1F; }
+.rep-legend-pct { color: #86868B; font-size: 12px; font-variant-numeric: tabular-nums; min-width: 38px; text-align: right; }
+.rep-legend-val { color: #1D1D1F; font-weight: 600; min-width: 22px; text-align: right; }

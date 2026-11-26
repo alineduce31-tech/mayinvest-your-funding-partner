@@ -14,7 +14,7 @@ import React from 'react'
 type Variant = 'admin' | 'dashboard' | 'list' | 'form'
 
 type Props = {
-  /** Texte au bas de la page, à côté du pulse vert Mayinvest */
+  /** Texte au bas de la page, à côté du pulse bleu Mayinvest */
   label?: string
   /** Mise en page du skeleton — 'admin' par défaut (topbar + KPIs + liste) */
   variant?: Variant
@@ -22,8 +22,8 @@ type Props = {
   rows?: number
 }
 
-const MI_GREEN = '#0F6E3E'
-const MI_GREEN_SOFT = '#E6F2EB'
+const MI_BLUE = '#1A6BFF'
+const MI_BLUE_SOFT = '#EAF1FF'
 const BG = '#FAFAF8'
 const CARD = '#FFFFFF'
 const HAIRLINE = '#F3F3F1'
@@ -53,12 +53,12 @@ const CSS = `
   .skp-logo-mark {
     width: 32px; height: 32px;
     border-radius: 8px;
-    background: ${MI_GREEN_SOFT};
+    background: ${MI_BLUE_SOFT};
     display: inline-flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
   .skp-logo-dot {
-    width: 7px; height: 7px; border-radius: 50%; background: ${MI_GREEN};
+    width: 7px; height: 7px; border-radius: 50%; background: ${MI_BLUE};
     animation: skp-pulse 1.4s infinite ease-in-out;
   }
   .skp-nav { display: flex; gap: 8px; }
@@ -96,7 +96,7 @@ const CSS = `
     flex-shrink: 0;
   }
   .skp-list-lines { flex: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0; }
-  .skp-score-chip { width: 48px; height: 18px; background: ${MI_GREEN_SOFT}; border-radius: 6px; flex-shrink: 0; }
+  .skp-score-chip { width: 48px; height: 18px; background: ${MI_BLUE_SOFT}; border-radius: 6px; flex-shrink: 0; }
 
   .skp-form-field { background: ${CARD}; border: 1px solid ${HAIRLINE}; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; }
 
@@ -114,7 +114,7 @@ const CSS = `
   }
   .skp-overlay-dot {
     width: 7px; height: 7px; border-radius: 50%;
-    background: ${MI_GREEN};
+    background: ${MI_BLUE};
     animation: skp-pulse 1.4s infinite ease-in-out;
   }
 `

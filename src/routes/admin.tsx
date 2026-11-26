@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Download, FileSpreadsheet, FileDown, UserPlus, LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
+import { MapPin, Download, FileSpreadsheet, FileDown, UserPlus, LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
@@ -820,7 +820,7 @@ function Admin({ session }: { session: any }) {
           background: transparent; border: none; cursor: pointer; border-bottom: 2px solid transparent;
           font-family: inherit; transition: all 0.15s; }
         .dr-tab:hover { color: var(--ink); }
-        .dr-tab.on { color: var(--primary, #0F6E3E); border-color: var(--primary, #0F6E3E); }
+        .dr-tab.on { color: var(--primary, #1A6BFF); border-color: var(--primary, #1A6BFF); }
         .dr-body { padding: 20px 28px 40px; }
 
         /* BODY B — dense liste 2 colonnes clé→valeur */
@@ -871,7 +871,7 @@ function Admin({ session }: { session: any }) {
           min-width: 0;
         }
         .dr-meta-score strong {
-          font-size: 16px; font-weight: 700; color: var(--primary, #0F6E3E);
+          font-size: 16px; font-weight: 700; color: var(--primary, #1A6BFF);
           font-variant-numeric: tabular-nums;
         }
         .dr-meta-score small {
@@ -919,7 +919,7 @@ function Admin({ session }: { session: any }) {
           transition: color .15s ease, background .15s ease, border-color .15s ease;
         }
         .dr-contact-btn svg { display: block; }
-        .dr-contact-btn.phone:hover { color: #0F6E3E !important; border-color: #0F6E3E !important; background: #E6F2EB !important; }
+        .dr-contact-btn.phone:hover { color: #1A6BFF !important; border-color: #1A6BFF !important; background: #EAF1FF !important; }
         .dr-contact-btn.mail:hover  { color: #1E4FA3 !important; border-color: #1E4FA3 !important; background: #E8EEF9 !important; }
         .dr-contact-btn.chat:hover  { color: #8A6617 !important; border-color: #B4871F !important; background: #FBF2DC !important; }
 
@@ -1650,7 +1650,7 @@ function LeadsTable({ leads, msgCounts, onOpen, agentEmailById, isDirector, upda
                   <td className="lt-td" onClick={e => e.stopPropagation()}>
                     <NiceSelect variant="compact" value={l.agent_commercial_id || ''} onChange={v => assignLead(l.id, v || null)}
                       title="Assigner ce lead" ariaLabel="Assigner ce lead"
-                      style={{ border: '1px solid transparent', background: 'transparent', padding: '4px 6px 4px 8px', borderRadius: 6, color: l.agent_commercial_id ? '#0F6E3E' : '#B45309', maxWidth: 130 }}
+                      style={{ border: '1px solid transparent', background: 'transparent', padding: '4px 6px 4px 8px', borderRadius: 6, color: l.agent_commercial_id ? '#1A6BFF' : '#B45309', maxWidth: 130 }}
                       options={[{ value: '', label: 'Non assigné' }, ...(teamMembers || []).filter((m: any) => m.role === 'commercial').map((m: any) => ({ value: m.id, label: m.email.split('@')[0] }))]}/>
                   </td>
                 )}
@@ -1980,18 +1980,18 @@ function StatusSelect({ value, onChange, size = 'md' }: { value: string; onChang
                     style={{
                       display: 'flex', alignItems: 'flex-start', gap: 10,
                       padding: '9px 12px', borderRadius: 7, cursor: 'pointer',
-                      background: sel ? '#E6F2EB' : 'transparent',
+                      background: sel ? '#EAF1FF' : 'transparent',
                     }}
                     onMouseOver={e => { if (!sel) e.currentTarget.style.background = '#F3F3F1' }}
-                    onMouseOut={e => { e.currentTarget.style.background = sel ? '#E6F2EB' : 'transparent' }}
+                    onMouseOut={e => { e.currentTarget.style.background = sel ? '#EAF1FF' : 'transparent' }}
                   >
                     <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: it.dot, marginTop: 5, flexShrink: 0 }}/>
                     <span style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: sel ? 600 : 500, color: sel ? '#0F6E3E' : '#111827', lineHeight: 1.3, wordBreak: 'break-word' }}>{it.k}</div>
+                      <div style={{ fontSize: 13, fontWeight: sel ? 600 : 500, color: sel ? '#1A6BFF' : '#111827', lineHeight: 1.3, wordBreak: 'break-word' }}>{it.k}</div>
                       <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2, lineHeight: 1.3, wordBreak: 'break-word' }}>{it.sub}</div>
                     </span>
                     {sel && (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F6E3E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 3, flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A6BFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 3, flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
                     )}
                   </div>
                 )
@@ -2036,7 +2036,7 @@ function LeadRow({ lead, msgCount, onOpen, updateStatut, agentName }: any) {
 }
 
 // Palette Mayinvest pour les donuts (5 segments, le 6e = "Autres" en gris)
-const DONUT_PALETTE = ['#0F6E3E', '#5FA381', '#B4871F', '#D6B672', '#1E4FA3', '#9CA3AF']
+const DONUT_PALETTE = ['#1A6BFF', '#0D1B3E', '#6AA2FF', '#41557F', '#B5CFFF', '#C7C7CC']
 
 function SegmentsView({ leads }: any) {
   const bySecteur = useMemo(() => {
@@ -2050,13 +2050,13 @@ function SegmentsView({ leads }: any) {
     return Object.entries(m).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: k, value: v as number }))
   }, [leads])
   const byMontant = useMemo(() => {
-    const tranches = [{ k: '< 1M', min: 0, max: 1_000_000 }, { k: '1M–5M', min: 1_000_000, max: 5_000_000 }, { k: '5M–20M', min: 5_000_000, max: 20_000_000 }, { k: '20M+', min: 20_000_000, max: Infinity }]
+    const tranches = [{ k: 'Moins de 1 M', min: 0, max: 1_000_000 }, { k: '1 à 5 M', min: 1_000_000, max: 5_000_000 }, { k: '5 à 20 M', min: 5_000_000, max: 20_000_000 }, { k: 'Plus de 20 M', min: 20_000_000, max: Infinity }]
     return tranches.map(t => ({ label: t.k, value: leads.filter((l: any) => (l.montant_demande || 0) >= t.min && (l.montant_demande || 0) < t.max).length }))
   }, [leads])
   const SICONS = {
-    sector: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>,
-    city: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>,
-    amount: <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>,
+    sector: <Briefcase size={16} strokeWidth={1.8}/>,
+    city: <MapPin size={16} strokeWidth={1.8}/>,
+    amount: <Coins size={16} strokeWidth={1.8}/>,
   }
   return (
     <div className="rep-grid">
@@ -2081,9 +2081,12 @@ function Panel({ title, children, icon }: { title: string; children: React.React
 
 function Donut({ items, capLabel }: { items: { label: string; value: number }[]; capLabel: string }) {
   // Regroupe à partir du 6e en "Autres"
+  // « Autre » saisi par le client et le surplus sont réunis dans une seule ligne « Autres ».
+  const estAutre = (l: string) => /^autres?$/i.test(String(l).trim())
+  const propres = items.filter(i => !estAutre(i.label))
   const topN = 5
-  const sliced = items.slice(0, topN)
-  const rest = items.slice(topN).reduce((s, i) => s + i.value, 0)
+  const sliced = propres.slice(0, topN)
+  const rest = propres.slice(topN).reduce((s, i) => s + i.value, 0) + items.filter(i => estAutre(i.label)).reduce((s, i) => s + i.value, 0)
   const display = rest > 0 ? [...sliced, { label: 'Autres', value: rest }] : sliced
   const total = display.reduce((s, i) => s + i.value, 0)
 
@@ -2106,7 +2109,7 @@ function Donut({ items, capLabel }: { items: { label: string; value: number }[];
         key={item.label}
         cx="60" cy="60" r="48" fill="none"
         stroke={DONUT_PALETTE[i % DONUT_PALETTE.length]}
-        strokeWidth="14"
+        strokeWidth="12"
         strokeDasharray={`${len} ${C}`}
         strokeDashoffset={-offset}
       />
@@ -2119,7 +2122,7 @@ function Donut({ items, capLabel }: { items: { label: string; value: number }[];
     <div className="rep-donut-wrap">
       <div className="rep-donut">
         <svg width="120" height="120" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)' }}>
-          <circle cx="60" cy="60" r="48" fill="none" stroke="var(--mi-hairline)" strokeWidth="14"/>
+          <circle cx="60" cy="60" r="48" fill="none" stroke="#F0F0F2" strokeWidth="12"/>
           {segments}
         </svg>
         <div className="rep-donut-center">
@@ -2132,6 +2135,7 @@ function Donut({ items, capLabel }: { items: { label: string; value: number }[];
           <div key={item.label} className="rep-legend-row">
             <span className="rep-legend-dot" style={{ background: DONUT_PALETTE[i % DONUT_PALETTE.length] }}/>
             <span className="rep-legend-lbl" title={item.label}>{item.label}</span>
+            <span className="rep-legend-pct">{Math.round(item.value / total * 100)} %</span>
             <span className="rep-legend-val">{item.value}</span>
           </div>
         ))}

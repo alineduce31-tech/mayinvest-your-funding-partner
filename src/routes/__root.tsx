@@ -12,9 +12,9 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
-const MI_GREEN = "#0F6E3E";
-const MI_GREEN_DARK = "#0A4E2C";
-const MI_GREEN_SOFT = "#E6F2EB";
+const MI_BLUE = "#1A6BFF";
+const MI_BLUE_DARK = "#0D1B3E";
+const MI_BLUE_SOFT = "#EAF1FF";
 const MI_GOLD = "#B4871F";
 const MI_GOLD_SOFT = "#FBF2DC";
 
@@ -100,7 +100,7 @@ function NotFoundComponent() {
         .mi-404-logo-mark {
           width: 28px; height: 28px;
           border-radius: 8px;
-          background: ${MI_GREEN};
+          background: ${MI_BLUE};
           color: white;
           display: inline-flex; align-items: center; justify-content: center;
           font-weight: 800; font-size: 13px;
@@ -141,7 +141,7 @@ function NotFoundComponent() {
           font-variant-numeric: tabular-nums;
         }
         .mi-404-big .n.mid {
-          color: ${MI_GREEN};
+          color: ${MI_BLUE};
           position: relative;
         }
         .mi-404-big .n.mid::after {
@@ -149,7 +149,7 @@ function NotFoundComponent() {
           position: absolute;
           left: 10%; right: 10%; bottom: 10px;
           height: 8px;
-          background: ${MI_GREEN_SOFT};
+          background: ${MI_BLUE_SOFT};
           z-index: -1;
           border-radius: 2px;
         }
@@ -198,15 +198,15 @@ function NotFoundComponent() {
           box-shadow: 0 1px 2px rgba(17, 24, 39, 0.03);
         }
         .mi-404-link:hover {
-          border-color: ${MI_GREEN};
+          border-color: ${MI_BLUE};
           transform: translateY(-1px);
-          box-shadow: 0 6px 16px rgba(15,110,62,0.1);
+          box-shadow: 0 6px 16px rgba(26,107,255,0.1);
         }
         .mi-404-link-ic {
           width: 34px; height: 34px;
           border-radius: 9px;
-          background: ${MI_GREEN_SOFT};
-          color: ${MI_GREEN};
+          background: ${MI_BLUE_SOFT};
+          color: ${MI_BLUE};
           display: inline-flex; align-items: center; justify-content: center;
           flex-shrink: 0;
         }
@@ -233,15 +233,15 @@ function NotFoundComponent() {
           text-align: left;
           font-family: inherit;
           transition: all 0.15s;
-          background: ${MI_GREEN};
+          background: ${MI_BLUE};
           color: white;
-          box-shadow: 0 6px 18px rgba(15,110,62,0.25);
+          box-shadow: 0 6px 18px rgba(26,107,255,0.25);
           text-decoration: none;
         }
         .mi-404-home:hover {
-          background: ${MI_GREEN_DARK};
+          background: ${MI_BLUE_DARK};
           transform: translateY(-1px);
-          box-shadow: 0 8px 22px rgba(15,110,62,0.32);
+          box-shadow: 0 8px 22px rgba(26,107,255,0.32);
         }
         .mi-404-home-ic,
         .mi-404-home-ar {

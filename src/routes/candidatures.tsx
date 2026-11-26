@@ -131,26 +131,26 @@ function CandidaturesPage() {
 
         .cd-tabs { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
         .cd-tab { padding: 8px 14px; background: #FFFFFF; border: 1px solid #ECECEA; border-radius: 999px; cursor: pointer; font-size: 12px; font-weight: 600; color: #6B7280; font-family: inherit; }
-        .cd-tab.active { background: #0F6E3E; color: white; border-color: #0F6E3E; }
+        .cd-tab.active { background: #1A6BFF; color: white; border-color: #1A6BFF; }
         .cd-tab-count { margin-left: 6px; font-weight: 700; opacity: 0.8; }
 
         .cd-list { background: white; border: 1px solid #ECECEA; border-radius: 12px; overflow: hidden; }
         .cd-row { display: grid; grid-template-columns: 1fr 100px 90px 100px 80px; align-items: center; gap: 12px; padding: 14px 18px; border-bottom: 1px solid #F3F3F1; cursor: pointer; transition: background 0.1s; }
         @media (max-width: 720px) { .cd-row { grid-template-columns: 1fr 70px 70px; } .cd-row .hide-mobile { display: none; } }
-        .cd-row:hover { background: #E6F2EB; }
-        .cd-row.selected { background: #E6F2EB; }
+        .cd-row:hover { background: #EAF1FF; }
+        .cd-row.selected { background: #EAF1FF; }
         .cd-row:last-child { border-bottom: none; }
         .cd-row-name { display: flex; align-items: center; gap: 10px; }
         .cd-ava { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #2361EF, #7C3AED); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
         .cd-row-name strong { font-size: 13px; font-weight: 700; color: #111827; display: block; }
         .cd-row-name small { font-size: 11px; color: #6B7280; display: block; margin-top: 1px; }
         .cd-score { font-size: 15px; font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; }
-        .cd-score.hi { color: #0F6E3E; }
+        .cd-score.hi { color: #1A6BFF; }
         .cd-score.mid { color: #B4871F; }
         .cd-score.lo { color: #B42318; }
         .cd-score small { font-size: 10px; color: #9CA3AF; font-weight: 500; display: block; margin-top: 1px; }
         .cd-time { font-size: 11px; color: #6B7280; text-align: center; font-variant-numeric: tabular-nums; font-weight: 600; }
-        .cd-time.fast { color: #0F6E3E; }
+        .cd-time.fast { color: #1A6BFF; }
         .cd-time.slow { color: #B4871F; }
         .cd-status { padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; text-align: center; white-space: nowrap; }
         .cd-status.pending { background: #FEF3C7; color: #92400E; }
@@ -162,7 +162,7 @@ function CandidaturesPage() {
         .cd-status.encours.simu-prat { background: #BAE6FD; color: #075985; }
 
         .cd-notify-btn { background: #F3F3F1; border: 1px solid #E5E7EB; width: 28px; height: 28px; border-radius: 50%; color: #6B7280; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: all 0.15s; flex-shrink: 0; }
-        .cd-notify-btn:hover { background: #0F6E3E; color: white; border-color: #0F6E3E; transform: translateY(-1px); }
+        .cd-notify-btn:hover { background: #1A6BFF; color: white; border-color: #1A6BFF; transform: translateY(-1px); }
 
         .cd-empty { padding: 60px 20px; text-align: center; color: #6B7280; font-size: 13px; }
 
@@ -170,7 +170,7 @@ function CandidaturesPage() {
         .cd-panel { background: white; border: 1px solid #ECECEA; border-radius: 20px; padding: 0; overflow: hidden; height: fit-content; position: sticky; top: 90px; box-shadow: 0 20px 40px rgba(13,23,41,0.08); }
 
         /* === HEADER VERT MAYINVEST === */
-        .cd-panel-head { padding: 22px 24px 24px; background: linear-gradient(135deg, #0F6E3E 0%, #0A4E2C 100%); color: white; position: relative; }
+        .cd-panel-head { padding: 22px 24px 24px; background: linear-gradient(135deg, #1A6BFF 0%, #0D1B3E 100%); color: white; position: relative; }
         .cd-panel-head-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
         .cd-panel-ref { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.75; font-weight: 700; }
         .cd-panel-close { background: rgba(255,255,255,0.15); border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white; transition: background 0.15s; }
@@ -178,7 +178,7 @@ function CandidaturesPage() {
 
         .cd-identity { display: flex; align-items: center; gap: 18px; }
         .cd-ring { position: relative; width: 78px; height: 78px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .cd-ring-inner { width: 66px; height: 66px; background: #0A4E2C; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .cd-ring-inner { width: 66px; height: 66px; background: #0D1B3E; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         .cd-ring-num { font-size: 22px; font-weight: 800; color: white; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
         .cd-ring-lbl { font-size: 8px; color: rgba(255,255,255,0.75); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 700; margin-top: 2px; }
         .cd-identity-info { flex: 1; min-width: 0; }
@@ -188,7 +188,7 @@ function CandidaturesPage() {
         .cd-identity-info .meta span:first-child::before { content: ''; margin: 0; }
 
         /* === VERDICT === */
-        .cd-verdict { padding: 14px 24px; background: #E6F2EB; border-bottom: 1px solid #ECECEA; font-size: 13px; color: #0A4E2C; line-height: 1.5; display: flex; align-items: flex-start; gap: 10px; }
+        .cd-verdict { padding: 14px 24px; background: #EAF1FF; border-bottom: 1px solid #ECECEA; font-size: 13px; color: #0D1B3E; line-height: 1.5; display: flex; align-items: flex-start; gap: 10px; }
         .cd-verdict svg { flex-shrink: 0; margin-top: 2px; }
         .cd-verdict b { font-weight: 700; }
         .cd-verdict.warn { background: #FEF3C7; color: #92400E; }
@@ -218,7 +218,7 @@ function CandidaturesPage() {
         .cd-break-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 12px; }
         .cd-break-row b { font-weight: 700; color: #111827; font-variant-numeric: tabular-nums; }
         .cd-break-row .pts { font-weight: 700; font-variant-numeric: tabular-nums; }
-        .cd-break-row .pts.hi { color: #0F6E3E; }
+        .cd-break-row .pts.hi { color: #1A6BFF; }
         .cd-break-row .pts.mid { color: #B4871F; }
         .cd-break-row .pts.lo { color: #B42318; }
         .cd-break-time { font-size: 10px; color: #9CA3AF; margin-left: 8px; font-weight: 500; }
@@ -238,8 +238,8 @@ function CandidaturesPage() {
         .cd-btn-ic { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.18); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .cd-btn-tx { flex: 1; }
         .cd-btn-ar { width: 24px; height: 24px; border-radius: 50%; background: rgba(255,255,255,0.18); display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .cd-btn-val { background: #0F6E3E; color: white; box-shadow: 0 6px 18px rgba(15,110,62,0.25); }
-        .cd-btn-val:hover { background: #0A4E2C; transform: translateY(-1px); box-shadow: 0 8px 22px rgba(15,110,62,0.32); }
+        .cd-btn-val { background: #1A6BFF; color: white; box-shadow: 0 6px 18px rgba(26,107,255,0.25); }
+        .cd-btn-val:hover { background: #0D1B3E; transform: translateY(-1px); box-shadow: 0 8px 22px rgba(26,107,255,0.32); }
         .cd-btn-ref { background: transparent; color: #B42318; border: 1.5px solid #ECECEA; }
         .cd-btn-ref .cd-btn-ic { background: #FEE2E2; }
         .cd-btn-ref .cd-btn-ar { background: #F3F3F1; }
@@ -263,7 +263,7 @@ function CandidaturesPage() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
           </Link>
           <nav style={{ display: 'flex', gap: 6 }}>
-            <Link to={'/candidatures' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, textDecoration: 'none', background: '#0F6E3E', color: '#fff' }}>Candidatures</Link>
+            <Link to={'/candidatures' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, textDecoration: 'none', background: '#1A6BFF', color: '#fff' }}>Candidatures</Link>
             <Link to={'/equipe-commerciale' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, color: '#6B7280', textDecoration: 'none' }}>Commerciaux</Link>
             <Link to={'/equipe-admin' as any} style={{ padding: '7px 14px', borderRadius: 100, fontSize: 12, fontWeight: 600, color: '#6B7280', textDecoration: 'none' }}>Admins</Link>
           </nav>
@@ -461,7 +461,7 @@ function CandidaturesPage() {
                 </div>
               )}
               {selected.status === 'valide' && selected.activated_at && (
-                <div style={{ margin: '0 24px 22px', padding: 14, background: '#D1FAE5', borderLeft: '3px solid #0F6E3E', borderRadius: '0 10px 10px 0', fontSize: 12, color: '#065F46', display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ margin: '0 24px 22px', padding: 14, background: '#EAF1FF', borderLeft: '3px solid #1A6BFF', borderRadius: '0 10px 10px 0', fontSize: 12, color: '#065F46', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                   Compte activé le {new Date(selected.activated_at).toLocaleDateString('fr-FR')}
                 </div>
@@ -613,18 +613,18 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
         .nmodal-tpls { display: flex; flex-wrap: wrap; gap: 6px; }
         .nmodal-tpl { padding: 8px 14px; background: #F3F3F1; border: 1px solid transparent; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: #6B7280; cursor: pointer; font-family: inherit; transition: all 0.15s; }
         .nmodal-tpl:hover { background: #ECECEA; color: #0F1729; }
-        .nmodal-tpl.active { background: #0F6E3E; color: white; border-color: #0F6E3E; box-shadow: 0 4px 10px rgba(15,110,62,0.2); }
+        .nmodal-tpl.active { background: #1A6BFF; color: white; border-color: #1A6BFF; box-shadow: 0 4px 10px rgba(26,107,255,0.2); }
 
         .nmodal-input { width: 100%; padding: 11px 14px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; font-size: 13px; font-family: inherit; color: #0F1729; }
-        .nmodal-input:focus { outline: none; border-color: #0F6E3E; box-shadow: 0 0 0 3px rgba(15,110,62,0.12); }
+        .nmodal-input:focus { outline: none; border-color: #1A6BFF; box-shadow: 0 0 0 3px rgba(26,107,255,0.12); }
         .nmodal-textarea { width: 100%; padding: 12px 14px; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; font-size: 13px; font-family: inherit; color: #0F1729; line-height: 1.5; resize: vertical; min-height: 180px; }
-        .nmodal-textarea:focus { outline: none; border-color: #0F6E3E; box-shadow: 0 0 0 3px rgba(15,110,62,0.12); }
+        .nmodal-textarea:focus { outline: none; border-color: #1A6BFF; box-shadow: 0 0 0 3px rgba(26,107,255,0.12); }
 
         .nmodal-actions { padding: 16px 24px 20px; display: flex; gap: 10px; justify-content: flex-end; background: #FAFAF8; border-top: 1px solid #F3F3F1; flex-wrap: wrap; }
         .nmodal-btn-sec { padding: 11px 18px; background: #fff; color: #6B7280; border: 1.5px solid #E5E7EB; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; }
         .nmodal-btn-sec:hover { background: #F3F3F1; color: #0F1729; }
-        .nmodal-btn-pri { padding: 11px 22px; background: #0F6E3E; color: white; border: none; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 6px 16px rgba(15,110,62,0.25); }
-        .nmodal-btn-pri:hover { background: #0A4E2C; transform: translateY(-1px); }
+        .nmodal-btn-pri { padding: 11px 22px; background: #1A6BFF; color: white; border: none; border-radius: 999px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 6px 16px rgba(26,107,255,0.25); }
+        .nmodal-btn-pri:hover { background: #0D1B3E; transform: translateY(-1px); }
       `}</style>
     </div>
   )
