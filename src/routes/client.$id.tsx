@@ -1094,7 +1094,7 @@ function ClientPortal() {
             <div className="c-msg-scroll">
               <Conversation viewer="client" docs={documents} bulles={regrouper(messages.map(vueClient), Date.now())}
                 onUploadDoc={uploadDocument} uploadingDocId={uploadingDocType || null} onRepondreRdv={repondreRdv}
-                vide={<>Aucun message pour le moment.<br/>Écrivez votre premier message à votre conseiller !</>}/>
+                vide={<><span className="cx-vide-ic"><MessageCircle size={22}/></span><b>{nomConseiller ? `Écrivez à ${conseiller?.prenom || 'votre conseiller'}` : 'Écrivez à l\'équipe Mayinvest'}</b><span>Posez votre question ou envoyez un document. Réponse en général sous 24\u00a0h.</span></>}/>
               <div ref={chatEnd}/>
             </div>
 
@@ -1267,6 +1267,9 @@ const CX_CSS = `
   .cx-out:hover { background: #E8E8ED; }
   @media (max-width: 640px) { .cx-out { width: 38px; padding: 0; justify-content: center; } .cx-out span { display: none; } }
   .cx-cherche { background: #F5F5F7; color: #86868B; }
+  .cx .cv-vide { display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 300px; padding: 48px 16px; color: #86868B; font-size: 13.5px; line-height: 1.5; text-wrap: balance; }
+  .cx .cv-vide b { color: #1D1D1F; font-size: 16px; font-weight: 600; }
+  .cx-vide-ic { width: 52px; height: 52px; border-radius: 16px; background: #EAF1FF; color: #1A6BFF; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px; }
   .cx .c-msg-head.cx-mh { background: #fff !important; color: #1D1D1F; border-bottom: 1px solid #F0F0F2; display: flex; align-items: center; gap: 10px; padding: 10px 12px !important; }
   .cx-mh-av { position: relative; }
   .cx-mh-av i { position: absolute; right: 0; bottom: 0; width: 10px; height: 10px; border-radius: 50%; background: #22C55E; border: 2px solid #fff; }
@@ -1281,7 +1284,7 @@ const CX_CSS = `
   .cx-op span:last-child { display: flex; flex-direction: column; } .cx-op b { font-size: 14px; font-weight: 600; } .cx-op small { font-size: 12px; color: #86868B; }
   .cx-annuler { width: 100%; margin-top: 8px; padding: 11px; border: none; border-radius: 14px; background: #fff; color: #1A6BFF; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
   .cx .c-msg-input-bar { background: #fff; align-items: center; gap: 8px; }
-  .cx .cv-input { background: #F5F5F7; border-radius: 999px; }
+
   .cx .cv-input textarea { scrollbar-width: none; }
   .cx .cv-input textarea::-webkit-scrollbar { display: none; }
 `

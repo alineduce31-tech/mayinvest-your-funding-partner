@@ -166,8 +166,8 @@ export function ChatInput({ value, onChange, onSend, placeholder, disabled, send
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    el.style.height = 'auto'
-    el.style.height = `${Math.min(el.scrollHeight, 140)}px`
+    el.style.height = '36px'
+    el.style.height = `${Math.min(Math.max(el.scrollHeight, 36), 140)}px`
     el.style.overflowY = el.scrollHeight > 140 ? 'auto' : 'hidden'
   }, [value])
   return (
@@ -247,7 +247,7 @@ export function ConversationStyles() {
 
 const CV_CSS = `
   .cv { display: flex; flex-direction: column; color: #0D1B3E; }
-  .cv-vide { align-self: center; text-align: center; color: #8A94A6; font-size: 13.5px; padding: 40px 16px; max-width: 320px; }
+  .cv-vide { align-self: center; text-align: center; color: #86868B; font-size: 13.5px; line-height: 1.5; padding: 40px 16px; max-width: 320px; text-wrap: balance; }
   .cv-ligne { display: flex; flex-direction: column; margin-top: 2px; }
   .cv-ligne.debut { margin-top: 10px; }
   .cv-ligne.gauche { align-items: flex-start; } .cv-ligne.droite { align-items: flex-end; }
@@ -310,17 +310,19 @@ const CV_CSS = `
   .cv-etat.ok { background: #DCFCE7; color: #15803D; } .cv-etat.gris { background: #F1F5F9; color: #64748B; } .cv-etat.attente { background: #FFF7ED; color: #C2410C; }
   .cv-sugg { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
   .cv-sugg::-webkit-scrollbar { display: none; }
-  .cv-sugg button { flex: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; border: 1px solid #E3E8F0; background: #fff; border-radius: 999px; padding: 6px 12px; font-family: inherit; font-size: 12.5px; color: #334155; cursor: pointer; }
+  .cv-sugg button { flex: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; border: none; background: #F5F5F7; border-radius: 999px; padding: 6px 12px; font-family: inherit; font-size: 12.5px; color: #334155; cursor: pointer; }
   .cv-sugg button:hover { border-color: #BFD4FF; color: #1A6BFF; }
   .cv-spark { color: #7C3AED; }
-  .cv-input { display: flex; align-items: flex-end; gap: 8px; background: #F3F5F9; border: 1px solid transparent; border-radius: 24px; padding: 5px 5px 5px 16px; transition: border-color .15s, background .15s; }
-  .cv-input:focus-within { background: #fff; border-color: #BFD4FF; box-shadow: 0 0 0 4px rgba(26,107,255,.08); }
+  .cv-input { flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 8px; background: #F5F5F7; border: 1px solid transparent; border-radius: 22px; padding: 4px 4px 4px 16px; transition: border-color .15s, background .15s; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; }
+  .cv-input:focus-within { background: #fff; border-color: #CFE0FF; box-shadow: 0 0 0 3px rgba(26,107,255,.08); }
   .cv-input.note { background: #FFFBEB; } .cv-input.note:focus-within { border-color: #FCD34D; box-shadow: 0 0 0 4px rgba(245,158,11,.1); }
-  .cv-input textarea { flex: 1; border: none; background: transparent; resize: none; outline: none; font-family: inherit; font-size: 14.5px; line-height: 1.4; padding: 8px 0; color: #0D1B3E; max-height: 140px; min-height: 22px; }
-  .cv-send { width: 38px; height: 38px; flex: none; border-radius: 50%; border: none; background: linear-gradient(135deg, #2F7BFF, #1557E0); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(26,107,255,.3); transition: transform .1s, opacity .15s; }
+  .cv-input textarea { flex: 1; min-width: 0; box-sizing: border-box !important; border: none !important; background: transparent !important; resize: none; outline: none; box-shadow: none !important; font-family: inherit; font-size: 15px !important; line-height: 20px !important; padding: 8px 0 !important; margin: 0; height: 36px; min-height: 36px !important; max-height: 140px; color: #1D1D1F; overflow-y: hidden; scrollbar-width: none; }
+  .cv-input textarea::-webkit-scrollbar { display: none; }
+  .cv-input textarea::placeholder { color: #A1A1A6; }
+  .cv-send { width: 36px; height: 36px; flex: none; border-radius: 50%; border: none; background: #1A6BFF; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .1s, opacity .15s; }
   .cv-send:active:not(:disabled) { transform: scale(.94); }
-  .cv-send:disabled { background: #CBD5E1; box-shadow: none; cursor: default; }
-  .cv-input.note .cv-send:not(:disabled) { background: #F59E0B; box-shadow: 0 4px 12px rgba(245,158,11,.3); }
+  .cv-send:disabled { background: #C7C7CC; box-shadow: none; cursor: default; }
+  .cv-input.note .cv-send:not(:disabled) { background: #F59E0B; }
   .cv-pop, .cv-ovr { font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; color: #0D1B3E; -webkit-font-smoothing: antialiased; }
   .cv-pop { position: fixed; z-index: 10000; background: #fff; border: 1px solid #E5E7EB; border-radius: 16px; padding: 14px; box-shadow: 0 16px 40px rgba(13,27,62,.16); }
   .cv-ovr { position: fixed; inset: 0; z-index: 10000; background: rgba(13,27,62,.35); display: flex; align-items: flex-end; }
