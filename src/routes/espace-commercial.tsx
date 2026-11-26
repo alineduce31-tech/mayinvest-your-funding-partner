@@ -36,7 +36,7 @@ type Session = { id: string; nom: string; prenom: string; email: string; telepho
 type Stats = { total_leads: number; leads_actifs: number; dossiers_finances: number; gains_total_xaf: number; gains_mois_xaf: number; classement: number }
 type Lead = any
 
-const SITE_URL = typeof window !== 'undefined' ? window.location.origin : 'https://preselect.mayinvest.cg'
+const SITE_URL = typeof window !== 'undefined' ? window.location.origin : 'https://mayinvestcapitalstrategy.com'
 const xaf = (n: number) => new Intl.NumberFormat('fr-FR').format(n) + ' XAF'
 
 function EspaceCommercialPage() {

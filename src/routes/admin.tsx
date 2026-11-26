@@ -168,7 +168,7 @@ function _UnusedLoginScreen() {
         <div className="lg-dots">{icons.map((_, i) => <div key={i} className={`lg-dot ${i === iconIdx ? 'on' : ''}`}/>)}</div>
         <h1 className="lg-h">Mayinvest Admin</h1>
         <p className="lg-sub">Connectez-vous pour accéder au back-office</p>
-        <div className="lg-field"><label>Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@mayinvest.cg"/></div>
+        <div className="lg-field"><label>Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="prenom@mayinvestcapitalstrategy.com"/></div>
         <div className="lg-field"><label>Mot de passe</label><input type="password" value={password} onChange={e => setPassword(e.target.value)} onKeyDown={e => e.key === 'Enter' && login()}/></div>
         <button className="lg-btn" disabled={loading || !email || !password} onClick={login}>{loading ? 'Connexion…' : 'Se connecter'}</button>
         {error && <div className="lg-err">{error}</div>}
@@ -499,7 +499,7 @@ function Admin({ session }: { session: any }) {
         <tbody>${rowsHtml || '<tr><td colspan="8" style="text-align:center;padding:40px;color:#94A3B8;font-style:italic">Aucun lead correspondant aux filtres</td></tr>'}</tbody>
       </table>
       <div class="footer">
-        Rapport généré automatiquement par <strong>Mayinvest PréSelect</strong> · preselect.mayinvest.cg · +242 06 53 13 187
+        Rapport généré automatiquement par <strong>Mayinvest PréSelect</strong> · mayinvestcapitalstrategy.com
       </div>
       <script>window.onload = () => { setTimeout(() => window.print(), 300) }</script>
       </body></html>`

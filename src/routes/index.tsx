@@ -518,11 +518,12 @@ function Index() {
             <div className="footer-col-title">Équipe</div>
             <a className="footer-link" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>Devenir commercial</a>
             <a className="footer-link" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>Formation & simulation</a>
+            <a className="footer-link" onClick={() => navigate({ to: '/mon-espace' as any })}>Espace équipe · connexion</a>
           </div>
           <div>
-            <div className="footer-col-title">Partenaires</div>
-            <span className="footer-link disabled">Portail banques · bientôt</span>
-            <span className="footer-link">contact@mayinvest.cg</span>
+            <div className="footer-col-title">Nous contacter</div>
+            <a className="footer-link" onClick={() => { setHakiOpen(true); trackHaki(PAGE, 'haki_open', { trigger: 'footer' }) }}>Poser une question à Haki</a>
+            <a className="footer-link" onClick={() => navigate({ to: '/mon-dossier' })}>Écrire à mon conseiller</a>
           </div>
         </div>
         <div className="footer-bottom">

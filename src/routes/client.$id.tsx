@@ -1066,10 +1066,8 @@ function ClientPortal() {
               <b>{nomConseiller || 'Nous cherchons votre conseiller'}</b>
               <small>{nomConseiller ? 'Répond en général sous 24 h' : 'En attendant, l\'équipe Mayinvest vous répond.'}</small>
             </div>
-            <a className="cx-rb g" href={`tel:${TEL_AGENCE}`} title="Appeler Mayinvest au 04 023 23 17" aria-label="Appeler Mayinvest"><Phone size={15}/></a>
             <button className="cx-rb b" onClick={() => openAdvisorChat()} title="Écrire à mon conseiller" aria-label="Écrire à mon conseiller"><MessageCircle size={15}/></button>
           </div>
-          <div className="cx-note"><Phone size={13}/>Le bouton d'appel compose le numéro de Mayinvest : 04 023 23 17.</div>
         </>}
 
         {/* ----- CHAT type messenger ----- */}
@@ -1085,7 +1083,6 @@ function ClientPortal() {
                 <b>{nomConseiller || 'Équipe Mayinvest'}</b>
                 <small>{nomConseiller ? 'Votre conseiller · répond sous 24 h' : 'Nous cherchons votre conseiller'}</small>
               </div>
-              <a className="cx-rb g" href={`tel:${TEL_AGENCE}`} title="Appeler Mayinvest au 04 023 23 17" aria-label="Appeler Mayinvest"><Phone size={15}/></a>
             </div>
 
             {/* Zone messages */}
@@ -1199,8 +1196,6 @@ function ClientPortal() {
     </div>
   )
 }
-
-const TEL_AGENCE = '040232317'
 
 const CX_CSS = `
   .cx { font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; background: #F5F5F7; color: #1D1D1F; min-height: 100vh; }

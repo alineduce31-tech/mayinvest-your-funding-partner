@@ -502,19 +502,19 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
       k: 'relance',
       title: '📣 Relance douce',
       subject: `Mayinvest · ${candidate.prenom}, on vous attend pour ${stage.cta}`,
-      body: `Bonjour ${candidate.prenom},\n\nL'équipe Mayinvest remarque que votre parcours de recrutement commercial est actuellement en pause (étape : ${stage.label}).\n\nPrenez 10 minutes pour ${stage.cta} depuis votre espace :\n👉 https://preselect.mayinvest.cg/espace-commercial\n\nBesoin d'aide ? Répondez à cet email ou contactez-nous sur WhatsApp au +242 06 53 13 187.\n\nÀ très vite,\nL'équipe Mayinvest`,
+      body: `Bonjour ${candidate.prenom},\n\nL'équipe Mayinvest remarque que votre parcours de recrutement commercial est actuellement en pause (étape : ${stage.label}).\n\nPrenez 10 minutes pour ${stage.cta} depuis votre espace :\n👉 https://mayinvestcapitalstrategy.com/espace-commercial\n\nBesoin d'aide ? Répondez à cet email ou contactez-nous sur WhatsApp au +242 06 53 13 187.\n\nÀ très vite,\nL'équipe Mayinvest`,
     },
     {
       k: 'encourage',
       title: '🎉 Encouragement',
       subject: `${candidate.prenom}, vous êtes presque arrivé(e) !`,
-      body: `Bonjour ${candidate.prenom},\n\nFélicitations pour votre engagement jusqu'ici ! Il ne vous reste qu'une étape (${stage.label}) avant de rejoindre officiellement l'équipe commerciale Mayinvest.\n\n💚 Chaque dossier financé = 50 000 XAF de commission.\n\nContinuez ici : https://preselect.mayinvest.cg/espace-commercial\n\nL'équipe Mayinvest`,
+      body: `Bonjour ${candidate.prenom},\n\nFélicitations pour votre engagement jusqu'ici ! Il ne vous reste qu'une étape (${stage.label}) avant de rejoindre officiellement l'équipe commerciale Mayinvest.\n\n💚 Chaque dossier financé = 50 000 XAF de commission.\n\nContinuez ici : https://mayinvestcapitalstrategy.com/espace-commercial\n\nL'équipe Mayinvest`,
     },
     {
       k: 'urgent',
       title: '⏰ Dernier rappel',
       subject: `Dernier rappel · Finalisez votre inscription Mayinvest`,
-      body: `Bonjour ${candidate.prenom},\n\nNous clôturons bientôt la campagne de recrutement en cours. Pour que votre candidature soit retenue, il faut ${stage.cta} dans les prochains jours.\n\nLien direct vers votre espace :\nhttps://preselect.mayinvest.cg/espace-commercial\n\nSi vous ne souhaitez plus participer, répondez simplement « STOP » à cet email.\n\nL'équipe Mayinvest`,
+      body: `Bonjour ${candidate.prenom},\n\nNous clôturons bientôt la campagne de recrutement en cours. Pour que votre candidature soit retenue, il faut ${stage.cta} dans les prochains jours.\n\nLien direct vers votre espace :\nhttps://mayinvestcapitalstrategy.com/espace-commercial\n\nSi vous ne souhaitez plus participer, répondez simplement « STOP » à cet email.\n\nL'équipe Mayinvest`,
     },
   ]
 
