@@ -2001,3 +2001,24 @@ button:active, .lap-btn:active {
   .sd-ne-r { grid-area: r; } .sd-ne-p { grid-area: p; } .sd-ne-bar { grid-area: bar; } .sd-ne-row .sd-chip-action { grid-area: act; justify-self: start; }
 }
 @media (max-width: 520px) { .strategic-dashboard .sd-grid { grid-template-columns: minmax(0, 1fr); } }
+
+/* ============================================================
+   CRM · style Apple
+   ============================================================ */
+.toolbar.crm-v2 { background: #fff !important; border: none !important; border-radius: 18px !important; box-shadow: 0 1px 2px rgba(0,0,0,.04) !important; padding: 10px !important; gap: 8px !important; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; }
+.toolbar.crm-v2 > input { flex: 1 1 220px !important; min-width: 200px !important; background: #F5F5F7 !important; border: none !important; border-radius: 999px !important; font-size: 13.5px !important; padding: 9px 16px !important; }
+.toolbar.crm-v2 button:not(.crm-exp-btn):not(.btn-reset), .toolbar.crm-v2 .msf-trigger { font-size: 13px !important; font-weight: 500 !important; background: #F5F5F7 !important; border: none !important; border-radius: 999px !important; color: #3A3A3C !important; height: 36px; }
+.crm-exp { position: relative; margin-left: auto; }
+.crm-exp-btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; border: none; background: #0D1B3E; color: #fff; font-family: inherit; font-size: 13px !important; font-weight: 500; cursor: pointer; }
+.crm-exp-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(13,27,62,.14), 0 0 0 1px #EEF1F6; padding: 6px; min-width: 180px; }
+.crm-exp-menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: none; background: none; border-radius: 9px; font-family: inherit; font-size: 13px !important; color: #1D1D1F; cursor: pointer; text-align: left; }
+.crm-exp-menu button:hover { background: #F5F5F7; }
+.crm-exp-menu svg { color: #1A6BFF; }
+.crm-stats.crm-v2 { background: transparent !important; padding: 0 !important; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.crm-stats.crm-v2 .pill { display: inline-flex; align-items: center; gap: 6px; border: none; cursor: pointer; font-family: inherit; font-size: 13px !important; font-weight: 500; padding: 7px 14px; border-radius: 999px; background: #fff; color: #3A3A3C; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+.crm-stats.crm-v2 .pill b { font-weight: 700; color: #1A6BFF; }
+.crm-stats.crm-v2 .pill.on { background: #0D1B3E; color: #fff; }
+.crm-stats.crm-v2 .pill.on b { color: #fff; opacity: .8; }
+.crm-stats.crm-v2 .pill.warn { background: #FFF3E0; color: #C2410C; }
+.crm-stats.crm-v2 .pill.warn b { color: #C2410C; }
+.crm-stats.crm-v2 span.pill { cursor: default; }

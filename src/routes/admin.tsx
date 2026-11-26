@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
+import { Download, FileSpreadsheet, FileDown, UserPlus, LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
@@ -11,6 +11,7 @@ import { Logo } from '@/components/Logo'
 import CallButton from '@/components/CallButton'
 import { formatPhone } from '@/lib/phone'
 import BancarisationView from '@/components/BancarisationView'
+import CrmListe from '@/components/CrmListe'
 import { couleurAvatar, initialesNom, dateRelative } from '@/lib/affichage'
 import NonEligiblesView from '@/components/NonEligiblesView'
 import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
@@ -1491,10 +1492,12 @@ function CRMView({ leads, allLeads, msgCounts, search, setSearch, filterStatut, 
     const t = teamMembers?.find((m: any) => m.id === id)
     return t ? t.email.split('@')[0] : ''
   }
+  const [expOpen, setExpOpen] = useState(false)
+  const iso30 = (() => { const d = new Date(now30); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })()
   const agentOptions = [{ value: 'none', label: 'Non assigné' }, ...(teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => ({ value: m.id, label: m.email.split('@')[0] })) || [])]
   return (
     <>
-      <div className="toolbar toolbar-advanced">
+      <div className="toolbar toolbar-advanced crm-v2">
         <input placeholder="Rechercher nom, téléphone, code…" value={search} onChange={e => setSearch(e.target.value)}/>
         <MultiSelectFilter placeholder="Tous statuts" title="Statuts" options={STATUSES.map((s: string) => ({ value: s, label: s }))} value={filterStatut} onChange={setFilterStatut}/>
         <MultiSelectFilter placeholder="Tous types" title="Type de client" options={[{ value: 'physique', label: 'Particulier' }, { value: 'morale', label: 'PME' }]} value={filterType} onChange={setFilterType}/>
@@ -1508,23 +1511,17 @@ function CRMView({ leads, allLeads, msgCounts, search, setSearch, filterStatut, 
             Réinitialiser ({activeFiltersCount})
           </button>
         )}
-        <div className="sd-export-seg" role="group" aria-label="Exporter">
-          <button type="button" onClick={exportCSV} title="Exporter en CSV">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            CSV
-          </button>
-          <button type="button" onClick={exportExcel} title="Exporter en Excel (.xlsx)">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            Excel
-          </button>
-          <button type="button" onClick={exportPDF} title="Exporter en PDF">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-            PDF
-          </button>
+        <div className="crm-exp">
+          <button type="button" className="crm-exp-btn" onClick={() => setExpOpen(o => !o)} aria-expanded={expOpen}><Download size={14}/>Exporter<ChevronDown size={13}/></button>
+          {expOpen && <div className="crm-exp-menu" onMouseLeave={() => setExpOpen(false)}>
+            <button type="button" onClick={() => { setExpOpen(false); exportExcel() }}><FileSpreadsheet size={15}/>Excel (.xlsx)</button>
+            <button type="button" onClick={() => { setExpOpen(false); exportCSV() }}><FileText size={15}/>CSV</button>
+            <button type="button" onClick={() => { setExpOpen(false); exportPDF() }}><FileDown size={15}/>PDF</button>
+          </div>}
         </div>
       </div>
 
-      <div className="crm-stats">
+      <div className="crm-stats crm-v2">
         {activeFiltersCount > 0 ? (
           <>
             <span className="pill total">Affichés <b>{leads.length} lead{leads.length > 1 ? 's' : ''}</b></span>
@@ -1538,14 +1535,14 @@ function CRMView({ leads, allLeads, msgCounts, search, setSearch, filterStatut, 
           </>
         ) : isDirector ? (
           <>
-            <span className="pill total">Total <b>{total} lead{total > 1 ? 's' : ''}</b></span>
-            <span className="pill periode">Sur 30j <b>{sur30j}</b></span>
-            <span className="pill warn">Non assignés <b>{nonAssignes}</b></span>
+            <button type="button" className="pill total on" onClick={resetFilters}>Tous <b>{total}</b></button>
+            <button type="button" className="pill periode" onClick={() => { setDateTo(''); setDateFrom(iso30) }}>30 derniers jours <b>{sur30j}</b></button>
+            <button type="button" className="pill warn" onClick={() => setFilterAgent(['none'])}><UserPlus size={13}/>À assigner <b>{nonAssignes}</b></button>
           </>
         ) : (
           <>
-            <span className="pill total">Mes leads <b>{total}</b></span>
-            <span className="pill periode">Sur 30j <b>{sur30j}</b></span>
+            <button type="button" className="pill total on" onClick={resetFilters}>Mes leads <b>{total}</b></button>
+            <button type="button" className="pill periode" onClick={() => { setDateTo(''); setDateFrom(iso30) }}>30 derniers jours <b>{sur30j}</b></button>
             <span className="pill warn">À relancer <b>{aRelancer}</b></span>
           </>
         )}
@@ -1566,9 +1563,7 @@ function CRMView({ leads, allLeads, msgCounts, search, setSearch, filterStatut, 
           )}
         </div>
       ) : (
-        <div className="lead-grid">
-          {leads.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={msgCounts[l.id] || 0} onOpen={onOpen} updateStatut={updateStatut} agentName={agentEmailById(l.agent_commercial_id)}/>)}
-        </div>
+        <CrmListe leads={leads} msgCounts={msgCounts} onOpen={onOpen} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>
       )}
     </>
   )
