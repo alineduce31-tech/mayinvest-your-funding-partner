@@ -1,0 +1,2 @@
+-- Appliquée : un seul nom par banque (BGFI, BOA), règle automatique sur leads.
+-- Voir migration banques_noms_uniques (mi_nom_banque + trigger trg_leads_nom_banque).

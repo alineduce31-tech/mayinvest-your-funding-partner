@@ -67,7 +67,7 @@ const ICON_M: Record<string, ReactNode> = {
 }
 const ACTIVITES_PHYSIQUE = Object.keys(ICON_P)
 const ACTIVITES_MORALE = Object.keys(ICON_M)
-const BANQUES = ['BGFI Bank', 'UBA', 'BOA Bank', 'MUCODEC', 'Crédit du Congo', 'Ecobank', 'Autre', 'Aucune']
+const BANQUES = ['BGFI', 'UBA', 'BOA', 'MUCODEC', 'Crédit du Congo', 'Ecobank', 'Autre', 'Aucune']
 const VILLES = [
   'Brazzaville',
   'Pointe-Noire',
@@ -126,7 +126,7 @@ function validateField(key: string, value: string, isP: boolean): FieldCheck {
     case 'montant': return parseInt(v || '0') >= 100000 ? { ok: true, label: 'Montant' } : { ok: false, label: 'Montant', msg: 'Montant minimum 100 000 XAF', example: 'Ex : 5 000 000' }
     case 'objet': return v ? { ok: true, label: 'Objet' } : { ok: false, label: 'Objet', msg: 'Choisissez pourquoi vous voulez le prêt', example: isP ? 'Consommation, Immobilier, Véhicule…' : 'Investissement, Fonds de roulement, Marché public…' }
     case 'flux_mois': return parseInt(v || '0') > 0 ? { ok: true, label: 'Flux mensuel' } : { ok: false, label: 'Flux mensuel', msg: 'Indiquez le flux mensuel moyen', example: 'Ex : 2 000 000' }
-    case 'banque': return v ? { ok: true, label: 'Banque' } : { ok: false, label: 'Banque', msg: 'Choisissez votre banque actuelle', example: "Ex : BGFI Bank. Choisissez « Aucune » si vous n'en avez pas." }
+    case 'banque': return v ? { ok: true, label: 'Banque' } : { ok: false, label: 'Banque', msg: 'Choisissez votre banque actuelle', example: "Ex : BGFI. Choisissez « Aucune » si vous n'en avez pas." }
     case 'salaire_domic': return v ? { ok: true, label: 'Domiciliation' } : { ok: false, label: 'Domiciliation', msg: 'Votre salaire est-il versé sur ce compte bancaire ?', example: 'Oui ou Non' }
     case 'compte_mouvemente': return v ? { ok: true, label: 'Compte mouvementé' } : { ok: false, label: 'Compte mouvementé', msg: 'Avez-vous des transactions régulières sur ce compte ?', example: 'Oui ou Non' }
     case 'refus_bancaire': return v ? { ok: true, label: 'Refus bancaire' } : { ok: false, label: 'Refus bancaire', msg: "Une banque a-t-elle déjà refusé un financement ?", example: 'Oui ou Non' }

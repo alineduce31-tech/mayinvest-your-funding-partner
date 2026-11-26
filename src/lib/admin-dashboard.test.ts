@@ -122,3 +122,16 @@ describe('dashboard strategic rules', () => {
     expect(m.current).toEqual([])
   })
 })
+
+describe('noms de banque', () => {
+  test('regroupe les variantes', async () => {
+    const { nomBanque, bloc4Segments } = await import('./admin-dashboard')
+    expect(nomBanque('BGFI')).toBe('BGFI')
+    expect(nomBanque('BGFI Bank')).toBe('BGFI')
+    expect(nomBanque(' boa ')).toBe('BOA')
+    expect(nomBanque('Autre banque')).toBe('Autre banque')
+    const l = (b: string, statut = 'Nouveau') => ({ id: b + statut, statut, created_at: new Date().toISOString(), banque_actuelle: b } as any)
+    const r = bloc4Segments([l('BGFI', 'Financé'), l('BGFI Bank'), l('BOA'), l('BOA Bank')]).banques
+    expect(r.map(x => [x.label, x.total, x.acceptes])).toEqual([['BGFI', 2, 1], ['BOA', 2, 0]])
+  })
+})

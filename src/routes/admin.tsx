@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
+import { FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
@@ -11,6 +11,7 @@ import { Logo } from '@/components/Logo'
 import CallButton from '@/components/CallButton'
 import { formatPhone } from '@/lib/phone'
 import BancarisationView from '@/components/BancarisationView'
+import { couleurAvatar, initialesNom, dateRelative } from '@/lib/affichage'
 import NonEligiblesView from '@/components/NonEligiblesView'
 import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
 import { regrouper, vueAdmin, suggestions } from '@/lib/conversation'
@@ -1132,6 +1133,11 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
   const showCRM = (filter: PriorityFilter) => navigate({ to: '/admin', search: { view: 'crm', priority: filter } })
 
   const isEmpty = m.current.length === 0
+  const prio = useMemo(() => ({
+    ready: m.current.filter(l => matchesPriority(l, 'ready', now)).length,
+    impact: m.current.filter(l => matchesPriority(l, 'impact', now)).length,
+    followup: m.current.filter(l => matchesPriority(l, 'followup', now)).length,
+  }), [m.current, now])
 
   // BLOC 3 · IMPACT MAYINVEST (Avant / Après)
   const bloc3 = useMemo(() => {
@@ -1204,21 +1210,22 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
     </section>
 
     <section className="sd-pole bloc2"><h2>Bloc 2 · Analyse des non-éligibles <span>· Monétiser le Pack Formalisation</span></h2>
-      <div className="sd-table-wrap"><table className="sd-table"><thead><tr><th>Raison</th><th>Nb Leads</th><th>%</th><th>Potentiel CA</th><th>Action</th></tr></thead><tbody>
-        {m.bloc2.map(row => <tr key={row.key}>
-          <td><strong>{row.raison}</strong></td>
-          <td>{row.nb}</td>
-          <td>{pct(row.pct)}</td>
-          <td>{xaf(row.potentiel)}</td>
-          <td><button type="button" className="sd-chip-action" onClick={() => navigate({ to: '/admin', search: { view: 'crm', priority: 'impact' as PriorityFilter } })}>{row.action}<ArrowUpRight size={12} strokeWidth={2.3}/></button></td>
-        </tr>)}
-      </tbody></table></div>
-      <p className="sd-hint"><em>Pack Formalisation = 50 000 XAF · Potentiel = Nb × Prix</em></p>
+      <div className="sd-ne">
+        {m.bloc2.map(row => (
+          <div className="sd-ne-row" key={row.key}>
+            <span className={`sd-ne-r ${row.key}`}><span className="sd-ne-ic">{row.key === 'pas_compte' ? <Landmark size={16}/> : row.key === 'pas_rccm' ? <FileX size={16}/> : row.key === 'flux_faible' ? <Sprout size={16}/> : <Ban size={16}/>}</span><strong>{row.raison}</strong></span>
+            <span className="sd-ne-bar"><span className="t"><i style={{ width: `${Math.min(100, Math.round(row.pct))}%` }}/></span><span>{row.nb} · {pct(row.pct)}</span></span>
+            <span className={`sd-ne-p ${row.potentiel ? '' : 'nul'}`}>{xaf(row.potentiel)}</span>
+            <button type="button" className="sd-chip-action" onClick={() => navigate({ to: '/admin', search: { view: 'crm', priority: 'impact' as PriorityFilter } })}>{row.action}<ArrowUpRight size={12} strokeWidth={2.3}/></button>
+          </div>
+        ))}
+      </div>
+      <p className="sd-hint">Potentiel = nombre de dossiers × prix du service (Ouverture compte 30 000 XAF, Pack formalisation et Restructuration 50 000 XAF).</p>
     </section>
 
     <section className="sd-section"><h2>Actions prioritaires</h2><div className="sd-alerts">
       <article className="sd-alert-row r">
-        <div className="sd-alert-icon"><Flame size={18} strokeWidth={1.75}/></div>
+        <div className="sd-alert-icon sd-alert-n">{prio.ready}</div>
         <div className="sd-alert-body">
           <div className="sd-alert-title">Dossiers prêts sans contact 48h</div>
           <div className="sd-alert-sub">Score ≥ 80 · à contacter en priorité</div>
@@ -1226,15 +1233,15 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
         <button type="button" className="sd-alert-link" onClick={() => showCRM('ready')}>Voir<ArrowUpRight size={12} strokeWidth={2.3}/></button>
       </article>
       <article className="sd-alert-row g">
-        <div className="sd-alert-icon"><AlertOctagon size={18} strokeWidth={1.75}/></div>
+        <div className="sd-alert-icon sd-alert-n">{prio.impact}</div>
         <div className="sd-alert-body">
-          <div className="sd-alert-title">Non-bancarisés cette semaine</div>
-          <div className="sd-alert-sub">Vendre Pack Formalisation</div>
+          <div className="sd-alert-title">Non bancarisés cette semaine</div>
+          <div className="sd-alert-sub">Proposer l'ouverture de compte</div>
         </div>
         <button type="button" className="sd-alert-link" onClick={() => showCRM('impact')}>Voir<ArrowUpRight size={12} strokeWidth={2.3}/></button>
       </article>
       <article className="sd-alert-row b">
-        <div className="sd-alert-icon"><Briefcase size={18} strokeWidth={1.75}/></div>
+        <div className="sd-alert-icon sd-alert-n">{prio.followup}</div>
         <div className="sd-alert-body">
           <div className="sd-alert-title">Pipeline à relancer</div>
           <div className="sd-alert-sub">{'RDV > 7j · relancer les dossiers en attente'}</div>
@@ -1342,7 +1349,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
                   <span className="sd-seg-row-label">{b.label}</span>
                   <span className="sd-seg-row-val">{b.acceptes}/{b.total} · <b>{pct(b.taux)}</b></span>
                 </div>
-                <div className="sd-seg-bar"><span style={{ width: `${Math.round((b.taux || 0) * 100)}%` }}/></div>
+                <div className="sd-seg-bar"><span style={{ width: `${Math.min(100, Math.round(b.taux || 0))}%` }}/></div>
               </div>
             ))}
           </div>
@@ -1369,7 +1376,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
                   <span className="sd-seg-row-label">{s.label}</span>
                   <span className="sd-seg-row-val">{s.eligibles}/{s.total} · <b>{pct(s.pct)}</b></span>
                 </div>
-                <div className="sd-seg-bar"><span style={{ width: `${Math.round((s.pct || 0) * 100)}%` }}/></div>
+                <div className="sd-seg-bar"><span style={{ width: `${Math.min(100, Math.round(s.pct || 0))}%` }}/></div>
               </div>
             ))}
           </div>
@@ -1394,7 +1401,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
               <div className="sd-seg-row" key={t.label}>
                 <div className="sd-seg-row-top">
                   <span className="sd-seg-row-label">{t.label}</span>
-                  <span className="sd-seg-row-val">{t.finances}/{t.deposes} · <b>{pct(t.taux)}</b></span>
+                  <span className="sd-seg-row-val">{t.finances}/{t.deposes} · <b>{t.deposes ? pct(t.taux * 100) : '—'}</b></span>
                 </div>
                 <div className="sd-seg-bar"><span style={{ width: `${Math.round((t.taux || 0) * 100)}%` }}/></div>
               </div>
@@ -1438,14 +1445,15 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
                 return (
                   <tr key={l.id} className="dl-row" onClick={() => onOpen(l)}>
                     <td className="dl-name">
-                      <strong>{name}</strong>
-                      <small>{typeLbl} · {l.activite || 'Non renseignée'} · {ville}</small>
+                      <span className="dl-who"><span className="dl-av" style={{ background: couleurAvatar(name).fond, color: couleurAvatar(name).texte }}>{initialesNom(name)}</span>
+                      <span><strong>{name}</strong>
+                      <small>{typeLbl} · {l.activite || 'Non renseignée'} · {ville}</small></span></span>
                     </td>
-                    <td><span className={`dl-score ${scoreCls}`}>{l.score ?? 0}<small>/100</small></span></td>
+                    <td><span className={`dl-ring ${scoreCls}`} title="Score sur 100">{l.score ?? 0}</span></td>
                     <td><span className="dl-statut" style={{ background: color.bg, color: color.fg }}>{l.statut}</span></td>
                     <td><span className={`dl-op ${opCls}`}>{op || 'À qualifier'}</span></td>
                     <td className="r dl-amt">{xaf(amount(l.montant_demande))}</td>
-                    <td className="r dl-date">{new Date(l.created_at).toLocaleDateString('fr-FR')}</td>
+                    <td className="r dl-date">{dateRelative(l.created_at, now)}</td>
                   </tr>
                 )
               })}

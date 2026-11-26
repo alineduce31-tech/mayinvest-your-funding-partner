@@ -247,7 +247,7 @@ export function bloc4Segments(leads: DashboardLead[]) {
   const byBanque: Record<string, { total: number; acceptes: number }> = {}
   for (const l of leads) {
     if (!l.banque_actuelle || isUnbanked(l)) continue
-    const b = String(l.banque_actuelle).trim()
+    const b = nomBanque(String(l.banque_actuelle))
     if (!byBanque[b]) byBanque[b] = { total: 0, acceptes: 0 }
     byBanque[b].total++
     if (l.statut === 'Financé') byBanque[b].acceptes++
@@ -291,4 +291,12 @@ export function opportunity(lead: DashboardLead): 'Crédit' | 'Impact' | 'Crédi
     return amount(lead.montant_demande) >= 5_000_000 ? 'Crédit + Impact' : 'Impact'
   }
   return 'Crédit'
+}
+
+/** Un seul nom par banque : "BGFI Bank" devient "BGFI", "BOA Bank" devient "BOA". */
+export function nomBanque(raw: string): string {
+  const b = String(raw || '').trim()
+  const k = b.toLowerCase().replace(/\s+bank$/, '').replace(/\s+/g, ' ')
+  const connus: Record<string, string> = { bgfi: 'BGFI', boa: 'BOA', uba: 'UBA', ecobank: 'Ecobank', mucodec: 'MUCODEC', 'crédit du congo': 'Crédit du Congo', 'credit du congo': 'Crédit du Congo' }
+  return connus[k] || b
 }
