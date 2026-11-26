@@ -7,7 +7,8 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 
 const SITE_URL = (Deno.env.get('SITE_URL') || 'https://mayinvestcapitalstrategy.com').replace(/\/$/, '')
 const RESEND_API_KEY = Deno.env.get('RESEND_API_KEY') || ''
-const RESEND_FROM = Deno.env.get('RESEND_FROM') || 'Mayinvest <onboarding@resend.dev>'
+const FROM_ENV = Deno.env.get('RESEND_FROM') || ''
+const RESEND_FROM = FROM_ENV && !FROM_ENV.includes('resend.dev') ? FROM_ENV : 'Mayinvest <noreply@mayinvestcapitalstrategy.com>'
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
