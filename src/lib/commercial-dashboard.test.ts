@@ -64,7 +64,7 @@ describe('ma journée', () => {
       lead({ statut: 'Contacté', created_at: new Date(now - 2 * h).toISOString() }),
     ], 2, now)
     expect(t.map(x => x.key)).toEqual(['repondre', 'appeler', 'relancer'])
-    expect(t[2].nb).toBe(1)
+    expect(t[2]?.nb).toBe(1)
   })
   test('rien à faire, liste vide', () => {
     expect(tachesDuJour([], 0, now)).toEqual([])

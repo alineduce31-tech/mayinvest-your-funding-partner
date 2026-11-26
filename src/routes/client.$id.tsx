@@ -378,7 +378,7 @@ function ClientPortal() {
     try {
       const ext = file.name.split('.').pop() || 'bin'
       const path = `${id}/docs/${docRow.doc_type}-${Date.now()}.${ext}`
-      const { error: upErr } = await supabase.storage.from('lead-documents').upload(path, file, { contentType: file.type, upsert: true })
+      const { error: upErr } = await supabase.storage.from('lead-documents').upload(path, file, { contentType: file.type, upsert: false })
       if (upErr) throw upErr
       const { data: pub } = supabase.storage.from('lead-documents').getPublicUrl(path)
       await supabase.from('documents').update({

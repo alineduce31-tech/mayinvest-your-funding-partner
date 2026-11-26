@@ -312,7 +312,7 @@ function CandidaturesPage() {
               const canNotify = ['formation', 'simulation_theo', 'simulation_prat', 'en_attente_validation'].includes(c.status)
               const mins = c.time_total_seconds ? Math.floor(c.time_total_seconds / 60) : 0
               const secs = c.time_total_seconds ? c.time_total_seconds % 60 : 0
-              const initials = (c.prenom[0] + c.nom[0]).toUpperCase()
+              const initials = (`${c.prenom?.[0] ?? ''}${c.nom?.[0] ?? ''}` || '?').toUpperCase()
               return (
                 <div key={c.id} className={`cd-row${selected?.id === c.id ? ' selected' : ''}`} onClick={() => setSelected(c)}>
                   <div className="cd-row-name">
@@ -422,7 +422,7 @@ function CandidaturesPage() {
 
               <div className="cd-sec-wrap">
                 <div className="cd-sec-title" style={{ margin: '0 0 10px', border: 'none', padding: 0 }}>Chronomètre (vue admin)</div>
-                <CandidateChrono candidate={selected} medianTime={medianTime}/>
+                <CandidateChrono candidate={selected} medianTime={medianTime ?? 0}/>
               </div>
 
               {selected.status === 'en_attente_validation' && (
@@ -518,7 +518,7 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
     },
   ]
 
-  const [template, setTemplate] = useState(TEMPLATES[0].k)
+  const [template, setTemplate] = useState(TEMPLATES[0]!.k)
   const current = TEMPLATES.find(t => t.k === template)!
   const [subject, setSubject] = useState(current.subject)
   const [body, setBody] = useState(current.body)

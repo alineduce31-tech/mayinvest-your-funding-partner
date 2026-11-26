@@ -515,7 +515,7 @@ function StatutPill({ current, onChange }: { current: string; onChange: (s: stri
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [open])
-  const cur = STATUTS_LEAD.find(s => s.k === current) || STATUTS_LEAD[0]
+  const cur = STATUTS_LEAD.find(s => s.k === current) || STATUTS_LEAD[0]!
   return (
     <div className="statut-wrap" ref={ref}>
       <button type="button" className="statut-pill-btn" onClick={() => setOpen(!open)}
