@@ -6,8 +6,18 @@ import { COMMISSION_PAR_DOSSIER } from '@/lib/commercial-dashboard'
 import CallButton from '@/components/CallButton'
 import ScrollRow from '@/components/ScrollRow'
 import { useRappels, RappelPicker } from '@/components/Rappels'
-import { IdCard, Receipt, Landmark, FileBadge, Building2, FileText, File as FileIcon, Send, Check } from 'lucide-react'
-import { decouperLibelle, titreCourt, etatPiece, LIBELLE_ETAT, iconePiece, piecesARelancer, progressionPieces } from '@/lib/affichage'
+import { EyeOff, IdCard, Receipt, Landmark, FileBadge, Building2, FileText, File as FileIcon, Send, Check } from 'lucide-react'
+import { segmentsMessage, decouperLibelle, titreCourt, etatPiece, LIBELLE_ETAT, iconePiece, piecesARelancer, progressionPieces } from '@/lib/affichage'
+
+function Contenu({ texte }: { texte: string }) {
+  return (
+    <div className="cm-txt">
+      {segmentsMessage(texte).map((seg, i) => seg.type === 'texte'
+        ? <div key={i} className="cm-par">{seg.texte}</div>
+        : <div key={i} className="cm-puces">{seg.items.map((it, j) => <span key={j} className="cm-puce">{it}</span>)}</div>)}
+    </div>
+  )
+}
 
 const ICONES_PIECE = {
   id: <IdCard size={16}/>, salaire: <Receipt size={16}/>, banque: <Landmark size={16}/>, attestation: <FileBadge size={16}/>,
@@ -257,14 +267,14 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
             const internal = m.visibility === 'internal'
             const me = m.author_id === commercialId
             const cls = m.sender === 'client' ? 'in' : me ? 'out' : 'staff'
-            const who = m.sender === 'client' ? `${row.nom || 'Client'} · client` : me ? 'Vous' : `${m.author_name || 'Direction'} · direction`
             return (
               <div key={m.id} className="cm-block">
                 {showDay && <div className="cm-day">{new Date(m.created_at).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>}
-                <div className={`cm-bubble ${cls} ${internal ? 'note' : ''}`}>
-                  <div className="cm-who">{internal ? `${me ? 'Ta note' : 'Note de la direction'} · invisible pour le client` : who}</div>
-                  <div className="cm-txt">{m.content}</div>
-                  <div className="cm-time">{new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}{me && !internal && m.read_at ? ' · lu' : ''}</div>
+                <div className={`cm-bubble ${internal ? 'note' : cls}`}>
+                  {internal && <div className="cm-tag note"><EyeOff size={12}/>{me ? 'Ta note' : 'Note de la direction'} · invisible pour le client</div>}
+                  {!internal && cls === 'staff' && <div className="cm-tag">{m.author_name || 'Direction'}</div>}
+                  <Contenu texte={m.content}/>
+                  <div className="cm-time">{cls === 'in' && !internal ? `${(row.nom || 'Client').split(' ')[0]} · ` : ''}{new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}{me && !internal && m.read_at ? ' · lu' : ''}</div>
                 </div>
               </div>
             )
@@ -465,9 +475,9 @@ function DirectionThread({ commercialId, tick, onBack, onRead }: { commercialId:
         <div className="cm-msgs">
           {msgs.length === 0 && <div className="cm-empty">Pas encore de message. Pose ta question à la direction.</div>}
           {msgs.map(m => (
-            <div key={m.id} className={`cm-bubble ${m.sender_type === 'commercial' ? 'out' : 'staff-in'}`}>
-              <div className="cm-who">{m.sender_type === 'commercial' ? 'Vous' : 'Direction Mayinvest'}</div>
-              <div className="cm-txt">{m.body}</div>
+            <div key={m.id} className={`cm-bubble ${m.sender_type === 'commercial' ? 'out' : 'staff'}`}>
+              {m.sender_type !== 'commercial' && <div className="cm-tag">Direction Mayinvest</div>}
+              <Contenu texte={m.body}/>
               <div className="cm-time">{new Date(m.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}{m.sender_type === 'commercial' && m.read_at ? ' · lu' : ''}</div>
             </div>
           ))}
@@ -550,18 +560,24 @@ function CmStyles() {
     .cm-pill.solid { background: #1A6BFF; color: #fff; }
     .cm-pill.solid .cm-adot { background: rgba(255,255,255,0.22); }
     .cm-pill:disabled { opacity: 0.5; cursor: default; }
-    .cm-msgs { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+    .cm-msgs { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; background: #F4F6F9; }
     .cm-block { display: flex; flex-direction: column; gap: 8px; }
-    .cm-day { align-self: center; font-size: 11px; color: #64748B; background: #EEF2F8; border-radius: 100px; padding: 3px 12px; font-weight: 700; margin: 6px 0; }
-    .cm-bubble { max-width: min(76%, 560px); padding: 9px 13px; font-size: 14px; line-height: 1.45; }
-    .cm-bubble.in, .cm-bubble.staff-in { align-self: flex-start; background: #fff; border: 1px solid #E5E7EB; border-radius: 16px 16px 16px 4px; }
-    .cm-bubble.staff-in { background: #0D1B3E; color: #fff; border-color: #0D1B3E; }
-    .cm-bubble.out { align-self: flex-end; background: #1A6BFF; color: #fff; border-radius: 16px 16px 4px 16px; }
-    .cm-bubble.staff { align-self: flex-end; background: #0D1B3E; color: #fff; border-radius: 16px 16px 4px 16px; }
-    .cm-bubble.note { background: #FEF3C7; color: #78350F; border: 1.5px dashed #F59E0B; }
-    .cm-who { font-size: 11px; font-weight: 800; margin-bottom: 2px; opacity: 0.85; }
-    .cm-txt { white-space: pre-wrap; word-break: break-word; }
-    .cm-time { font-size: 10.5px; opacity: 0.7; margin-top: 3px; text-align: right; }
+    .cm-day { align-self: center; font-size: 11px; color: #64748B; background: #E8ECF2; border-radius: 100px; padding: 3px 12px; font-weight: 700; margin: 6px 0; }
+    .cm-bubble { max-width: min(76%, 560px); padding: 10px 14px; font-size: 14px; line-height: 1.45; border-radius: 20px; }
+    .cm-bubble.in, .cm-bubble.staff { align-self: flex-start; background: #fff; color: #0D1B3E; box-shadow: 0 1px 2px rgba(13,27,62,0.08); }
+    .cm-bubble.out { align-self: flex-end; background: #1A6BFF; color: #fff; }
+    .cm-bubble.note { align-self: flex-end; background: #FEF3C7; color: #78350F; }
+    .cm-tag { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; background: #0D1B3E; color: #fff; font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 2px 9px; margin-bottom: 5px; }
+    .cm-tag.note { background: rgba(120,53,15,0.1); color: #92400E; }
+    .cm-bubble { display: flex; flex-direction: column; }
+    .cm-txt { display: flex; flex-direction: column; gap: 6px; word-break: break-word; }
+    .cm-par { white-space: pre-wrap; }
+    .cm-puces { display: flex; flex-wrap: wrap; gap: 5px; }
+    .cm-puce { background: rgba(13,27,62,0.06); border-radius: 999px; padding: 4px 10px; font-size: 12.5px; font-weight: 600; }
+    .cm-bubble.out .cm-puce { color: #fff; background: rgba(255,255,255,0.2); }
+    .cm-bubble.note .cm-puce { background: rgba(120,53,15,0.1); }
+    .cm-time { font-size: 10.5px; opacity: 0.65; margin-top: 4px; text-align: right; }
+    .cm-bubble.in .cm-time, .cm-bubble.staff .cm-time { text-align: left; }
     .cm-composer { position: relative; background: #fff; border-top: 1px solid #E8ECF3; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; }
     
     .cm-tools::-webkit-scrollbar { display: none; }

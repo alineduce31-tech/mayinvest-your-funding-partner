@@ -99,3 +99,26 @@ export function initialesNom(nom: string): string {
   if (!p.length) return '?'
   return ((p[0]?.[0] ?? '') + (p.length > 1 ? p[p.length - 1]?.[0] ?? '' : p[0]?.[1] ?? '')).toUpperCase()
 }
+
+export type Segment = { type: 'texte'; texte: string } | { type: 'liste'; items: string[] }
+
+/** Découpe un message : les lignes qui commencent par "-", "•" ou "*" deviennent une liste (affichée en étiquettes). */
+export function segmentsMessage(contenu: string): Segment[] {
+  const out: Segment[] = []
+  for (const brut of (contenu || '').split('\n')) {
+    const puce = /^\s*[-•*]\s+(.+)$/.exec(brut)
+    const dernier = out[out.length - 1]
+    if (puce) {
+      const item = (puce[1] ?? '').trim()
+      if (dernier && dernier.type === 'liste') dernier.items.push(item)
+      else out.push({ type: 'liste', items: [item] })
+    } else if (dernier && dernier.type === 'texte') {
+      dernier.texte += `\n${brut}`
+    } else {
+      out.push({ type: 'texte', texte: brut })
+    }
+  }
+  return out
+    .map(s => (s.type === 'texte' ? { ...s, texte: s.texte.replace(/^\n+|\n+$/g, '') } : s))
+    .filter(s => s.type === 'liste' || s.texte.trim() !== '')
+}

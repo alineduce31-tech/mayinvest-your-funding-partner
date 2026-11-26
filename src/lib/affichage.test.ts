@@ -54,3 +54,20 @@ describe('ligne de lead', () => {
     expect(initialesNom('Boutique')).toBe('BO')
   })
 })
+
+describe('messages', () => {
+  test('les lignes à tirets deviennent une liste', async () => {
+    const { segmentsMessage } = await import('./affichage')
+    const m = "Bonjour, il nous manque encore :\n- Carte d'identité\n- Relevé bancaire\nVous pouvez les envoyer depuis votre espace."
+    expect(segmentsMessage(m)).toEqual([
+      { type: 'texte', texte: 'Bonjour, il nous manque encore :' },
+      { type: 'liste', items: ["Carte d'identité", 'Relevé bancaire'] },
+      { type: 'texte', texte: 'Vous pouvez les envoyer depuis votre espace.' },
+    ])
+  })
+  test('un message sans liste reste intact', async () => {
+    const { segmentsMessage } = await import('./affichage')
+    expect(segmentsMessage('Bonjour\nà demain')).toEqual([{ type: 'texte', texte: 'Bonjour\nà demain' }])
+    expect(segmentsMessage('Prix : 10 - 20 000')).toEqual([{ type: 'texte', texte: 'Prix : 10 - 20 000' }])
+  })
+})
