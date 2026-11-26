@@ -1,8 +1,8 @@
 import CloseIcon from '@/components/CloseIcon'
-import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { supabase } from '@/integrations/supabase/client'
-import qrcode from '@/lib/vendor/qrcode-generator'
+import { QrSvg as QrBase } from '@/components/QrCode'
 import { appelDirect, lienTel, lienWhatsapp, noteAppel, numeroAffiche } from '@/lib/appel'
 
 type Moyen = 'telephone' | 'ordinateur' | 'whatsapp' | 'manuel'
@@ -56,24 +56,6 @@ export default function CallButton({ tel, nom, leadId, className, style, title, 
   )
 }
 
-function QrSvg({ data, size = 176 }: { data: string; size?: number }) {
-  const cells = useMemo(() => {
-    const qr = qrcode(0, 'M')
-    qr.addData(data)
-    qr.make()
-    const n = qr.getModuleCount()
-    const rects: string[] = []
-    for (let r = 0; r < n; r++) for (let c = 0; c < n; c++) if (qr.isDark(r, c)) rects.push(`M${c} ${r}h1v1h-1z`)
-    return { n, d: rects.join('') }
-  }, [data])
-  const m = 2
-  return (
-    <svg width={size} height={size} viewBox={`${-m} ${-m} ${cells.n + m * 2} ${cells.n + m * 2}`} shapeRendering="crispEdges" role="img" aria-label="QR code pour lancer l'appel">
-      <rect x={-m} y={-m} width={cells.n + m * 2} height={cells.n + m * 2} fill="#fff"/>
-      <path d={cells.d} fill="#0D1B3E"/>
-    </svg>
-  )
-}
 
 function CallSheet({ tel, nom, canLog, onClose, onLog }: { tel: string; nom?: string | null | undefined; canLog: boolean; onClose: () => void; onLog: (m: Moyen) => Promise<void> }) {
   const [copied, setCopied] = useState(false)
@@ -170,3 +152,7 @@ function CallSheet({ tel, nom, canLog, onClose, onLog }: { tel: string; nom?: st
 
 const PhoneIc = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round"/></svg>
 const WaIc = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.3.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1.1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2l-.7-.3z"/></svg>
+
+function QrSvg({ data, size = 176 }: { data: string; size?: number }) {
+  return <QrBase data={data} size={size} label="QR code pour lancer l'appel"/>
+}

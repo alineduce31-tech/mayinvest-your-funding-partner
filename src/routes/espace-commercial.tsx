@@ -10,11 +10,13 @@ import CommercialMessagerie from '@/components/CommercialMessagerie'
 import CallButton from '@/components/CallButton'
 import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
 import { RappelAlarme } from '@/components/Rappels'
-import { UserPlus, LogOut, RefreshCw, ChevronRight, AlertCircle, PhoneCall, CalendarDays, Landmark, Check, Clock, Phone, MessageCircle, ArrowRight } from 'lucide-react'
+import { Copy, Download, MessageSquare, MessagesSquare, Share2, Coins, UserPlus, LogOut, RefreshCw, ChevronRight, AlertCircle, PhoneCall, CalendarDays, Landmark, Check, Clock, Phone, MessageCircle, ArrowRight } from 'lucide-react'
 import { montantCourt, dateRelative, tonScore, tonStatut, initialesNom, couleurAvatar } from '@/lib/affichage'
 import { blocCalendrier } from '@/lib/conversation'
 import { heureTexte } from '@/lib/rappels'
 import { RappelPicker, useRappels } from '@/components/Rappels'
+import { QrSvg, telechargerQr } from '@/components/QrCode'
+import { scripts, lienWhatsappTexte, lienFacebook, lienSms, gains, chiffresParrainage } from '@/lib/outils'
 import { statutPourEtape, type Etape, aJourDepuis, urgence, trierParUrgence, nbEnRetard, totalMontant, piecesRecues, type InfoDossier, ETAPES, COMMISSION_PAR_DOSSIER, grouperParEtape, financesCeMois, progressionObjectif, gainsPour, tachesDuJour } from '@/lib/commercial-dashboard'
 
 export const Route = createFileRoute('/espace-commercial')({
@@ -262,7 +264,7 @@ function EspaceCommercialPage() {
               {tab === 'dashboard' && <DashboardTab session={session} stats={stats} leads={leads} refLink={refLink} unreadClients={unreadClients} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)} onGo={setTab} onOpenThread={(id) => { setOpenLeadId(id); setTab('messagerie'); window.scrollTo(0, 0) }} onUpdated={() => { loadLeads(); loadStats() }}/>}
               {tab === 'leads' && <LeadsTab leads={leads} majA={leadsMajA} onReload={loadLeads} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)}/>}
               {tab === 'messagerie' && <CommercialMessagerie key={openLeadId || 'inbox'} commercialId={session.id} initialLeadId={openLeadId} onThreadOpen={setThreadOpen} onCountsChange={() => { loadUnreadClients(); loadUnreadChat() }}/>}
-              {tab === 'outils' && <OutilsTab refCode={session.ref_code} refLink={refLink} session={session}/>}
+              {tab === 'outils' && <OutilsTab refCode={session.ref_code} refLink={refLink} session={session} leads={leads}/>}
             </div>
           </main>
 
@@ -764,85 +766,90 @@ function NewLeadModal({ commercialId, onClose, onCreated }: { commercialId: stri
 }
 
 // ============ OUTILS TAB ============
-function OutilsTab({ refCode, refLink, session }: { refCode?: string | undefined; refLink: string; session: Session }) {
+function OutilsTab({ refCode, refLink, session, leads }: { refCode?: string | undefined; refLink: string; session: Session; leads: Lead[] }) {
   const [copied, setCopied] = useState<string | null>(null)
-  function copy(text: string, id: string) {
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(id); setTimeout(() => setCopied(null), 2000)
-    })
-  }
-  const scripts = [
-    { k: 'intro', title: 'Message d\'introduction', body: `Bonjour, je suis ${session.prenom} de Mayinvest Conseil. On aide les Congolais à obtenir leur crédit bancaire plus vite et sans se faire renvoyer. Vous remplissez un formulaire de 2 minutes, on vous dit en 24h si votre dossier est bancable. C'est gratuit, et vous ne payez que si on obtient votre financement. Voici le lien : ${refLink}` },
-    { k: 'relance', title: 'Message de relance (après 48h sans réponse)', body: `Bonjour, je reviens vers vous pour votre projet de financement. 2 banques partenaires m'ont confirmé pouvoir traiter votre dossier cette semaine si on le dépose avant vendredi. Vous êtes toujours partant ?` },
-    { k: 'pme', title: 'Message pour PME sans RCCM (upsell Pack)', body: `Bonjour, je comprends que vous n'avez pas encore de RCCM. Pas de problème : pour 50 000 XAF, on vous met en règle (RCCM, NIU, compte bancaire pro) en 2 semaines. Après ça, votre dossier crédit passe comme une lettre à la poste. On commence ?` },
-  ]
-  return (
-    <>
-      <div className="section-card">
-        <div className="section-head">
-          <h3>Ton lien unique de parrainage</h3>
-          <span className="section-sub">Chaque prospect qui remplit via ce lien t'est attribué</span>
-        </div>
-        <div className="ref-box">
-          <div className="ref-code-row">
-            <div className="ref-code-label">Ton code</div>
-            <div className="ref-code">{refCode || '—'}</div>
-          </div>
-          <div className="ref-link-row">
-            <input readOnly value={refLink} className="ref-link-input"/>
-            <button className="btn-copy" onClick={() => copy(refLink, 'link')}>
-              {copied === 'link' ? '✓ Copié' : 'Copier'}
-            </button>
-          </div>
-          <div className="ref-hint">Partage ce lien sur WhatsApp, Facebook, en face à face. Tu peux aussi générer un QR code sur n'importe quel site (ex: qr-code-generator.com).</div>
-        </div>
-      </div>
-
-      <div className="section-card">
-        <div className="section-head">
-          <h3>Scripts de messagerie prêts à copier</h3>
-          <span className="section-sub">À utiliser dans la messagerie interne du prospect</span>
-        </div>
-        {scripts.map(s => (
-          <div key={s.k} className="script-card">
-            <div className="script-head">
-              <h4>{s.title}</h4>
-              <button className="btn-copy-sm" onClick={() => copy(s.body, s.k)}>
-                {copied === s.k ? '✓ Copié' : 'Copier'}
-              </button>
-            </div>
-            <p className="script-body">{s.body}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="section-card">
-        <div className="section-head">
-          <h3>Calculateur de commission</h3>
-          <span className="section-sub">50 000 XAF par dossier financé</span>
-        </div>
-        <CommissionCalc/>
-      </div>
-    </>
-  )
-}
-
-function CommissionCalc() {
   const [nb, setNb] = useState(5)
-  const total = nb * 50000
+  function copy(text: string, id: string) {
+    navigator.clipboard.writeText(text).then(() => { setCopied(id); setTimeout(() => setCopied(null), 2000) })
+  }
+  const liste = scripts(session.prenom, refLink)
+  const ch = chiffresParrainage(leads, Date.now())
+  const g = gains(nb)
+  const invitation = `Bonjour ! Mayinvest vous dit sous 24 h si votre dossier de crédit est bancable. Gratuit, 2 minutes : ${refLink}`
+  async function partager() {
+    if (navigator.share) { try { await navigator.share({ title: 'Mayinvest', text: invitation, url: refLink }) } catch {} }
+    else copy(refLink, 'link')
+  }
   return (
-    <div className="calc-box">
-      <div className="calc-row">
-        <label>Nombre de dossiers financés ce mois :</label>
-        <input type="number" min={0} max={100} value={nb} onChange={e => setNb(parseInt(e.target.value) || 0)}/>
+    <div className="ot">
+      <div className="ot-ref">
+        <div className="ot-ref-l">
+          <div className="ot-lbl">Ton code de parrainage</div>
+          <div className="ot-code">{refCode || '—'}</div>
+          <div className="ot-link">
+            <span>{refLink ? refLink.replace(/^https?:\/\//, '') : 'Lien en cours de création'}</span>
+            <button onClick={() => copy(refLink, 'link')} disabled={!refLink}>{copied === 'link' ? <><Check size={14} strokeWidth={3}/>Copié</> : <><Copy size={14}/>Copier</>}</button>
+          </div>
+          <div className="ot-share">
+            <a className="wa" href={refLink ? lienWhatsappTexte(invitation) : undefined} target="_blank" rel="noreferrer"><WaIcon/>WhatsApp</a>
+            <a className="fb" href={refLink ? lienFacebook(refLink) : undefined} target="_blank" rel="noreferrer"><FbIcon/>Facebook</a>
+            <a className="ghost" href={refLink ? lienSms(invitation) : undefined}><MessageSquare size={15}/>SMS</a>
+            <button className="ghost" onClick={partager}><Share2 size={15}/>Partager</button>
+          </div>
+          <div className="ot-stats">
+            <div><b>{ch.total}</b><small>dossiers attribués</small></div>
+            <div><b>{ch.mois}</b><small>ce mois-ci</small></div>
+            <div><b>{ch.finances}</b><small>financé{ch.finances > 1 ? 's' : ''}</small></div>
+          </div>
+        </div>
+        {refLink && (
+          <div className="ot-qr">
+            <div className="ot-qr-box"><QrSvg data={refLink} size={132} label="QR code de ton lien de parrainage"/></div>
+            <small>À faire scanner</small>
+            <button onClick={() => telechargerQr(refLink, `qr-mayinvest-${refCode || 'lien'}.png`)}><Download size={14}/>Télécharger</button>
+          </div>
+        )}
       </div>
-      <div className="calc-result">
-        <div className="calc-result-lbl">Tes gains ce mois</div>
-        <div className="calc-result-val">{xaf(total)}</div>
+
+      <div className="section-card">
+        <div className="ot-h"><span className="ot-hi blue"><MessagesSquare size={18}/></span><div><b>Messages prêts à envoyer</b><small>Copie-les ou envoie-les directement sur WhatsApp</small></div></div>
+        <div className="ot-scripts">
+          {liste.map(s => (
+            <div key={s.k} className="ot-sc">
+              <span className={`ot-tag ${s.ton}`}>{s.etiquette}</span>
+              <b>{s.titre}</b>
+              <p>{s.texte}</p>
+              <div className="ot-acts">
+                <button onClick={() => copy(s.texte, s.k)}>{copied === s.k ? <><Check size={14} strokeWidth={3}/>Copié</> : <><Copy size={14}/>Copier</>}</button>
+                <a className="wa" href={lienWhatsappTexte(s.texte)} target="_blank" rel="noreferrer"><WaIcon/>Envoyer</a>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="section-card">
+        <div className="ot-h"><span className="ot-hi green"><Coins size={18}/></span><div><b>Combien je peux gagner</b><small>{fmtK(COMMISSION_PAR_DOSSIER)} par dossier financé</small></div></div>
+        <div className="ot-sim">
+          <div>
+            <div className="ot-sim-row"><span>Dossiers financés ce mois</span><b>{nb}</b></div>
+            <input type="range" min={1} max={20} step={1} value={nb} onChange={e => setNb(Number(e.target.value))} aria-label="Nombre de dossiers financés"/>
+            <div className="ot-pills">{[3, 5, 10, 20].map(n => <button key={n} className={nb === n ? 'on' : ''} onClick={() => setNb(n)}>{n}</button>)}</div>
+          </div>
+          <div className="ot-big">
+            <small>Tes gains ce mois</small>
+            <b>{fmtK(g.mois)}</b>
+            <small>Soit {fmtK(g.an)} sur un an à ce rythme</small>
+          </div>
+        </div>
       </div>
     </div>
   )
 }
+
+const WaIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.2.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>
+const FbIcon = () => <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M13.5 22v-8.2h2.8l.4-3.2h-3.2V8.5c0-.9.3-1.6 1.6-1.6h1.7V4.1a23 23 0 0 0-2.5-.1c-2.5 0-4.2 1.5-4.2 4.3v2.4H7.3v3.2h2.8V22h3.4z"/></svg>
+
 
 const IconGrid = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
 const IconUsers = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -1137,6 +1144,55 @@ function GlobalStyles() {
         .lt-meta-m { display: inline; }
       }
 
+      .ot { display: flex; flex-direction: column; gap: 16px; }
+      .ot-ref-l { min-width: 0; }
+      .ot-ref { background: linear-gradient(135deg, #0D1B3E 0%, #1A3A8F 100%); border-radius: 22px; padding: 22px; color: #fff; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 22px; align-items: center; box-shadow: 0 16px 40px rgba(13,27,62,.18); }
+      .ot-lbl { font-size: 12px; opacity: .7; }
+      .ot-code { font-family: 'SF Mono', Menlo, monospace; font-size: 32px; font-weight: 800; letter-spacing: .14em; margin: 2px 0; }
+      .ot-link { display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,.1); border-radius: 14px; padding: 7px 7px 7px 14px; margin: 12px 0; }
+      .ot-link span { flex: 1; min-width: 0; font-size: 13px; opacity: .92; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .ot-link button { flex: none; display: inline-flex; align-items: center; gap: 6px; border: none; background: #fff; color: #0D1B3E; border-radius: 999px; padding: 8px 14px; font-family: inherit; font-size: 12.5px; font-weight: 800; cursor: pointer; }
+      .ot-share { display: flex; flex-wrap: wrap; gap: 8px; }
+      .ot-share a, .ot-share button { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 999px; padding: 9px 14px; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; text-decoration: none; color: #fff; }
+      .ot-share .wa { background: #25D366; } .ot-share .fb { background: #1877F2; } .ot-share .ghost { background: rgba(255,255,255,.14); }
+      .ot-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; }
+      .ot-stats > div { background: rgba(255,255,255,.08); border-radius: 14px; padding: 10px 12px; }
+      .ot-stats b { display: block; font-size: 20px; font-weight: 800; } .ot-stats small { font-size: 11.5px; opacity: .72; }
+      .ot-qr { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+      .ot-qr-box { background: #fff; border-radius: 16px; padding: 6px; line-height: 0; }
+      .ot-qr small { font-size: 11.5px; opacity: .75; }
+      .ot-qr button { display: inline-flex; align-items: center; gap: 6px; border: none; background: rgba(255,255,255,.14); color: #fff; border-radius: 999px; padding: 7px 12px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+      .ot-h { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+      .ot-h b { display: block; font-size: 15px; font-weight: 800; color: ${MI.navy}; } .ot-h small { font-size: 12px; color: #8A94A6; }
+      .ot-hi { width: 36px; height: 36px; border-radius: 11px; display: flex; align-items: center; justify-content: center; flex: none; }
+      .ot-hi.blue { background: ${MI.blueSoft}; color: ${MI.blue}; } .ot-hi.green { background: #DCFCE7; color: #16A34A; }
+      .ot-scripts { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+      .ot-sc { border: 1px solid #EEF1F6; border-radius: 18px; padding: 14px; display: flex; flex-direction: column; gap: 8px; }
+      .ot-sc > b { font-size: 14px; font-weight: 800; color: ${MI.navy}; }
+      .ot-sc p { margin: 0; font-size: 13px; color: #475569; line-height: 1.55; flex: 1; }
+      .ot-tag { align-self: flex-start; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+      .ot-tag.vert { background: #DCFCE7; color: #166534; } .ot-tag.orange { background: #FEF3C7; color: #92400E; } .ot-tag.violet { background: #EDE9FE; color: #5B21B6; }
+      .ot-acts { display: flex; gap: 8px; }
+      .ot-acts button, .ot-acts a { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 999px; padding: 8px 13px; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; text-decoration: none; }
+      .ot-acts button { background: #F1F5F9; color: #334155; } .ot-acts .wa { background: #25D366; color: #fff; }
+      .ot-sim { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; align-items: center; }
+      .ot-sim-row { display: flex; justify-content: space-between; font-size: 13.5px; color: #334155; margin-bottom: 8px; } .ot-sim-row b { font-size: 16px; color: ${MI.navy}; }
+      .ot-sim input[type=range] { width: 100%; accent-color: ${MI.blue}; }
+      .ot-pills { display: flex; gap: 6px; margin-top: 10px; }
+      .ot-pills button { flex: 1; border: 1px solid #E3E8F0; background: #fff; border-radius: 999px; padding: 7px 0; font-family: inherit; font-size: 12.5px; font-weight: 700; color: #334155; cursor: pointer; }
+      .ot-pills button.on { background: ${MI.blueSoft}; border-color: ${MI.blue}; color: ${MI.blue}; }
+      .ot-big { background: linear-gradient(135deg, #2F7BFF, #1557E0); border-radius: 18px; padding: 18px; color: #fff; box-shadow: 0 10px 24px rgba(26,107,255,.25); }
+      .ot-big b { display: block; font-size: 30px; font-weight: 800; margin: 4px 0; } .ot-big small { font-size: 12px; opacity: .85; }
+      @media (max-width: 760px) {
+        .ot-ref { grid-template-columns: minmax(0, 1fr); padding: 18px; }
+        .ot-ref-l { min-width: 0; }
+        .ot-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+        .ot-stats > div { padding: 9px 10px; }
+        .ot-link button { padding: 8px 11px; }
+        .ot-code { font-size: 26px; }
+        .ot-qr { flex-direction: row; flex-wrap: wrap; justify-content: flex-start; gap: 10px 14px; }
+        .ot-sim { grid-template-columns: 1fr; }
+      }
       /* Outils */
       .ref-box { background: linear-gradient(135deg, ${MI.blueSoft} 0%, #fff 60%); border: 1px solid ${MI.grayBorder}; border-radius: 14px; padding: 20px; }
       .ref-code-row { display: flex; align-items: center; gap: 14px; padding-bottom: 14px; border-bottom: 1px solid ${MI.grayBorder}; margin-bottom: 14px; }
