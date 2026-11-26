@@ -524,6 +524,7 @@ function Index() {
             <div className="footer-col-title">Nous contacter</div>
             <a className="footer-link" onClick={() => { setHakiOpen(true); trackHaki(PAGE, 'haki_open', { trigger: 'footer' }) }}>Poser une question à Haki</a>
             <a className="footer-link" onClick={() => navigate({ to: '/mon-dossier' })}>Écrire à mon conseiller</a>
+            <a className="footer-link" href="mailto:contact@mayinvestcapitalstrategy.com">contact@mayinvestcapitalstrategy.com</a>
           </div>
         </div>
         <div className="footer-bottom">
