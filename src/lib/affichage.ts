@@ -122,3 +122,16 @@ export function segmentsMessage(contenu: string): Segment[] {
     .map(s => (s.type === 'texte' ? { ...s, texte: s.texte.replace(/^\n+|\n+$/g, '') } : s))
     .filter(s => s.type === 'liste' || s.texte.trim() !== '')
 }
+
+const PALETTE_AVATAR = [
+  ['#DBEAFE', '#1E40AF'], ['#FCE7F3', '#9D174D'], ['#DCFCE7', '#166534'], ['#FFEDD5', '#9A3412'],
+  ['#E0E7FF', '#3730A3'], ['#EDE9FE', '#5B21B6'], ['#CCFBF1', '#115E59'], ['#FEF3C7', '#92400E'],
+] as const
+
+/** Couleur d'avatar stable pour un même nom. */
+export function couleurAvatar(nom: string): { fond: string; texte: string } {
+  let h = 0
+  for (const c of nom || '?') h = (h * 31 + c.charCodeAt(0)) >>> 0
+  const p = PALETTE_AVATAR[h % PALETTE_AVATAR.length]!
+  return { fond: p[0], texte: p[1] }
+}

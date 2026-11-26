@@ -78,3 +78,55 @@ export function aJourDepuis(majA: number, now: number): string {
   if (min < 60) return `il y a ${min} min`
   return `il y a ${Math.floor(min / 60)} h`
 }
+
+// ============ Pipeline : urgence des dossiers ============
+export type InfoDossier = {
+  last_public_at?: string | null
+  docs_total?: number | null
+  docs_ok?: number | null
+  docs_uploaded?: number | null
+  rdv_at?: string | null
+  rdv_lieu?: string | null
+  rdv_statut?: string | null
+}
+export type Urgence = { jours: number; ton: 'rouge' | 'orange' | 'gris'; libelle: string }
+
+const JOUR_MS = 86_400_000
+
+/** Jours sans échange visible du client (dernier message non interne, sinon création du dossier). */
+export function urgence(lead: CommercialLead, info: InfoDossier | undefined, now: number): Urgence {
+  const ref = new Date(info?.last_public_at || lead.created_at).getTime()
+  const jours = Math.max(0, Math.floor((now - ref) / JOUR_MS))
+  const etape = etapeDe(lead.statut)
+  const seuil = etape === 'a_contacter' ? 2 : etape === 'rdv' ? 3 : Infinity
+  const ton: Urgence['ton'] = jours >= seuil ? 'rouge' : jours >= 1 && etape !== 'depose' ? 'orange' : 'gris'
+  const libelle = jours === 0 ? 'auj.' : jours === 1 ? 'hier' : `${jours} j`
+  return { jours, ton, libelle }
+}
+
+/** Les plus anciens sans nouvelles en premier. */
+export function trierParUrgence<T extends CommercialLead>(leads: T[], infos: Record<string, InfoDossier>, now: number): T[] {
+  return [...leads].sort((a, b) => urgence(b, infos[b.id], now).jours - urgence(a, infos[a.id], now).jours)
+}
+
+export function nbEnRetard(leads: CommercialLead[], infos: Record<string, InfoDossier>, now: number): number {
+  return leads.filter(l => etapeDe(l.statut) && urgence(l, infos[l.id], now).ton === 'rouge').length
+}
+
+export function totalMontant(leads: { montant_demande?: number | null }[]): number {
+  return leads.reduce((s, l) => s + (Number(l.montant_demande) || 0), 0)
+}
+
+/** Pièces reçues (validées ou à vérifier) sur le total. */
+export function piecesRecues(info: InfoDossier | undefined): { recues: number; total: number } {
+  const total = Number(info?.docs_total) || 0
+  return { recues: Math.min(total, (Number(info?.docs_ok) || 0) + (Number(info?.docs_uploaded) || 0)), total }
+}
+
+/** Statut à donner quand on dépose un dossier dans une colonne ; null si rien ne change. */
+export function statutPourEtape(cible: Etape, statutActuel: string): string | null {
+  if (etapeDe(statutActuel) === cible) return null
+  if (cible === 'a_contacter') return 'Contacté'
+  if (cible === 'rdv') return 'RDV'
+  return 'Dossier Déposé'
+}

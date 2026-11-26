@@ -62,7 +62,7 @@ export function useRappels(commercialId: string) {
 // ============ CHOIX DU RAPPEL ============
 const ICONES = { heure: <Clock size={16}/>, soir: <Sunset size={16}/>, demain: <Sun size={16}/>, lundi: <CalendarDays size={16}/> }
 
-export function RappelPicker({ value, onChange, className }: { value: number | null; onChange: (at: number | null) => Promise<string | null> | void; className?: string }) {
+export function RappelPicker({ value, onChange, className, compact }: { value: number | null; onChange: (at: number | null) => Promise<string | null> | void; className?: string; compact?: boolean }) {
   const [open, setOpen] = useState(false)
   const [libre, setLibre] = useState(false)
   const [mobile, setMobile] = useState(false)
@@ -157,8 +157,10 @@ export function RappelPicker({ value, onChange, className }: { value: number | n
   return (
     <>
       <RappelStyles/>
-      <button ref={btn} type="button" className={`${className || ''}${value ? ' on' : ''}`} onClick={() => (open ? setOpen(false) : ouvrir())} aria-haspopup="dialog" aria-expanded={open}>
-        {value ? <><BellRing size={13} style={{ verticalAlign: '-2px', marginRight: 5 }}/>Rappel {libelleRappel(value, now)}</> : <><Bell size={13} style={{ verticalAlign: '-2px', marginRight: 5 }}/>Me rappeler</>}
+      <button ref={btn} type="button" className={`${className || ''}${value ? ' on' : ''}`} onClick={(e) => { e.stopPropagation(); open ? setOpen(false) : ouvrir() }} aria-haspopup="dialog" aria-expanded={open}
+        aria-label={compact ? (value ? `Rappel ${libelleRappel(value, now)}` : 'Me rappeler de ce client') : undefined} title={compact ? (value ? `Rappel ${libelleRappel(value, now)}` : 'Me rappeler') : undefined}>
+        {compact ? (value ? <BellRing size={14}/> : <Bell size={14}/>)
+          : value ? <><BellRing size={13} style={{ verticalAlign: '-2px', marginRight: 5 }}/>Rappel {libelleRappel(value, now)}</> : <><Bell size={13} style={{ verticalAlign: '-2px', marginRight: 5 }}/>Me rappeler</>}
       </button>
       {open && typeof document !== 'undefined' && createPortal(
         mobile ? (

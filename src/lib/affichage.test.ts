@@ -71,3 +71,11 @@ describe('messages', () => {
     expect(segmentsMessage('Prix : 10 - 20 000')).toEqual([{ type: 'texte', texte: 'Prix : 10 - 20 000' }])
   })
 })
+
+describe('avatar', () => {
+  test('même nom, même couleur', async () => {
+    const { couleurAvatar } = await import('./affichage')
+    expect(couleurAvatar('Alin LN')).toEqual(couleurAvatar('Alin LN'))
+    expect(couleurAvatar('').fond).toMatch(/^#/)
+  })
+})

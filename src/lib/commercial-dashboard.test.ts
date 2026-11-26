@@ -80,3 +80,35 @@ describe('fraîcheur de la liste', () => {
     expect(aJourDepuis(t, t + 125 * 60_000)).toBe('il y a 2 h')
   })
 })
+
+describe('pipeline par urgence', () => {
+  const now = new Date(2026, 10, 26, 15, 0).getTime()
+  const j = (n: number) => new Date(now - n * 86_400_000 - 3_600_000).toISOString()
+  test('seuils de retard selon l\'étape', async () => {
+    const { urgence } = await import('./commercial-dashboard')
+    expect(urgence({ id: 'a', statut: 'Nouveau', created_at: j(5) }, undefined, now)).toEqual({ jours: 5, ton: 'rouge', libelle: '5 j' })
+    expect(urgence({ id: 'a', statut: 'Nouveau', created_at: j(1) }, undefined, now).ton).toBe('orange')
+    expect(urgence({ id: 'a', statut: 'RDV', created_at: j(9) }, { last_public_at: j(2) }, now)).toMatchObject({ jours: 2, ton: 'orange' })
+    expect(urgence({ id: 'a', statut: 'Dossier Déposé', created_at: j(8) }, undefined, now).ton).toBe('gris')
+    expect(urgence({ id: 'a', statut: 'Contacté', created_at: j(9) }, { last_public_at: new Date(now - 3_600_000).toISOString() }, now).libelle).toBe('auj.')
+  })
+  test('tri, retards, montants et pièces', async () => {
+    const { trierParUrgence, nbEnRetard, totalMontant, piecesRecues } = await import('./commercial-dashboard')
+    const ls = [{ id: 'a', statut: 'Nouveau', created_at: j(1) }, { id: 'b', statut: 'Nouveau', created_at: j(5) }, { id: 'c', statut: 'Perdu', created_at: j(9) }]
+    expect(trierParUrgence(ls, {}, now).map(l => l.id)).toEqual(['c', 'b', 'a'])
+    expect(nbEnRetard(ls, {}, now)).toBe(1)
+    expect(totalMontant([{ montant_demande: 2_000_000 }, { montant_demande: null }, { montant_demande: 5_200_000 }])).toBe(7_200_000)
+    expect(piecesRecues({ docs_total: 4, docs_ok: 1, docs_uploaded: 2 })).toEqual({ recues: 3, total: 4 })
+  })
+})
+
+describe('glisser-déposer', () => {
+  test('statut selon la colonne d\'arrivée', async () => {
+    const { statutPourEtape } = await import('./commercial-dashboard')
+    expect(statutPourEtape('rdv', 'Nouveau')).toBe('RDV')
+    expect(statutPourEtape('depose', 'RDV')).toBe('Dossier Déposé')
+    expect(statutPourEtape('a_contacter', 'RDV')).toBe('Contacté')
+    expect(statutPourEtape('rdv', 'Éligible')).toBeNull()
+    expect(statutPourEtape('a_contacter', 'Nouveau')).toBeNull()
+  })
+})

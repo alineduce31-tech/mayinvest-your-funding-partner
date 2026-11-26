@@ -10,9 +10,12 @@ import CommercialMessagerie from '@/components/CommercialMessagerie'
 import CallButton from '@/components/CallButton'
 import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
 import { RappelAlarme } from '@/components/Rappels'
-import { UserPlus, LogOut, RefreshCw, ChevronRight } from 'lucide-react'
-import { montantCourt, dateRelative, tonScore, tonStatut, initialesNom } from '@/lib/affichage'
-import { aJourDepuis, ETAPES, COMMISSION_PAR_DOSSIER, grouperParEtape, financesCeMois, progressionObjectif, gainsPour, tachesDuJour } from '@/lib/commercial-dashboard'
+import { UserPlus, LogOut, RefreshCw, ChevronRight, AlertCircle, PhoneCall, CalendarDays, Landmark, Check, Clock, Phone, MessageCircle, ArrowRight } from 'lucide-react'
+import { montantCourt, dateRelative, tonScore, tonStatut, initialesNom, couleurAvatar } from '@/lib/affichage'
+import { blocCalendrier } from '@/lib/conversation'
+import { heureTexte } from '@/lib/rappels'
+import { RappelPicker, useRappels } from '@/components/Rappels'
+import { statutPourEtape, type Etape, aJourDepuis, urgence, trierParUrgence, nbEnRetard, totalMontant, piecesRecues, type InfoDossier, ETAPES, COMMISSION_PAR_DOSSIER, grouperParEtape, financesCeMois, progressionObjectif, gainsPour, tachesDuJour } from '@/lib/commercial-dashboard'
 
 export const Route = createFileRoute('/espace-commercial')({
   component: EspaceCommercialPage,
@@ -256,7 +259,7 @@ function EspaceCommercialPage() {
             </header>
 
             <div className={`ws-content ${tab === 'messagerie' ? 'flush' : ''}`}>
-              {tab === 'dashboard' && <DashboardTab session={session} stats={stats} leads={leads} refLink={refLink} unreadClients={unreadClients} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)} onGo={setTab}/>}
+              {tab === 'dashboard' && <DashboardTab session={session} stats={stats} leads={leads} refLink={refLink} unreadClients={unreadClients} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)} onGo={setTab} onOpenThread={(id) => { setOpenLeadId(id); setTab('messagerie'); window.scrollTo(0, 0) }} onUpdated={() => { loadLeads(); loadStats() }}/>}
               {tab === 'leads' && <LeadsTab leads={leads} majA={leadsMajA} onReload={loadLeads} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)}/>}
               {tab === 'messagerie' && <CommercialMessagerie key={openLeadId || 'inbox'} commercialId={session.id} initialLeadId={openLeadId} onThreadOpen={setThreadOpen} onCountsChange={() => { loadUnreadClients(); loadUnreadChat() }}/>}
               {tab === 'outils' && <OutilsTab refCode={session.ref_code} refLink={refLink} session={session}/>}
@@ -338,14 +341,44 @@ const Arrow = () => (
   </span>
 )
 
+function fmtK(n: number) { return `${new Intl.NumberFormat('fr-FR').format(n).replace(/\u202f|\u00a0/g, ' ')} XAF` }
+
 function leadNom(l: Lead) {
   return `${l.identite?.prenom || l.identite?.raison_sociale || 'Prospect'} ${l.identite?.nom || ''}`.trim()
 }
 
-function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLead, onNewLead, onGo }: {
+function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLead, onNewLead, onGo, onOpenThread, onUpdated }: {
   session: Session; stats: Stats | null; leads: Lead[]; refLink: string; unreadClients: number
-  onOpenLead: (l: Lead) => void; onNewLead: () => void; onGo: (t: 'leads' | 'messagerie' | 'outils') => void
+  onOpenLead: (l: Lead) => void; onNewLead: () => void; onGo: (t: 'leads' | 'messagerie' | 'outils') => void; onOpenThread: (leadId: string) => void; onUpdated: () => void
 }) {
+  const [infos, setInfos] = useState<Record<string, InfoDossier>>({})
+  const { rappels, poser } = useRappels(session.id)
+  const [glisse, setGlisse] = useState<string | null>(null)
+  const [survol, setSurvol] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ id: string; avant: string; texte: string; err?: boolean } | null>(null)
+  const [souris] = useState(() => typeof window !== 'undefined' && !!window.matchMedia?.('(hover: hover) and (pointer: fine)').matches)
+  async function deplacer(leadId: string, cible: Etape) {
+    const l = leads.find(x => x.id === leadId)
+    if (!l) return
+    const nouveau = statutPourEtape(cible, l.statut)
+    if (!nouveau) return
+    const { error } = await supabase.rpc('commercial_update_lead_status', { p_commercial_id: session.id, p_lead_id: leadId, p_statut: nouveau })
+    if (error) { setToast({ id: leadId, avant: l.statut, texte: error.message || 'Déplacement impossible', err: true }); return }
+    setToast({ id: leadId, avant: l.statut, texte: `${leadNom(l)} passé à « ${ETAPES.find(x => x.key === cible)?.label} »` })
+    onUpdated()
+  }
+  async function annuler() {
+    if (!toast || toast.err) { setToast(null); return }
+    await supabase.rpc('commercial_update_lead_status', { p_commercial_id: session.id, p_lead_id: toast.id, p_statut: toast.avant })
+    setToast(null); onUpdated()
+  }
+  useEffect(() => { if (!toast) return; const t = setTimeout(() => setToast(null), 6000); return () => clearTimeout(t) }, [toast])
+  useEffect(() => {
+    supabase.rpc('commercial_inbox').then(({ data }) => {
+      if (!data) return
+      setInfos(Object.fromEntries((data as any[]).map(r => [r.lead_id, r])))
+    })
+  }, [leads])
   const [copied, setCopied] = useState(false)
   const [calcNb, setCalcNb] = useState(3)
   const [done, setDone] = useState<Record<string, boolean>>({})
@@ -355,6 +388,7 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
   const colonnes = grouperParEtape(leads)
   const taches = tachesDuJour(leads, unreadClients, now)
   const actifs = colonnes.a_contacter.length + colonnes.rdv.length + colonnes.depose.length
+  const retards = nbEnRetard(leads, infos, now)
   const waText = encodeURIComponent(`Bonjour ! Mayinvest vous dit en 24 h si votre dossier de crédit est bancable. Gratuit, 2 minutes : ${refLink}`)
 
   function copyLink() {
@@ -393,26 +427,76 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
 
       <div className="cd-grid">
         <div className="section-card cd-kanban-card">
-          <div className="section-head">
-            <h3>Mes dossiers par étape</h3>
-            <button className="pill-btn" onClick={onNewLead}>Nouveau dossier<Arrow/></button>
+          {toast && <div className={`pk-toast ${toast.err ? 'err' : ''}`} role="status">{toast.texte}{!toast.err && <button onClick={annuler}>Annuler</button>}</div>}
+          <div className="pk-top">
+            <div><h3>Mes dossiers par étape</h3><small>{souris ? 'Glisse une carte pour changer son étape · ' : ''}{actifs} dossier{actifs > 1 ? 's' : ''} · {montantCourt(totalMontant([...colonnes.a_contacter, ...colonnes.rdv, ...colonnes.depose])).replace('—', '0 XAF')} en cours</small></div>
+            <div className="pk-top-r">
+              {retards > 0 && <span className="pk-alert"><AlertCircle size={14}/>{retards} en retard</span>}
+              <button className="btn-new-lead" onClick={onNewLead}><UserPlus size={16} strokeWidth={2.2}/>Nouveau dossier</button>
+            </div>
           </div>
-          <div className="cd-kanban">
-            {ETAPES.map(e => (
-              <div key={e.key} className={`cd-col cd-col-${e.key}`}>
-                <div className="cd-col-head"><span>{e.label}</span><b>{colonnes[e.key].length}</b></div>
-                {colonnes[e.key].length === 0 ? (
-                  <div className="cd-col-empty">Aucun dossier</div>
-                ) : colonnes[e.key].slice(0, 4).map(l => (
-                  <button key={l.id} className="cd-card" onClick={() => onOpenLead(l)}>
-                    <div className="cd-card-name">{leadNom(l)}</div>
-                    <div className="cd-card-meta">{l.montant_demande ? xaf(l.montant_demande) : (l.type === 'physique' ? 'Particulier' : 'PME')}</div>
-                    <span className="cd-card-st">{l.statut}</span>
-                  </button>
-                ))}
-                {colonnes[e.key].length > 4 && <button className="cd-more" onClick={() => onGo('leads')}>+ {colonnes[e.key].length - 4} autres</button>}
-              </div>
-            ))}
+          <div className="pk-cols">
+            {ETAPES.map(e => {
+              const liste = trierParUrgence(colonnes[e.key], infos, now)
+              return (
+                <div key={e.key} className={`pk-col pk-col-${e.key} ${survol === e.key && glisse ? 'drop' : ''}`}
+                  onDragOver={ev => { if (!glisse) return; ev.preventDefault(); setSurvol(e.key) }}
+                  onDragLeave={ev => { if (!(ev.currentTarget as HTMLElement).contains(ev.relatedTarget as Node)) setSurvol(null) }}
+                  onDrop={ev => { ev.preventDefault(); const id = glisse; setGlisse(null); setSurvol(null); if (id) deplacer(id, e.key) }}>
+                  <div className="pk-ch">
+                    <span className="pk-ci">{e.key === 'a_contacter' ? <PhoneCall size={17}/> : e.key === 'rdv' ? <CalendarDays size={17}/> : <Landmark size={17}/>}</span>
+                    <div className="pk-ct"><b>{e.label}</b><small>{liste.length ? montantCourt(totalMontant(liste)) : 'Aucun montant'}</small></div>
+                    <span className="pk-cn">{liste.length}</span>
+                  </div>
+                  {liste.length === 0 && <div className="pk-vide">Aucun dossier pour l'instant</div>}
+                  {liste.slice(0, 4).map(l => {
+                    const nom = leadNom(l)
+                    const info = infos[l.id]
+                    const u = urgence(l, info, now)
+                    const av = couleurAvatar(nom)
+                    const p = piecesRecues(info)
+                    const rdvAt = info?.rdv_at ? new Date(info.rdv_at).getTime() : null
+                    const tel = l.identite?.tel || l.identite?.telephone
+                    return (
+                      <div key={l.id} role="button" tabIndex={0} className={`pk-card ${u.ton === 'rouge' ? 'late' : ''} ${glisse === l.id ? 'drag' : ''}`} onClick={() => onOpenLead(l)}
+                        draggable={souris} onDragStart={ev => { ev.dataTransfer.effectAllowed = 'move'; ev.dataTransfer.setData('text/plain', l.id); setGlisse(l.id) }}
+                        onDragEnd={() => { setGlisse(null); setSurvol(null) }}
+                        onKeyDown={ev => { if (ev.key === 'Enter') onOpenLead(l) }}>
+                        <div className="pk-row">
+                          <span className="pk-av" style={{ background: av.fond, color: av.texte }}>{initialesNom(nom)}</span>
+                          <div className="pk-nm"><b>{nom}</b><small>{[l.activite, l.identite?.ville || l.ville].filter(Boolean).join(' · ') || (l.type === 'physique' ? 'Particulier' : 'PME')}</small></div>
+                          {e.key === 'rdv' && info?.rdv_statut === 'confirme'
+                            ? <span className="pk-bd vert"><Check size={11} strokeWidth={3}/>confirmé</span>
+                            : <span className={`pk-bd ${u.ton}`} title="Depuis le dernier échange">{u.libelle}</span>}
+                        </div>
+                        {e.key === 'rdv' && rdvAt && info?.rdv_statut !== 'autre' && (
+                          <div className="pk-rdv">
+                            <span className="pk-cal"><i>{blocCalendrier(rdvAt).jour}</i><b>{blocCalendrier(rdvAt).num}</b></span>
+                            <span>{heureTexte(rdvAt)}{info?.rdv_lieu ? ` · ${info.rdv_lieu}` : ''}</span>
+                          </div>
+                        )}
+                        {e.key === 'rdv' && info?.rdv_statut === 'propose' && u.ton !== 'gris' && <div className="pk-note warn"><Clock size={13}/>RDV proposé, pas de réponse</div>}
+                        {e.key === 'rdv' && info?.rdv_statut === 'autre' && <div className="pk-note warn"><CalendarDays size={13}/>Le client demande une autre date</div>}
+                        {e.key === 'depose' && <div className="pk-note"><Landmark size={13}/>{l.besoin?.banque || l.banque_actuelle || 'En banque'} · déposé il y a {u.jours ? `${u.jours} j` : "aujourd'hui"}</div>}
+                        <div className="pk-ft">
+                          <span className="pk-amt">{montantCourt(l.montant_demande)}</span>
+                          {e.key === 'depose'
+                            ? <span className="pk-bd vert">+{fmtK(COMMISSION_PAR_DOSSIER)} si financé</span>
+                            : p.total > 0 && <span className="pk-pc" title="Pièces reçues"><span className="pk-dots">{Array.from({ length: p.total }, (_, i) => <i key={i} className={i < p.recues ? 'on' : ''}/>)}</span>{p.recues}/{p.total}</span>}
+                        </div>
+                        <div className="pk-qa" onClick={ev => ev.stopPropagation()} onKeyDown={ev => ev.stopPropagation()}>
+                          {tel && <CallButton tel={tel} nom={nom} leadId={l.id} className="pk-q call" title="Appeler"><Phone size={14}/></CallButton>}
+                          <button className="pk-q msg" title="Écrire" aria-label="Écrire au client" onClick={() => onOpenThread(l.id)}><MessageCircle size={14}/></button>
+                          <RappelPicker compact className="pk-q bell" value={rappels[l.id] || null} onChange={at => poser(l.id, at)}/>
+                        </div>
+                      </div>
+                    )
+                  })}
+                  {liste.length > 4 && <button className="pk-more" onClick={() => onGo('leads')}>Voir les {liste.length - 4} autres<ArrowRight size={14}/></button>}
+                  {glisse && survol === e.key && !liste.some(x => x.id === glisse) && <div className="pk-drop">Déposer ici</div>}
+                </div>
+              )
+            })}
           </div>
         </div>
 
@@ -909,12 +993,60 @@ function GlobalStyles() {
       .cd-btn-light:disabled { opacity: 0.5; cursor: default; }
       .cd-btn-wa { background: #16A34A; color: #fff; }
       .cd-btn-wa:hover { color: #fff; background: #15803D; }
-      .cd-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+      .cd-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; align-items: start; }
+      .cd-grid > .cd-kanban-card { grid-column: 1 / -1; }
       @media (max-width: 1000px) { .cd-grid { grid-template-columns: 1fr; } }
-      .cd-side { display: flex; flex-direction: column; gap: 16px; }
+      .cd-side { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; align-items: start; grid-column: 1 / -1; }
       .cd-side .section-card { margin-bottom: 0; }
       .cd-kanban { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
       @media (max-width: 640px) { .cd-kanban { grid-template-columns: 1fr; } }
+      .pk-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+      .pk-top h3 { font-size: 16px; font-weight: 800; color: ${MI.navy}; margin: 0; }
+      .pk-top small { font-size: 12px; color: #8A94A6; }
+      .pk-top-r { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+      .pk-alert { display: inline-flex; align-items: center; gap: 5px; background: #FEE2E2; color: #B91C1C; font-size: 12px; font-weight: 700; padding: 6px 11px; border-radius: 999px; }
+      .pk-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+      .pk-col { background: #F5F7FB; border-radius: 18px; padding: 12px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+      .pk-ch { display: flex; align-items: center; gap: 10px; padding: 2px 2px 4px; }
+      .pk-ci { width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex: none; }
+      .pk-col-a_contacter .pk-ci { background: #FEF3C7; color: #B45309; } .pk-col-rdv .pk-ci { background: ${MI.blueSoft}; color: ${MI.blue}; } .pk-col-depose .pk-ci { background: #EDE9FE; color: #6D28D9; }
+      .pk-ct { flex: 1; min-width: 0; } .pk-ct b { display: block; font-size: 13.5px; font-weight: 800; color: ${MI.navy}; } .pk-ct small { font-size: 11.5px; color: #8A94A6; }
+      .pk-cn { font-size: 12px; font-weight: 800; background: #fff; color: ${MI.navy}; border-radius: 999px; padding: 2px 10px; box-shadow: 0 1px 2px rgba(13,27,62,.06); }
+      .pk-vide { font-size: 12px; color: #A3AEC2; padding: 14px 6px; text-align: center; }
+      .pk-card { position: relative; background: #fff; border-radius: 16px; padding: 12px; box-shadow: 0 1px 3px rgba(13,27,62,.07); display: flex; flex-direction: column; gap: 9px; cursor: pointer; transition: box-shadow .15s, transform .15s; outline: none; }
+      .pk-card:hover, .pk-card:focus-visible { box-shadow: 0 8px 22px rgba(13,27,62,.1); transform: translateY(-1px); }
+      .pk-card.late::before { content: ''; position: absolute; left: 0; top: 14px; bottom: 14px; width: 3px; border-radius: 0 3px 3px 0; background: #EF4444; }
+      .pk-row { display: flex; align-items: center; gap: 10px; min-width: 0; }
+      .pk-av { width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; flex: none; }
+      .pk-nm { flex: 1; min-width: 0; } .pk-nm b { display: block; font-size: 13.5px; font-weight: 800; color: ${MI.navy}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .pk-nm small { display: block; font-size: 11.5px; color: #8A94A6; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .pk-bd { display: inline-flex; align-items: center; gap: 3px; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 999px; white-space: nowrap; flex: none; }
+      .pk-bd.rouge { background: #FEE2E2; color: #B91C1C; } .pk-bd.orange { background: #FEF3C7; color: #92400E; } .pk-bd.gris { background: #F1F5F9; color: #64748B; } .pk-bd.vert { background: #DCFCE7; color: #15803D; }
+      .pk-rdv { display: flex; align-items: center; gap: 8px; background: #F5F8FF; border-radius: 10px; padding: 7px 9px; font-size: 12px; color: #334155; min-width: 0; }
+      .pk-rdv > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .pk-cal { width: 30px; text-align: center; border-radius: 7px; overflow: hidden; box-shadow: 0 0 0 1px #E3E8F0; background: #fff; flex: none; }
+      .pk-cal i { display: block; font-style: normal; background: #EF4444; color: #fff; font-size: 8px; font-weight: 800; padding: 1px 0; }
+      .pk-cal b { display: block; font-size: 13px; color: ${MI.navy}; }
+      .pk-note { display: flex; align-items: center; gap: 5px; font-size: 12px; color: #64748B; }
+      .pk-note.warn { color: #B45309; }
+      .pk-ft { display: flex; align-items: center; gap: 8px; border-top: 1px solid #F0F2F7; padding-top: 9px; }
+      .pk-amt { flex: 1; font-size: 13.5px; font-weight: 800; color: ${MI.navy}; white-space: nowrap; }
+      .pk-pc { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: #64748B; font-weight: 600; }
+      .pk-dots { display: inline-flex; gap: 2px; } .pk-dots i { width: 6px; height: 6px; border-radius: 2px; background: #E2E8F0; display: block; } .pk-dots i.on { background: #22C55E; }
+      .pk-qa { display: flex; gap: 6px; }
+      .pk-q { width: 30px; height: 30px; border-radius: 50%; border: none; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; font-family: inherit; text-decoration: none; transition: transform .1s; }
+      .pk-q:active { transform: scale(.92); }
+      .pk-q.call { background: #E8F8EE; color: #16A34A; } .pk-q.msg { background: ${MI.blueSoft}; color: ${MI.blue}; } .pk-q.bell { background: #F1F5F9; color: #64748B; } .pk-q.bell.on { background: #FEF3C7; color: #B45309; }
+      .pk-col.drop { background: ${MI.blueSoft}; box-shadow: inset 0 0 0 2px ${MI.blue}; }
+      .pk-card.drag { opacity: .45; }
+      .pk-card[draggable="true"] { cursor: grab; }
+      .pk-drop { border: 2px dashed ${MI.blue}; border-radius: 14px; padding: 14px; text-align: center; font-size: 12.5px; font-weight: 700; color: ${MI.blue}; background: rgba(255,255,255,.6); }
+      .pk-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 1000; background: ${MI.navy}; color: #fff; border-radius: 999px; padding: 10px 10px 10px 18px; display: flex; align-items: center; gap: 14px; font-size: 13px; font-weight: 600; box-shadow: 0 12px 30px rgba(13,27,62,.3); }
+      .pk-toast.err { background: #B91C1C; padding-right: 18px; }
+      .pk-toast button { border: none; background: rgba(255,255,255,.15); color: #fff; border-radius: 999px; padding: 6px 12px; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+      .pk-more { display: flex; align-items: center; justify-content: center; gap: 6px; border: none; border-radius: 12px; padding: 10px; font-family: inherit; font-size: 12.5px; font-weight: 700; color: ${MI.blue}; background: #fff; cursor: pointer; box-shadow: 0 1px 2px rgba(13,27,62,.05); }
+      .pk-more:hover { background: ${MI.blueSoft}; }
+      @media (max-width: 900px) { .pk-cols { grid-template-columns: 1fr; } }
       .cd-col { background: ${MI.grayBg}; border-radius: 14px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; }
       .cd-col-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 800; color: ${MI.navy}; padding: 2px 4px 4px; }
       .cd-col-head b { background: #fff; border-radius: 100px; padding: 1px 9px; font-size: 11px; }
