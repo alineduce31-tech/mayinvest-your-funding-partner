@@ -1,0 +1,3 @@
+-- Appliquées : documents_sans_doublons (suppression des pièces vides en double + index unique lead_id, doc_label),
+-- documents_creation_sans_doublon (on conflict do nothing dans get_lead_documents, admin_request_document,
+-- commercial_request_document), client_mon_conseiller (prénom, initiale du nom et téléphone du conseiller du client connecté).

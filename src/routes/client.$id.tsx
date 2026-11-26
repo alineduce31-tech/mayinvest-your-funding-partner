@@ -1,5 +1,8 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
+import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Landmark, FileBadge, FileText, BarChart3, CircleCheck, Clock, Camera, Lock } from 'lucide-react'
+import { ETAPES_CLIENT, etapeCourante, compteDocs, prochaineEtape, decoupePiece } from '@/lib/espace-client'
+import { initialesNom, couleurAvatar } from '@/lib/affichage'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { setClientToken } from '@/lib/session-tokens'
 import { requestPasswordReset } from '@/lib/password-reset'
@@ -176,7 +179,8 @@ function ClientPortal() {
   const [messages, setMessages] = useState<any[]>([])
   const [newMsg, setNewMsg] = useState('')
   const [sending, setSending] = useState(false)
-  const [activeTab, setActiveTab] = useState<'suivi' | 'chat' | 'infos'>('suivi')
+  const [activeTab, setActiveTab] = useState<'suivi' | 'chat' | 'docs' | 'infos'>('suivi')
+  const [conseiller, setConseiller] = useState<{ prenom: string; nom: string; telephone: string } | null>(null)
   // Lien direct vers un onglet : /client/<id>?tab=chat
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('tab')
@@ -355,6 +359,12 @@ function ClientPortal() {
     closeAttach()
   }
 
+  async function loadConseiller() {
+    const { data } = await supabase.rpc('client_mon_conseiller')
+    const c = Array.isArray(data) ? data[0] : data
+    setConseiller(c ? { prenom: c.prenom || '', nom: c.nom || '', telephone: c.telephone || '' } : null)
+  }
+
   async function loadDocuments() {
     const { data } = await supabase.rpc('get_lead_documents', { p_id: id })
     if (data) setDocuments(data)
@@ -385,10 +395,10 @@ function ClientPortal() {
   }
 
   useEffect(() => {
-    if (stage === 'portal' && (activeTab === 'infos' || activeTab === 'chat') && documents.length === 0) {
-      loadDocuments()
-    }
+    if (stage === 'portal' && documents.length === 0) loadDocuments()
   }, [stage, activeTab])
+
+  useEffect(() => { if (stage === 'portal') loadConseiller() }, [stage, lead?.agent_commercial_id])
 
   async function deconnecter() {
     try { await supabase.rpc('mi_logout', { p_kind: 'client' }) } catch {}
@@ -986,91 +996,73 @@ function ClientPortal() {
   const tel = lead?.identite?.tel || ''
   const unreadMsgs = messages.filter(m => m.sender !== 'client' && !m.read_at).length
 
+  const prochaine = prochaineEtape(lead?.statut, documents)
+  const docsC = compteDocs(documents)
+  const etape = etapeCourante(lead?.statut)
+  const nomConseiller = conseiller ? `${conseiller.prenom} ${conseiller.nom}`.trim() : ''
+  const av = couleurAvatar(nom || 'Client')
+  const objet = lead?.besoin?.objet ? `Crédit ${String(lead.besoin.objet).toLowerCase()}` : 'Votre demande de crédit'
+  const ICONES_PIECE: Record<string, ReactNode> = { cni: <IdCard size={17}/>, bulletin_salaire: <Receipt size={17}/>, releve_bancaire: <Landmark size={17}/>, attestation_employeur: <FileBadge size={17}/>, rccm: <FileBadge size={17}/>, statuts: <FileText size={17}/>, niu: <IdCard size={17}/>, bilan: <BarChart3 size={17}/> }
+
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", background: '#F8FAFC', color: '#111', minHeight: '100vh' }}>
+    <div className="cx">
       {commonStyle}
+      <style>{CX_CSS}</style>
 
-      <div className="c-wrap">
-        {/* ----- HEADER UNIQUE (2 cols sur PC, stacké sur mobile) ----- */}
-        <div className="c-portal-head">
-          <div className="c-head-top">
-            <div className="c-head-identity">
-              <h1 className="c-head-name">{nom || 'Mon dossier'}</h1>
-              <div className="c-head-ref">Dossier n° {String(id).slice(0, 8).toUpperCase()}</div>
-            </div>
-            <div className="c-head-score">
-              <div className="c-head-score-v">{lead?.score || 0}</div>
-              <div className="c-head-score-l">/ 100</div>
-            </div>
-            <div className="c-head-meta" style={{ marginTop: 12 }}>
-              <span className="c-chip c-chip-statut" style={{ background: col.bg, color: col.fg }}>● {lead?.statut}</span>
-              <span className="c-chip">{isP ? 'Particulier' : 'PME'}{lead?.activite ? ' · ' + lead.activite : ''}</span>
-              {lead?.ville && <span className="c-chip">📍 {lead.ville}</span>}
-            </div>
+      <div className="c-wrap cx-wrap">
+        <div className="cx-head">
+          <div className="cx-top">
+            <span className="cx-av" style={{ background: av.fond, color: av.texte }}>{initialesNom(nom || 'Client')}</span>
+            <div className="cx-id"><small>Bonjour</small><h1>{nom || 'Mon dossier'}</h1></div>
+            <button className="cx-rb" onClick={deconnecter} title="Se déconnecter" aria-label="Se déconnecter"><LogOut size={16}/></button>
           </div>
-          <div className="c-head-right">
-            <div className="c-head-actions">
-              <button className="c-btn-chat-head" onClick={() => setActiveTab('chat')}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
-                Mon conseiller
-                {unreadMsgs > 0 && <span style={{ background: '#fff', color: '#1A6BFF', fontSize: 10, fontWeight: 800, padding: '1px 6px', borderRadius: 100, marginLeft: 4 }}>{unreadMsgs}</span>}
-              </button>
-              <button className="c-btn-logout" onClick={deconnecter}>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 1h3v12H9M5 10l-3-3 3-3M2 7h8" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                Déconnexion
-              </button>
-            </div>
+          <div className="cx-sum">
+            <svg width="48" height="48" viewBox="0 0 48 48" aria-label={`Score ${lead?.score || 0} sur 100`}><circle cx="24" cy="24" r="19" fill="none" stroke="rgba(255,255,255,.15)" strokeWidth="5"/><circle cx="24" cy="24" r="19" fill="none" stroke="#4A8DFF" strokeWidth="5" strokeDasharray={`${(Math.min(100, lead?.score || 0) / 100) * 119.4} 119.4`} strokeLinecap="round" transform="rotate(-90 24 24)"/><text x="24" y="28" textAnchor="middle" fontSize="13" fill="#fff" fontWeight="700">{lead?.score || 0}</text></svg>
+            <div className="cx-sum-t"><small>{objet}</small><b>{formatXAF(lead?.montant_demande)}</b><small>Dossier {lead?.access_code || String(id).slice(0, 8).toUpperCase()}</small></div>
           </div>
         </div>
 
-        {/* ----- Tabs ----- */}
-        <div className="c-tabs">
-          <button className={`c-tab ${activeTab === 'suivi' ? 'on' : ''}`} onClick={() => setActiveTab('suivi')}>Suivi</button>
-          <button className={`c-tab ${activeTab === 'chat' ? 'on' : ''}`} onClick={() => setActiveTab('chat')}>
-            Discussion{unreadMsgs > 0 && <span className="c-tab-badge">{unreadMsgs}</span>}
-          </button>
-          <button className={`c-tab ${activeTab === 'infos' ? 'on' : ''}`} onClick={() => setActiveTab('infos')}>Mes infos</button>
+        <div className="cx-seg" role="tablist">
+          <button className={activeTab === 'suivi' ? 'on' : ''} onClick={() => setActiveTab('suivi')}>Suivi</button>
+          <button className={activeTab === 'chat' ? 'on' : ''} onClick={() => setActiveTab('chat')}>Discussion{unreadMsgs > 0 && <i>{unreadMsgs}</i>}</button>
+          <button className={activeTab === 'docs' ? 'on' : ''} onClick={() => setActiveTab('docs')}>Documents{docsC.aRefaire > 0 && <i className="o">{docsC.aRefaire}</i>}</button>
+          <button className={activeTab === 'infos' ? 'on' : ''} onClick={() => setActiveTab('infos')}>Infos</button>
         </div>
 
-        {/* ----- SUIVI ----- */}
         {activeTab === 'suivi' && <>
-          <div className="c-card">
-            <div className="c-card-h">Avancement de votre dossier</div>
-            {STEPS.map((s, i) => {
-              const cls = i < statutIdx ? 'done' : i === statutIdx ? 'on' : 'pending'
-              return (
-                <div key={s} className={`c-tl-step ${cls}`}>
-                  <div className="c-tl-dot"><div className="c-tl-circle">{i < statutIdx ? '✓' : i + 1}</div></div>
-                  <div className="c-tl-label">{s}</div>
-                </div>
-              )
-            })}
+          <div className="cx-next">
+            <small>Prochaine étape</small>
+            <b>{prochaine.titre}</b>
+            <p>{prochaine.texte}</p>
+            {prochaine.action && <button onClick={() => prochaine.action === 'documents' ? setActiveTab('docs') : openAdvisorChat()}>{prochaine.action === 'documents' ? <Upload size={14}/> : <MessageCircle size={14}/>}{prochaine.bouton}</button>}
+          </div>
+
+          <div className="cx-gt">Avancement</div>
+          <div className="cx-g cx-steps">
+            {ETAPES_CLIENT.map((e, i) => (
+              <div key={e.statut} className={`cx-step ${i < etape ? 'ok' : i === etape ? 'on' : ''}`}>
+                <span className="cx-dot">{i < etape ? <Check size={13} strokeWidth={3}/> : i + 1}</span>
+                <span className="cx-step-l">{e.label}</span>
+                {i === 0 && lead?.created_at && <small>{new Date(lead.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</small>}
+                {i === etape && i > 0 && <small className="b">en cours</small>}
+              </div>
+            ))}
           </div>
 
           {packNeeded && (
-            <div className="c-card">
-              <div className="c-pack">
-                <div className="c-pack-h">📄 Pack Formalisation Mayinvest</div>
-                <div className="c-pack-p">Votre société n'a pas encore de RCCM. Nous pouvons nous charger de la création : statuts, immatriculation, NIU et compte bancaire.</div>
-                <button className="c-btn-pack" onClick={() => openAdvisorChat('Bonjour, je suis intéressé par le Pack Formalisation pour ma société.')}>Je suis intéressé</button>
-              </div>
+            <div className="cx-g cx-pack">
+              <b>Pack Formalisation Mayinvest</b>
+              <p>Votre société n'a pas encore de RCCM. Nous pouvons nous charger de la création : statuts, immatriculation, NIU et compte bancaire.</p>
+              <button onClick={() => openAdvisorChat('Bonjour, je suis intéressé par le Pack Formalisation pour ma société.')}>Je suis intéressé</button>
             </div>
           )}
 
-          <div className="c-card">
-            <div className="c-card-h">Besoin d'aide ?</div>
-            <div className="c-contact">
-              <div className="c-contact-h">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#1A6BFF" strokeWidth="2" strokeLinejoin="round"/></svg>
-                Discuter avec un conseiller
-              </div>
-              <div className="c-contact-sub">Écrivez à votre conseiller Mayinvest directement ici. Il vous répond sous 24h et vous pouvez lui envoyer vos documents.</div>
-              <button className="c-btn-wa" onClick={() => openAdvisorChat()}>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M4 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H9l-5 4V5z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
-                Écrire à mon conseiller
-                {unreadMsgs > 0 && <span className="c-btn-wa-badge">{unreadMsgs}</span>}
-              </button>
-            </div>
+          <div className="cx-gt">Votre conseiller</div>
+          <div className="cx-g cx-cons">
+            <span className="cx-av s" style={{ background: '#E8F8EE', color: '#16A34A' }}>{nomConseiller ? initialesNom(nomConseiller) : <User size={16}/>}</span>
+            <div className="cx-cons-t"><b>{nomConseiller || 'Un conseiller va vous être attribué'}</b><small>{nomConseiller ? 'Répond en général sous 24 h' : 'Vous pouvez déjà écrire, l\'équipe vous répond.'}</small></div>
+            {conseiller?.telephone && <a className="cx-rb g" href={`tel:${conseiller.telephone}`} title="Appeler mon conseiller" aria-label="Appeler mon conseiller"><Phone size={15}/></a>}
+            <button className="cx-rb b" onClick={() => openAdvisorChat()} title="Écrire à mon conseiller" aria-label="Écrire à mon conseiller"><MessageCircle size={15}/></button>
           </div>
         </>}
 
@@ -1090,8 +1082,8 @@ function ClientPortal() {
                 <span className="c-msg-head-dot"/>
               </div>
               <div className="c-msg-head-info">
-                <div className="c-msg-head-name">Conseiller Mayinvest</div>
-                <div className="c-msg-head-sub">En ligne · Répond sous 24h</div>
+                <div className="c-msg-head-name">{conseiller ? `${conseiller.prenom} ${conseiller.nom}`.trim() : 'Votre conseiller Mayinvest'}</div>
+                <div className="c-msg-head-sub">Conseiller Mayinvest · répond en général sous 24 h</div>
               </div>
             </div>
 
@@ -1142,99 +1134,71 @@ function ClientPortal() {
           </div>
         )}
 
-        {/* ----- INFOS ----- */}
-        {activeTab === 'infos' && (
-          <div className="c-card">
-            <div className="c-card-h">Récap de votre demande</div>
-            <div className="c-infos">
-              <div><div className="c-info-k">Type</div><div className="c-info-v">{isP ? 'Particulier' : 'PME'}</div></div>
-              <div><div className="c-info-k">Activité</div><div className="c-info-v">{lead?.activite || '—'}</div></div>
-              <div><div className="c-info-k">Montant demandé</div><div className="c-info-v">{formatXAF(lead?.montant_demande)}</div></div>
-              <div><div className="c-info-k">Objet</div><div className="c-info-v">{lead?.besoin?.objet || '—'}</div></div>
-              <div><div className="c-info-k">Banque</div><div className="c-info-v">{lead?.banque_actuelle || '—'}</div></div>
-              <div><div className="c-info-k">Ville</div><div className="c-info-v">{lead?.ville || '—'}</div></div>
-              {isP ? <>
-                <div><div className="c-info-k">Employeur</div><div className="c-info-v">{lead?.situation?.employeur || '—'}</div></div>
-                <div><div className="c-info-k">Revenu mensuel</div><div className="c-info-v">{formatXAF(lead?.situation?.revenu)}</div></div>
-                <div><div className="c-info-k">Salaire domicilié</div><div className="c-info-v">{lead?.eligibilite?.salaire_domic || '—'}</div></div>
-              </> : <>
-                <div><div className="c-info-k">Dirigeant</div><div className="c-info-v">{lead?.situation?.dirigeant || '—'}</div></div>
-                <div><div className="c-info-k">RCCM</div><div className="c-info-v">{lead?.situation?.rccm || '—'}</div></div>
-                <div><div className="c-info-k">CA annuel</div><div className="c-info-v">{formatXAF(lead?.situation?.ca_annuel)}</div></div>
-                <div><div className="c-info-k">Flux mensuel</div><div className="c-info-v">{formatXAF(lead?.besoin?.flux_mois)}</div></div>
-              </>}
-            </div>
-            <div className="c-info-note">💡 Besoin de modifier une info ? Envoyez un message à votre conseiller dans l'onglet Discussion.</div>
+        {activeTab === 'docs' && <>
+          <div className="cx-g cx-docs-h">
+            <div className="cx-docs-n"><b>{docsC.envoyes} sur {docsC.total}</b> envoyé{docsC.envoyes > 1 ? 's' : ''}{docsC.valides > 0 ? ` · ${docsC.valides} validé${docsC.valides > 1 ? 's' : ''}` : ''}</div>
+            <div className="cx-bar"><i style={{ width: `${docsC.total ? (docsC.envoyes / docsC.total) * 100 : 0}%` }}/></div>
+            <p>Une photo nette prise avec votre téléphone suffit. Votre conseiller vérifie chaque pièce.</p>
           </div>
-        )}
-
-        {/* ----- DOCUMENTS CHECKLIST (dans Mes infos) ----- */}
-        {activeTab === 'infos' && (
-          <div className="c-card">
-            <div className="c-card-h">Mes documents</div>
-            <div style={{ fontSize: 13, color: '#666', marginBottom: 14, lineHeight: 1.5 }}>
-              Téléversez vos documents un par un. Chaque pièce est validée automatiquement par votre conseiller.
-            </div>
-            {documents.length === 0 ? (
-              <div style={{ padding: '24px 0' }}>
-                <div style={{ height: 12, width: '50%', margin: '0 auto 10px', background: 'linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%)', backgroundSize: '200% 100%', animation: 'skp-inline-shim 1.5s infinite', borderRadius: 6 }}/>
-                <div style={{ height: 12, width: '35%', margin: '0 auto', background: 'linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%)', backgroundSize: '200% 100%', animation: 'skp-inline-shim 1.5s infinite', borderRadius: 6 }}/>
-                <style>{`@keyframes skp-inline-shim { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
-              </div>
-            ) : (
-              <div className="c-docs">
-                <div className="c-docs-progress">
-                  <div className="c-docs-progress-bar" style={{ width: `${(documents.filter(d => d.status !== 'pending').length / documents.length) * 100}%` }}/>
-                </div>
-                <div className="c-docs-progress-txt">
-                  {documents.filter(d => d.status !== 'pending').length} / {documents.length} documents déposés
-                </div>
-                {documents.map(d => {
-                  const isUploaded = d.status === 'uploaded' || d.status === 'validated'
-                  const isValidated = d.status === 'validated'
-                  const isRejected = d.status === 'rejected'
-                  const isUploading = uploadingDocType === d.id
-                  return (
-                    <div key={d.id} className={`c-doc-row ${isUploaded ? 'ok' : ''} ${isRejected ? 'ko' : ''}`}>
-                      <div className="c-doc-ic">
-                        {isValidated ? (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#34D058"/><path d="M8 12l3 3 5-6" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        ) : isUploaded ? (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#1A6BFF"/><path d="M8 12l3 3 5-6" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                        ) : isRejected ? (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#DC2626"/><path d="M15 9l-6 6M9 9l6 6" stroke="#fff" strokeWidth="2" strokeLinecap="round"/></svg>
-                        ) : (
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#F3F4F6" stroke="#E5E7EB" strokeWidth="1.5"/></svg>
-                        )}
-                      </div>
-                      <div className="c-doc-info">
-                        <div className="c-doc-name">{d.doc_label}</div>
-                        <div className="c-doc-status">
-                          {isValidated && <span style={{ color: '#166534', fontWeight: 700 }}>✓ Validé par le conseiller</span>}
-                          {!isValidated && isUploaded && <span style={{ color: '#1A6BFF', fontWeight: 700 }}>Déposé · En attente de validation</span>}
-                          {isRejected && <span style={{ color: '#DC2626', fontWeight: 700 }}>✗ À remplacer · {d.admin_note || 'Fichier non conforme'}</span>}
-                          {!isUploaded && !isRejected && <span style={{ color: '#888' }}>À déposer</span>}
-                        </div>
-                        {d.file_name && (
-                          <a href={d.file_url} target="_blank" rel="noopener" className="c-doc-link">
-                            📎 {d.file_name}
-                          </a>
-                        )}
-                      </div>
-                      <label className="c-doc-upload-btn">
-                        {isUploading ? '…' : isUploaded ? 'Remplacer' : 'Déposer'}
-                        <input type="file" style={{ display: 'none' }}
-                          accept="image/*,application/pdf,.doc,.docx"
-                          disabled={isUploading}
+          {documents.length === 0 ? (
+            <div className="cx-g cx-vide">Chargement de vos documents…</div>
+          ) : (
+            <div className="cx-g">
+              {documents.map(d => {
+                const envoye = d.status === 'uploaded'
+                const valide = d.status === 'validated'
+                const refuse = d.status === 'rejected'
+                const enCours = uploadingDocType === d.id
+                const t = decoupePiece(d.doc_label)
+                const ton = valide ? 'g' : envoye ? 'o' : refuse ? 'r' : 'b'
+                return (
+                  <div key={d.id} className="cx-doc">
+                    <span className={`cx-ic ${ton}`}>{ICONES_PIECE[d.doc_type] || <FileText size={17}/>}</span>
+                    <div className="cx-doc-t">
+                      <b>{t.titre}</b>
+                      <small className={ton}>{valide ? 'Validée' : envoye ? 'Reçue, en vérification' : refuse ? `À remplacer · ${d.admin_note || 'fichier non conforme'}` : (t.precision || 'À envoyer')}</small>
+                      {d.file_name && <a href={d.file_url} target="_blank" rel="noopener">{d.file_name}</a>}
+                    </div>
+                    {valide ? <CircleCheck size={20} className="cx-st g"/> : envoye ? <Clock size={19} className="cx-st o"/> : (
+                      <label className={`cx-send ${refuse ? 'r' : ''}`}>
+                        {enCours ? 'Envoi…' : <><Camera size={14}/>{refuse ? 'Renvoyer' : 'Envoyer'}</>}
+                        <input type="file" style={{ display: 'none' }} accept="image/*,application/pdf,.doc,.docx" disabled={enCours}
                           onChange={e => { const f = e.target.files?.[0]; if (f) uploadDocument(d, f); e.currentTarget.value = '' }}/>
                       </label>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
+          <div className="cx-note"><Lock size={13}/>Vos documents sont visibles uniquement par Mayinvest.</div>
+        </>}
+
+        {activeTab === 'infos' && <>
+          <div className="cx-gt">Votre demande</div>
+          <div className="cx-g">
+            <div className="cx-r"><span>Type</span><b>{isP ? 'Particulier' : 'PME'}</b></div>
+            <div className="cx-r"><span>Activité</span><b>{lead?.activite || '—'}</b></div>
+            <div className="cx-r"><span>Montant demandé</span><b>{formatXAF(lead?.montant_demande)}</b></div>
+            <div className="cx-r"><span>Objet</span><b>{lead?.besoin?.objet || '—'}</b></div>
+            <div className="cx-r"><span>Banque</span><b>{lead?.banque_actuelle || '—'}</b></div>
+            <div className="cx-r"><span>Ville</span><b>{lead?.ville || '—'}</b></div>
           </div>
-        )}
+          <div className="cx-gt">{isP ? 'Situation professionnelle' : 'Votre société'}</div>
+          <div className="cx-g">
+            {isP ? <>
+              <div className="cx-r"><span>Employeur</span><b>{lead?.situation?.employeur || '—'}</b></div>
+              <div className="cx-r"><span>Revenu mensuel</span><b>{lead?.situation?.revenu ? formatXAF(lead.situation.revenu) : '—'}</b></div>
+              <div className="cx-r"><span>Salaire domicilié</span><b>{lead?.eligibilite?.salaire_domic || '—'}</b></div>
+            </> : <>
+              <div className="cx-r"><span>Dirigeant</span><b>{lead?.situation?.dirigeant || '—'}</b></div>
+              <div className="cx-r"><span>RCCM</span><b>{lead?.situation?.rccm || '—'}</b></div>
+              <div className="cx-r"><span>CA annuel</span><b>{lead?.situation?.ca_annuel ? formatXAF(lead.situation.ca_annuel) : '—'}</b></div>
+              <div className="cx-r"><span>Flux mensuel</span><b>{lead?.besoin?.flux_mois ? formatXAF(lead.besoin.flux_mois) : '—'}</b></div>
+            </>}
+          </div>
+          <div className="cx-note"><MessageCircle size={13}/>Une information à corriger ? Écrivez à votre conseiller dans l'onglet Discussion.</div>
+        </>}
       </div>
 
       <HakiSheetStyles panel=".c-haki-panel"/>
@@ -1243,3 +1207,64 @@ function ClientPortal() {
     </div>
   )
 }
+
+const CX_CSS = `
+  .cx { font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; background: #F5F5F7; color: #1D1D1F; min-height: 100vh; }
+  .cx-wrap { max-width: 720px !important; margin: 0 auto; padding: 16px 14px 120px !important; }
+  .cx-head { background: #fff; border-radius: 20px; padding: 16px; margin-bottom: 14px; }
+  .cx-top { display: flex; align-items: center; gap: 12px; }
+  .cx-av { width: 46px; height: 46px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; flex: none; }
+  .cx-av.s { width: 40px; height: 40px; font-size: 13px; }
+  .cx-id { flex: 1; min-width: 0; }
+  .cx-id small { font-size: 12.5px; color: #86868B; }
+  .cx-id h1 { margin: 0; font-size: 20px; font-weight: 700; letter-spacing: -0.02em; }
+  .cx-rb { width: 38px; height: 38px; border-radius: 50%; border: none; background: #F5F5F7; color: #6E6E73; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; text-decoration: none; }
+  .cx-rb.g { background: #E8F8EE; color: #16A34A; } .cx-rb.b { background: #EAF1FF; color: #1A6BFF; }
+  .cx-sum { display: flex; align-items: center; gap: 12px; margin-top: 14px; padding: 12px 14px; border-radius: 16px; background: #0D1B3E; color: #fff; }
+  .cx-sum-t { display: flex; flex-direction: column; min-width: 0; }
+  .cx-sum-t small { font-size: 12px; opacity: .72; }
+  .cx-sum-t b { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
+  .cx-seg { display: flex; background: #E8E8ED; border-radius: 12px; padding: 3px; margin-bottom: 14px; position: sticky; top: 8px; z-index: 5; box-shadow: 0 0 0 8px #F5F5F7; }
+  .cx-seg button { flex: 1; border: none; background: none; border-radius: 10px; padding: 8px 2px; font-family: inherit; font-size: 13px; font-weight: 500; color: #6E6E73; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
+  .cx-seg button.on { background: #fff; color: #1D1D1F; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .cx-seg i { font-style: normal; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #1A6BFF; color: #fff; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
+  .cx-seg i.o { background: #DC2626; }
+  .cx-next { background: #EAF1FF; border-radius: 18px; padding: 14px 16px; }
+  .cx-next small { font-size: 12px; color: #1A6BFF; font-weight: 600; }
+  .cx-next b { display: block; font-size: 16px; font-weight: 700; margin: 2px 0 4px; }
+  .cx-next p { margin: 0; font-size: 13.5px; color: #3A3A3C; line-height: 1.5; }
+  .cx-next button, .cx-pack button { margin-top: 12px; display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 16px; border: none; border-radius: 999px; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .cx-gt { font-size: 12.5px; font-weight: 500; color: #86868B; margin: 18px 6px 7px; }
+  .cx-g { background: #fff; border-radius: 18px; overflow: hidden; }
+  .cx-steps { padding: 6px 16px; }
+  .cx-step { display: flex; align-items: center; gap: 12px; padding: 9px 0; font-size: 14px; color: #A1A1A6; }
+  .cx-step.ok, .cx-step.on { color: #1D1D1F; }
+  .cx-step.on .cx-step-l { font-weight: 600; }
+  .cx-dot { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; background: #F0F0F2; color: #A1A1A6; flex: none; }
+  .cx-step.ok .cx-dot { background: #16A34A; color: #fff; } .cx-step.on .cx-dot { background: #1A6BFF; color: #fff; }
+  .cx-step small { margin-left: auto; font-size: 12px; color: #86868B; } .cx-step small.b { color: #1A6BFF; font-weight: 500; }
+  .cx-pack { padding: 14px 16px; margin-top: 14px; } .cx-pack b { font-size: 15px; } .cx-pack p { margin: 4px 0 0; font-size: 13.5px; color: #3A3A3C; line-height: 1.5; }
+  .cx-cons { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .cx-cons-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .cx-cons-t b { font-size: 14.5px; font-weight: 600; } .cx-cons-t small { font-size: 12px; color: #86868B; }
+  .cx-docs-h { padding: 14px 16px; margin-bottom: 12px; }
+  .cx-docs-n { font-size: 13.5px; color: #3A3A3C; } .cx-docs-n b { color: #1D1D1F; }
+  .cx-bar { height: 6px; border-radius: 6px; background: #F0F0F2; overflow: hidden; margin: 8px 0; } .cx-bar i { display: block; height: 100%; background: #1A6BFF; border-radius: 6px; }
+  .cx-docs-h p { margin: 0; font-size: 12.5px; color: #86868B; line-height: 1.5; }
+  .cx-doc { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
+  .cx-doc + .cx-doc { border-top: 1px solid #F0F0F2; }
+  .cx-ic { width: 36px; height: 36px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+  .cx-ic.b { background: #EAF1FF; color: #1A6BFF; } .cx-ic.o { background: #FFF3E0; color: #C2410C; } .cx-ic.g { background: #E8F8EE; color: #16A34A; } .cx-ic.r { background: #FDECEC; color: #DC2626; }
+  .cx-doc-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .cx-doc-t b { font-size: 14px; font-weight: 600; }
+  .cx-doc-t small { font-size: 12px; color: #86868B; } .cx-doc-t small.o { color: #C2410C; } .cx-doc-t small.g { color: #16A34A; } .cx-doc-t small.r { color: #DC2626; }
+  .cx-doc-t a { font-size: 12px; color: #1A6BFF; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+  .cx-send { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 999px; background: #1A6BFF; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; flex: none; }
+  .cx-send.r { background: #DC2626; }
+  .cx-st { flex: none; } .cx-st.g { color: #16A34A; } .cx-st.o { color: #C2410C; }
+  .cx-vide { padding: 22px; text-align: center; font-size: 13px; color: #86868B; }
+  .cx-note { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #86868B; margin: 12px 6px 0; }
+  .cx-r { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: 14px; }
+  .cx-r + .cx-r { border-top: 1px solid #F0F0F2; }
+  .cx-r span { color: #86868B; } .cx-r b { font-weight: 500; text-align: right; }
+`
