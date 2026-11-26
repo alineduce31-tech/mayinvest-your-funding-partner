@@ -299,6 +299,11 @@ export function opportunity(lead: DashboardLead): 'Crédit' | 'Impact' | 'Crédi
 export function nomBanque(raw: string): string {
   const b = String(raw || '').trim()
   const k = b.toLowerCase().replace(/\s+bank$/, '').replace(/\s+/g, ' ')
-  const connus: Record<string, string> = { bgfi: 'BGFI', boa: 'BOA', uba: 'UBA', ecobank: 'Ecobank', mucodec: 'MUCODEC', 'crédit du congo': 'Crédit du Congo', 'credit du congo': 'Crédit du Congo' }
+  const connus: Record<string, string> = {
+    bgfi: 'BGFI', boa: 'BOA', uba: 'UBA', ecobank: 'Ecobank', mucodec: 'MUCODEC', bci: 'BCI', bch: 'BCH',
+    'crédit du congo': 'Crédit du Congo', 'credit du congo': 'Crédit du Congo',
+    'banque postale': 'Banque Postale', 'la banque postale': 'Banque Postale', 'banque postale du congo': 'Banque Postale',
+    bsca: 'BSCA Bank', afriland: 'Afriland First Bank', 'afriland first': 'Afriland First Bank',
+  }
   return connus[k] || b
 }

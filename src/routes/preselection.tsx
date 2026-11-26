@@ -67,7 +67,7 @@ const ICON_M: Record<string, ReactNode> = {
 }
 const ACTIVITES_PHYSIQUE = Object.keys(ICON_P)
 const ACTIVITES_MORALE = Object.keys(ICON_M)
-const BANQUES = ['BGFI', 'UBA', 'BOA', 'MUCODEC', 'Crédit du Congo', 'Ecobank', 'Autre', 'Aucune']
+const BANQUES = ['BGFI', 'BCI', 'UBA', 'BOA', 'Ecobank', 'Crédit du Congo', 'MUCODEC', 'BCH', 'Banque Postale', 'BSCA Bank', 'Afriland First Bank', 'Autre', 'Aucune']
 const VILLES = [
   'Brazzaville',
   'Pointe-Noire',

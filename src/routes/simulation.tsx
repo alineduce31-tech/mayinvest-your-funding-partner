@@ -279,7 +279,7 @@ function Epreuve2Lead({ onComplete }: { onComplete: (score: number, time: number
           <Field label="Objet du crédit" value={form.objet} onChange={v => setForm({ ...form, objet: v })}
             options={['', 'Investissement', 'Fonds de roulement', 'Marché', 'Véhicule', 'Autre']}/>
           <Field label="Banque actuelle" value={form.banque} onChange={v => setForm({ ...form, banque: v })}
-            options={['', 'UBA', 'BGFI', 'BOA', 'MUCODEC', 'Ecobank', 'Crédit du Congo', 'Aucune', 'Autre']}/>
+            options={['', 'BGFI', 'BCI', 'UBA', 'BOA', 'Ecobank', 'Crédit du Congo', 'MUCODEC', 'BCH', 'Banque Postale', 'BSCA Bank', 'Afriland First Bank', 'Aucune', 'Autre']}/>
         </div>
 
         <div className="form-actions">
