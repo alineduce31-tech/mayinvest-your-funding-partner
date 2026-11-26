@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Search, Phone, MessageCircle, FileText, UserPlus, Ban, FileX, BarChart3, CircleCheck, CircleAlert, RefreshCw, Landmark } from 'lucide-react'
+import { Search, Phone, MessageCircle, FileText, UserPlus, Ban, FileX, BarChart3, CircleCheck, CircleAlert, RefreshCw, Landmark, Wallet } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import NiceSelect from '@/components/NiceSelect'
 import CallButton from '@/components/CallButton'
@@ -56,10 +56,10 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
       <style>{BK_CSS + NE_CSS}</style>
       <p className="bk-sub">Dossiers refusés pour l'instant : on les aide à devenir éligibles (Pack formalisation, ouverture de compte, restructuration).</p>
       <div className="bk-kpis">
-        <div className="bk-k"><small>Dossiers à reconvertir</small><b>{ch.aReconvertir}</b><span>dont {ch.sansConseiller} sans conseiller</span></div>
-        <div className="bk-k warn"><small>Sans RCCM</small><b>{ch.sansRccm}</b><span>cible du Pack formalisation</span></div>
-        <div className="bk-k ok"><small>Packs vendus</small><b>{ch.packs}</b><span>{montantComplet(ch.encaisse).replace('—', '0 XAF')} encaissés</span></div>
-        <div className="bk-k"><small>Potentiel restant</small><b>{montantComplet(ch.potentiel).replace('—', '0 XAF')}</b><span>si chaque dossier sans RCCM prend le Pack</span></div>
+        <div className="bk-k"><i className="bk-ic b"><RefreshCw size={16} strokeWidth={1.8}/></i><small>Dossiers à reconvertir</small><b>{ch.aReconvertir}</b><span>dont {ch.sansConseiller} sans conseiller</span></div>
+        <div className="bk-k warn"><i className="bk-ic o"><FileX size={16} strokeWidth={1.8}/></i><small>Sans RCCM</small><b>{ch.sansRccm}</b><span>cible du Pack formalisation</span></div>
+        <div className="bk-k ok"><i className="bk-ic g"><CircleCheck size={16} strokeWidth={1.8}/></i><small>Packs vendus</small><b>{ch.packs}</b><span>{montantComplet(ch.encaisse).replace('—', '0 XAF')} encaissés</span></div>
+        <div className="bk-k"><i className="bk-ic n"><Wallet size={16} strokeWidth={1.8}/></i><small>Potentiel restant</small><b>{montantComplet(ch.potentiel).replace('—', '0 XAF')}</b><span>si chaque dossier sans RCCM prend le Pack</span></div>
       </div>
 
       <div className="bk-card">

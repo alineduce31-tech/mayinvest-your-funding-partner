@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { useNavigate } from '@tanstack/react-router'
-import { Search, Phone, MessageCircle, FileText, UserPlus, Landmark } from 'lucide-react'
+import { Search, Phone, MessageCircle, FileText, UserPlus, Landmark, Wallet, UserX, PhoneCall } from 'lucide-react'
 import NiceSelect from '@/components/NiceSelect'
 import CallButton from '@/components/CallButton'
 import { LIFECYCLE_STATUTS, STATUT_COLORS } from '@/lib/lead-templates'
@@ -44,10 +44,10 @@ export default function BancarisationView({ leads, onOpen, updateStatut, assignL
       <style>{BK_CSS}</style>
       <p className="bk-sub">Prospects sans compte bancaire ou sans salaire domicilié, à accompagner vers l'ouverture d'un compte.</p>
       <div className="bk-kpis">
-        <div className="bk-k"><small>À bancariser</small><b>{ch.aBancariser}</b><span>dont {ch.cetteSemaine} cette semaine</span></div>
-        <div className="bk-k"><small>Montant en jeu</small><b>{montantComplet(ch.montant).replace('—', '0 XAF')}</b><span>demandés au total</span></div>
-        <div className={`bk-k ${ch.sansConseiller ? 'warn' : ''}`}><small>Sans conseiller</small><b>{ch.sansConseiller}</b><span>{ch.sansConseiller ? 'à assigner' : 'tout le monde est suivi'}</span></div>
-        <div className="bk-k ok"><small>Contactés</small><b>{ch.contactes}</b><span>{ch.bancarises} déjà bancarisé{ch.bancarises > 1 ? 's' : ''}</span></div>
+        <div className="bk-k"><i className="bk-ic b"><Landmark size={16} strokeWidth={1.8}/></i><small>À bancariser</small><b>{ch.aBancariser}</b><span>dont {ch.cetteSemaine} cette semaine</span></div>
+        <div className="bk-k"><i className="bk-ic n"><Wallet size={16} strokeWidth={1.8}/></i><small>Montant en jeu</small><b>{montantComplet(ch.montant).replace('—', '0 XAF')}</b><span>demandés au total</span></div>
+        <div className={`bk-k ${ch.sansConseiller ? 'warn' : ''}`}><i className={`bk-ic ${ch.sansConseiller ? 'o' : 'b'}`}><UserX size={16} strokeWidth={1.8}/></i><small>Sans conseiller</small><b>{ch.sansConseiller}</b><span>{ch.sansConseiller ? 'à assigner' : 'tout le monde est suivi'}</span></div>
+        <div className="bk-k ok"><i className="bk-ic g"><PhoneCall size={16} strokeWidth={1.8}/></i><small>Contactés</small><b>{ch.contactes}</b><span>{ch.bancarises} déjà bancarisé{ch.bancarises > 1 ? 's' : ''}</span></div>
       </div>
 
       <div className="bk-card">
@@ -109,25 +109,28 @@ export default function BancarisationView({ leads, onOpen, updateStatut, assignL
 }
 
 export const BK_CSS = `
-  .bk { display: flex; flex-direction: column; gap: 14px; color: #0D1B3E; }
-  .bk-sub { margin: -6px 0 0; font-size: 13px; color: #8A94A6; }
+  .bk { display: flex; flex-direction: column; gap: 14px; color: #1D1D1F; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; }
+  .bk-sub { margin: -6px 0 2px; font-size: 13px; color: #86868B; }
   .bk-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
-  .bk-k { background: #fff; border-radius: 16px; padding: 14px 16px; box-shadow: 0 1px 3px rgba(13,27,62,.06); }
-  .bk-k small { display: block; font-size: 12px; color: #8A94A6; font-weight: 600; }
-  .bk-k b { display: block; font-size: 24px; font-weight: 800; margin: 2px 0; }
-  .bk-k span { font-size: 12px; color: #64748B; }
-  .bk-k.warn { box-shadow: inset 0 0 0 1.5px #FCD34D; } .bk-k.warn b, .bk-k.warn span { color: #B45309; }
-  .bk-k.ok b { color: #15803D; }
-  .bk-card { background: #fff; border-radius: 20px; padding: 16px; box-shadow: 0 1px 3px rgba(13,27,62,.06); }
+  .bk-k { background: #fff; border-radius: 18px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  .bk-ic { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; font-style: normal; }
+  .bk-ic.b { background: #EAF1FF; color: #1A6BFF; } .bk-ic.o { background: #FFF3E0; color: #C2410C; } .bk-ic.g { background: #E8F8EE; color: #16A34A; } .bk-ic.n { background: #EDEFF4; color: #0D1B3E; } .bk-ic.r { background: #FDECEC; color: #DC2626; }
+  .bk-k small { display: block; font-size: 13px; color: #86868B; font-weight: 500; }
+  .bk-k b { display: block; font-size: 28px; font-weight: 700; letter-spacing: -0.03em; margin: 2px 0; color: #1D1D1F; }
+  .bk-k span { font-size: 12px; color: #86868B; }
+  .bk-k.warn b { color: #C2410C; }
+  .bk-k.ok b { color: #16A34A; }
+  .bk-card { background: #fff; border-radius: 18px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
   .bk-tb { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
-  .bk-srch { flex: 1; min-width: 200px; display: flex; align-items: center; gap: 8px; background: #F5F7FB; border-radius: 999px; padding: 0 14px; color: #94A3B8; }
+  .bk-srch { flex: 1; min-width: 200px; display: flex; align-items: center; gap: 8px; background: #F5F5F7; border-radius: 999px; padding: 0 14px; color: #94A3B8; }
   .bk-srch input { flex: 1; border: none; background: transparent; outline: none; font-family: inherit; font-size: 13.5px; padding: 10px 0; color: #0D1B3E; }
   .bk-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
-  .bk-chips button { flex: none; border: 1px solid #E3E8F0; background: #fff; border-radius: 999px; padding: 7px 12px; font-family: inherit; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer; white-space: nowrap; }
-  .bk-chips button b { font-weight: 700; opacity: .6; margin-left: 5px; }
+  .bk-chips button { flex: none; border: none; background: #F5F5F7; border-radius: 999px; padding: 7px 12px; font-family: inherit; font-size: 12.5px; font-weight: 500; color: #3A3A3C; cursor: pointer; white-space: nowrap; }
+  .bk-chips button { font-size: 12.5px !important; }
+  .bk-chips button b { font-weight: 600; opacity: .6; margin-left: 5px; }
   .bk-chips button.on { background: #0D1B3E; color: #fff; border-color: #0D1B3E; }
   .bk-hd, .bk-row { display: grid; grid-template-columns: minmax(0, 1fr) 44px 160px 160px 130px 104px; gap: 14px; align-items: center; }
-  .bk-hd { padding: 0 12px 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #94A3B8; }
+  .bk-hd { padding: 0 12px 8px; font-size: 11px; font-weight: 500; color: #86868B; border-bottom: 1px solid #F0F0F2; }
   .bk-hd .r { text-align: right; }
   .bk-row { padding: 10px 12px; border-radius: 14px; transition: background .12s; }
   .bk-row + .bk-row { border-top: 1px solid #F0F2F7; }
