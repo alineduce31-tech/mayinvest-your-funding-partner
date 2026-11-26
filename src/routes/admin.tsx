@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Star, MapPin, Download, FileSpreadsheet, FileDown, UserPlus, LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
+import { Lock, ArrowUp, Trash2, Eye, MessagesSquare, Star, MapPin, Download, FileSpreadsheet, FileDown, UserPlus, LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
@@ -999,7 +999,7 @@ function Admin({ session }: { session: any }) {
               </button>
               <button className="sb-link" onClick={() => { navigate({ to: '/equipe-admin' as any }); setSidebarOpen(false) }}>
                 <span>
-                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2l2.5 5 5.5.8-4 3.9.9 5.5L10 14.8 5.1 17.2 6 11.7 2 7.8l5.5-.8L10 2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>
+                  <Crown size={18} strokeWidth={1.6}/>
                 </span>
                 <span>Équipe admin</span>
               </button>
@@ -2232,7 +2232,10 @@ function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
  * DRAWER DÉTAIL + CHAT
  * ============================================================ */
 function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMembers, onAssignAgent, isDirector, adminId }: any) {
-  const [tab, setTab] = useState<'infos' | 'chat' | 'docs'>('infos')
+  const [tab, setTab] = useState<'infos' | 'chat' | 'docs' | 'notes'>('infos')
+  const [notes, setNotes] = useState<any[]>([])
+  const [newNote, setNewNote] = useState('')
+  const [noteSending, setNoteSending] = useState(false)
   const [messages, setMessages] = useState<any[]>([])
   const [newMsg, setNewMsg] = useState('')
   const [sending, setSending] = useState(false)
@@ -2285,9 +2288,30 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     return () => { document.body.classList.remove('drawer-open') }
   }, [])
 
+  async function loadNotes() {
+    const { data } = await supabase.rpc('admin_lead_notes', { p_lead_id: lead.id })
+    if (data) setNotes(data as any[])
+  }
+  async function addNote() {
+    const t = newNote.trim()
+    if (!t || noteSending) return
+    setNoteSending(true)
+    const { error } = await supabase.rpc('admin_add_lead_note', { p_lead_id: lead.id, p_body: t })
+    setNoteSending(false)
+    if (error) { alert('Note non enregistrée : ' + error.message); return }
+    setNewNote('')
+    loadNotes()
+  }
+  async function deleteNote(id: string) {
+    if (!confirm('Supprimer cette note ?')) return
+    await supabase.rpc('admin_delete_lead_note', { p_note_id: id })
+    loadNotes()
+  }
+
   useEffect(() => {
     loadMessages()
     loadDocuments()
+    loadNotes()
     return onLiveEvent(`drawer-${lead.id}`, (e) => {
       if (e.ref !== lead.id) return
       if (e.topic === 'msg') loadMessages()
@@ -2310,116 +2334,121 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
   return (
     <div className="drawer-ovr" onClick={onClose}>
       <div className="drawer" onClick={e => e.stopPropagation()}>
-        <div className="dr-head">
-          <button className="dr-close" onClick={onClose} aria-label="Fermer">
-            <X size={16} strokeWidth={2.2}/>
-          </button>
-          <h2 className="dr-name">{nom}</h2>
-          <div className="dr-code">{lead.access_code || '—'} · {lead.id}</div>
-          <div style={{ marginTop: 10, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="dr-head ld-head">
+          <div className="ld-top">
+            <span className="ld-av" style={{ background: couleurAvatar(nom).fond, color: couleurAvatar(nom).texte }}>{initialesNom(nom)}</span>
+            <div className="ld-id">
+              <h2 className="dr-name">{nom}</h2>
+              <div className="ld-meta">{[lead.activite, lead.ville, lead.access_code].filter(Boolean).join(' · ')}</div>
+            </div>
+            <button className="ld-x" onClick={onClose} aria-label="Fermer"><X size={16} strokeWidth={2.2}/></button>
+          </div>
+          <div className="ld-pills">
             <StatusSelect value={lead.statut} onChange={s => onStatutChange(s)} size="md"/>
-            <span style={{ background: '#EEF4FF', color: '#1A6BFF', padding: '6px 10px', borderRadius: 8, fontSize: 12, fontWeight: 800 }}>Score {lead.score}/100</span>
             {isDirector && (
               <NiceSelect variant="compact" value={lead.agent_commercial_id || ''} onChange={v => onAssignAgent(v || null)}
                 title="Assigner ce lead" ariaLabel="Assigner ce lead à un commercial"
-                style={{ background: lead.agent_commercial_id ? '#DCFCE7' : '#FEF3C7', color: lead.agent_commercial_id ? '#047857' : '#B45309', border: 'none', borderRadius: 8 }}
-                options={[{ value: '', label: 'Non assigné' }, ...(teamMembers || []).filter((m: any) => m.role === 'commercial').map((m: any) => ({ value: m.id, label: m.email.split('@')[0] }))]}/>
+                className={lead.agent_commercial_id ? 'ld-ag' : 'ld-ag vide'}
+                options={[{ value: '', label: 'À assigner', icon: <UserPlus size={14}/> }, ...(lead.agent_commercial_id && !(teamMembers || []).some((m: any) => m.id === lead.agent_commercial_id) ? [{ value: lead.agent_commercial_id, label: 'Conseiller assigné' }] : []), ...(teamMembers || []).filter((m: any) => m.role === 'commercial').map((m: any) => ({ value: m.id, label: m.email.split('@')[0] }))]}/>
             )}
-            {!isDirector && lead.agent_commercial_id && (
-              <span style={{ background: '#ECFDF5', color: '#047857', padding: '6px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: '1px solid #BBF7D0' }}>Assigné à moi</span>
-            )}
-            {tel && (
-              <CallButton tel={tel} nom={nom} leadId={lead.id} onLogged={loadMessages} title={`Appeler ${formatPhone(tel)}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 999, background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#6B7280', padding: 0 }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-              </CallButton>
-            )}
-            {email && (
-              <a href={`mailto:${email}`} title={`Email ${email}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 999, background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#6B7280', textDecoration: 'none' }}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-              </a>
-            )}
-            <button type="button" onClick={() => setTab('chat')} title="Messagerie interne" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 999, background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#6B7280', cursor: 'pointer' }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            </button>
+            {!isDirector && lead.agent_commercial_id && <span className="ld-pill ok">Assigné à moi</span>}
+            <span className={`ld-pill sc ${(lead.score ?? 0) >= 70 ? 'hi' : (lead.score ?? 0) < 40 ? 'lo' : 'mid'}`}>Score {lead.score ?? 0}</span>
+          </div>
+          <div className="ld-acts">
+            {tel && <CallButton tel={tel} nom={nom} leadId={lead.id} onLogged={loadMessages} title={`Appeler ${formatPhone(tel)}`} className="ld-rb g"><Phone size={15}/></CallButton>}
+            {tel && <a className="ld-rb g" href={buildWhatsappUrl(tel, '')} target="_blank" rel="noopener" title="WhatsApp"><MessageCircle size={15}/></a>}
+            {email && <a className="ld-rb b" href={`mailto:${email}`} title={`Email ${email}`}><Mail size={15}/></a>}
+            <button type="button" className="ld-rb b" onClick={() => setTab('chat')} title="Discussion avec le client"><MessagesSquare size={15}/></button>
           </div>
         </div>
 
-        <div className="dr-tabs">
-          <button className={`dr-tab ${tab === 'infos' ? 'on' : ''}`} onClick={() => setTab('infos')}>Infos</button>
-          <button className={`dr-tab ${tab === 'chat' ? 'on' : ''}`} onClick={() => setTab('chat')}>
-            Discussion {messages.filter(m => m.sender === 'client' && !m.read_at).length > 0 && <span className="msg-badge" style={{ marginLeft: 4 }}>{messages.filter(m => m.sender === 'client' && !m.read_at).length}</span>}
+        <div className="ld-seg" role="tablist">
+          <button className={tab === 'infos' ? 'on' : ''} onClick={() => setTab('infos')}>Infos</button>
+          <button className={tab === 'chat' ? 'on' : ''} onClick={() => setTab('chat')}>
+            Discussion {messages.filter(m => m.sender === 'client' && !m.read_at).length > 0 && <i className="ld-badge">{messages.filter(m => m.sender === 'client' && !m.read_at).length}</i>}
           </button>
-          <button className={`dr-tab ${tab === 'docs' ? 'on' : ''}`} onClick={() => setTab('docs')}>
-            Documents {documents.filter(d => d.status === 'uploaded').length > 0 && <span className="msg-badge" style={{ marginLeft: 4, background: '#FFB020' }}>{documents.filter(d => d.status === 'uploaded').length}</span>}
+          <button className={tab === 'docs' ? 'on' : ''} onClick={() => setTab('docs')}>
+            Documents {documents.filter(d => d.status === 'uploaded').length > 0 && <i className="ld-badge o">{documents.filter(d => d.status === 'uploaded').length}</i>}
           </button>
+          <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>Notes {notes.length > 0 && <i className="ld-badge n">{notes.length}</i>}</button>
         </div>
 
         <div className="dr-body">
           {tab === 'infos' && <>
-            <div className="dr-section">
-              <div className="dr-s-h">Contact</div>
-              <div className="dr-grid">
-                <div className="dr-field"><div className="dr-k">Téléphone</div><div className="dr-v">{tel ? formatPhone(tel) : '—'}</div></div>
-                <div className="dr-field"><div className="dr-k">Email</div><div className="dr-v">{lead.identite?.email || '—'}</div></div>
-                <div className="dr-field"><div className="dr-k">Ville</div><div className="dr-v">{lead.ville || '—'}</div></div>
-                <div className="dr-field"><div className="dr-k">Activité</div><div className="dr-v">{lead.activite || '—'}</div></div>
-              </div>
+            {notes[0] && (
+              <button type="button" className="ld-lastnote" onClick={() => setTab('notes')}>
+                <Lock size={13}/><span><b>{notes[0].auteur}</b> · {notes[0].body}</span>
+              </button>
+            )}
+            <div className="ld-gt"><Phone size={13}/>Contact</div>
+            <div className="ld-g">
+              <div className="ld-r"><span>Téléphone</span><b>{tel ? formatPhone(tel) : '—'}</b></div>
+              <div className="ld-r"><span>Email</span><b>{lead.identite?.email || '—'}</b></div>
+              <div className="ld-r"><span>Ville</span><b>{lead.ville || '—'}</b></div>
+              <div className="ld-r"><span>Activité</span><b>{lead.activite || '—'}</b></div>
             </div>
 
-            <div className="dr-section">
-              <div className="dr-s-h">Situation {isP ? 'professionnelle' : 'juridique'}</div>
-              <div className="dr-grid">
-                {isP ? <>
-                  <div className="dr-field"><div className="dr-k">Employeur</div><div className="dr-v">{lead.situation?.employeur || '—'}</div></div>
-                  <div className="dr-field"><div className="dr-k">Type de contrat</div><div className="dr-v">{lead.situation?.contrat || '—'}</div></div>
-                  {lead.situation?.duree_restante && <div className="dr-field"><div className="dr-k">Durée restante</div><div className="dr-v">{lead.situation.duree_restante} mois</div></div>}
-                  <div className="dr-field"><div className="dr-k">Ancienneté</div><div className="dr-v">{TRANCHE_LABELS[lead.situation?.anciennete_tranche] || lead.situation?.anciennete || '—'}</div></div>
-                  <div className="dr-field"><div className="dr-k">Revenu mensuel</div><div className="dr-v">{formatXAF(lead.situation?.revenu)}</div></div>
-                </> : <>
-                  <div className="dr-field"><div className="dr-k">Dirigeant</div><div className="dr-v">{lead.situation?.dirigeant || '—'}</div></div>
-                  <div className="dr-field"><div className="dr-k">RCCM</div><div className="dr-v">{lead.situation?.rccm || '—'}</div></div>
-                  <div className="dr-field"><div className="dr-k">NIU</div><div className="dr-v">{lead.situation?.niu || '—'}</div></div>
-                  <div className="dr-field"><div className="dr-k">Ancienneté</div><div className="dr-v">{TRANCHE_LABELS[lead.situation?.anciennete_tranche] || '—'}</div></div>
-                  <div className="dr-field"><div className="dr-k">CA annuel</div><div className="dr-v">{formatXAF(lead.situation?.ca_annuel)}</div></div>
-                </>}
-              </div>
+            <div className="ld-gt"><Briefcase size={13}/>Situation {isP ? 'professionnelle' : 'juridique'}</div>
+            <div className="ld-g">
+              {isP ? <>
+                <div className="ld-r"><span>Employeur</span><b>{lead.situation?.employeur || '—'}</b></div>
+                <div className="ld-r"><span>Type de contrat</span><b>{lead.situation?.contrat || '—'}</b></div>
+                {lead.situation?.duree_restante && <div className="ld-r"><span>Durée restante</span><b>{lead.situation.duree_restante} mois</b></div>}
+                <div className="ld-r"><span>Ancienneté</span><b>{TRANCHE_LABELS[lead.situation?.anciennete_tranche] || lead.situation?.anciennete || '—'}</b></div>
+                <div className="ld-r"><span>Revenu mensuel</span><b>{formatXAF(lead.situation?.revenu)}</b></div>
+              </> : <>
+                <div className="ld-r"><span>Dirigeant</span><b>{lead.situation?.dirigeant || '—'}</b></div>
+                <div className="ld-r"><span>RCCM</span><b>{lead.situation?.rccm || '—'}</b></div>
+                <div className="ld-r"><span>NIU</span><b>{lead.situation?.niu || '—'}</b></div>
+                <div className="ld-r"><span>Ancienneté</span><b>{TRANCHE_LABELS[lead.situation?.anciennete_tranche] || '—'}</b></div>
+                <div className="ld-r"><span>CA annuel</span><b>{formatXAF(lead.situation?.ca_annuel)}</b></div>
+              </>}
             </div>
 
-            <div className="dr-section">
-              <div className="dr-s-h">Besoin</div>
-              <div className="dr-grid">
-                <div className="dr-field"><div className="dr-k">Montant demandé</div><div className="dr-v">{formatXAF(lead.montant_demande)}</div></div>
-                <div className="dr-field"><div className="dr-k">Objet</div><div className="dr-v">{lead.besoin?.objet || '—'}</div></div>
-                <div className="dr-field"><div className="dr-k">Banque actuelle</div><div className="dr-v">{lead.banque_actuelle || '—'}</div></div>
-                {!isP && <div className="dr-field"><div className="dr-k">Flux mensuel</div><div className="dr-v">{formatXAF(lead.besoin?.flux_mois)}</div></div>}
-              </div>
+            <div className="ld-gt"><Coins size={13}/>Besoin</div>
+            <div className="ld-g">
+              <div className="ld-r"><span>Montant demandé</span><b>{formatXAF(lead.montant_demande)}</b></div>
+              <div className="ld-r"><span>Objet</span><b>{lead.besoin?.objet || '—'}</b></div>
+              <div className="ld-r"><span>Banque actuelle</span><b>{lead.banque_actuelle || '—'}</b></div>
+              {!isP && <div className="ld-r"><span>Flux mensuel</span><b>{formatXAF(lead.besoin?.flux_mois)}</b></div>}
             </div>
 
-            <div className="dr-section">
-              <div className="dr-s-h">Éligibilité</div>
-              <div className="dr-grid">
-                {isP ? <>
-                  <div className="dr-field"><div className="dr-k">Salaire domicilié</div><div className="dr-v">{lead.eligibilite?.salaire_domic || '—'}</div></div>
-                  {lead.eligibilite?.anciennete_compte_tranche && <div className="dr-field"><div className="dr-k">Compte ouvert depuis</div><div className="dr-v">{TRANCHE_LABELS[lead.eligibilite.anciennete_compte_tranche]}</div></div>}
-                  <div className="dr-field"><div className="dr-k">Non éligible</div><div className="dr-v" style={{ color: lead.eligibilite?.non_eligible ? '#B91C1C' : '#166534' }}>{lead.eligibilite?.non_eligible ? 'Oui' : 'Non'}</div></div>
-                </> : <>
-                  <div className="dr-field"><div className="dr-k">Compte mouvementé</div><div className="dr-v">{lead.eligibilite?.compte_mouvemente || '—'}</div></div>
-                  <div className="dr-field"><div className="dr-k">Refus bancaire antérieur</div><div className="dr-v">{lead.eligibilite?.refus_bancaire || '—'}</div></div>
-                  <div className="dr-field"><div className="dr-k">Garanties</div><div className="dr-v">{lead.eligibilite?.garanties || '—'}</div></div>
-                </>}
-              </div>
-            </div>
-
-            <div className="dr-section">
-              <div className="dr-s-h">Métadonnées</div>
-              <div className="dr-grid">
-                <div className="dr-field"><div className="dr-k">Créé le</div><div className="dr-v">{new Date(lead.created_at).toLocaleString('fr-FR')}</div></div>
-                <div className="dr-field"><div className="dr-k">Mis à jour</div><div className="dr-v">{new Date(lead.updated_at).toLocaleString('fr-FR')}</div></div>
-              </div>
+            <div className="ld-gt"><CheckCircle2 size={13}/>Éligibilité</div>
+            <div className="ld-g">
+              {isP ? <>
+                <div className="ld-r"><span>Salaire domicilié</span><b>{lead.eligibilite?.salaire_domic || '—'}</b></div>
+                {lead.eligibilite?.anciennete_compte_tranche && <div className="ld-r"><span>Compte ouvert depuis</span><b>{TRANCHE_LABELS[lead.eligibilite.anciennete_compte_tranche]}</b></div>}
+                <div className="ld-r"><span>Non éligible</span><b style={{ color: lead.eligibilite?.non_eligible ? '#DC2626' : '#16A34A' }}>{lead.eligibilite?.non_eligible ? 'Oui' : 'Non'}</b></div>
+              </> : <>
+                <div className="ld-r"><span>Compte mouvementé</span><b>{lead.eligibilite?.compte_mouvemente || '—'}</b></div>
+                <div className="ld-r"><span>Refus bancaire antérieur</span><b>{lead.eligibilite?.refus_bancaire || '—'}</b></div>
+                <div className="ld-r"><span>Garanties</span><b>{lead.eligibilite?.garanties || '—'}</b></div>
+              </>}
             </div>
 
             <LeadActionsPanel lead={lead} onSendInternal={(msg) => { setTab('chat'); setNewMsg(msg); }} />
+            <div className="ld-foot">Créé le {new Date(lead.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · mis à jour {dateRelative(lead.updated_at || lead.created_at, Date.now())}</div>
           </>}
+
+          {tab === 'notes' && <div className="ld-notes">
+            <div className="ld-lock"><Lock size={14}/>Visible uniquement par la direction. Ni le client ni le commercial ne voient ces notes.</div>
+            <div className="ld-note-in">
+              <textarea value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Écrire une note pour l'équipe…" rows={2} maxLength={2000}
+                onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) addNote() }}/>
+              <button type="button" onClick={addNote} disabled={!newNote.trim() || noteSending} aria-label="Ajouter la note"><ArrowUp size={16}/></button>
+            </div>
+            {notes.length === 0 ? <div className="ld-note-vide">Aucune note pour ce dossier.</div> : notes.map(n => (
+              <div key={n.id} className="ld-note">
+                <div className="ld-note-h">
+                  <span className="ld-av s" style={{ background: couleurAvatar(n.auteur).fond, color: couleurAvatar(n.auteur).texte }}>{initialesNom(n.auteur)}</span>
+                  <b>{n.auteur}</b>
+                  <span className="ld-note-t">{dateRelative(n.created_at, Date.now())} · {new Date(n.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                  {n.admin_id === adminId && <button type="button" className="ld-note-del" onClick={() => deleteNote(n.id)} aria-label="Supprimer la note"><Trash2 size={13}/></button>}
+                </div>
+                <div className="ld-note-b">{n.body}</div>
+              </div>
+            ))}
+          </div>}
 
           {tab === 'docs' && (
             <div>
@@ -2536,55 +2565,21 @@ function LeadActionsPanel({ lead, onSendInternal }: { lead: any; onSendInternal:
   }
 
   return (
-    <div className="lead-actions-panel">
-      <h3 className="lap-title">
-        <Target size={16} strokeWidth={1.75}/> Actions commerciales
-        <span className="lap-subtitle">4 scripts de relance prêts</span>
-      </h3>
-
-      <div className="lap-actions-grid">
+    <div className="ld-svc">
+      <div className="ld-gt"><Send size={13}/>Proposer un service</div>
+      <div className="ld-g">
         {LEAD_ACTIONS.map(action => {
           const isOpen = openDrawer === action.key
           const filled = fillTemplate(action.template, vars)
           return (
-            <div key={action.key} className="lap-action-card">
-              <div className="lap-action-head">
-                <div className="lap-action-info">
-                  <strong>{action.short}</strong>
-                  <span className="lap-price">
-                    {action.prix === 0 ? 'Gratuit' : new Intl.NumberFormat('fr-FR').format(action.prix) + ' XAF'}
-                  </span>
-                </div>
+            <div key={action.key} className="ld-svc-row">
+              <div className="ld-svc-top">
+                <div className="ld-svc-n"><b>{action.short}</b><small>{action.prix === 0 ? 'Gratuit' : new Intl.NumberFormat('fr-FR').format(action.prix).replace(/[\u202F\u00A0]/g, '\u00A0') + ' XAF'}</small></div>
+                <button type="button" className={`ld-ib ${isOpen ? 'on' : ''}`} onClick={() => setOpenDrawer(isOpen ? null : action.key)} title={isOpen ? 'Masquer le message' : 'Voir le message'} aria-label="Aperçu"><Eye size={14}/></button>
+                <button type="button" className="ld-ib" onClick={() => copyToClipboard(filled, action.key)} title="Copier le message" aria-label="Copier">{copiedKey === action.key ? <Check size={14}/> : <Copy size={14}/>}</button>
+                <button type="button" className="ld-send" onClick={() => sendInternal(action.template)} title="Préparer ce message dans la discussion avec le client"><Send size={13}/>Envoyer</button>
               </div>
-              <div className="lap-action-buttons">
-                <button
-                  type="button"
-                  className="lap-btn primary"
-                  onClick={() => sendInternal(action.template)}
-                  title="Pré-remplir le script dans la messagerie interne"
-                >
-                  <Send size={14} strokeWidth={1.75}/> Envoyer
-                </button>
-                <button
-                  type="button"
-                  className="lap-btn secondary"
-                  onClick={() => copyToClipboard(filled, action.key)}
-                >
-                  {copiedKey === action.key ? <><Check size={14} strokeWidth={1.75}/> Copié</> : <><Copy size={14} strokeWidth={1.75}/> Copier</>}
-                </button>
-                <button
-                  type="button"
-                  className="lap-btn ghost"
-                  onClick={() => setOpenDrawer(isOpen ? null : action.key)}
-                >
-                  {isOpen ? <><ChevronUp size={14} strokeWidth={1.75}/> Masquer</> : <><ChevronDown size={14} strokeWidth={1.75}/> Aperçu</>}
-                </button>
-              </div>
-              {isOpen && (
-                <div className="lap-preview">
-                  <pre>{filled}</pre>
-                </div>
-              )}
+              {isOpen && <pre className="ld-prev">{filled}</pre>}
             </div>
           )
         })}

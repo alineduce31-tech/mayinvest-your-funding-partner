@@ -1,0 +1,2 @@
+-- Appliquée (migration notes_internes_leads) : table lead_notes + RPC admin_lead_notes,
+-- admin_add_lead_note, admin_delete_lead_note. Réservé aux admins (mi_require_admin).
