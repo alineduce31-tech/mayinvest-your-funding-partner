@@ -1,3 +1,4 @@
+import { lienContact } from '@/lib/lead-templates'
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
 import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Landmark, FileBadge, FileText, BarChart3, CircleCheck, Clock, Camera, Lock, Search, ChevronLeft, Plus, Image as ImageIcon } from 'lucide-react'
@@ -429,7 +430,7 @@ function ClientPortal() {
       return {
         title: '🔐 Accès sécurisé',
         body: "Pour voir votre dossier, entrez votre code d'accès reçu lors de l'inscription (format MYI-XXXXXXX). Ce code protège vos informations.",
-        actions: [{ label: 'Code perdu ? Contacter un expert', onClick: () => window.open('https://wa.me/24265313187?text=Bonjour%20Mayinvest%2C%20j%27ai%20perdu%20mon%20code', '_blank') }],
+        actions: [{ label: 'Code perdu ? Écrire à Mayinvest', onClick: () => { window.location.href = lienContact('Code d\'accès perdu', "Bonjour, j'ai perdu mon code d'accès. Mon numéro ou email : ") } }],
       }
     }
     if (!lead) return { body: '' }
@@ -968,7 +969,7 @@ function ClientPortal() {
                       <button style={{ background: 'transparent', border: 'none', color: '#1A6BFF', fontSize: 12, fontWeight: 700, cursor: 'pointer' }} onClick={() => setRecoveryStep('')}>← Retour à la connexion</button>
                     </div>
                     <div style={{ marginTop: 10, padding: 10, background: '#FFF4E5', borderRadius: 8, fontSize: 11, color: '#92400E', textAlign: 'center' }}>
-                      Email non reçu ? <a href="https://wa.me/24265313187?text=Bonjour%2C%20j%27ai%20oubli%C3%A9%20mon%20mot%20de%20passe%20et%20je%20n%27ai%20pas%20re%C3%A7u%20l%27email" target="_blank" rel="noopener" style={{ color: '#B45309', fontWeight: 700 }}>Contact urgent WhatsApp</a>
+                      Email non reçu ? <a href={lienContact('Email de réinitialisation non reçu', "Bonjour, je n'ai pas reçu l'email pour changer mon mot de passe. Mon numéro ou email : ")} style={{ color: '#B45309', fontWeight: 700 }}>Contact urgent WhatsApp</a>
                     </div>
                   </>
                 )}
@@ -976,7 +977,7 @@ function ClientPortal() {
             )}
 
             <div className="c-gate-help">
-              Besoin d'aide ? <a href="https://wa.me/24265313187?text=Bonjour%20Mayinvest" target="_blank" rel="noopener">Contactez un expert</a>
+              Besoin d'aide ? <a href={lienContact('Besoin d\'aide Mayinvest')}>Écrire à Mayinvest</a>
             </div>
           </div>
         </div>

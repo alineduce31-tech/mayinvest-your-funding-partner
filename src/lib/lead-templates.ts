@@ -3,8 +3,12 @@
 // Fichier: src/lib/lead-templates.ts
 // ============================================================
 
-export const MAYINVEST_CONTACT = '+242 06 53 13 187'
-export const MAYINVEST_WHATSAPP = '24265313187'
+export const MAYINVEST_EMAIL = 'contact@mayinvestcapitalstrategy.com'
+export const MAYINVEST_CONTACT = MAYINVEST_EMAIL
+/** Lien email vers Mayinvest (pas encore de numéro officiel). */
+export function lienContact(sujet: string, corps = ''): string {
+  return `mailto:${MAYINVEST_EMAIL}?subject=${encodeURIComponent(sujet)}${corps ? `&body=${encodeURIComponent(corps)}` : ''}`
+}
 
 export const PRIX_OUVERTURE_COMPTE = 30_000
 export const PRIX_PACK_FORMALISATION = 50_000

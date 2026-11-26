@@ -502,7 +502,7 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
       k: 'relance',
       title: '📣 Relance douce',
       subject: `Mayinvest · ${candidate.prenom}, on vous attend pour ${stage.cta}`,
-      body: `Bonjour ${candidate.prenom},\n\nL'équipe Mayinvest remarque que votre parcours de recrutement commercial est actuellement en pause (étape : ${stage.label}).\n\nPrenez 10 minutes pour ${stage.cta} depuis votre espace :\n👉 https://mayinvestcapitalstrategy.com/espace-commercial\n\nBesoin d'aide ? Répondez à cet email ou contactez-nous sur WhatsApp au +242 06 53 13 187.\n\nÀ très vite,\nL'équipe Mayinvest`,
+      body: `Bonjour ${candidate.prenom},\n\nL'équipe Mayinvest remarque que votre parcours de recrutement commercial est actuellement en pause (étape : ${stage.label}).\n\nPrenez 10 minutes pour ${stage.cta} depuis votre espace :\n👉 https://mayinvestcapitalstrategy.com/espace-commercial\n\nBesoin d'aide ? Répondez à cet email ou écrivez-nous à contact@mayinvestcapitalstrategy.com.\n\nÀ très vite,\nL'équipe Mayinvest`,
     },
     {
       k: 'encourage',

@@ -1,3 +1,5 @@
+import { lienContact } from '@/lib/lead-templates'
+import { Mail } from 'lucide-react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
@@ -124,7 +126,7 @@ function MonDossier() {
     await sleep(900)
     setDemoStage('typing')
 
-    const idExample = channel === 'phone' ? '065313187' : 'jean.pierre@gmail.com'
+    const idExample = channel === 'phone' ? '066553218' : 'jean.pierre@gmail.com'
     for (let i = 1; i <= idExample.length; i++) {
       setDemoId(idExample.slice(0, i))
       await sleep(channel === 'phone' ? 80 : 50)
@@ -200,8 +202,7 @@ function MonDossier() {
   }
 
   function openExpertWA() {
-    const msg = encodeURIComponent("Bonjour, j'aimerais parler à un conseiller Mayinvest.")
-    window.open('https://wa.me/24265313187?text=' + msg, '_blank')
+    window.location.href = lienContact('Demande de contact Mayinvest', "Bonjour, j'aimerais parler à un conseiller Mayinvest.")
   }
 
   async function tryLogin() {
@@ -300,7 +301,7 @@ function MonDossier() {
         .md-modal-card { background: #fff; border-radius: 20px; padding: 24px; max-width: 400px; width: 100%; }
         .md-modal-close { background: #F0F2F5; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; color: #64748B; padding: 0; }
         .md-modal-close:hover { background: #E5E7EB; color: #0D1B3E; }
-        .md-whats { background: #25D366; color: #fff; border: none; padding: 12px; border-radius: 100px; font-weight: 700; font-size: 13px; cursor: pointer; width: 100%; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; }
+        .md-whats { background: #0D1B3E; color: #fff; border: none; padding: 12px; border-radius: 100px; font-weight: 700; font-size: 13px; cursor: pointer; width: 100%; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: inherit; }
         .md-msg-head { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #F0F2F5; }
         .md-msg-ava { width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: transparent; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
         .md-msg-ava svg { width: 44px; height: 44px; display: block; }
@@ -361,7 +362,7 @@ function MonDossier() {
         .hk-sep::before, .hk-sep::after { content: ''; position: absolute; top: 50%; width: 20%; height: 1px; background: #E5E7EB; }
         .hk-sep::before { left: 0; }
         .hk-sep::after { right: 0; }
-        .hk-btn-wa { background: #25D366; color: #fff; border: none; padding: 11px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: inherit; width: 100%; justify-content: center; transition: all 0.15s; }
+        .hk-btn-wa { background: #0D1B3E; color: #fff; border: none; padding: 11px 14px; border-radius: 10px; font-weight: 700; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-family: inherit; width: 100%; justify-content: center; transition: all 0.15s; }
         .hk-btn-wa:hover { background: #1EB558; transform: translateY(-1px); }
 
         .hk-decline { background: transparent; border: none; color: #94A3B8; font-size: 11px; cursor: pointer; margin-top: 10px; width: 100%; text-align: center; font-family: inherit; text-decoration: underline; }
@@ -678,8 +679,8 @@ function MonDossier() {
               <div className="hk-sep">OU EN DERNIER RECOURS</div>
 
               <button className="hk-btn-wa" onClick={openExpertWA}>
-                <IconWA />
-                Parler à un conseiller
+                <Mail size={16}/>
+                Écrire à Mayinvest
               </button>
 
               {/* Bouton décliner Haki */}
@@ -757,9 +758,9 @@ function MonDossier() {
                 color: forgotMsg.startsWith('OK') ? '#166534' : '#B91C1C',
               }}>{forgotMsg}</div>
             )}
-            <button className="md-whats" onClick={() => window.open('https://wa.me/24265313187?text=Urgence%20mot%20de%20passe%20Mayinvest', '_blank')}>
-              <IconWA />
-              Urgence : WhatsApp conseiller
+            <button className="md-whats" onClick={() => { window.location.href = lienContact('Mot de passe oublié', "Bonjour, je n'arrive pas à me connecter à mon dossier Mayinvest. Mon numéro ou email : ") }}>
+              <Mail size={16}/>
+              Toujours bloqué ? Écrire à Mayinvest
             </button>
           </div>
         </div>
