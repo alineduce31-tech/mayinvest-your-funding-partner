@@ -1094,7 +1094,7 @@ function ClientPortal() {
             <div className="c-msg-scroll">
               <Conversation viewer="client" docs={documents} bulles={regrouper(messages.map(vueClient), Date.now())}
                 onUploadDoc={uploadDocument} uploadingDocId={uploadingDocType || null} onRepondreRdv={repondreRdv}
-                vide={<><span className="cx-vide-ic"><MessageCircle size={22}/></span><b>{nomConseiller ? `Écrivez à ${conseiller?.prenom || 'votre conseiller'}` : 'Écrivez à l\'équipe Mayinvest'}</b><span>Posez votre question ou envoyez un document. Réponse en général sous 24\u00a0h.</span></>}/>
+                vide={<><span className="cx-vide-ic"><MessageCircle size={22}/></span><b>{nomConseiller ? `Écrivez à ${conseiller?.prenom || 'votre conseiller'}` : 'Écrivez à l\'équipe Mayinvest'}</b><span>Posez votre question ou envoyez un document. Réponse en général sous 24{'\u00a0'}h.</span></>}/>
               <div ref={chatEnd}/>
             </div>
 
