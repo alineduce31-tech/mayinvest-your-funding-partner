@@ -1269,47 +1269,41 @@ function Simulation() {
                 {/* Mot de passe alphanumérique (lettres + chiffres, min 8 caractères) */}
                 <div className="field" style={{ position: 'relative' }}>
                   <label>Choisir un mot de passe * <span style={{ color: '#888', fontWeight: 500 }}>(min 8 caractères, lettres + chiffres)</span></label>
-                  <input
+                  <span className="mi-pw"><input
                     type={showFormPwd1 ? 'text' : 'password'}
                     placeholder="Ex : Mayinvest2026"
                     minLength={8}
                     value={form['password']||''}
                     onChange={e=>set('password', e.target.value)}
                     autoComplete="new-password"
-                    style={{ paddingRight: 44 }}
                   />
-                  <button type="button" onClick={() => setShowFormPwd1(v => !v)}
-                    style={{ position: 'absolute', right: 8, top: 32, background: 'transparent', border: 'none', cursor: 'pointer', padding: 8, color: '#888', borderRadius: 8, display: 'flex' }}
-                    aria-label={showFormPwd1 ? 'Masquer' : 'Afficher'}>
+<button type="button" className="mi-eye" onClick={() => setShowFormPwd1(v => !v)} aria-label={showFormPwd1 ? 'Masquer' : 'Afficher'}>
                     {showFormPwd1 ? (
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                     ) : (
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     )}
-                  </button>
+                  </button></span>
                   {form['password'] && form['password'].length > 0 && form['password'].length < 8 && (
                     <div className="field-hint" style={{ color: '#B45309' }}>Encore {8 - form['password'].length} caractère(s)</div>
                   )}
                 </div>
                 <div className="field" style={{ position: 'relative' }}>
                   <label>Confirmer le mot de passe *</label>
-                  <input
+                  <span className="mi-pw"><input
                     type={showFormPwd2 ? 'text' : 'password'}
                     placeholder="Retapez votre mot de passe"
                     value={form['password_confirm']||''}
                     onChange={e=>set('password_confirm', e.target.value)}
                     autoComplete="new-password"
-                    style={{ paddingRight: 44 }}
                   />
-                  <button type="button" onClick={() => setShowFormPwd2(v => !v)}
-                    style={{ position: 'absolute', right: 8, top: 32, background: 'transparent', border: 'none', cursor: 'pointer', padding: 8, color: '#888', borderRadius: 8, display: 'flex' }}
-                    aria-label={showFormPwd2 ? 'Masquer' : 'Afficher'}>
+<button type="button" className="mi-eye" onClick={() => setShowFormPwd2(v => !v)} aria-label={showFormPwd2 ? 'Masquer' : 'Afficher'}>
                     {showFormPwd2 ? (
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
                     ) : (
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                     )}
-                  </button>
+                  </button></span>
                   {form['password'] && form['password_confirm'] && form['password'] !== form['password_confirm'] && (
                     <div className="field-hint" style={{ color: '#B91C1C' }}>⚠ Les mots de passe ne correspondent pas</div>
                   )}

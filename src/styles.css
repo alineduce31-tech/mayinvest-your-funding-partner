@@ -2186,3 +2186,22 @@ button:active, .lap-btn:active {
 /* Fiche : seul le sélecteur d'onglets reste collé en haut au défilement */
 .drawer .ld-head { position: relative !important; top: auto !important; }
 .drawer .ld-seg { top: 10px; box-shadow: 0 -10px 0 0 #F5F5F7, 0 0 0 10px #F5F5F7; }
+
+/* Œil des champs mot de passe : centré sur la ligne de saisie, immobile au clic, partout */
+.mi-pw { position: relative; display: block; width: 100%; }
+.mi-pw > input { width: 100%; padding-right: 44px !important; }
+.mi-eye { position: absolute !important; right: 2px !important; left: auto !important; top: 50% !important; bottom: auto !important; transform: translateY(-50%) !important;
+  width: 36px !important; height: 36px !important; min-width: 0 !important; padding: 0 !important; margin: 0 !important; border: none !important; border-radius: 50% !important;
+  background: transparent !important; box-shadow: none !important; color: #86868B !important; cursor: pointer;
+  display: inline-flex !important; align-items: center; justify-content: center; transition: background-color .15s, color .15s !important; }
+.mi-eye:hover { background: #F0F0F2 !important; color: #1D1D1F !important; }
+.mi-eye:active, .mi-eye:focus, .mi-eye:focus-visible { transform: translateY(-50%) !important; }
+.mi-eye:focus-visible { outline: 2px solid #1A6BFF; outline-offset: 1px; }
+.mi-eye svg { width: 18px !important; height: 18px !important; display: block; flex: none; }
+/* Champs remplis automatiquement par le navigateur : pas de fond bleu */
+input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:focus, textarea:-webkit-autofill, select:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 1000px #fff inset !important; box-shadow: 0 0 0 1000px #fff inset !important;
+  -webkit-text-fill-color: #1D1D1F !important; caret-color: #1D1D1F; transition: background-color 9999s ease-out 0s;
+}
+.me-field .mi-eye { color: rgba(255,255,255,.6) !important; }
+.me-field .mi-eye:hover { background: rgba(255,255,255,.1) !important; color: #fff !important; }

@@ -485,7 +485,7 @@ function MonDossier() {
 
           <div className="md-field has-eye">
             <label>Mot de passe</label>
-            <input
+            <span className="mi-pw"><input
               ref={passwordRef}
               type={showPwd ? 'text' : 'password'}
               placeholder="Ex : Mayinvest2026"
@@ -496,9 +496,9 @@ function MonDossier() {
               onBlur={() => setActiveField('none')}
               autoComplete="current-password"
             />
-            <button type="button" className="md-eye" onClick={() => setShowPwd(!showPwd)} aria-label={showPwd ? 'Masquer' : 'Afficher'}>
+<button type="button" className="mi-eye" onClick={() => setShowPwd(v => !v)} aria-label={showPwd ? 'Masquer' : 'Afficher'}>
               {showPwd ? <IconEyeOff /> : <IconEyeOn />}
-            </button>
+            </button></span>
           </div>
 
           <button className="md-btn" disabled={!canSubmit} onClick={tryLogin}>
