@@ -79,3 +79,11 @@ describe('avatar', () => {
     expect(couleurAvatar('').fond).toMatch(/^#/)
   })
 })
+
+describe('montant complet', () => {
+  test('espaces et devise', async () => {
+    const { montantComplet } = await import('./affichage')
+    expect(montantComplet(22_800_000)).toBe('22 800 000 XAF')
+    expect(montantComplet(null)).toBe('—')
+  })
+})

@@ -6,7 +6,7 @@ import NiceSelect from '@/components/NiceSelect'
 import CallButton from '@/components/CallButton'
 import { LIFECYCLE_STATUTS, STATUT_COLORS } from '@/lib/lead-templates'
 import { estABancariser, chiffresB, compteFiltres, listeB, nomLead, estClos, estPme, type FiltreB, type LeadB } from '@/lib/bancarisation'
-import { montantCourt, dateRelative, tonScore, initialesNom, couleurAvatar } from '@/lib/affichage'
+import { montantComplet, dateRelative, tonScore, initialesNom, couleurAvatar } from '@/lib/affichage'
 
 const FILTRES: { k: FiltreB; label: string }[] = [
   { k: 'tous', label: 'Tous' }, { k: 'nouveaux', label: 'Nouveaux' }, { k: 'contactes', label: 'Contactés' },
@@ -45,7 +45,7 @@ export default function BancarisationView({ leads, onOpen, updateStatut, assignL
       <p className="bk-sub">Prospects sans compte bancaire ou sans salaire domicilié, à accompagner vers l'ouverture d'un compte.</p>
       <div className="bk-kpis">
         <div className="bk-k"><small>À bancariser</small><b>{ch.aBancariser}</b><span>dont {ch.cetteSemaine} cette semaine</span></div>
-        <div className="bk-k"><small>Montant en jeu</small><b>{montantCourt(ch.montant).replace(' XAF', '').replace('—', '0')}</b><span>XAF demandés</span></div>
+        <div className="bk-k"><small>Montant en jeu</small><b>{montantComplet(ch.montant).replace('—', '0 XAF')}</b><span>demandés au total</span></div>
         <div className={`bk-k ${ch.sansConseiller ? 'warn' : ''}`}><small>Sans conseiller</small><b>{ch.sansConseiller}</b><span>{ch.sansConseiller ? 'à assigner' : 'tout le monde est suivi'}</span></div>
         <div className="bk-k ok"><small>Contactés</small><b>{ch.contactes}</b><span>{ch.bancarises} déjà bancarisé{ch.bancarises > 1 ? 's' : ''}</span></div>
       </div>
@@ -92,7 +92,7 @@ export default function BancarisationView({ leads, onOpen, updateStatut, assignL
                         ]}/>
                     ) : <span className="bk-ag-txt">{l.agent_commercial_id ? nomAgent(l.agent_commercial_id) : '—'}</span>}
                   </span>
-                  <span className="bk-amt"><b>{montantCourt(l.montant_demande)}</b><small>{dateRelative(l.created_at, now)}</small></span>
+                  <span className="bk-amt"><b>{montantComplet(l.montant_demande)}</b><small>{dateRelative(l.created_at, now)}</small></span>
                   <span className="bk-qa">
                     {tel && <CallButton tel={tel} nom={nom} leadId={l.id} className="bk-q call" title="Appeler"><Phone size={14}/></CallButton>}
                     <button className="bk-q msg" title="Conversation" aria-label="Ouvrir la conversation" onClick={() => navigate({ to: '/messagerie', search: { lead: l.id } as any })}><MessageCircle size={14}/></button>
@@ -108,7 +108,7 @@ export default function BancarisationView({ leads, onOpen, updateStatut, assignL
   )
 }
 
-const BK_CSS = `
+export const BK_CSS = `
   .bk { display: flex; flex-direction: column; gap: 14px; color: #0D1B3E; }
   .bk-sub { margin: -6px 0 0; font-size: 13px; color: #8A94A6; }
   .bk-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
@@ -126,7 +126,7 @@ const BK_CSS = `
   .bk-chips button { flex: none; border: 1px solid #E3E8F0; background: #fff; border-radius: 999px; padding: 7px 12px; font-family: inherit; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer; white-space: nowrap; }
   .bk-chips button b { font-weight: 700; opacity: .6; margin-left: 5px; }
   .bk-chips button.on { background: #0D1B3E; color: #fff; border-color: #0D1B3E; }
-  .bk-hd, .bk-row { display: grid; grid-template-columns: minmax(0, 1fr) 44px 170px 170px 100px 104px; gap: 14px; align-items: center; }
+  .bk-hd, .bk-row { display: grid; grid-template-columns: minmax(0, 1fr) 44px 160px 160px 130px 104px; gap: 14px; align-items: center; }
   .bk-hd { padding: 0 12px 6px; font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #94A3B8; }
   .bk-hd .r { text-align: right; }
   .bk-row { padding: 10px 12px; border-radius: 14px; transition: background .12s; }

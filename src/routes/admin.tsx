@@ -10,6 +10,7 @@ import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
 import CallButton from '@/components/CallButton'
 import BancarisationView from '@/components/BancarisationView'
+import NonEligiblesView from '@/components/NonEligiblesView'
 import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
 import { regrouper, vueAdmin, suggestions } from '@/lib/conversation'
 import NiceSelect from '@/components/NiceSelect'
@@ -1028,7 +1029,7 @@ function Admin({ session }: { session: any }) {
             {page === 'crm' && <CRMView leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>}
-            {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead}/>}
+            {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>}
             {page === 'rapports' && <RapportsView leads={leads} exportCSV={exportCSV} exportExcel={exportExcel} exportPDF={exportPDF}/>}
           </>)}
         </main>
@@ -2135,54 +2136,8 @@ function Donut({ items, capLabel }: { items: { label: string; value: number }[];
   )
 }
 
-function ListCard({ icon, title, subtitle, emptyIcon, emptyTitle, emptySub, list, onOpen }: {
-  icon: React.ReactNode; title: string; subtitle?: string;
-  emptyIcon: React.ReactNode; emptyTitle: string; emptySub: string;
-  list: any[]; onOpen: (l: any) => void;
-}) {
-  return (
-    <div className="lc-card">
-      <div className="lc-head">
-        <span className="lc-ico" aria-hidden="true">{icon}</span>
-        <div className="lc-head-body">
-          <span className="lc-title">{title}</span>
-          {subtitle && <span className="lc-subtitle">{subtitle}</span>}
-        </div>
-        <span className="lc-badge">{list.length}</span>
-      </div>
-      {list.length === 0 ? (
-        <div className="lc-empty">
-          <div className="lc-empty-ico" aria-hidden="true">{emptyIcon}</div>
-          <div className="lc-empty-t">{emptyTitle}</div>
-          <div className="lc-empty-s">{emptySub}</div>
-        </div>
-      ) : (
-        <div className="lc-body">
-          <div className="lead-grid">{list.map((l: any) => <LeadRow key={l.id} lead={l} msgCount={0} onOpen={onOpen} updateStatut={() => {}}/>)}</div>
-        </div>
-      )}
-    </div>
-  )
-}
 
 
-function NonEligiblesView({ leads, onOpen }: any) {
-  const list = leads.filter((l: any) => l.eligibilite?.non_eligible === true || l.statut === 'Non Éligible' || l.situation?.rccm === 'Non')
-  const ICO = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-  const EMPTY_ICO = <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-  return (
-    <ListCard
-      icon={ICO}
-      title="Dossiers non éligibles"
-      subtitle="Pack formalisation · up-sell · reconversion"
-      emptyIcon={EMPTY_ICO}
-      emptyTitle="Aucun dossier non éligible"
-      emptySub="Les leads marqués non éligibles (pas de RCCM, flux insuffisants, refus bancaire) atterriront ici avec le script de relance Pack Formalisation."
-      list={list}
-      onOpen={onOpen}
-    />
-  )
-}
 
 function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
   const totalMontant = leads.reduce((s: number, l: any) => s + (l.montant_demande || 0), 0)

@@ -135,3 +135,10 @@ export function couleurAvatar(nom: string): { fond: string; texte: string } {
   const p = PALETTE_AVATAR[h % PALETTE_AVATAR.length]!
   return { fond: p[0], texte: p[1] }
 }
+
+/** 22 800 000 -> "22 800 000 XAF" (espaces normaux, lisibles partout). */
+export function montantComplet(n: number | null | undefined): string {
+  const v = Number(n) || 0
+  if (!v) return '—'
+  return `${new Intl.NumberFormat('fr-FR').format(Math.round(v)).replace(/ | /g, ' ')} XAF`
+}
