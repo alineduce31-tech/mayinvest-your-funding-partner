@@ -5,6 +5,8 @@
 export type HakiPage = 'home' | 'login' | 'form' | 'client'
 
 export const MOBILE_MAX_WIDTH = 760
+/** Jusqu'à cette largeur (tablettes), Haki n'ouvre jamais son panneau tout seul. */
+export const TABLETTE_MAX_WIDTH = 1024
 export const SCROLL_TRIGGER_PX = 150
 export const TEASER_AUTO_HIDE_MS = 12_000
 
@@ -28,8 +30,12 @@ export function estMobile(largeur: number): boolean {
 
 export function modeApparition(p: { largeur: number; autoActif: boolean; refuse: boolean; bulleDejaVue: boolean }): 'rien' | 'bulle' | 'panneau' {
   if (!p.autoActif || p.refuse) return 'rien'
-  if (estMobile(p.largeur)) return p.bulleDejaVue ? 'rien' : 'bulle'
+  if (p.largeur <= TABLETTE_MAX_WIDTH) return p.bulleDejaVue ? 'rien' : 'bulle'
   return 'panneau'
+}
+
+export function petitEcran(largeur: number): boolean {
+  return largeur <= TABLETTE_MAX_WIDTH
 }
 
 export function cleSession(page: HakiPage): string {

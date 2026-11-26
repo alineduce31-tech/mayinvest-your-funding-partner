@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
-import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles, vueMobile } from '@/components/HakiTeaser'
+import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles, vueMobile, petitEcranActuel } from '@/components/HakiTeaser'
 
 export const Route = createFileRoute('/preselection')({
   component: Simulation,
@@ -512,6 +512,8 @@ function Simulation() {
   const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null
   const initType: 'physique' | 'morale' | '' = params?.get('type') === 'morale' ? 'morale' : params?.get('type') === 'physique' ? 'physique' : ''
   const [step, setStep] = useState<1 | 2 | 3 | 4>(initType ? 2 : 1)
+  const stepRef = useRef(step)
+  stepRef.current = step
   const [type, setType] = useState<'physique' | 'morale' | ''>(initType)
   const [activite, setActivite] = useState('')
   const [form, setForm] = useState<Record<string, string>>({})
@@ -543,7 +545,7 @@ function Simulation() {
     const result = validateField(key, form[key] || '', type === 'physique')
     setFieldFeedback({ ...result, field: key })
     // Mobile : jamais de panneau pendant la saisie, une bulle seulement en cas d'erreur
-    if (vueMobile()) {
+    if (petitEcranActuel()) {
       if (!result.ok) bulle.montrer(`${result.msg || 'Champ à corriger'}${result.example ? ' · ' + result.example : ''}`)
       return undefined
     }
@@ -578,13 +580,19 @@ function Simulation() {
   // Haki s'ouvre AUTOMATIQUEMENT à chaque chargement de page si pas encore refusée
   // (le mode auto peut être désactivé via le toggle dans le panneau)
   // Mobile : bulle discrète ; ordinateur : panneau après un court délai
-  const bulle = useHakiTeaser('form', { autoActif: true, refuse: hakiDeclined, ouvrirPanneau: () => setMascotOpen(true) })
+  const bulle = useHakiTeaser('form', { autoActif: true, refuse: hakiDeclined, actif: step !== 4, ouvrirPanneau: () => { if (stepRef.current !== 4) setMascotOpen(true) } })
   useSheetSwipe(mascotOpen, '.haki-panel', () => setMascotOpen(false))
 
   // Si acceptée ET mode auto activé : s'ouvre à chaque changement d'étape pour guider
   useEffect(() => {
+    if (step === 4) {
+      // Page du score : Haki ne s'ouvre jamais tout seul, et se range sur mobile et tablette
+      bulle.fermer()
+      if (petitEcranActuel()) setMascotOpen(false)
+      return undefined
+    }
     if (hakiAccepted && autoMode) {
-      if (vueMobile()) return undefined
+      if (petitEcranActuel()) return undefined
       const t = setTimeout(() => setMascotOpen(true), 400)
       return () => clearTimeout(t)
     }
@@ -1483,15 +1491,13 @@ function Simulation() {
                 Copier le code
               </>}
             </button>
-            <div className="code-warn">⚠️ Notez ce code. Il vous servira à retrouver votre dossier (avec votre numéro ou email).</div>
+            <div className="code-warn">Gardez ce code pour vous. Avec votre numéro ou votre email, il donne accès à votre dossier. Mayinvest ne vous le demandera jamais.</div>
           </div>
 
-          <div className="ref">Réf. {leadId}</div>
-
-          {/* Bouton partage WhatsApp (envoyer le code à un proche / soi-même) */}
+          {/* Recommander Mayinvest : ne partage ni le code ni le lien du dossier */}
           <button className="btn-share" onClick={() => {
-            const text = `Mon dossier Mayinvest : code d'accès ${accessCode} · Score ${score}/100. Suivre : ${window.location.origin}/client/${leadId}`
-            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank')
+            const text = `J'ai fait ma pré-sélection de crédit gratuite sur Mayinvest, en 2 minutes. Fais la tienne : ${window.location.origin}`
+            window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener')
           }}>
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <circle cx="18" cy="5" r="3" stroke="currentColor" strokeWidth="2"/>
@@ -1499,7 +1505,7 @@ function Simulation() {
               <circle cx="18" cy="19" r="3" stroke="currentColor" strokeWidth="2"/>
               <path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
             </svg>
-            Partager mon code avec un proche
+            Recommander Mayinvest à un proche
           </button>
 
           <button className="btn-wa" style={{ background: '#1A6BFF', marginBottom: 10 }} onClick={() => navigate({ to: '/client/$id', params: { id: leadId } })}>

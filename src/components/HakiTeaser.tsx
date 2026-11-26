@@ -1,12 +1,16 @@
 import CloseIcon from '@/components/CloseIcon'
 import { useEffect, useRef, useState } from 'react'
-import { DELAIS, SCROLL_TRIGGER_PX, TEASER_AUTO_HIDE_MS, TEXTES, cleSession, doitFermerParGlisse, estMobile, modeApparition, type HakiPage } from '@/lib/haki-teaser'
+import { DELAIS, SCROLL_TRIGGER_PX, TEASER_AUTO_HIDE_MS, TEXTES, cleSession, doitFermerParGlisse, estMobile, modeApparition, type HakiPage, TABLETTE_MAX_WIDTH } from '@/lib/haki-teaser'
 
 function bulleVue(page: HakiPage) {
   try { return sessionStorage.getItem(cleSession(page)) === '1' } catch { return false }
 }
 function marquerVue(page: HakiPage) {
   try { sessionStorage.setItem(cleSession(page), '1') } catch {}
+}
+/** Mobile ou tablette : pas d'ouverture automatique du panneau. */
+export function petitEcranActuel() {
+  return typeof window !== 'undefined' && window.innerWidth <= TABLETTE_MAX_WIDTH
 }
 export function vueMobile() {
   return typeof window !== 'undefined' && estMobile(window.innerWidth)

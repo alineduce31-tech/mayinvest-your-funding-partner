@@ -18,6 +18,8 @@ describe('apparition de Haki', () => {
   test('tablette 820 px traitée comme un ordinateur, téléphone 760 px comme un mobile', () => {
     expect(estMobile(760)).toBe(true)
     expect(estMobile(820)).toBe(false)
+    expect(modeApparition({ largeur: 820, autoActif: true, refuse: false, bulleDejaVue: false })).toBe('bulle')
+    expect(modeApparition({ largeur: 1024, autoActif: true, refuse: false, bulleDejaVue: true })).toBe('rien')
   })
   test('connexion : bulle plus rapide que sur l\'accueil', () => {
     expect(DELAIS.login.mobile).toBeLessThan(DELAIS.home.mobile)

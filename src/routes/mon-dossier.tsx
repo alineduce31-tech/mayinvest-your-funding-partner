@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { Logo } from '@/components/Logo'
 import { formatPhoneInput } from '@/lib/phone'
 import { requestPasswordReset } from '@/lib/password-reset'
-import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles, vueMobile } from '@/components/HakiTeaser'
+import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles, vueMobile, petitEcranActuel } from '@/components/HakiTeaser'
 
 export const Route = createFileRoute('/mon-dossier')({
   component: MonDossier,
@@ -167,13 +167,13 @@ function MonDossier() {
 
   // Ordinateur : Haki s'ouvre quand on clique sur un champ. Mobile : jamais pendant la saisie.
   useEffect(() => {
-    if (autoMode && !hakiDeclined && activeField !== 'none' && !vueMobile()) setHakiOpen(true)
+    if (autoMode && !hakiDeclined && activeField !== 'none' && !petitEcranActuel()) setHakiOpen(true)
   }, [activeField, autoMode, hakiDeclined])
 
   // En cas d'erreur : panneau sur ordinateur, bulle sur mobile
   useEffect(() => {
     if (!error || !autoMode || hakiDeclined) return
-    if (vueMobile()) bulle.montrer('Ça ne passe pas ? Touchez ici, je vous aide à vous connecter.')
+    if (petitEcranActuel()) bulle.montrer('Ça ne passe pas ? Touchez ici, je vous aide à vous connecter.')
     else setHakiOpen(true)
   }, [error, autoMode, hakiDeclined]) // eslint-disable-line react-hooks/exhaustive-deps
 
