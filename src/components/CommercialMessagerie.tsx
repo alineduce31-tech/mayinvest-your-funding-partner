@@ -3,6 +3,7 @@ import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { messageRdv, initiales, heureCourte } from '@/lib/messagerie'
 import { COMMISSION_PAR_DOSSIER } from '@/lib/commercial-dashboard'
 import CallButton from '@/components/CallButton'
+import ScrollRow from '@/components/ScrollRow'
 import {
   SUIVI, aRelancer, demainMatin, etapeFaite, etapeSuivante, filtrerCom, heuresDepuis, indexSuivi,
   messagePieces, prochaineEtape, type ComRow, type FiltreCom, type Rappels,
@@ -280,28 +281,24 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
         </div>
 
         <div className="cm-composer">
-          <div className="cm-tools">
+          <ScrollRow className="cm-tools">
             <div className="cm-seg">
               <button className={!note ? 'on' : ''} onClick={() => setNote(false)}>Au client</button>
               <button className={note ? 'on note' : ''} onClick={() => setNote(true)}>Note pour la direction</button>
             </div>
-            <div className="cm-pop-wrap">
-              <button className="cm-tool" onClick={() => setPop(p => (p === 'types' ? null : 'types'))}>Message type</button>
-              {pop === 'types' && (
-                <div className="cm-pop">
-                  {MESSAGES_TYPES.map(t => <button key={t.label} onClick={() => { setText(t.text); setNote(false); setPop(null); inputRef.current?.focus() }}><b>{t.label}</b><span>{t.text}</span></button>)}
-                </div>
-              )}
-            </div>
-            <div className="cm-pop-wrap">
-              <button className="cm-tool" onClick={() => setPop(p => (p === 'rdv' ? null : 'rdv'))}>Proposer un RDV</button>
-              {pop === 'rdv' && <RdvPicker onClose={() => setPop(null)} onDone={(t) => { setText(t); setNote(false); setPop(null); inputRef.current?.focus() }}/>}
-            </div>
+            <button className={`cm-tool ${pop === 'types' ? 'active' : ''}`} onClick={() => setPop(p => (p === 'types' ? null : 'types'))}>Message type</button>
+            <button className={`cm-tool ${pop === 'rdv' ? 'active' : ''}`} onClick={() => setPop(p => (p === 'rdv' ? null : 'rdv'))}>Proposer un RDV</button>
             <button className="cm-tool" onClick={() => setPiecesOpen(true)}>Demander une pièce</button>
             <button className={`cm-tool ${rappel ? 'on' : ''}`} onClick={() => onRappel(rappel ? null : demainMatin(Date.now()))}>
               {rappel ? `Rappel ${new Date(rappel).toLocaleDateString('fr-FR', { weekday: 'short' })} 9 h · annuler` : 'Me rappeler demain'}
             </button>
-          </div>
+          </ScrollRow>
+          {pop === 'types' && (
+            <div className="cm-pop">
+              {MESSAGES_TYPES.map(t => <button key={t.label} onClick={() => { setText(t.text); setNote(false); setPop(null); inputRef.current?.focus() }}><b>{t.label}</b><span>{t.text}</span></button>)}
+            </div>
+          )}
+          {pop === 'rdv' && <RdvPicker onClose={() => setPop(null)} onDone={(t) => { setText(t); setNote(false); setPop(null); inputRef.current?.focus() }}/>}
           {err && <div className="cm-err">{err}</div>}
           <div className={`cm-input ${note ? 'note' : ''}`}>
             <textarea ref={inputRef} rows={1} value={text} onChange={e => setText(e.target.value)}
@@ -553,8 +550,8 @@ function CmStyles() {
     .cm-who { font-size: 11px; font-weight: 800; margin-bottom: 2px; opacity: 0.85; }
     .cm-txt { white-space: pre-wrap; word-break: break-word; }
     .cm-time { font-size: 10.5px; opacity: 0.7; margin-top: 3px; text-align: right; }
-    .cm-composer { background: #fff; border-top: 1px solid #E8ECF3; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; }
-    .cm-tools { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .cm-composer { position: relative; background: #fff; border-top: 1px solid #E8ECF3; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 8px; }
+    
     .cm-tools::-webkit-scrollbar { display: none; }
     .cm-seg { display: flex; background: #F0F2F5; border-radius: 100px; padding: 3px; flex-shrink: 0; }
     .cm-seg button { border: none; background: transparent; color: #5B6478; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
@@ -562,9 +559,9 @@ function CmStyles() {
     .cm-seg button.on.note { color: #B45309; }
     .cm-tool { border: 1.5px solid #E5E7EB; background: #fff; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .cm-tool:hover { border-color: #BFD4FF; color: #1A6BFF; }
+    .cm-tool.active { border-color: #1A6BFF; color: #1A6BFF; background: #EEF4FF; }
     .cm-tool.on { border-color: #FCD34D; background: #FFFBEB; color: #B45309; }
-    .cm-pop-wrap { position: static; flex-shrink: 0; }
-    .cm-pop { position: absolute; bottom: 120px; left: 14px; width: 340px; max-width: calc(100% - 28px); background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; box-shadow: 0 16px 40px rgba(13,27,62,0.16); padding: 6px; z-index: 30; display: flex; flex-direction: column; gap: 2px; max-height: 50vh; overflow-y: auto; }
+        .cm-pop { position: absolute; bottom: calc(100% + 6px); left: 14px; width: 340px; max-width: calc(100% - 28px); background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; box-shadow: 0 16px 40px rgba(13,27,62,0.16); padding: 6px; z-index: 30; display: flex; flex-direction: column; gap: 2px; max-height: 50vh; overflow-y: auto; }
     .cm-pop > button { border: none; background: none; text-align: left; padding: 9px 10px; border-radius: 10px; font-family: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
     .cm-pop > button:hover { background: #F5F8FF; }
     .cm-pop > button b { font-size: 12.5px; color: #0D1B3E; }
@@ -639,13 +636,11 @@ function CmStyles() {
       .cm-msgs { padding: 10px; }
       .cm-bubble { max-width: 86%; }
       .cm-composer { padding: 8px 10px calc(8px + env(safe-area-inset-bottom)); }
-      .cm-tools { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-      .cm-tools::-webkit-scrollbar { display: none; }
       .cm-side { top: auto; left: 0; right: 0; width: 100%; max-height: 82%; border-left: none; border-radius: 20px 20px 0 0; transform: translateY(105%); box-shadow: 0 -12px 32px rgba(13,27,62,0.18); }
       .cm-side.open { transform: translateY(0); }
       .cm-grab { display: block; width: 40px; height: 4px; border-radius: 4px; background: #CBD5E1; margin: -6px auto 0; }
       .cm-commission { margin-top: 4px; }
-      .cm-pop { bottom: 112px; left: 10px; max-width: calc(100% - 20px); }
+      .cm-pop { left: 10px; max-width: calc(100% - 20px); }
     }
   `}</style>
 }

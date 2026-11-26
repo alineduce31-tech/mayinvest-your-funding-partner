@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { LIFECYCLE_STATUTS } from '@/lib/lead-templates'
 import CallButton from '@/components/CallButton'
+import ScrollRow from '@/components/ScrollRow'
 import {
   filtrerInbox, filtrerEquipe, compteurs, heuresAttente, enRetard, apercu, heureCourte, initiales,
   messageRdv, MESSAGES_TYPES, type InboxRow, type TeamRow, type Filtre,
@@ -303,26 +304,22 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
         </div>
 
         <div className="am-composer">
-          <div className="am-tools">
+          <ScrollRow className="am-tools">
             <div className="am-seg" role="tablist">
               <button className={mode === 'groupe' ? 'on' : ''} onClick={() => setMode('groupe')}>Au groupe</button>
               <button className={mode === 'note' ? 'on note' : ''} onClick={() => setMode('note')}>Note interne</button>
               <button className={mode === 'commercial' ? 'on' : ''} disabled={!agentIsCommercial} title={agentIsCommercial ? '' : 'Aucun commercial terrain sur ce dossier'} onClick={() => setMode('commercial')}>Au commercial seul</button>
             </div>
-            <div className="am-pop-wrap">
-              <button className="am-tool" onClick={() => { setTypesOpen(o => !o); setRdvOpen(false) }}>Message type</button>
-              {typesOpen && (
-                <div className="am-pop">
-                  {MESSAGES_TYPES.map(q => <button key={q.label} onClick={() => { setText(q.text); setMode('groupe'); setTypesOpen(false) }}><b>{q.label}</b><span>{q.text}</span></button>)}
-                </div>
-              )}
-            </div>
-            <div className="am-pop-wrap">
-              <button className="am-tool" onClick={() => { setRdvOpen(o => !o); setTypesOpen(false) }}>Proposer un RDV</button>
-              {rdvOpen && <RdvPicker onDone={(t) => { setText(t); setMode('groupe'); setRdvOpen(false) }} onClose={() => setRdvOpen(false)}/>}
-            </div>
+            <button className={`am-tool ${typesOpen ? 'active' : ''}`} onClick={() => { setTypesOpen(o => !o); setRdvOpen(false) }}>Message type</button>
+            <button className={`am-tool ${rdvOpen ? 'active' : ''}`} onClick={() => { setRdvOpen(o => !o); setTypesOpen(false) }}>Proposer un RDV</button>
             <button className="am-tool" onClick={demanderPiece}>Demander une pièce</button>
-          </div>
+          </ScrollRow>
+          {typesOpen && (
+            <div className="am-pop">
+              {MESSAGES_TYPES.map(q => <button key={q.label} onClick={() => { setText(q.text); setMode('groupe'); setTypesOpen(false) }}><b>{q.label}</b><span>{q.text}</span></button>)}
+            </div>
+          )}
+          {rdvOpen && <RdvPicker onDone={(t) => { setText(t); setMode('groupe'); setRdvOpen(false) }} onClose={() => setRdvOpen(false)}/>}
           {err && <div className="am-err">{err}</div>}
           <div className={`am-input-row ${mode}`}>
             <textarea rows={1} value={text} placeholder={placeholder} onChange={e => setText(e.target.value)}
@@ -669,17 +666,18 @@ function MessagerieStyles() {
     .am-who { font-size: 11px; font-weight: 800; margin-bottom: 2px; opacity: 0.85; }
     .am-txt { white-space: pre-wrap; word-break: break-word; }
     .am-time { font-size: 10.5px; opacity: 0.7; margin-top: 3px; text-align: right; }
-    .am-composer { background: #fff; border-top: 1px solid #E8ECF3; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; }
-    .am-tools { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-    .am-seg { display: flex; background: #F0F2F5; border-radius: 100px; padding: 3px; flex-wrap: wrap; }
+    .am-composer { position: relative; background: #fff; border-top: 1px solid #E8ECF3; padding: 10px 14px; display: flex; flex-direction: column; gap: 8px; }
+    .am-seg { display: flex; background: #F0F2F5; border-radius: 100px; padding: 3px; flex-shrink: 0; }
+    .am-seg button { white-space: nowrap; }
     .am-seg button { border: none; background: transparent; color: #5B6478; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
     .am-seg button.on { background: #fff; color: #1A6BFF; font-weight: 800; box-shadow: 0 1px 4px rgba(13,27,62,0.08); }
     .am-seg button.on.note { color: #B45309; }
     .am-seg button:disabled { opacity: 0.4; cursor: not-allowed; }
     .am-tool { border: 1.5px solid #E5E7EB; background: #fff; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; }
-    .am-tool:hover { border-color: #BFD4FF; color: #1A6BFF; }
-    .am-pop-wrap { position: relative; }
-    .am-pop { position: absolute; bottom: calc(100% + 8px); left: 0; width: 320px; max-width: 80vw; background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; box-shadow: 0 16px 40px rgba(13,27,62,0.16); padding: 6px; z-index: 20; display: flex; flex-direction: column; gap: 2px; max-height: 340px; overflow-y: auto; }
+    .am-tool { white-space: nowrap; }
+    .am-tool:hover, .am-tool.active { border-color: #BFD4FF; color: #1A6BFF; }
+    .am-tool.active { background: #EEF4FF; }
+    .am-pop { position: absolute; bottom: calc(100% + 6px); left: 14px; width: 320px; max-width: 80vw; background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; box-shadow: 0 16px 40px rgba(13,27,62,0.16); padding: 6px; z-index: 20; display: flex; flex-direction: column; gap: 2px; max-height: 340px; overflow-y: auto; }
     .am-pop > button { border: none; background: none; text-align: left; padding: 8px 10px; border-radius: 10px; font-family: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
     .am-pop > button:hover { background: #F5F8FF; }
     .am-pop > button b { font-size: 12.5px; color: #0D1B3E; }
