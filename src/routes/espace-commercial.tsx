@@ -9,7 +9,8 @@ import { formatPhoneInput } from '@/lib/phone'
 import CommercialMessagerie from '@/components/CommercialMessagerie'
 import CallButton from '@/components/CallButton'
 import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
-import { UserPlus } from 'lucide-react'
+import { RappelAlarme } from '@/components/Rappels'
+import { UserPlus, LogOut } from 'lucide-react'
 import { ETAPES, COMMISSION_PAR_DOSSIER, grouperParEtape, financesCeMois, progressionObjectif, gainsPour, tachesDuJour } from '@/lib/commercial-dashboard'
 
 export const Route = createFileRoute('/espace-commercial')({
@@ -235,7 +236,7 @@ function EspaceCommercialPage() {
                   <div className="ws-user-city">{session.ville}</div>
                 </div>
               </div>
-              <button className="btn-logout-sm" onClick={logout}>Se déconnecter</button>
+              <button className="btn-logout-sm" onClick={logout}><LogOut size={15} strokeWidth={2.2}/>Se déconnecter</button>
             </div>
           </aside>
 
@@ -274,6 +275,9 @@ function EspaceCommercialPage() {
             ))}
           </nav>
 
+          <RappelAlarme commercialId={session.id}
+            noms={Object.fromEntries(leads.map(l => [l.id, leadNom(l)]))}
+            onOpen={(id) => { setSelectedLead(null); setOpenLeadId(id); setTab('messagerie'); window.scrollTo(0, 0) }}/>
           {selectedLead && (
             <LeadDrawer
               lead={selectedLead}
@@ -816,8 +820,8 @@ function GlobalStyles() {
       .ws-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, ${MI.blue}, ${MI.violet}); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
       .ws-user-name { font-size: 12px; font-weight: 700; color: #fff; }
       .ws-user-city { font-size: 10px; color: rgba(255,255,255,0.5); }
-      .btn-logout-sm { width: 100%; padding: 8px; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.65); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
-      .btn-logout-sm:hover { background: rgba(255,255,255,0.1); color: #fff; }
+      .btn-logout-sm { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; background: transparent; color: #FCA5A5; border: 1px solid rgba(248,113,113,0.35); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s, border-color .15s, color .15s; }
+      .btn-logout-sm:hover { background: rgba(220,38,38,0.14); border-color: rgba(248,113,113,0.6); color: #FECACA; }
 
       .ws-main { min-width: 0; }
       .ws-topbar { height: 56px; box-sizing: border-box; padding: 0 32px; background: #fff; border-bottom: 1px solid ${MI.grayBorder}; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 10; }

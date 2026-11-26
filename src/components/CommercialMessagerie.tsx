@@ -5,8 +5,9 @@ import { messageRdv, initiales, heureCourte } from '@/lib/messagerie'
 import { COMMISSION_PAR_DOSSIER } from '@/lib/commercial-dashboard'
 import CallButton from '@/components/CallButton'
 import ScrollRow from '@/components/ScrollRow'
+import { useRappels, RappelPicker } from '@/components/Rappels'
 import {
-  SUIVI, aRelancer, demainMatin, etapeFaite, etapeSuivante, filtrerCom, heuresDepuis, indexSuivi,
+  SUIVI, aRelancer, etapeFaite, etapeSuivante, filtrerCom, heuresDepuis, indexSuivi,
   messagePieces, prochaineEtape, type ComRow, type FiltreCom, type Rappels,
 } from '@/lib/messagerie-commercial'
 
@@ -31,24 +32,6 @@ const BackIcon = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="non
 const SendIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11l18-8-8 18-3-8-7-2z" fill="#fff"/></svg>
 const PhoneIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round"/></svg>
 
-function useRappels(commercialId: string) {
-  const key = `mi_rappels_${commercialId}`
-  const [rappels, setRappels] = useState<Rappels>({})
-  useEffect(() => {
-    try { setRappels(JSON.parse(localStorage.getItem(key) || '{}')) } catch { setRappels({}) }
-  }, [key])
-  function toggle(leadId: string, at: number | null) {
-    setRappels(prev => {
-      const next = { ...prev }
-      if (at === null) delete next[leadId]
-      else next[leadId] = at
-      try { localStorage.setItem(key, JSON.stringify(next)) } catch {}
-      return next
-    })
-  }
-  return { rappels, toggle }
-}
-
 export default function CommercialMessagerie({ commercialId, onCountsChange, onThreadOpen, initialLeadId }: { commercialId: string; onCountsChange: () => void; onThreadOpen?: ((open: boolean) => void) | undefined; initialLeadId?: string | null | undefined }) {
   const [rows, setRows] = useState<ComRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -59,7 +42,7 @@ export default function CommercialMessagerie({ commercialId, onCountsChange, onT
   const [sel, setSel] = useState<Sel>(initialLeadId ? { kind: 'lead', id: initialLeadId } : null)
   const [tick, setTick] = useState(0)
   const [now, setNow] = useState(Date.now())
-  const { rappels, toggle } = useRappels(commercialId)
+  const { rappels, poser } = useRappels(commercialId)
   useEffect(() => { onThreadOpen?.(sel !== null); return () => onThreadOpen?.(false) }, [sel !== null])
 
   async function loadRows() {
@@ -153,7 +136,7 @@ export default function CommercialMessagerie({ commercialId, onCountsChange, onT
         {sel?.kind === 'lead' && current && (
           <LeadThread key={current.lead_id} row={current} commercialId={commercialId} tick={tick} now={now}
             rappel={rappels[current.lead_id] || null}
-            onRappel={(at) => toggle(current.lead_id, at)}
+            onRappel={(at) => poser(current.lead_id, at)}
             onBack={() => setSel(null)} onChanged={refreshCounts}/>
         )}
         {sel?.kind === 'lead' && !current && !loading && <div className="cm-placeholder"><p>Ce dossier n'est plus dans ta liste.</p></div>}
@@ -172,7 +155,7 @@ function statutTone(s: string | null) {
 // ============ FIL CLIENT ============
 function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, onChanged }: {
   row: ComRow; commercialId: string; tick: number; now: number; rappel: number | null
-  onRappel: (at: number | null) => void; onBack: () => void; onChanged: () => void
+  onRappel: (at: number | null) => Promise<string | null>; onBack: () => void; onChanged: () => void
 }) {
   const [msgs, setMsgs] = useState<any[]>([])
   const [docs, setDocs] = useState<any[]>([])
@@ -290,9 +273,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
             <button className={`cm-tool ${pop === 'types' ? 'active' : ''}`} onClick={() => setPop(p => (p === 'types' ? null : 'types'))}>Message type</button>
             <button className={`cm-tool ${pop === 'rdv' ? 'active' : ''}`} onClick={() => setPop(p => (p === 'rdv' ? null : 'rdv'))}>Proposer un RDV</button>
             <button className="cm-tool" onClick={() => setPiecesOpen(true)}>Demander une pièce</button>
-            <button className={`cm-tool ${rappel ? 'on' : ''}`} onClick={() => onRappel(rappel ? null : demainMatin(Date.now()))}>
-              {rappel ? `Rappel ${new Date(rappel).toLocaleDateString('fr-FR', { weekday: 'short' })} 9 h · annuler` : 'Me rappeler demain'}
-            </button>
+            <RappelPicker className="cm-tool" value={rappel} onChange={onRappel}/>
           </ScrollRow>
           {pop === 'types' && (
             <div className="cm-pop">
