@@ -4,6 +4,7 @@ import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { LIFECYCLE_STATUTS } from '@/lib/lead-templates'
 import CallButton from '@/components/CallButton'
 import ScrollRow from '@/components/ScrollRow'
+import NiceSelect from '@/components/NiceSelect'
 import {
   filtrerInbox, filtrerEquipe, compteurs, heuresAttente, enRetard, apercu, heureCourte, initiales,
   messageRdv, MESSAGES_TYPES, type InboxRow, type TeamRow, type Filtre,
@@ -340,17 +341,17 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
         </div>
         <div className="am-kv">
           <div><span>Statut</span>
-            <select value={lead?.statut || ''} onChange={e => changerStatut(e.target.value)}>
-              {LIFECYCLE_STATUTS.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <NiceSelect variant="compact" value={lead?.statut || ''} onChange={changerStatut} title="Statut du dossier" ariaLabel="Statut du dossier" style={{ maxWidth: 170 }}
+              options={LIFECYCLE_STATUTS.map(s => ({ value: s, label: s }))}/>
           </div>
           <div><span>Conseiller</span>
             {isDirector ? (
-              <select value={agentId || ''} onChange={e => reattribuer(e.target.value)}>
-                <option value="">Sans conseiller</option>
-                {agentId && !team.some(t => t.commercial_id === agentId) && <option value={agentId}>{agentNom || 'Membre de la direction'}</option>}
-                {team.map(t => <option key={t.commercial_id} value={t.commercial_id}>{t.nom} · {t.ville || '—'}</option>)}
-              </select>
+              <NiceSelect variant="compact" value={agentId || ''} onChange={reattribuer} title="Conseiller" ariaLabel="Conseiller" style={{ maxWidth: 170 }}
+                options={[
+                  { value: '', label: 'Sans conseiller' },
+                  ...(agentId && !team.some(t => t.commercial_id === agentId) ? [{ value: agentId, label: agentNom || 'Membre de la direction' }] : []),
+                  ...team.map(t => ({ value: t.commercial_id, label: `${t.nom} · ${t.ville || '—'}` })),
+                ]}/>
             ) : <b>{agentNom || 'Sans conseiller'}</b>}
           </div>
           <div><span>Pièces validées</span><b className={docsOk < docs.length ? 'warn' : 'ok'}>{docsOk} / {docs.length}</b></div>

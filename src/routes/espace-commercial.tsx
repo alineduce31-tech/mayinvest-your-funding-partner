@@ -8,6 +8,8 @@ import { getCommercialToken, setCommercialToken } from '@/lib/session-tokens'
 import { formatPhoneInput } from '@/lib/phone'
 import CommercialMessagerie from '@/components/CommercialMessagerie'
 import CallButton from '@/components/CallButton'
+import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
+import { UserPlus } from 'lucide-react'
 import { ETAPES, COMMISSION_PAR_DOSSIER, grouperParEtape, financesCeMois, progressionObjectif, gainsPour, tachesDuJour } from '@/lib/commercial-dashboard'
 
 export const Route = createFileRoute('/espace-commercial')({
@@ -524,9 +526,8 @@ function LeadDrawer({ lead, commercialId, onClose, onUpdated }: { lead: Lead; co
 
           <div className="drawer-row">
             <div className="drawer-chip">Score {lead.score || '—'}/100</div>
-            <select className="drawer-statut" value={statut} onChange={e => changeStatut(e.target.value)} disabled={saving}>
-              {STATUTS_DISPO.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+            <NiceSelect variant="compact" value={statut} onChange={changeStatut} disabled={saving} title="Statut du lead" ariaLabel="Statut du lead"
+              options={STATUTS_DISPO.map(s => ({ value: s, label: s }))}/>
           </div>
 
           <div className="drawer-sec">
@@ -609,15 +610,13 @@ function NewLeadModal({ commercialId, onClose, onCreated }: { commercialId: stri
         {err && <div className="form-err">{err}</div>}
 
         <div className="type-switch">
-          <button className={type === 'physique' ? 'active' : ''} onClick={() => setType('physique')}>Particulier</button>
-          <button className={type === 'morale' ? 'active' : ''} onClick={() => setType('morale')}>PME</button>
+          <button className={type === 'physique' ? 'active' : ''} onClick={() => { setType('physique'); setActivite('') }}>Particulier</button>
+          <button className={type === 'morale' ? 'active' : ''} onClick={() => { setType('morale'); setActivite('') }}>PME</button>
         </div>
 
         <div className="field"><label>Activité <span style={{ color: MI.red }}>*</span></label>
-          <select value={activite} onChange={e => setActivite(e.target.value)}>
-            <option value="">— Choisir —</option>
-            {(type === 'physique' ? ACTIVITES_PHYSIQUE : ACTIVITES_PME).map(a => <option key={a}>{a}</option>)}
-          </select>
+          <NiceSelect value={activite} onChange={setActivite} placeholder="Choisir une activité" title="Activité"
+            options={optionsActivite(type === 'physique' ? ACTIVITES_PHYSIQUE : ACTIVITES_PME)}/>
         </div>
 
         {type === 'physique' ? (
@@ -645,7 +644,7 @@ function NewLeadModal({ commercialId, onClose, onCreated }: { commercialId: stri
         <div className="modal-actions">
           <button className="btn-cancel" onClick={onClose}>Annuler</button>
           <button className="btn-primary-full" onClick={submit} disabled={loading}>
-            {loading ? 'Création…' : 'Créer le lead →'}
+            {loading ? 'Création…' : <><UserPlus size={17} strokeWidth={2.2}/>Créer le lead</>}
           </button>
         </div>
       </div>
@@ -1022,7 +1021,7 @@ function GlobalStyles() {
       .field select:focus { outline: none; border-color: ${MI.blue}; box-shadow: 0 0 0 3px rgba(26,107,255,0.12); }
       .modal-actions { display: flex; gap: 10px; margin-top: 20px; padding-top: 16px; border-top: 1px solid ${MI.grayBorder}; }
       .btn-cancel { padding: 12px 20px; background: ${MI.grayHair}; color: ${MI.text}; border: 1px solid ${MI.grayBorder}; border-radius: 100px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; }
-      .btn-primary-full { flex: 1; padding: 12px 20px; background: #111; color: #fff; border: none; border-radius: 100px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
+      .btn-primary-full { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 12px 20px; background: #111; color: #fff; border: none; border-radius: 100px; font-size: 13px; font-weight: 700; cursor: pointer; font-family: inherit; }
       .btn-primary-full:hover:not(:disabled) { background: ${MI.blue}; }
 
       /* ===== CHAT ===== */
