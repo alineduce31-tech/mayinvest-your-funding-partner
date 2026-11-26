@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { createPortal } from 'react-dom'
 import { useSuspenseQuery } from '@tanstack/react-query'
-import { Lock, ArrowUp, Trash2, Eye, MessagesSquare, Star, MapPin, Download, FileSpreadsheet, FileDown, UserPlus, LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
+import { ClipboardCheck, Lock, ArrowUp, Trash2, Eye, MessagesSquare, Star, MapPin, Download, FileSpreadsheet, FileDown, UserPlus, LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
@@ -988,7 +988,7 @@ function Admin({ session }: { session: any }) {
               <div style={{ margin: '10px 16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}/>
               <button className="sb-link" onClick={() => { navigate({ to: '/candidatures' as any }); setSidebarOpen(false) }}>
                 <span>
-                  <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M3 4.5h11a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H3a1.5 1.5 0 0 1-1.5-1.5V6A1.5 1.5 0 0 1 3 4.5z" stroke="currentColor" strokeWidth="1.6"/><path d="M5 8.5h7M5 11.5h7M5 14.5h4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><path d="M14 2v5l2-1.5L18 7V2" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>
+                  <ClipboardCheck size={18} strokeWidth={1.6}/>
                 </span>
                 <span>Candidatures</span>
               </button>
