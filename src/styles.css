@@ -2183,3 +2183,6 @@ button:active, .lap-btn:active {
 .ld-pills > button:first-child, .ld-pills > div:first-child > button { height: 30px !important; padding: 0 12px !important; border-radius: 999px !important; font-size: 12.5px !important; font-weight: 600 !important; text-transform: none !important; letter-spacing: 0 !important; }
 /* Pas de bande blanche au-dessus du bandeau des pages Équipe */
 .eq-page, .ea-root { display: flow-root; }
+/* Fiche : seul le sélecteur d'onglets reste collé en haut au défilement */
+.drawer .ld-head { position: relative !important; top: auto !important; }
+.drawer .ld-seg { top: 10px; box-shadow: 0 -10px 0 0 #F5F5F7, 0 0 0 10px #F5F5F7; }
