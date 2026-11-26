@@ -168,6 +168,7 @@ export function ChatInput({ value, onChange, onSend, placeholder, disabled, send
     if (!el) return
     el.style.height = 'auto'
     el.style.height = `${Math.min(el.scrollHeight, 140)}px`
+    el.style.overflowY = el.scrollHeight > 140 ? 'auto' : 'hidden'
   }, [value])
   return (
     <div className={`cv-input ${note ? 'note' : ''}`}>

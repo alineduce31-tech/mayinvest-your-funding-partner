@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
-import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Landmark, FileBadge, FileText, BarChart3, CircleCheck, Clock, Camera, Lock } from 'lucide-react'
+import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Landmark, FileBadge, FileText, BarChart3, CircleCheck, Clock, Camera, Lock, Search, ChevronLeft, Plus, Image as ImageIcon } from 'lucide-react'
 import { ETAPES_CLIENT, etapeCourante, compteDocs, prochaineEtape, decoupePiece } from '@/lib/espace-client'
 import { initialesNom, couleurAvatar } from '@/lib/affichage'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
@@ -180,7 +180,7 @@ function ClientPortal() {
   const [newMsg, setNewMsg] = useState('')
   const [sending, setSending] = useState(false)
   const [activeTab, setActiveTab] = useState<'suivi' | 'chat' | 'docs' | 'infos'>('suivi')
-  const [conseiller, setConseiller] = useState<{ prenom: string; nom: string; telephone: string } | null>(null)
+  const [conseiller, setConseiller] = useState<{ prenom: string; nom: string } | null>(null)
   // Lien direct vers un onglet : /client/<id>?tab=chat
   useEffect(() => {
     const t = new URLSearchParams(window.location.search).get('tab')
@@ -189,6 +189,8 @@ function ClientPortal() {
   const chatEnd = useRef<HTMLDivElement>(null)
   const fileInput = useRef<HTMLInputElement>(null)
   const [attachOpen, setAttachOpen] = useState(false)
+  const photoInput = useRef<HTMLInputElement>(null)
+  const galerieInput = useRef<HTMLInputElement>(null)
   function closeAttach() { setAttachOpen(false) }
   const [uploading, setUploading] = useState(false)
   const [documents, setDocuments] = useState<any[]>([])
@@ -362,7 +364,7 @@ function ClientPortal() {
   async function loadConseiller() {
     const { data } = await supabase.rpc('client_mon_conseiller')
     const c = Array.isArray(data) ? data[0] : data
-    setConseiller(c ? { prenom: c.prenom || '', nom: c.nom || '', telephone: c.telephone || '' } : null)
+    setConseiller(c ? { prenom: c.prenom || '', nom: c.nom || '' } : null)
   }
 
   async function loadDocuments() {
@@ -1014,7 +1016,7 @@ function ClientPortal() {
           <div className="cx-top">
             <span className="cx-av" style={{ background: av.fond, color: av.texte }}>{initialesNom(nom || 'Client')}</span>
             <div className="cx-id"><small>Bonjour</small><h1>{nom || 'Mon dossier'}</h1></div>
-            <button className="cx-rb" onClick={deconnecter} title="Se déconnecter" aria-label="Se déconnecter"><LogOut size={16}/></button>
+            <button className="cx-out" onClick={deconnecter} title="Se déconnecter" aria-label="Se déconnecter"><LogOut size={16}/><span>Déconnexion</span></button>
           </div>
           <div className="cx-sum">
             <svg width="48" height="48" viewBox="0 0 48 48" aria-label={`Score ${lead?.score || 0} sur 100`}><circle cx="24" cy="24" r="19" fill="none" stroke="rgba(255,255,255,.15)" strokeWidth="5"/><circle cx="24" cy="24" r="19" fill="none" stroke="#4A8DFF" strokeWidth="5" strokeDasharray={`${(Math.min(100, lead?.score || 0) / 100) * 119.4} 119.4`} strokeLinecap="round" transform="rotate(-90 24 24)"/><text x="24" y="28" textAnchor="middle" fontSize="13" fill="#fff" fontWeight="700">{lead?.score || 0}</text></svg>
@@ -1059,32 +1061,33 @@ function ClientPortal() {
 
           <div className="cx-gt">Votre conseiller</div>
           <div className="cx-g cx-cons">
-            <span className="cx-av s" style={{ background: '#E8F8EE', color: '#16A34A' }}>{nomConseiller ? initialesNom(nomConseiller) : <User size={16}/>}</span>
-            <div className="cx-cons-t"><b>{nomConseiller || 'Un conseiller va vous être attribué'}</b><small>{nomConseiller ? 'Répond en général sous 24 h' : 'Vous pouvez déjà écrire, l\'équipe vous répond.'}</small></div>
-            {conseiller?.telephone && <a className="cx-rb g" href={`tel:${conseiller.telephone}`} title="Appeler mon conseiller" aria-label="Appeler mon conseiller"><Phone size={15}/></a>}
+            {nomConseiller
+              ? <span className="cx-av s" style={{ background: '#E8F8EE', color: '#16A34A' }}>{initialesNom(nomConseiller)}</span>
+              : <span className="cx-av s cx-cherche"><Search size={17}/></span>}
+            <div className="cx-cons-t">
+              <b>{nomConseiller || 'Nous cherchons votre conseiller'}</b>
+              <small>{nomConseiller ? 'Répond en général sous 24 h' : 'En attendant, l\'équipe Mayinvest vous répond.'}</small>
+            </div>
+            <a className="cx-rb g" href={`tel:${TEL_AGENCE}`} title="Appeler Mayinvest au 04 023 23 17" aria-label="Appeler Mayinvest"><Phone size={15}/></a>
             <button className="cx-rb b" onClick={() => openAdvisorChat()} title="Écrire à mon conseiller" aria-label="Écrire à mon conseiller"><MessageCircle size={15}/></button>
           </div>
+          <div className="cx-note"><Phone size={13}/>Le bouton d'appel compose le numéro de Mayinvest : 04 023 23 17.</div>
         </>}
 
         {/* ----- CHAT type messenger ----- */}
         {activeTab === 'chat' && (
           <div className="c-messenger c-messenger-fs-active">
             {/* Header messagerie type WhatsApp */}
-            <div className="c-msg-head">
-              <button className="c-msg-head-back" onClick={() => setActiveTab('suivi')} aria-label="Retour">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M10 3L5 8l5 5" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-              <div className="c-msg-head-avatar">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="8" r="4" fill="#1A6BFF"/>
-                  <path d="M4 20c0-4.4 3.6-8 8-8s8 3.6 8 8" fill="#1A6BFF"/>
-                </svg>
-                <span className="c-msg-head-dot"/>
+            <div className="c-msg-head cx-mh">
+              <button className="cx-rb" onClick={() => setActiveTab('suivi')} aria-label="Retour"><ChevronLeft size={18}/></button>
+              {nomConseiller
+                ? <span className="cx-av s cx-mh-av" style={{ background: '#E8F8EE', color: '#16A34A' }}>{initialesNom(nomConseiller)}<i/></span>
+                : <span className="cx-av s cx-cherche"><Search size={16}/></span>}
+              <div className="cx-mh-t">
+                <b>{nomConseiller || 'Équipe Mayinvest'}</b>
+                <small>{nomConseiller ? 'Votre conseiller · répond sous 24 h' : 'Nous cherchons votre conseiller'}</small>
               </div>
-              <div className="c-msg-head-info">
-                <div className="c-msg-head-name">{conseiller ? `${conseiller.prenom} ${conseiller.nom}`.trim() : 'Votre conseiller Mayinvest'}</div>
-                <div className="c-msg-head-sub">Conseiller Mayinvest · répond en général sous 24 h</div>
-              </div>
+              <a className="cx-rb g" href={`tel:${TEL_AGENCE}`} title="Appeler Mayinvest au 04 023 23 17" aria-label="Appeler Mayinvest"><Phone size={15}/></a>
             </div>
 
             {/* Zone messages */}
@@ -1100,33 +1103,24 @@ function ClientPortal() {
             <div className="c-msg-input-bar">
               {/* Bouton Haki : ouvre menu options */}
               <div className="c-msg-attach-wrap">
-                <button className={`c-msg-attach-btn ${attachOpen ? 'on' : ''}`} onClick={() => setAttachOpen(a => !a)} aria-label="Partager un fichier" disabled={uploading}>
-                  <span className="c-msg-attach-eye">{hakiAvatar(36)}</span>
-                  <span className="c-msg-attach-dot"/>
-                </button>
+                <button className={`cx-plus ${attachOpen ? 'on' : ''}`} onClick={() => setAttachOpen(a => !a)} aria-label="Joindre un fichier" disabled={uploading}><Plus size={20}/></button>
                 {attachOpen && (
-                  <div className="c-attach-menu">
-                    <div className="c-attach-head">
-                      <span className="c-attach-haki-ic">{hakiAvatar(22)}</span>
-                      <span style={{ flex: 1 }}>Haki · Partager un fichier</span>
-                      <button className="c-attach-x" onClick={closeAttach} aria-label="Fermer">
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>
-                      </button>
+                  <div className="cx-attach">
+                    <div className="cx-g">
+                      <button className="cx-op" onClick={() => { closeAttach(); photoInput.current?.click() }}><span className="cx-ic b"><Camera size={18}/></span><span><b>Prendre une photo</b><small>Pièce d'identité, bulletin…</small></span></button>
+                      <button className="cx-op" onClick={() => { closeAttach(); galerieInput.current?.click() }}><span className="cx-ic g"><ImageIcon size={18}/></span><span><b>Choisir une photo</b><small>Depuis la galerie</small></span></button>
+                      <button className="cx-op" onClick={() => { closeAttach(); fileInput.current?.click() }}><span className="cx-ic o"><FileText size={18}/></span><span><b>Envoyer un document</b><small>PDF ou Word, 10 Mo maximum</small></span></button>
                     </div>
-                    <button className="c-attach-opt" onClick={() => { fileInput.current?.click() }}>
-                      <span className="c-attach-ic" style={{ background: '#DCFCE7', color: '#166534' }}>
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-                      </span>
-                      <div>
-                        <div className="c-attach-ttl">Partager un document</div>
-                        <div className="c-attach-sub">Photo, PDF, Word… (max 10 Mo)</div>
-                      </div>
-                    </button>
+                    <button className="cx-annuler" onClick={closeAttach}>Annuler</button>
                   </div>
                 )}
               </div>
+              <input ref={photoInput} type="file" style={{ display: 'none' }} accept="image/*" capture="environment"
+                onChange={e => { const f = e.target.files?.[0]; if (f) uploadFileToChat(f); e.currentTarget.value = '' }}/>
+              <input ref={galerieInput} type="file" style={{ display: 'none' }} accept="image/*"
+                onChange={e => { const f = e.target.files?.[0]; if (f) uploadFileToChat(f); e.currentTarget.value = '' }}/>
               <input ref={fileInput} type="file" style={{ display: 'none' }}
-                accept="image/*,application/pdf,.doc,.docx"
+                accept="application/pdf,.doc,.docx,image/*"
                 onChange={e => { const f = e.target.files?.[0]; if (f) uploadFileToChat(f); e.currentTarget.value = '' }}/>
               <ChatInput value={newMsg} onChange={setNewMsg} onSend={envoyer} sending={sending} disabled={uploading}
                 placeholder={uploading ? 'Envoi du fichier…' : 'Écrire un message…'}/>
@@ -1208,6 +1202,8 @@ function ClientPortal() {
   )
 }
 
+const TEL_AGENCE = '040232317'
+
 const CX_CSS = `
   .cx { font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; background: #F5F5F7; color: #1D1D1F; min-height: 100vh; }
   .cx-wrap { max-width: 720px !important; margin: 0 auto; padding: 16px 14px 120px !important; }
@@ -1267,4 +1263,25 @@ const CX_CSS = `
   .cx-r { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: 14px; }
   .cx-r + .cx-r { border-top: 1px solid #F0F0F2; }
   .cx-r span { color: #86868B; } .cx-r b { font-weight: 500; text-align: right; }
+  .cx-out { height: 38px; padding: 0 14px; border-radius: 999px; border: none; background: #F5F5F7; color: #3A3A3C; display: inline-flex; align-items: center; gap: 7px; font-family: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; flex: none; }
+  .cx-out:hover { background: #E8E8ED; }
+  @media (max-width: 640px) { .cx-out { width: 38px; padding: 0; justify-content: center; } .cx-out span { display: none; } }
+  .cx-cherche { background: #F5F5F7; color: #86868B; }
+  .cx .c-msg-head.cx-mh { background: #fff !important; color: #1D1D1F; border-bottom: 1px solid #F0F0F2; display: flex; align-items: center; gap: 10px; padding: 10px 12px !important; }
+  .cx-mh-av { position: relative; }
+  .cx-mh-av i { position: absolute; right: 0; bottom: 0; width: 10px; height: 10px; border-radius: 50%; background: #22C55E; border: 2px solid #fff; }
+  .cx-mh-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .cx-mh-t b { font-size: 15px; font-weight: 600; } .cx-mh-t small { font-size: 12px; color: #86868B; }
+  .cx-plus { width: 40px; height: 40px; border-radius: 50%; border: none; background: #F5F5F7; color: #1A6BFF; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; transition: transform .15s; }
+  .cx-plus.on { transform: rotate(45deg); background: #EAF1FF; }
+  .cx-attach { position: absolute; left: 0; bottom: calc(100% + 10px); width: 290px; max-width: calc(100vw - 32px); z-index: 30; background: #F5F5F7; border-radius: 20px; padding: 8px; box-shadow: 0 12px 34px rgba(13,27,62,.18); }
+  .cx-op { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; border: none; background: #fff; text-align: left; font-family: inherit; cursor: pointer; color: #1D1D1F; }
+  .cx-op + .cx-op { border-top: 1px solid #F0F0F2; }
+  .cx-op:hover { background: #FAFAFC; }
+  .cx-op span:last-child { display: flex; flex-direction: column; } .cx-op b { font-size: 14px; font-weight: 600; } .cx-op small { font-size: 12px; color: #86868B; }
+  .cx-annuler { width: 100%; margin-top: 8px; padding: 11px; border: none; border-radius: 14px; background: #fff; color: #1A6BFF; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .cx .c-msg-input-bar { background: #fff; align-items: center; gap: 8px; }
+  .cx .cv-input { background: #F5F5F7; border-radius: 999px; }
+  .cx .cv-input textarea { scrollbar-width: none; }
+  .cx .cv-input textarea::-webkit-scrollbar { display: none; }
 `
