@@ -6,6 +6,13 @@ import { COMMISSION_PAR_DOSSIER } from '@/lib/commercial-dashboard'
 import CallButton from '@/components/CallButton'
 import ScrollRow from '@/components/ScrollRow'
 import { useRappels, RappelPicker } from '@/components/Rappels'
+import { IdCard, Receipt, Landmark, FileBadge, Building2, FileText, File as FileIcon, Send, Check } from 'lucide-react'
+import { decouperLibelle, titreCourt, etatPiece, LIBELLE_ETAT, iconePiece, piecesARelancer, progressionPieces } from '@/lib/affichage'
+
+const ICONES_PIECE = {
+  id: <IdCard size={16}/>, salaire: <Receipt size={16}/>, banque: <Landmark size={16}/>, attestation: <FileBadge size={16}/>,
+  societe: <Building2 size={16}/>, fiscal: <FileText size={16}/>, doc: <FileIcon size={16}/>,
+}
 import {
   SUIVI, aRelancer, etapeFaite, etapeSuivante, filtrerCom, heuresDepuis, indexSuivi,
   messagePieces, prochaineEtape, type ComRow, type FiltreCom, type Rappels,
@@ -159,6 +166,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
 }) {
   const [msgs, setMsgs] = useState<any[]>([])
   const [docs, setDocs] = useState<any[]>([])
+  const [relanceOk, setRelanceOk] = useState(false)
   const [text, setText] = useState('')
   const [note, setNote] = useState(false)
   const [sending, setSending] = useState(false)
@@ -312,15 +320,37 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
         )}
         {next && <button className="cm-dark" onClick={passerEtape} disabled={busyStep}>{busyStep ? 'Mise à jour…' : `Passer à « ${next === 'Dossier Déposé' ? 'Déposé en banque' : next === 'RDV' ? 'Rendez-vous' : next} »`}</button>}
 
-        <div className="cm-side-h"><span>Pièces</span><small>{docs.filter(d => d.status === 'validated').length} / {docs.length}</small></div>
+        <div className="cm-side-h"><span>Pièces</span><small>{docs.filter(d => etatPiece(d.status) === 'validated').length} sur {docs.length} validée{docs.filter(d => etatPiece(d.status) === 'validated').length > 1 ? 's' : ''}</small></div>
         <div className="cm-docs">
           {docs.length === 0 && <div className="cm-empty sm">Aucune pièce demandée.</div>}
-          {docs.map(d => (
-            <div key={d.id} className="cm-doc">
-              <span>{d.doc_label || d.file_name || 'Document'}</span>
-              <b className={d.status}>{d.status === 'validated' ? 'Validée' : d.status === 'uploaded' ? 'En vérification' : d.status === 'rejected' ? 'Refusée' : 'Manquante'}</b>
-            </div>
-          ))}
+          {docs.length > 0 && (() => { const p = progressionPieces(docs); return (
+            <div className="cm-prog" aria-hidden="true"><span className="v" style={{ width: `${p.valide}%` }}/><span className="u" style={{ width: `${p.aVerifier}%` }}/></div>
+          ) })()}
+          {docs.map(d => {
+            const e = etatPiece(d.status)
+            const { titre, precision } = decouperLibelle(d.doc_label || d.file_name || 'Document')
+            const detail = e === 'rejected' && d.admin_note ? d.admin_note : precision
+            return (
+              <div key={d.id} className="cm-doc">
+                <span className={`cm-doc-ic ${e}`}>{ICONES_PIECE[iconePiece(d.doc_type, titre)]}</span>
+                <div className="cm-doc-txt"><b>{titreCourt(titre)}</b>{detail && <small>{detail}</small>}</div>
+                <span className={`cm-doc-pill ${e}`}>{LIBELLE_ETAT[e]}</span>
+              </div>
+            )
+          })}
+          {(() => {
+            const aRelancerPieces = piecesARelancer(docs)
+            if (!aRelancerPieces.length) return null
+            const n = aRelancerPieces.length
+            return (
+              <button className="cm-doc-relance" disabled={sending || relanceOk} onClick={async () => {
+                const ok = await send(messagePieces(aRelancerPieces.map(d => d.doc_label || 'Document')), false)
+                if (ok) { setRelanceOk(true); setTimeout(() => setRelanceOk(false), 4000) }
+              }}>
+                {relanceOk ? <><Check size={14}/>Message envoyé</> : <><Send size={14}/>Relancer pour {n > 1 ? `${n} pièces` : '1 pièce'}</>}
+              </button>
+            )
+          })()}
         </div>
 
         <div className="cm-commission"><span>Ta commission si financé</span><b>{fmtXaf(COMMISSION_PAR_DOSSIER)}</b></div>
@@ -585,11 +615,23 @@ function CmStyles() {
     .cm-closed { background: #F1F5F9; border-radius: 10px; padding: 10px 12px; font-size: 13px; font-weight: 700; color: #475569; }
     .cm-dark { border: none; background: #0D1B3E; color: #fff; padding: 12px; border-radius: 100px; font-family: inherit; font-size: 13px; font-weight: 800; cursor: pointer; }
     .cm-dark:disabled { opacity: 0.6; }
-    .cm-docs { background: #F8FAFC; border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 8px; }
-    .cm-doc { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; align-items: baseline; }
-    .cm-doc span { color: #0F1729; min-width: 0; }
-    .cm-doc b { flex-shrink: 0; font-size: 12px; color: #B45309; }
-    .cm-doc b.validated { color: #15803D; } .cm-doc b.uploaded { color: #1A6BFF; } .cm-doc b.rejected { color: #B91C1C; }
+    .cm-docs { background: #fff; border: 1px solid #EEF0F3; border-radius: 14px; padding: 12px 12px 8px; display: flex; flex-direction: column; }
+    .cm-prog { height: 6px; border-radius: 6px; background: #F1F5F9; overflow: hidden; display: flex; margin-bottom: 6px; }
+    .cm-prog .v { background: #22C55E; } .cm-prog .u { background: #93C5FD; }
+    .cm-doc { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid #F1F5F9; }
+    .cm-doc:last-of-type { border-bottom: none; }
+    .cm-doc-ic { width: 30px; height: 30px; flex: none; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+    .cm-doc-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+    .cm-doc-txt b { font-size: 13px; font-weight: 700; color: #0F1729; line-height: 1.3; }
+    .cm-doc-txt small { font-size: 11.5px; color: #94A3B8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .cm-doc-pill { flex: none; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+    .cm-doc-ic.validated, .cm-doc-pill.validated { background: #DCFCE7; color: #166534; }
+    .cm-doc-ic.uploaded, .cm-doc-pill.uploaded { background: #DBEAFE; color: #1E40AF; }
+    .cm-doc-ic.pending, .cm-doc-pill.pending { background: #FEF3C7; color: #92400E; }
+    .cm-doc-ic.rejected, .cm-doc-pill.rejected { background: #FEE2E2; color: #991B1B; }
+    .cm-doc-relance { margin: 8px 0 4px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 10px; border: 1.5px dashed #CBD5E1; background: #fff; font-family: inherit; font-size: 12.5px; font-weight: 700; color: #475569; cursor: pointer; }
+    .cm-doc-relance:hover:not(:disabled) { border-color: #1A6BFF; color: #1A6BFF; background: #F5F8FF; }
+    .cm-doc-relance:disabled { cursor: default; border-style: solid; border-color: #BBF7D0; color: #15803D; background: #F0FDF4; }
     .cm-commission { margin-top: auto; background: linear-gradient(135deg, #1A6BFF, #0051D4); color: #fff; border-radius: 14px; padding: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; }
     .cm-commission span { font-size: 12.5px; font-weight: 700; }
     .cm-commission b { font-size: 18px; white-space: nowrap; }

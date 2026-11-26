@@ -10,7 +10,8 @@ import CommercialMessagerie from '@/components/CommercialMessagerie'
 import CallButton from '@/components/CallButton'
 import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
 import { RappelAlarme } from '@/components/Rappels'
-import { UserPlus, LogOut, RefreshCw } from 'lucide-react'
+import { UserPlus, LogOut, RefreshCw, ChevronRight } from 'lucide-react'
+import { montantCourt, dateRelative, tonScore, tonStatut, initialesNom } from '@/lib/affichage'
 import { aJourDepuis, ETAPES, COMMISSION_PAR_DOSSIER, grouperParEtape, financesCeMois, progressionObjectif, gainsPour, tachesDuJour } from '@/lib/commercial-dashboard'
 
 export const Route = createFileRoute('/espace-commercial')({
@@ -497,18 +498,25 @@ function LeadsTab({ leads, majA, onReload, onOpenLead, onNewLead }: { leads: Lea
       </div>
       <div className="leads-table">
         <div className="lt-head">
-          <span>Nom</span><span>Type · Activité</span><span>Score</span><span>Statut</span><span className="r">Montant</span><span className="r">Date</span>
+          <span>Client</span><span className="c">Score</span><span>Statut</span><span className="r">Montant</span><span/>
         </div>
-        {leads.map(l => (
-          <div key={l.id} className="lt-row" onClick={() => onOpenLead(l)} style={{ cursor: 'pointer' }}>
-            <span className="lt-name">{l.identite?.prenom || l.identite?.raison_sociale || 'Lead'} {l.identite?.nom || ''}</span>
-            <span className="lt-meta">{l.type === 'physique' ? 'Part.' : 'PME'} · {l.activite}</span>
-            <span className="lt-score">{l.score || '—'}<small>/100</small></span>
-            <span className="lt-statut">{l.statut}</span>
-            <span className="r lt-amt">{l.montant_demande ? xaf(l.montant_demande) : '—'}</span>
-            <span className="r lt-date">{new Date(l.created_at).toLocaleDateString('fr-FR')}</span>
-          </div>
-        ))}
+        {leads.map(l => {
+          const nom = leadNom(l)
+          const ts = tonScore(l.score)
+          const meta = [l.type === 'physique' ? 'Particulier' : 'PME', l.activite, l.identite?.ville || l.ville].filter(Boolean).join(' · ')
+          return (
+            <button key={l.id} type="button" className="lt-row" onClick={() => onOpenLead(l)}>
+              <span className="lt-who">
+                <span className="lt-av">{initialesNom(nom)}</span>
+                <span className="lt-id"><b>{nom}</b><small><span className="lt-meta-full">{meta}</span><span className="lt-meta-m">{l.activite || (l.type === 'physique' ? 'Particulier' : 'PME')} · {dateRelative(l.created_at, now)}</span></small></span>
+              </span>
+              <span className={`lt-ring ${ts}`} title="Score sur 100">{l.score || '—'}</span>
+              <span className={`lt-pill ${tonStatut(l.statut)}`}>{l.statut || 'Nouveau'}</span>
+              <span className="lt-amt"><b>{montantCourt(l.montant_demande)}</b><small>{dateRelative(l.created_at, now)}</small></span>
+              <ChevronRight size={16} className="lt-chev"/>
+            </button>
+          )
+        })}
       </div>
     </div>
   )
@@ -968,22 +976,33 @@ function GlobalStyles() {
 
       /* Leads table */
       .leads-table { font-size: 12px; }
-      .lt-head { display: grid; grid-template-columns: 2fr 2fr 70px 1.3fr 1fr 80px; gap: 12px; padding: 10px 14px; background: ${MI.grayHair}; border-radius: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: ${MI.textMuted}; margin-bottom: 4px; }
-      .lt-head .r { text-align: right; }
-      .lt-row { display: grid; grid-template-columns: 2fr 2fr 70px 1.3fr 1fr 80px; gap: 12px; padding: 12px 14px; border-bottom: 1px solid ${MI.grayHair}; align-items: center; }
-      .lt-row .r { text-align: right; }
-      .lt-name { font-weight: 700; color: ${MI.text}; }
-      .lt-meta { color: ${MI.textMuted}; }
-      .lt-score { font-weight: 800; color: ${MI.blue}; font-variant-numeric: tabular-nums; }
-      .lt-score small { font-size: 9px; color: ${MI.textFaint}; font-weight: 500; }
-      .lt-statut { padding: 3px 10px; background: ${MI.blueSoft}; color: ${MI.blue}; border-radius: 100px; font-size: 10px; font-weight: 700; text-align: center; text-transform: uppercase; letter-spacing: 0.04em; }
-      .lt-amt { font-weight: 700; color: ${MI.text}; font-variant-numeric: tabular-nums; }
-      .lt-date { color: ${MI.textFaint}; }
+      .lt-head { display: grid; grid-template-columns: minmax(0,1fr) 56px 140px 120px 20px; gap: 14px; padding: 10px 14px; background: ${MI.grayHair}; border-radius: 10px; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: ${MI.textMuted}; margin-bottom: 4px; }
+      .lt-head .r { text-align: right; } .lt-head .c { text-align: center; }
+      .lt-row { width: 100%; display: grid; grid-template-columns: minmax(0,1fr) 56px 140px 120px 20px; gap: 14px; align-items: center; padding: 12px 14px; background: none; border: none; border-bottom: 1px solid ${MI.grayHair}; font-family: inherit; text-align: left; cursor: pointer; border-radius: 12px; transition: background .12s; }
+      .lt-row:hover { background: #F8FAFC; }
+      .lt-who { display: flex; align-items: center; gap: 12px; min-width: 0; }
+      .lt-av { width: 38px; height: 38px; flex: none; border-radius: 50%; background: ${MI.blueSoft}; color: ${MI.blue}; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; }
+      .lt-id { display: flex; flex-direction: column; min-width: 0; }
+      .lt-id b { font-size: 14px; font-weight: 700; color: ${MI.navy}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .lt-id small { font-size: 12px; color: ${MI.textMuted}; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .lt-meta-m { display: none; }
+      .lt-ring { justify-self: center; width: 40px; height: 40px; border-radius: 50%; border: 3px solid #E5E7EB; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 800; color: ${MI.navy}; font-variant-numeric: tabular-nums; }
+      .lt-ring.vert { border-color: #22C55E; } .lt-ring.orange { border-color: #FBBF24; } .lt-ring.rouge { border-color: #F87171; } .lt-ring.aucun { color: ${MI.textFaint}; }
+      .lt-pill { justify-self: start; padding: 4px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
+      .lt-pill.bleu { background: ${MI.blueSoft}; color: ${MI.blue}; } .lt-pill.orange { background: #FEF3C7; color: #92400E; }
+      .lt-pill.violet { background: #EDE9FE; color: #6D28D9; } .lt-pill.vert { background: #DCFCE7; color: #166534; } .lt-pill.gris { background: #F1F5F9; color: #64748B; }
+      .lt-amt { display: flex; flex-direction: column; align-items: flex-end; }
+      .lt-amt b { font-size: 13.5px; font-weight: 800; color: ${MI.navy}; font-variant-numeric: tabular-nums; white-space: nowrap; }
+      .lt-amt small { font-size: 11.5px; color: ${MI.textFaint}; }
+      .lt-chev { color: #CBD5E1; }
       @media (max-width: 720px) {
         .lt-head { display: none; }
-        .lt-row { grid-template-columns: 1fr auto; gap: 6px; padding: 14px 12px; }
-        .lt-row > * { grid-column: 1; }
-        .lt-row .lt-amt, .lt-row .lt-date { grid-column: 2; text-align: right; }
+        .leads-table { display: flex; flex-direction: column; gap: 10px; }
+        .lt-row { grid-template-columns: minmax(0,1fr) auto; grid-template-areas: "who ring" "pill amt"; row-gap: 10px; padding: 14px; border: 1px solid ${MI.grayBorder}; border-radius: 14px; background: #fff; }
+        .lt-who { grid-area: who; } .lt-ring { grid-area: ring; justify-self: end; width: 36px; height: 36px; font-size: 12px; }
+        .lt-pill { grid-area: pill; align-self: center; } .lt-amt { grid-area: amt; justify-content: center; }
+        .lt-amt small, .lt-chev, .lt-meta-full { display: none; }
+        .lt-meta-m { display: inline; }
       }
 
       /* Outils */
