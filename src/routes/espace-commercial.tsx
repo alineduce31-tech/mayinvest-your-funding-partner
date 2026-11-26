@@ -5,7 +5,7 @@ import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
 import { AuthStyles, AuthHeader, AuthTitle, AuthTabs, PasswordField, IconPhone, IconMail, IconBriefcase, AlertIcon } from '@/components/AuthUI'
 import { getCommercialToken, setCommercialToken } from '@/lib/session-tokens'
-import { formatPhoneInput } from '@/lib/phone'
+import { formatPhone, formatPhoneInput } from '@/lib/phone'
 import CommercialMessagerie from '@/components/CommercialMessagerie'
 import CallButton from '@/components/CallButton'
 import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
@@ -645,7 +645,7 @@ function LeadDrawer({ lead, commercialId, onClose, onUpdated, onOpenThread }: { 
 
           <div className="drawer-sec">
             <div className="drawer-sec-title">Contact</div>
-            <div className="info-row"><span>Téléphone</span><b>{tel || '—'}</b></div>
+            <div className="info-row"><span>Téléphone</span><b>{tel ? formatPhone(tel) : '—'}</b></div>
             <div className="info-row"><span>Email</span><b>{email || '—'}</b></div>
             <div className="drawer-actions-row">
               {tel && <CallButton tel={tel} nom={nom} leadId={lead.id} className="btn-mini">
@@ -742,7 +742,7 @@ function NewLeadModal({ commercialId, onClose, onCreated }: { commercialId: stri
         )}
 
         <div className="field-grid">
-          <div className="field"><label>Téléphone <span style={{ color: MI.red }}>*</span></label><input value={form.tel} onChange={e => setForm({ ...form, tel: e.target.value })}/></div>
+          <div className="field"><label>Téléphone <span style={{ color: MI.red }}>*</span></label><input type="tel" inputMode="numeric" placeholder="04 023 23 17" value={formatPhoneInput(form.tel)} onChange={e => setForm({ ...form, tel: e.target.value.replace(/\D/g, '').slice(0, 9) })}/></div>
           <div className="field"><label>Email</label><input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}/></div>
         </div>
         <div className="field-grid">

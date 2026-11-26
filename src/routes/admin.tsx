@@ -9,6 +9,7 @@ import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
 import CallButton from '@/components/CallButton'
+import { formatPhone } from '@/lib/phone'
 import BancarisationView from '@/components/BancarisationView'
 import NonEligiblesView from '@/components/NonEligiblesView'
 import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
@@ -330,7 +331,7 @@ function Admin({ session }: { session: any }) {
       l.activite,
       l.identite?.nom || l.situation?.raison_sociale || '',
       l.identite?.prenom || l.situation?.dirigeant || '',
-      l.identite?.tel || '',
+      l.identite?.tel ? formatPhone(l.identite.tel) : '',
       l.identite?.email || '',
       l.ville || '',
       l.montant_demande || 0,
@@ -379,7 +380,7 @@ function Admin({ session }: { session: any }) {
       l.activite || '',
       l.identite?.nom || l.situation?.raison_sociale || '',
       l.identite?.prenom || l.situation?.dirigeant || '',
-      l.identite?.tel || '',
+      l.identite?.tel ? formatPhone(l.identite.tel) : '',
       l.identite?.email || '',
       l.ville || '',
       Number(l.montant_demande) || 0,
@@ -445,7 +446,7 @@ function Admin({ session }: { session: any }) {
     const rowsHtml = filtered.map(l => {
       const nom = l.identite?.nom || l.situation?.raison_sociale || '—'
       const prenom = l.identite?.prenom || l.situation?.dirigeant || ''
-      const tel = l.identite?.tel || '—'
+      const tel = l.identite?.tel ? formatPhone(l.identite.tel) : '—'
       const montant = l.montant_demande ? Number(l.montant_demande).toLocaleString('fr-FR') + ' XAF' : '—'
       const color = STATUS_COLORS[l.statut] || { bg: '#F1F5F9', fg: '#475569' }
       return `<tr>
@@ -2313,7 +2314,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
               <span style={{ background: '#ECFDF5', color: '#047857', padding: '6px 10px', borderRadius: 999, fontSize: 12, fontWeight: 600, border: '1px solid #BBF7D0' }}>Assigné à moi</span>
             )}
             {tel && (
-              <CallButton tel={tel} nom={nom} leadId={lead.id} onLogged={loadMessages} title={`Appeler ${tel}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 999, background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#6B7280', padding: 0 }}>
+              <CallButton tel={tel} nom={nom} leadId={lead.id} onLogged={loadMessages} title={`Appeler ${formatPhone(tel)}`} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 32, height: 32, borderRadius: 999, background: '#FFFFFF', border: '1px solid #D1D5DB', color: '#6B7280', padding: 0 }}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               </CallButton>
             )}
@@ -2343,7 +2344,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
             <div className="dr-section">
               <div className="dr-s-h">Contact</div>
               <div className="dr-grid">
-                <div className="dr-field"><div className="dr-k">Téléphone</div><div className="dr-v">{tel || '—'}</div></div>
+                <div className="dr-field"><div className="dr-k">Téléphone</div><div className="dr-v">{tel ? formatPhone(tel) : '—'}</div></div>
                 <div className="dr-field"><div className="dr-k">Email</div><div className="dr-v">{lead.identite?.email || '—'}</div></div>
                 <div className="dr-field"><div className="dr-k">Ville</div><div className="dr-v">{lead.ville || '—'}</div></div>
                 <div className="dr-field"><div className="dr-k">Activité</div><div className="dr-v">{lead.activite || '—'}</div></div>

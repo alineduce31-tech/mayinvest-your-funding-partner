@@ -5,6 +5,7 @@ import { LIFECYCLE_STATUTS } from '@/lib/lead-templates'
 import CallButton from '@/components/CallButton'
 import ScrollRow from '@/components/ScrollRow'
 import NiceSelect from '@/components/NiceSelect'
+import { formatPhone } from '@/lib/phone'
 import { Conversation, ChatInput, Suggestions, RdvComposer } from '@/components/Conversation'
 import { regrouper, vueAdmin, vueEquipe, suggestions, texteSecoursRdv, texteSecoursPieces } from '@/lib/conversation'
 import {
@@ -350,7 +351,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
             ) : <b>{agentNom || 'Sans conseiller'}</b>}
           </div>
           <div><span>Pièces validées</span><b className={docsOk < docs.length ? 'warn' : 'ok'}>{docsOk} / {docs.length}</b></div>
-          {lead?.identite?.tel && <div><span>Téléphone</span><CallButton tel={lead.identite.tel} nom={nom} leadId={leadId} className="am-tel" onLogged={loadMsgs}>{lead.identite.tel}</CallButton></div>}
+          {lead?.identite?.tel && <div><span>Téléphone</span><CallButton tel={lead.identite.tel} nom={nom} leadId={leadId} className="am-tel" onLogged={loadMsgs}>{formatPhone(lead.identite.tel)}</CallButton></div>}
         </div>
 
         <div className="am-side-sub">Pièces du dossier</div>
@@ -431,7 +432,7 @@ function TeamThread({ commercialId, row, dossiers, tick, onBack, onRead, onOpenD
       <aside className="am-side static">
         <div className="am-side-head"><span>Le commercial</span></div>
         <div className="am-side-id"><span className="am-score blue">{initiales(row?.nom)}</span><div><b>{row?.nom}</b><small>{row?.ville}</small></div></div>
-        {row?.telephone && <div className="am-kv"><div><span>Téléphone</span><CallButton tel={row.telephone} nom={row.nom} className="am-tel">{row.telephone}</CallButton></div></div>}
+        {row?.telephone && <div className="am-kv"><div><span>Téléphone</span><CallButton tel={row.telephone} nom={row.nom} className="am-tel">{formatPhone(row.telephone)}</CallButton></div></div>}
         <div className="am-side-sub">Ses dossiers en discussion</div>
         {dossiers.length === 0 ? <div className="am-empty sm">Aucun dossier avec messages.</div> : (
           <div className="am-docs">

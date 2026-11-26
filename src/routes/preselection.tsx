@@ -110,7 +110,7 @@ function validateField(key: string, value: string, isP: boolean): FieldCheck {
     case 'nom': return v.length >= 2 ? { ok: true, label: 'Nom' } : { ok: false, label: 'Nom', msg: 'Nom trop court', example: 'Ex : Moukouama' }
     case 'raison_sociale': return v.length >= 2 ? { ok: true, label: 'Raison sociale' } : { ok: false, label: 'Raison sociale', msg: 'Nom de la société manquant', example: 'Ex : Jespere SARL' }
     case 'dirigeant': return v.length >= 2 ? { ok: true, label: 'Dirigeant' } : { ok: false, label: 'Dirigeant', msg: 'Nom du dirigeant manquant', example: 'Ex : Alain Mabiala' }
-    case 'tel': return v.length === 9 ? { ok: true, label: 'Téléphone' } : { ok: false, label: 'Téléphone', msg: 'Le téléphone doit faire 9 chiffres (sans le +242)', example: 'Ex : 06 123 4567' }
+    case 'tel': return v.length === 9 ? { ok: true, label: 'Téléphone' } : { ok: false, label: 'Téléphone', msg: 'Le téléphone doit faire 9 chiffres (sans le +242)', example: 'Ex : 04 023 23 17' }
     case 'email': return !v ? { ok: true, label: 'Email' } : (/\S+@\S+\.\S+/.test(v) ? { ok: true, label: 'Email' } : { ok: false, label: 'Email', msg: 'Format email invalide', example: 'Ex : jean.moukouama@gmail.com' })
     case 'ville': return v ? { ok: true, label: 'Ville' } : { ok: false, label: 'Ville', msg: 'Choisissez votre ville dans la liste', example: 'Ex : Brazzaville' }
     case 'employeur': return v.length >= 2 ? { ok: true, label: 'Employeur' } : { ok: false, label: 'Employeur', msg: 'Indiquez votre employeur ou administration', example: "Ex : Ministère de l'Économie, SOCOFRAN…" }

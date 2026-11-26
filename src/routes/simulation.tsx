@@ -451,7 +451,7 @@ function Epreuve3Pilotage({ onComplete }: { onComplete: (score: number, time: nu
 
             {tab === 'infos' && (
               <div className="info-grid">
-                <div className="k">Téléphone</div><div className="v">066 42 18 03</div>
+                <div className="k">Téléphone</div><div className="v">06 642 18 03</div>
                 <div className="k">Employeur</div><div className="v">Total Energies Congo</div>
                 <div className="k">Ancienneté</div><div className="v">7 ans</div>
                 <div className="k">Revenu net</div><div className="v">950 000 XAF</div>

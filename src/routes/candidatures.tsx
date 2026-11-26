@@ -583,7 +583,7 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
         <div className="nmodal-actions">
           {!candidate.email ? (
             <div style={{ fontSize: 12, color: '#B45309', background: '#FEF3C7', padding: '10px 14px', borderRadius: 8, textAlign: 'center' }}>
-              ⚠ Pas d'email — impossible d'envoyer. Contacte-le par téléphone : {candidate.telephone}
+              ⚠ Pas d'email — impossible d'envoyer. Contacte-le par téléphone : {formatPhone(candidate.telephone)}
             </div>
           ) : (
             <>
