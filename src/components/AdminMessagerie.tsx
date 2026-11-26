@@ -23,8 +23,9 @@ const ArrowDot = () => (
   </span>
 )
 
-export default function AdminMessagerie({ session, onOpenLead, onLeadChanged, onBack }: {
+export default function AdminMessagerie({ session, onOpenLead, onLeadChanged, onBack, initialLeadId }: {
   session: any
+  initialLeadId?: string | undefined
   onOpenLead: (lead: any) => void
   onLeadChanged: () => void
   onBack?: (() => void) | undefined
@@ -34,7 +35,7 @@ export default function AdminMessagerie({ session, onOpenLead, onLeadChanged, on
   const [loading, setLoading] = useState(true)
   const [filtre, setFiltre] = useState<Filtre>('tous')
   const [recherche, setRecherche] = useState('')
-  const [fil, setFil] = useState<Fil>(null)
+  const [fil, setFil] = useState<Fil>(initialLeadId ? { kind: 'lead', id: initialLeadId } : null)
   const [newOpen, setNewOpen] = useState(false)
   const [now, setNow] = useState(Date.now())
   const filRef = useRef<Fil>(null)

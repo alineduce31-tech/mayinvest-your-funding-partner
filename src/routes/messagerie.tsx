@@ -5,11 +5,15 @@ import AdminMessagerie from '@/components/AdminMessagerie'
 
 export const Route = createFileRoute('/messagerie')({
   head: () => ({ meta: [{ title: 'Messagerie · Mayinvest PréSelect' }, { name: 'robots', content: 'noindex' }] }),
+  validateSearch: (search: Record<string, unknown>): { lead?: string | undefined } => ({
+    lead: typeof search['lead'] === 'string' && /^[0-9a-f-]{36}$/i.test(search['lead']) ? search['lead'] : undefined,
+  }),
   component: MessageriePage,
 })
 
 function MessageriePage() {
   const navigate = useNavigate()
+  const { lead } = Route.useSearch()
   const [session, setSession] = useState<any>(null)
 
   useEffect(() => {
@@ -34,6 +38,7 @@ function MessageriePage() {
       <style>{`body { margin: 0; }`}</style>
       <AdminMessagerie
         session={session}
+        initialLeadId={lead}
         onBack={() => navigate({ to: '/admin' })}
         onOpenLead={(lead) => navigate({ to: '/admin', search: { view: 'crm', lead: lead.id } as any })}
         onLeadChanged={() => {}}

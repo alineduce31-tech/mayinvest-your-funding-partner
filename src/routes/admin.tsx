@@ -9,6 +9,7 @@ import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
 import CallButton from '@/components/CallButton'
+import BancarisationView from '@/components/BancarisationView'
 import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
 import { regrouper, vueAdmin, suggestions } from '@/lib/conversation'
 import NiceSelect from '@/components/NiceSelect'
@@ -1026,7 +1027,7 @@ function Admin({ session }: { session: any }) {
             {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
             {page === 'crm' && <CRMView leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
-            {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead}/>}
+            {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead}/>}
             {page === 'rapports' && <RapportsView leads={leads} exportCSV={exportCSV} exportExcel={exportExcel} exportPDF={exportPDF}/>}
           </>)}
@@ -2164,22 +2165,6 @@ function ListCard({ icon, title, subtitle, emptyIcon, emptyTitle, emptySub, list
   )
 }
 
-function BancarisationView({ leads, onOpen }: any) {
-  const list = leads.filter((l: any) => l.eligibilite?.salaire_domic === 'Non' || l.banque_actuelle === 'Aucune')
-  const ICO = <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-  const EMPTY_ICO = <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-  return (
-    <ListCard
-      icon={ICO}
-      title="Prospects à bancariser"
-      emptyIcon={EMPTY_ICO}
-      emptyTitle="Aucun prospect à bancariser"
-      emptySub="Les leads sans banque ou sans salaire domicilié apparaîtront ici. C'est là que tu vendras le service Ouverture Compte."
-      list={list}
-      onOpen={onOpen}
-    />
-  )
-}
 
 function NonEligiblesView({ leads, onOpen }: any) {
   const list = leads.filter((l: any) => l.eligibilite?.non_eligible === true || l.statut === 'Non Éligible' || l.situation?.rccm === 'Non')
