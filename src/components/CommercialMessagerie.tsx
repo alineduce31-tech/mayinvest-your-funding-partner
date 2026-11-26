@@ -1,23 +1,16 @@
 import CloseIcon from '@/components/CloseIcon'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
-import { messageRdv, initiales, heureCourte } from '@/lib/messagerie'
+import { initiales, heureCourte } from '@/lib/messagerie'
 import { COMMISSION_PAR_DOSSIER } from '@/lib/commercial-dashboard'
 import CallButton from '@/components/CallButton'
 import ScrollRow from '@/components/ScrollRow'
 import { useRappels, RappelPicker } from '@/components/Rappels'
+import { Conversation, ChatInput, Suggestions, RdvComposer } from '@/components/Conversation'
+import { regrouper, vueCommercial, vueEquipe, suggestions, texteSecoursRdv, texteSecoursPieces } from '@/lib/conversation'
 import { EyeOff, IdCard, Receipt, Landmark, FileBadge, Building2, FileText, File as FileIcon, Send, Check } from 'lucide-react'
-import { segmentsMessage, decouperLibelle, titreCourt, etatPiece, LIBELLE_ETAT, iconePiece, piecesARelancer, progressionPieces } from '@/lib/affichage'
+import { decouperLibelle, titreCourt, etatPiece, LIBELLE_ETAT, iconePiece, piecesARelancer, progressionPieces } from '@/lib/affichage'
 
-function Contenu({ texte }: { texte: string }) {
-  return (
-    <div className="cm-txt">
-      {segmentsMessage(texte).map((seg, i) => seg.type === 'texte'
-        ? <div key={i} className="cm-par">{seg.texte}</div>
-        : <div key={i} className="cm-puces">{seg.items.map((it, j) => <span key={j} className="cm-puce">{it}</span>)}</div>)}
-    </div>
-  )
-}
 
 const ICONES_PIECE = {
   id: <IdCard size={16}/>, salaire: <Receipt size={16}/>, banque: <Landmark size={16}/>, attestation: <FileBadge size={16}/>,
@@ -25,7 +18,7 @@ const ICONES_PIECE = {
 }
 import {
   SUIVI, aRelancer, etapeFaite, etapeSuivante, filtrerCom, heuresDepuis, indexSuivi,
-  messagePieces, prochaineEtape, type ComRow, type FiltreCom, type Rappels,
+  prochaineEtape, type ComRow, type FiltreCom, type Rappels,
 } from '@/lib/messagerie-commercial'
 
 type Sel = { kind: 'dir' } | { kind: 'lead'; id: string } | null
@@ -46,7 +39,6 @@ const ArrowDot = () => (
   </span>
 )
 const BackIcon = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4L3 7l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-const SendIcon = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11l18-8-8 18-3-8-7-2z" fill="#fff"/></svg>
 const PhoneIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round"/></svg>
 
 export default function CommercialMessagerie({ commercialId, onCountsChange, onThreadOpen, initialLeadId }: { commercialId: string; onCountsChange: () => void; onThreadOpen?: ((open: boolean) => void) | undefined; initialLeadId?: string | null | undefined }) {
@@ -187,6 +179,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
   const [busyStep, setBusyStep] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const rdvBtn = useRef<HTMLButtonElement>(null)
 
   async function loadMsgs() {
     const { data } = await supabase.from('messages').select('*').eq('lead_id', row.lead_id).order('created_at')
@@ -214,6 +207,14 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
     if (body === undefined) setText('')
     loadMsgs(); onChanged()
     return true
+  }
+
+  async function sendCard(kind: 'pieces' | 'rdv', payload: any, secours: string): Promise<string | null> {
+    setErr('')
+    const { error } = await supabase.rpc('send_lead_card', { p_lead_id: row.lead_id, p_sender: 'commercial', p_author_id: commercialId, p_kind: kind, p_payload: payload, p_content: secours })
+    if (error) { setErr(error.message || 'Carte non envoyée'); return error.message || 'Carte non envoyée' }
+    loadMsgs(); onChanged()
+    return null
   }
 
   async function passerEtape() {
@@ -259,26 +260,8 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
         </div>
 
         <div className="cm-msgs">
-          {msgs.length === 0 && <div className="cm-empty">Pas encore de message. Présente-toi avec un message type ci-dessous.</div>}
-          {msgs.map((m, i) => {
-            const prev = msgs[i - 1]
-            const day = new Date(m.created_at).toDateString()
-            const showDay = !prev || new Date(prev.created_at).toDateString() !== day
-            const internal = m.visibility === 'internal'
-            const me = m.author_id === commercialId
-            const cls = m.sender === 'client' ? 'in' : me ? 'out' : 'staff'
-            return (
-              <div key={m.id} className="cm-block">
-                {showDay && <div className="cm-day">{new Date(m.created_at).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>}
-                <div className={`cm-bubble ${internal ? 'note' : cls}`}>
-                  {internal && <div className="cm-tag note"><EyeOff size={12}/>{me ? 'Ta note' : 'Note de la direction'} · invisible pour le client</div>}
-                  {!internal && cls === 'staff' && <div className="cm-tag">{m.author_name || 'Direction'}</div>}
-                  <Contenu texte={m.content}/>
-                  <div className="cm-time">{cls === 'in' && !internal ? `${(row.nom || 'Client').split(' ')[0]} · ` : ''}{new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}{me && !internal && m.read_at ? ' · lu' : ''}</div>
-                </div>
-              </div>
-            )
-          })}
+          <Conversation viewer="equipe" docs={docs} bulles={regrouper(msgs.map(m => vueCommercial(m, commercialId, row.nom || 'Client')), now)}
+            vide="Pas encore de message. Présente-toi avec un message type ou une suggestion ci-dessous."/>
           <div ref={endRef}/>
         </div>
 
@@ -289,7 +272,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
               <button className={note ? 'on note' : ''} onClick={() => setNote(true)}>Note pour la direction</button>
             </div>
             <button className={`cm-tool ${pop === 'types' ? 'active' : ''}`} onClick={() => setPop(p => (p === 'types' ? null : 'types'))}>Message type</button>
-            <button className={`cm-tool ${pop === 'rdv' ? 'active' : ''}`} onClick={() => setPop(p => (p === 'rdv' ? null : 'rdv'))}>Proposer un RDV</button>
+            <button ref={rdvBtn} className={`cm-tool ${pop === 'rdv' ? 'active' : ''}`} onClick={() => setPop(p => (p === 'rdv' ? null : 'rdv'))}>Proposer un RDV</button>
             <button className="cm-tool" onClick={() => setPiecesOpen(true)}>Demander une pièce</button>
             <RappelPicker className="cm-tool" value={rappel} onChange={onRappel}/>
           </ScrollRow>
@@ -298,14 +281,12 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
               {MESSAGES_TYPES.map(t => <button key={t.label} onClick={() => { setText(t.text); setNote(false); setPop(null); inputRef.current?.focus() }}><b>{t.label}</b><span>{t.text}</span></button>)}
             </div>
           )}
-          {pop === 'rdv' && <RdvPicker onClose={() => setPop(null)} onDone={(t) => { setText(t); setNote(false); setPop(null); inputRef.current?.focus() }}/>}
+          {pop === 'rdv' && <RdvComposer ancre={rdvBtn.current} onClose={() => setPop(null)}
+            onSend={(at, lieu) => sendCard('rdv', { at: new Date(at).toISOString(), lieu }, texteSecoursRdv(at, lieu))}/>}
           {err && <div className="cm-err">{err}</div>}
-          <div className={`cm-input ${note ? 'note' : ''}`}>
-            <textarea ref={inputRef} rows={1} value={text} onChange={e => setText(e.target.value)}
-              placeholder={note ? 'Note interne : seule la direction la verra…' : "Écris au client (la direction voit aussi l'échange)…"}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 760) { e.preventDefault(); send() } }} aria-label="Message"/>
-            <button className="cm-send" onClick={() => send()} disabled={!text.trim() || sending} aria-label="Envoyer"><SendIcon/></button>
-          </div>
+          {!note && !text && <Suggestions items={suggestions('equipe', msgs.map(m => vueCommercial(m, commercialId, row.nom || 'Client')), (row.nom || '').split(' ')[0])} onPick={t => { setText(t); inputRef.current?.focus() }}/>}
+          <ChatInput inputRef={inputRef} value={text} onChange={setText} onSend={() => send()} sending={sending} note={note}
+            placeholder={note ? 'Note interne : seule la direction la verra…' : "Écris au client (la direction voit aussi l'échange)…"}/>
         </div>
       </div>
 
@@ -354,8 +335,8 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
             const n = aRelancerPieces.length
             return (
               <button className="cm-doc-relance" disabled={sending || relanceOk} onClick={async () => {
-                const ok = await send(messagePieces(aRelancerPieces.map(d => d.doc_label || 'Document')), false)
-                if (ok) { setRelanceOk(true); setTimeout(() => setRelanceOk(false), 4000) }
+                const e = await sendCard('pieces', { doc_ids: aRelancerPieces.map(d => d.id) }, texteSecoursPieces(aRelancerPieces.map(d => d.doc_label || 'Document')))
+                if (!e) { setRelanceOk(true); setTimeout(() => setRelanceOk(false), 4000) }
               }}>
                 {relanceOk ? <><Check size={14}/>Message envoyé</> : <><Send size={14}/>Relancer pour {n > 1 ? `${n} pièces` : '1 pièce'}</>}
               </button>
@@ -367,25 +348,28 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
       </aside>
 
       {piecesOpen && (
-        <PiecesModal docs={docs} onClose={() => setPiecesOpen(false)} onSend={async (labels, extra) => {
+        <PiecesModal docs={docs} onClose={() => setPiecesOpen(false)} onSend={async (ids, labels, extra) => {
+          const nouveaux: string[] = []
           for (const l of extra) {
-            const { error } = await supabase.rpc('commercial_request_document', { p_lead_id: row.lead_id, p_label: l })
+            const { data, error } = await supabase.rpc('commercial_request_document', { p_lead_id: row.lead_id, p_label: l })
             if (error) { setErr(error.message); return }
+            if (data) nouveaux.push(String(data))
           }
-          const ok = await send(messagePieces([...labels, ...extra]), false)
-          if (ok) { setPiecesOpen(false); loadDocs() }
+          const e = await sendCard('pieces', { doc_ids: [...ids, ...nouveaux] }, texteSecoursPieces([...labels, ...extra]))
+          if (!e) { setPiecesOpen(false); loadDocs() }
         }}/>
       )}
     </div>
   )
 }
 
-function PiecesModal({ docs, onClose, onSend }: { docs: any[]; onClose: () => void; onSend: (labels: string[], extra: string[]) => Promise<void> }) {
+function PiecesModal({ docs, onClose, onSend }: { docs: any[]; onClose: () => void; onSend: (ids: string[], labels: string[], extra: string[]) => Promise<void> }) {
   const manquantes = docs.filter(d => d.status === 'pending' || d.status === 'rejected' || !d.status)
   const [checked, setChecked] = useState<Record<string, boolean>>(() => Object.fromEntries(manquantes.map(d => [d.id, true])))
   const [autre, setAutre] = useState('')
   const [busy, setBusy] = useState(false)
-  const labels = manquantes.filter(d => checked[d.id]).map(d => d.doc_label || 'Document')
+  const choisies = manquantes.filter(d => checked[d.id])
+  const labels = choisies.map(d => d.doc_label || 'Document')
   const extra = autre.trim() ? [autre.trim()] : []
   return (
     <div className="cm-modal-bg" onClick={onClose}>
@@ -401,7 +385,7 @@ function PiecesModal({ docs, onClose, onSend }: { docs: any[]; onClose: () => vo
         <input className="cm-search" placeholder="Autre pièce (ex : facture proforma)" value={autre} onChange={e => setAutre(e.target.value)}/>
         <div className="cm-modal-foot">
           <button className="cm-tool" onClick={onClose}>Annuler</button>
-          <button className="cm-pill solid" disabled={busy || (labels.length + extra.length === 0)} onClick={async () => { setBusy(true); await onSend(labels, extra); setBusy(false) }}>
+          <button className="cm-pill solid" disabled={busy || (labels.length + extra.length === 0)} onClick={async () => { setBusy(true); await onSend(choisies.map(d => d.id), labels, extra); setBusy(false) }}>
             {busy ? 'Envoi…' : `Envoyer la demande`}<ArrowDot/>
           </button>
         </div>
@@ -410,30 +394,6 @@ function PiecesModal({ docs, onClose, onSend }: { docs: any[]; onClose: () => vo
   )
 }
 
-function RdvPicker({ onDone, onClose }: { onDone: (t: string) => void; onClose: () => void }) {
-  const [slots, setSlots] = useState(['', '', ''])
-  const sugg = useMemo(() => {
-    const out: string[] = []
-    for (let i = 1; out.length < 6 && i < 10; i++) {
-      const x = new Date(Date.now() + i * 86_400_000)
-      if (x.getDay() === 0) continue
-      const j = x.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
-      out.push(`${j} à 10 h`, `${j} à 15 h`)
-    }
-    return out.slice(0, 6)
-  }, [])
-  return (
-    <div className="cm-pop rdv">
-      <div className="cm-pop-t">Créneaux proposés au client</div>
-      <div className="cm-sugg">{sugg.map(s => <button key={s} onClick={() => { const i = slots.findIndex(x => !x); if (i !== -1) setSlots(slots.map((x, k) => (k === i ? s : x))) }}>{s}</button>)}</div>
-      {slots.map((s, i) => <input key={i} value={s} placeholder={`Créneau ${i + 1}`} onChange={e => setSlots(slots.map((x, k) => (k === i ? e.target.value : x)))}/>)}
-      <div className="cm-pop-act">
-        <button onClick={onClose}>Annuler</button>
-        <button className="primary" disabled={!slots.some(s => s.trim())} onClick={() => onDone(messageRdv(slots))}>Insérer</button>
-      </div>
-    </div>
-  )
-}
 
 // ============ FIL DIRECTION ============
 function DirectionThread({ commercialId, tick, onBack, onRead }: { commercialId: string; tick: number; onBack: () => void; onRead: () => void }) {
@@ -473,23 +433,12 @@ function DirectionThread({ commercialId, tick, onBack, onRead }: { commercialId:
           <div className="cm-head-t"><b>Direction Mayinvest</b><small>Consignes, questions sur un dossier, aide</small></div>
         </div>
         <div className="cm-msgs">
-          {msgs.length === 0 && <div className="cm-empty">Pas encore de message. Pose ta question à la direction.</div>}
-          {msgs.map(m => (
-            <div key={m.id} className={`cm-bubble ${m.sender_type === 'commercial' ? 'out' : 'staff'}`}>
-              {m.sender_type !== 'commercial' && <div className="cm-tag">Direction Mayinvest</div>}
-              <Contenu texte={m.body}/>
-              <div className="cm-time">{new Date(m.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}{m.sender_type === 'commercial' && m.read_at ? ' · lu' : ''}</div>
-            </div>
-          ))}
+          <Conversation viewer="equipe" bulles={regrouper(msgs.map(m => vueEquipe(m, 'commercial')), Date.now())} vide="Pas encore de message. Pose ta question à la direction."/>
           <div ref={endRef}/>
         </div>
         <div className="cm-composer">
           {err && <div className="cm-err">{err}</div>}
-          <div className="cm-input">
-            <textarea rows={1} value={text} onChange={e => setText(e.target.value)} placeholder="Écris à la direction…"
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 760) { e.preventDefault(); send() } }} aria-label="Message"/>
-            <button className="cm-send" onClick={send} disabled={!text.trim() || sending} aria-label="Envoyer"><SendIcon/></button>
-          </div>
+          <ChatInput value={text} onChange={setText} onSend={send} sending={sending} placeholder="Écris à la direction…"/>
         </div>
       </div>
     </div>
@@ -560,7 +509,7 @@ function CmStyles() {
     .cm-pill.solid { background: #1A6BFF; color: #fff; }
     .cm-pill.solid .cm-adot { background: rgba(255,255,255,0.22); }
     .cm-pill:disabled { opacity: 0.5; cursor: default; }
-    .cm-msgs { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; background: #F4F6F9; }
+    .cm-msgs { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 8px 18px 18px; display: flex; flex-direction: column; background: #F5F7FB; }
     .cm-block { display: flex; flex-direction: column; gap: 8px; }
     .cm-day { align-self: center; font-size: 11px; color: #64748B; background: #E8ECF2; border-radius: 100px; padding: 3px 12px; font-weight: 700; margin: 6px 0; }
     .cm-bubble { max-width: min(76%, 560px); padding: 10px 14px; font-size: 14px; line-height: 1.45; border-radius: 20px; }

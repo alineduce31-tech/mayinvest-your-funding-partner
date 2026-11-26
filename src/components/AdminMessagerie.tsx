@@ -5,9 +5,11 @@ import { LIFECYCLE_STATUTS } from '@/lib/lead-templates'
 import CallButton from '@/components/CallButton'
 import ScrollRow from '@/components/ScrollRow'
 import NiceSelect from '@/components/NiceSelect'
+import { Conversation, ChatInput, Suggestions, RdvComposer } from '@/components/Conversation'
+import { regrouper, vueAdmin, vueEquipe, suggestions, texteSecoursRdv, texteSecoursPieces } from '@/lib/conversation'
 import {
   filtrerInbox, filtrerEquipe, compteurs, heuresAttente, enRetard, apercu, heureCourte, initiales,
-  messageRdv, MESSAGES_TYPES, type InboxRow, type TeamRow, type Filtre,
+  MESSAGES_TYPES, type InboxRow, type TeamRow, type Filtre,
 } from '@/lib/messagerie'
 
 type Fil = { kind: 'lead'; id: string } | { kind: 'team'; id: string } | { kind: 'broadcast' } | null
@@ -187,6 +189,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
   const [typesOpen, setTypesOpen] = useState(false)
   const [rdvOpen, setRdvOpen] = useState(false)
   const [infoOpen, setInfoOpen] = useState(false)
+  const rdvBtn = useRef<HTMLButtonElement>(null)
   const endRef = useRef<HTMLDivElement>(null)
 
   async function loadLead() {
@@ -227,13 +230,27 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
     loadMsgs(); onChanged()
   }
 
+  async function sendCard(kind: 'pieces' | 'rdv', payload: any, secours: string): Promise<string | null> {
+    setErr('')
+    const { error } = await supabase.rpc('send_lead_card', { p_lead_id: leadId, p_sender: 'admin', p_author_id: session.id, p_kind: kind, p_payload: payload, p_content: secours })
+    if (error) { setErr(error.message || 'Carte non envoyée'); return error.message || 'Carte non envoyée' }
+    loadMsgs(); onChanged()
+    return null
+  }
+
+  async function relancerPieces() {
+    const restantes = docs.filter(d => d.status === 'pending' || d.status === 'rejected' || !d.status)
+    if (!restantes.length) return
+    await sendCard('pieces', { doc_ids: restantes.map(d => d.id) }, texteSecoursPieces(restantes.map(d => d.doc_label || 'Document')))
+  }
+
   async function demanderPiece() {
     const label = prompt('Quelle pièce demander au client ?')
     if (!label || !label.trim()) return
-    const { error } = await supabase.rpc('admin_request_document', { p_admin_id: session.id, p_lead_id: leadId, p_label: label.trim() })
+    const { data: docId, error } = await supabase.rpc('admin_request_document', { p_admin_id: session.id, p_lead_id: leadId, p_label: label.trim() })
     if (error) { setErr(error.message); return }
-    await supabase.rpc('send_lead_message', { p_lead_id: leadId, p_sender: 'admin', p_author_id: session.id, p_content: `Merci de nous envoyer : ${label.trim()}. Vous pouvez l'ajouter depuis votre espace, rubrique Documents.` })
-    loadDocs(); loadMsgs(); onChanged()
+    await loadDocs()
+    await sendCard('pieces', { doc_ids: docId ? [String(docId)] : [] }, texteSecoursPieces([label.trim()]))
   }
 
   async function docStatus(id: string, status: 'validated' | 'rejected') {
@@ -281,27 +298,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
         </div>
 
         <div className="am-msgs">
-          {msgs.length === 0 && <div className="am-empty">Pas encore de message. Écris le premier au groupe.</div>}
-          {msgs.map((m, i) => {
-            const prev = msgs[i - 1]
-            const jour = new Date(m.created_at).toDateString()
-            const showDay = !prev || new Date(prev.created_at).toDateString() !== jour
-            const mine = m.sender !== 'client'
-            const internal = m.visibility === 'internal'
-            const qui = m.sender === 'client' ? `${nom} · client`
-              : m.author_id === session.id ? 'Vous · direction'
-              : `${m.author_name || (m.sender === 'commercial' ? 'Commercial' : 'Direction')} · ${m.sender === 'commercial' ? 'commercial' : 'direction'}`
-            return (
-              <div key={m.id} className="am-msg-block">
-                {showDay && <div className="am-day">{new Date(m.created_at).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</div>}
-                <div className={`am-bubble ${mine ? 'out' : 'in'} ${internal ? 'note' : ''} ${m.sender === 'commercial' ? 'com' : ''}`}>
-                  <div className="am-who">{internal ? `Note interne · ${qui}` : qui}</div>
-                  <div className="am-txt">{m.content}</div>
-                  <div className="am-time">{new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}{m.sender !== 'client' && !internal && (m.read_at ? ' · lu' : '')}</div>
-                </div>
-              </div>
-            )
-          })}
+          <Conversation viewer="equipe" docs={docs} bulles={regrouper(msgs.map(m => vueAdmin(m, session.id, nom)), Date.now())} vide="Pas encore de message. Écris le premier au groupe."/>
           <div ref={endRef}/>
         </div>
 
@@ -313,23 +310,20 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
               <button className={mode === 'commercial' ? 'on' : ''} disabled={!agentIsCommercial} title={agentIsCommercial ? '' : 'Aucun commercial terrain sur ce dossier'} onClick={() => setMode('commercial')}>Au commercial seul</button>
             </div>
             <button className={`am-tool ${typesOpen ? 'active' : ''}`} onClick={() => { setTypesOpen(o => !o); setRdvOpen(false) }}>Message type</button>
-            <button className={`am-tool ${rdvOpen ? 'active' : ''}`} onClick={() => { setRdvOpen(o => !o); setTypesOpen(false) }}>Proposer un RDV</button>
+            <button ref={rdvBtn} className={`am-tool ${rdvOpen ? 'active' : ''}`} onClick={() => { setRdvOpen(o => !o); setTypesOpen(false) }}>Proposer un RDV</button>
             <button className="am-tool" onClick={demanderPiece}>Demander une pièce</button>
+            {docs.some(d => d.status === 'pending' || d.status === 'rejected' || !d.status) && <button className="am-tool" onClick={relancerPieces}>Relancer les pièces</button>}
           </ScrollRow>
           {typesOpen && (
             <div className="am-pop">
               {MESSAGES_TYPES.map(q => <button key={q.label} onClick={() => { setText(q.text); setMode('groupe'); setTypesOpen(false) }}><b>{q.label}</b><span>{q.text}</span></button>)}
             </div>
           )}
-          {rdvOpen && <RdvPicker onDone={(t) => { setText(t); setMode('groupe'); setRdvOpen(false) }} onClose={() => setRdvOpen(false)}/>}
+          {rdvOpen && <RdvComposer ancre={rdvBtn.current} onClose={() => setRdvOpen(false)}
+            onSend={(at, lieu) => sendCard('rdv', { at: new Date(at).toISOString(), lieu }, texteSecoursRdv(at, lieu))}/>}
           {err && <div className="am-err">{err}</div>}
-          <div className={`am-input-row ${mode}`}>
-            <textarea rows={1} value={text} placeholder={placeholder} onChange={e => setText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} aria-label="Message"/>
-            <button className="am-send" onClick={send} disabled={!text.trim() || sending} aria-label="Envoyer">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11l18-8-8 18-3-8-7-2z" fill="#fff"/></svg>
-            </button>
-          </div>
+          {mode === 'groupe' && !text && <Suggestions items={suggestions('equipe', msgs.map(m => vueAdmin(m, session.id, nom)), nom.split(' ')[0])} onPick={t => setText(t)}/>}
+          <ChatInput value={text} onChange={setText} onSend={send} sending={sending} note={mode === 'note'} placeholder={placeholder}/>
         </div>
       </div>
 
@@ -384,36 +378,6 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
   )
 }
 
-function RdvPicker({ onDone, onClose }: { onDone: (t: string) => void; onClose: () => void }) {
-  const [slots, setSlots] = useState(['', '', ''])
-  const suggestions = useMemo(() => {
-    const out: string[] = []
-    const d = new Date()
-    for (let i = 1; out.length < 6 && i < 10; i++) {
-      const x = new Date(d.getTime() + i * 86_400_000)
-      if (x.getDay() === 0) continue
-      const j = x.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })
-      out.push(`${j} à 10 h`, `${j} à 15 h`)
-    }
-    return out.slice(0, 6)
-  }, [])
-  function add(s: string) {
-    const i = slots.findIndex(x => !x)
-    if (i === -1) return
-    setSlots(slots.map((x, k) => (k === i ? s : x)))
-  }
-  return (
-    <div className="am-pop rdv">
-      <div className="am-pop-title">Créneaux proposés au client</div>
-      <div className="am-sugg">{suggestions.map(s => <button key={s} onClick={() => add(s)}>{s}</button>)}</div>
-      {slots.map((s, i) => <input key={i} value={s} placeholder={`Créneau ${i + 1}`} onChange={e => setSlots(slots.map((x, k) => (k === i ? e.target.value : x)))}/>)}
-      <div className="am-pop-act">
-        <button onClick={onClose}>Annuler</button>
-        <button className="primary" disabled={!slots.some(s => s.trim())} onClick={() => onDone(messageRdv(slots))}>Insérer</button>
-      </div>
-    </div>
-  )
-}
 
 // ============ FIL DIRECTION <-> COMMERCIAL ============
 function TeamThread({ commercialId, row, dossiers, tick, onBack, onRead, onOpenDossier }: {
@@ -455,25 +419,12 @@ function TeamThread({ commercialId, row, dossiers, tick, onBack, onRead, onOpenD
           <div className="am-th-title"><b>{row?.nom || 'Commercial'}</b><small>Échange privé direction · {row?.ville || ''}</small></div>
         </div>
         <div className="am-msgs">
-          {msgs.length === 0 && <div className="am-empty">Aucun échange pour l'instant.</div>}
-          {msgs.map(m => (
-            <div key={m.id} className={`am-bubble ${m.sender_type === 'director' ? 'out' : 'in'}`}>
-              <div className="am-who">{m.sender_type === 'director' ? 'Direction' : row?.nom || 'Commercial'}</div>
-              <div className="am-txt">{m.body}</div>
-              <div className="am-time">{new Date(m.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}{m.sender_type === 'director' && m.read_at ? ' · lu' : ''}</div>
-            </div>
-          ))}
+          <Conversation viewer="equipe" bulles={regrouper(msgs.map(m => vueEquipe(m, 'director', row?.nom || 'Commercial')), Date.now())} vide="Aucun échange pour l'instant."/>
           <div ref={endRef}/>
         </div>
         <div className="am-composer">
           {err && <div className="am-err">{err}</div>}
-          <div className="am-input-row">
-            <textarea rows={1} value={text} placeholder={`Écrire à ${row?.nom || 'ce commercial'}…`} onChange={e => setText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send() } }} aria-label="Message"/>
-            <button className="am-send" onClick={send} disabled={!text.trim() || sending} aria-label="Envoyer">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11l18-8-8 18-3-8-7-2z" fill="#fff"/></svg>
-            </button>
-          </div>
+          <ChatInput value={text} onChange={setText} onSend={send} sending={sending} placeholder={`Écrire à ${row?.nom || 'ce commercial'}…`}/>
         </div>
       </div>
       <aside className="am-side static">
@@ -657,7 +608,7 @@ function MessagerieStyles() {
     .am-mem.warn { background: #FEF3C7; color: #B45309; }
     .am-mem.navy { background: #0D1B3E; color: #fff; }
     .am-info-btn { display: none; border: 1.5px solid #E5E7EB; background: #fff; border-radius: 100px; padding: 6px 12px; font-family: inherit; font-size: 12px; font-weight: 800; color: #0D1B3E; cursor: pointer; }
-    .am-msgs { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
+    .am-msgs { flex: 1; overflow-y: auto; padding: 8px 18px 18px; display: flex; flex-direction: column; background: #F5F7FB; }
     .am-msg-block { display: flex; flex-direction: column; gap: 8px; }
     .am-day { align-self: center; font-size: 11px; color: #64748B; background: #EEF2F8; border-radius: 100px; padding: 3px 12px; font-weight: 700; text-transform: capitalize; margin: 6px 0; }
     .am-bubble { max-width: min(78%, 560px); padding: 9px 13px; font-size: 14px; line-height: 1.45; }

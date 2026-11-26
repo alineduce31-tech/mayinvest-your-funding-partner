@@ -1,0 +1,350 @@
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
+import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download } from 'lucide-react'
+import {
+  type BulleAffichee, heure, lireRdv, pieceJointe, blocCalendrier, phraseRdv, piecesDeCarte, estRecue,
+} from '@/lib/conversation'
+import { segmentsMessage, decouperLibelle, titreCourt, etatPiece } from '@/lib/affichage'
+import { joursProposes, HEURES_PROPOSEES, combiner, heureTexte, estDansLeFutur } from '@/lib/rappels'
+import { positionCarte, estMobile, type Position } from '@/lib/nice-select'
+
+// ============ LISTE DES BULLES ============
+export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploadingDocId, onRepondreRdv, vide }: {
+  bulles: BulleAffichee[]
+  viewer: 'client' | 'equipe'
+  docs?: any[]
+  onUploadDoc?: (doc: any, file: File) => void
+  uploadingDocId?: string | null
+  onRepondreRdv?: (b: BulleAffichee, rep: 'confirme' | 'autre') => Promise<void> | void
+  vide?: ReactNode
+}) {
+  return (
+    <div className="cv">
+      <ConversationStyles/>
+      {bulles.length === 0 && vide && <div className="cv-vide">{vide}</div>}
+      {bulles.map(b => (
+        <div key={b.id} className={`cv-ligne ${b.cote} ${b.debut ? 'debut' : ''} ${b.fin ? 'fin' : ''}`}>
+          {b.jour && <div className="cv-jour">{b.jour}</div>}
+          {b.kind === 'pieces' ? <CartePieces b={b} viewer={viewer} docs={docs} onUploadDoc={onUploadDoc} uploadingDocId={uploadingDocId}/>
+            : b.kind === 'rdv' ? <CarteRdv b={b} viewer={viewer} onRepondre={onRepondreRdv}/>
+            : (
+              <div className={`cv-bulle ${b.ton}`}>
+                {b.debut && b.etiquette && <span className={`cv-tag ${b.ton}`}>{b.ton === 'note' && <EyeOff size={11}/>}{b.etiquette}</span>}
+                <Texte texte={b.contenu}/>
+              </div>
+            )}
+          {b.fin && <Meta b={b}/>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function Meta({ b }: { b: BulleAffichee }) {
+  return (
+    <div className={`cv-meta ${b.cote}`}>
+      {b.cote === 'gauche' && b.ton !== 'equipe' ? `${b.auteur} · ` : ''}{heure(b.created_at)}
+      {b.cote === 'droite' && b.ton !== 'note' && (b.vu ? <span className="cv-vu"><CheckCheck size={13}/>Vu</span> : <Check size={12} className="cv-envoye"/>)}
+    </div>
+  )
+}
+
+/** Texte d'un message : liens cliquables, lignes à tirets en étiquettes. */
+function Texte({ texte }: { texte: string }) {
+  const pj = pieceJointe(texte)
+  if (pj) return (
+    <div className="cv-txt">
+      {pj.type === 'image'
+        ? <a href={pj.url} target="_blank" rel="noopener noreferrer" className="cv-img"><img src={pj.url} alt={pj.nom} loading="lazy"/></a>
+        : <a href={pj.url} target="_blank" rel="noopener noreferrer" className="cv-fichier"><span className={`cv-fichier-ic ${pj.type}`}><FileText size={18}/></span><span className="cv-fichier-t"><b>{pj.nom}</b><small>{pj.type === 'pdf' ? 'Document PDF' : 'Fichier'} · ouvrir</small></span><Download size={16}/></a>}
+      {pj.reste && <div className="cv-par">{pj.reste}</div>}
+    </div>
+  )
+  return (
+    <div className="cv-txt">
+      {segmentsMessage(texte).map((s, i) => s.type === 'texte'
+        ? <div key={i} className="cv-par">{liens(s.texte)}</div>
+        : <div key={i} className="cv-puces">{s.items.map((it, j) => <span key={j}>{it}</span>)}</div>)}
+    </div>
+  )
+}
+function liens(t: string): ReactNode[] {
+  return t.split(/(https?:\/\/\S+)/g).map((p, i) => /^https?:\/\//.test(p)
+    ? <a key={i} href={p} target="_blank" rel="noopener noreferrer">{/\/lead-documents\//.test(p) ? 'Ouvrir le fichier' : p}</a>
+    : p)
+}
+
+// ============ CARTE PIÈCES ============
+function CartePieces({ b, viewer, docs, onUploadDoc, uploadingDocId }: { b: BulleAffichee; viewer: 'client' | 'equipe'; docs: any[]; onUploadDoc?: ((doc: any, file: File) => void) | undefined; uploadingDocId?: string | null | undefined }) {
+  const liste = piecesDeCarte(b.payload, docs)
+  if (!liste.length) return <div className={`cv-bulle ${b.ton}`}><Texte texte={b.contenu}/></div>
+  const recues = liste.filter(d => estRecue(d.status)).length
+  const pct = Math.round((recues / liste.length) * 100)
+  const fini = recues === liste.length
+  return (
+    <div className="cv-carte">
+      <div className="cv-carte-h">
+        <span className="cv-carte-ic"><FolderCheck size={18}/></span>
+        <div><b>{viewer === 'client' ? 'Pièces de votre dossier' : 'Pièces demandées'}</b><small>{fini ? 'Tout est reçu, merci !' : `${recues} sur ${liste.length} reçue${recues > 1 ? 's' : ''}`}</small></div>
+      </div>
+      <div className="cv-barre"><span style={{ width: `${pct}%` }}/></div>
+      {liste.map(d => {
+        const e = etatPiece(d.status)
+        const ok = estRecue(d.status)
+        const { titre } = decouperLibelle(d.doc_label || 'Document')
+        return (
+          <div key={d.id} className={`cv-piece ${ok ? 'ok' : ''}`}>
+            <span className={`cv-coche ${e}`}>{ok && <Check size={12} strokeWidth={3}/>}{e === 'rejected' && <X size={12} strokeWidth={3}/>}</span>
+            <span className="cv-piece-t"><span className="cv-piece-nom">{titreCourt(titre)}</span>{e === 'rejected' && <small>Refusée{d.admin_note ? ` : ${d.admin_note}` : ''}, à renvoyer</small>}{e === 'uploaded' && <small>Reçue, en vérification</small>}</span>
+            {!ok && viewer === 'client' && onUploadDoc && (
+              <label className={`cv-envoyer ${uploadingDocId === d.id ? 'busy' : ''}`}>
+                {uploadingDocId === d.id ? 'Envoi…' : <><Upload size={13}/>Envoyer</>}
+                <input type="file" accept="image/*,application/pdf,.doc,.docx" hidden disabled={!!uploadingDocId}
+                  onChange={ev => { const f = ev.target.files?.[0]; if (f) onUploadDoc(d, f); ev.currentTarget.value = '' }}/>
+              </label>
+            )}
+            {!ok && viewer === 'equipe' && <span className="cv-attente">{e === 'rejected' ? 'à renvoyer' : 'à envoyer'}</span>}
+          </div>
+        )
+      })}
+      <div className="cv-carte-pied">{viewer === 'client' ? 'Photo ou PDF, 10 Mo maximum par pièce.' : 'La carte se met à jour dès que le client envoie une pièce.'}</div>
+    </div>
+  )
+}
+
+// ============ CARTE RENDEZ-VOUS ============
+function CarteRdv({ b, viewer, onRepondre }: { b: BulleAffichee; viewer: 'client' | 'equipe'; onRepondre?: ((b: BulleAffichee, rep: 'confirme' | 'autre') => Promise<void> | void) | undefined }) {
+  const r = lireRdv(b.payload)
+  const [busy, setBusy] = useState(false)
+  if (!r) return <div className={`cv-bulle ${b.ton}`}><Texte texte={b.contenu}/></div>
+  const cal = blocCalendrier(r.at)
+  const passe = r.at < Date.now()
+  async function rep(x: 'confirme' | 'autre') {
+    if (!onRepondre || busy) return
+    setBusy(true); await onRepondre(b, x); setBusy(false)
+  }
+  return (
+    <div className="cv-carte">
+      <div className="cv-rdv">
+        <div className="cv-cal"><span>{cal.jour}</span><b>{cal.num}</b></div>
+        <div className="cv-rdv-t">
+          <b>Rendez-vous{r.lieu ? ' en agence' : ''}</b>
+          <small>{phraseRdv(r.at)}</small>
+          {r.lieu && <small className="cv-lieu"><MapPin size={12}/>{r.lieu}</small>}
+        </div>
+      </div>
+      {r.statut === 'confirme' && <div className="cv-etat ok"><Check size={14} strokeWidth={3}/>Rendez-vous confirmé</div>}
+      {r.statut === 'autre' && <div className="cv-etat gris"><CalendarClock size={14}/>Autre date demandée</div>}
+      {r.statut === 'propose' && viewer === 'client' && !passe && onRepondre && (
+        <div className="cv-actions">
+          <button className="oui" disabled={busy} onClick={() => rep('confirme')}><Check size={14} strokeWidth={3}/>Je confirme</button>
+          <button disabled={busy} onClick={() => rep('autre')}>Autre date</button>
+        </div>
+      )}
+      {r.statut === 'propose' && (viewer === 'equipe' || passe) && <div className="cv-etat attente"><Clock size={14}/>{passe ? 'Date passée sans réponse' : 'En attente de la réponse du client'}</div>}
+    </div>
+  )
+}
+
+// ============ RÉPONSES SUGGÉRÉES ============
+export function Suggestions({ items, onPick }: { items: string[]; onPick: (t: string) => void }) {
+  if (!items.length) return null
+  return (
+    <div className="cv-sugg">
+      {items.map((s, i) => <button key={s} type="button" onClick={() => onPick(s)}>{i === 0 && <Sparkles size={12} className="cv-spark"/>}{s}</button>)}
+    </div>
+  )
+}
+
+// ============ BARRE D'ÉCRITURE ============
+export function ChatInput({ value, onChange, onSend, placeholder, disabled, sending, note, avant, inputRef }: {
+  value: string; onChange: (v: string) => void; onSend: () => void; placeholder: string
+  disabled?: boolean | undefined; sending?: boolean | undefined; note?: boolean | undefined; avant?: ReactNode; inputRef?: React.RefObject<HTMLTextAreaElement | null> | undefined
+}) {
+  const local = useRef<HTMLTextAreaElement>(null)
+  const ref = inputRef || local
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.style.height = 'auto'
+    el.style.height = `${Math.min(el.scrollHeight, 140)}px`
+  }, [value])
+  return (
+    <div className={`cv-input ${note ? 'note' : ''}`}>
+      <ConversationStyles/>
+      {avant}
+      <textarea ref={ref as any} rows={1} value={value} placeholder={placeholder} disabled={disabled} aria-label="Message"
+        onChange={e => onChange(e.target.value)}
+        onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && window.innerWidth > 760) { e.preventDefault(); onSend() } }}/>
+      <button type="button" className="cv-send" onClick={onSend} disabled={disabled || sending || !value.trim()} aria-label="Envoyer"><ArrowUp size={18} strokeWidth={2.6}/></button>
+    </div>
+  )
+}
+
+// ============ PROPOSER UN RENDEZ-VOUS ============
+export function RdvComposer({ ancre, onSend, onClose, lieuDefaut = '' }: { ancre: HTMLElement | null; onSend: (at: number, lieu: string) => Promise<string | null>; onClose: () => void; lieuDefaut?: string }) {
+  const now = Date.now()
+  const jours = joursProposes(now, 10).slice(1)
+  const [jour, setJour] = useState(0)
+  const [h, setH] = useState<{ h: number; m: number } | null>(null)
+  const [lieu, setLieu] = useState(lieuDefaut)
+  const [err, setErr] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [pos, setPos] = useState<Position | null>(null)
+  const [mobile] = useState(() => typeof window !== 'undefined' && estMobile(window.innerWidth))
+  const carte = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    if (mobile || !ancre) return
+    const r = ancre.getBoundingClientRect()
+    setPos(positionCarte({ top: r.top, bottom: r.bottom, left: r.left, width: r.width }, { largeur: window.innerWidth, hauteur: window.innerHeight }, 340))
+  }, [ancre, mobile])
+  useEffect(() => {
+    function dehors(e: MouseEvent | TouchEvent) {
+      const t = e.target as Node
+      if (carte.current?.contains(t) || ancre?.contains(t)) return
+      onClose()
+    }
+    function esc(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    document.addEventListener('mousedown', dehors); document.addEventListener('touchstart', dehors); document.addEventListener('keydown', esc)
+    return () => { document.removeEventListener('mousedown', dehors); document.removeEventListener('touchstart', dehors); document.removeEventListener('keydown', esc) }
+  }, [ancre, onClose])
+  const jd = jours[jour]?.date ?? jours[0]!.date
+  const at = h ? combiner(jd, h.h, h.m) : null
+  async function envoyer() {
+    if (!at) return
+    if (!estDansLeFutur(at, Date.now())) { setErr('Cette heure est déjà passée.'); return }
+    setBusy(true); const e = await onSend(at, lieu.trim()); setBusy(false)
+    if (e) setErr(e); else onClose()
+  }
+  const contenu = (
+    <div ref={carte} className={mobile ? 'cv-sheet' : 'cv-pop'} role="dialog" aria-label="Proposer un rendez-vous" onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}
+      style={!mobile && pos ? { left: pos.left, width: Math.max(pos.width, 340), ...(pos.versLeHaut ? { bottom: window.innerHeight - pos.top } : { top: pos.top }) } : undefined}>
+      {mobile && <div className="cv-grip"/>}
+      <div className="cv-pop-h"><b>Proposer un rendez-vous</b><small>Le client confirme d'un clic dans la conversation.</small></div>
+      <div className="cv-pop-sub">Jour</div>
+      <div className="cv-chips">{jours.map((j, i) => <button key={i} className={i === jour ? 'on' : ''} onClick={() => { setJour(i); setErr('') }}>{j.libelle}</button>)}</div>
+      <div className="cv-pop-sub">Heure</div>
+      <div className="cv-heures">{HEURES_PROPOSEES.map(x => <button key={`${x.h}`} className={h && h.h === x.h ? 'on' : ''} onClick={() => { setH(x); setErr('') }}>{heureTexte(combiner(jd, x.h, x.m))}</button>)}</div>
+      <div className="cv-pop-sub">Lieu</div>
+      <input className="cv-lieu-in" value={lieu} onChange={e => setLieu(e.target.value)} placeholder="BGFI Pointe-Noire, nos bureaux, par téléphone…" maxLength={120}/>
+      {err && <div className="cv-err">{err}</div>}
+      <button className="cv-go" disabled={!at || busy} onClick={envoyer}><CalendarClock size={16}/>{busy ? 'Envoi…' : at ? `Proposer ${phraseRdv(at).toLowerCase()}` : 'Choisis une heure'}</button>
+    </div>
+  )
+  if (typeof document === 'undefined') return null
+  return createPortal(mobile ? <div className="cv-ovr">{contenu}</div> : (pos ? contenu : null), document.body)
+}
+
+// ============ STYLES ============
+export function ConversationStyles() {
+  useEffect(() => {
+    if (document.getElementById('cv-styles')) return
+    const el = document.createElement('style'); el.id = 'cv-styles'; el.textContent = CV_CSS; document.head.appendChild(el)
+  }, [])
+  return null
+}
+
+const CV_CSS = `
+  .cv { display: flex; flex-direction: column; color: #0D1B3E; }
+  .cv-vide { align-self: center; text-align: center; color: #8A94A6; font-size: 13.5px; padding: 40px 16px; max-width: 320px; }
+  .cv-ligne { display: flex; flex-direction: column; margin-top: 2px; }
+  .cv-ligne.debut { margin-top: 10px; }
+  .cv-ligne.gauche { align-items: flex-start; } .cv-ligne.droite { align-items: flex-end; }
+  .cv-jour { align-self: center; font-size: 11.5px; font-weight: 600; color: #8A94A6; margin: 14px 0 6px; }
+  .cv-bulle { max-width: min(78%, 560px); padding: 10px 14px; font-size: 14px; line-height: 1.45; display: flex; flex-direction: column; word-break: break-word; }
+  .cv-ligne.gauche .cv-bulle { background: #fff; box-shadow: 0 1px 2px rgba(13,27,62,.07); border-radius: 6px 20px 20px 6px; }
+  .cv-ligne.gauche.debut .cv-bulle { border-top-left-radius: 20px; }
+  .cv-ligne.gauche.fin .cv-bulle { border-bottom-left-radius: 20px; }
+  .cv-ligne.gauche.debut.fin .cv-bulle { border-radius: 20px 20px 20px 6px; }
+  .cv-ligne.droite .cv-bulle { border-radius: 20px 6px 6px 20px; }
+  .cv-ligne.droite.debut .cv-bulle { border-top-right-radius: 20px; }
+  .cv-ligne.droite.debut.fin .cv-bulle { border-radius: 20px 20px 6px 20px; }
+  .cv-bulle.moi { background: linear-gradient(135deg, #2F7BFF, #1557E0); color: #fff; box-shadow: 0 4px 12px rgba(26,107,255,.22); }
+  .cv-ligne.droite .cv-bulle.equipe { background: #0D1B3E; color: #fff; }
+  .cv-bulle.note { background: #FEF3C7; color: #78350F; }
+  .cv-tag { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 2px 9px; margin-bottom: 5px; background: #0D1B3E; color: #fff; }
+  .cv-ligne.droite .cv-tag.equipe { background: rgba(255,255,255,.16); }
+  .cv-tag.note { background: rgba(120,53,15,.1); color: #92400E; }
+  .cv-txt { display: flex; flex-direction: column; gap: 6px; }
+  .cv-par { white-space: pre-wrap; }
+  .cv-par a { color: inherit; font-weight: 700; text-decoration: underline; }
+  .cv-puces { display: flex; flex-wrap: wrap; gap: 5px; }
+  .cv-puces span { background: rgba(13,27,62,.06); border-radius: 999px; padding: 4px 10px; font-size: 12.5px; font-weight: 600; }
+  .cv-bulle.moi .cv-puces span, .cv-ligne.droite .cv-bulle.equipe .cv-puces span { background: rgba(255,255,255,.2); color: #fff; }
+  .cv-meta { display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: #8A94A6; margin: 4px 8px 0; }
+  .cv-vu { display: inline-flex; align-items: center; gap: 3px; color: #1A6BFF; font-weight: 600; margin-left: 2px; }
+  .cv-envoye { margin-left: 2px; }
+  .cv-carte { width: min(88%, 400px); background: #fff; border-radius: 20px; box-shadow: 0 6px 20px rgba(13,27,62,.08); overflow: hidden; }
+  .cv-carte-h { display: flex; align-items: center; gap: 10px; padding: 13px 14px 8px; }
+  .cv-carte-h b { display: block; font-size: 14px; } .cv-carte-h small { font-size: 12px; color: #8A94A6; }
+  .cv-carte-ic { width: 34px; height: 34px; border-radius: 10px; background: #EEF4FF; color: #1A6BFF; display: flex; align-items: center; justify-content: center; flex: none; }
+  .cv-barre { height: 5px; border-radius: 5px; background: #EEF1F6; margin: 2px 14px 6px; overflow: hidden; }
+  .cv-barre span { display: block; height: 100%; background: linear-gradient(90deg, #22C55E, #4ADE80); border-radius: 5px; transition: width .4s; }
+  .cv-piece { display: flex; align-items: center; gap: 10px; padding: 8px 14px; font-size: 13.5px; }
+  .cv-piece-t { flex: 1; min-width: 0; font-weight: 600; display: flex; flex-direction: column; }
+  .cv-piece-t small { font-weight: 500; font-size: 11.5px; color: #B45309; }
+  .cv-piece.ok .cv-piece-t { color: #8A94A6; font-weight: 500; }
+  .cv-piece.ok .cv-piece-nom { text-decoration: line-through; }
+  .cv-piece.ok .cv-piece-t small { color: #1E40AF; }
+  .cv-coche { width: 20px; height: 20px; border-radius: 50%; flex: none; display: flex; align-items: center; justify-content: center; border: 2px solid #CBD5E1; }
+  .cv-coche.validated { background: #DCFCE7; border-color: #DCFCE7; color: #16A34A; }
+  .cv-coche.uploaded { background: #DBEAFE; border-color: #DBEAFE; color: #1D4ED8; }
+  .cv-coche.rejected { background: #FEE2E2; border-color: #FEE2E2; color: #B91C1C; }
+  .cv-envoyer { display: inline-flex; align-items: center; gap: 5px; background: #1A6BFF; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 11px; border-radius: 999px; cursor: pointer; flex: none; }
+  .cv-envoyer.busy { background: #93C5FD; cursor: default; }
+  .cv-attente { font-size: 11px; color: #B45309; font-weight: 600; flex: none; }
+  .cv-carte-pied { font-size: 11.5px; color: #8A94A6; padding: 6px 14px 13px; }
+  .cv-rdv { display: flex; gap: 12px; align-items: center; padding: 14px; }
+  .cv-cal { width: 54px; border-radius: 12px; overflow: hidden; text-align: center; box-shadow: 0 0 0 1px #E3E8F0; flex: none; background: #fff; }
+  .cv-cal span { display: block; background: #EF4444; color: #fff; font-size: 10px; font-weight: 700; padding: 3px 0; letter-spacing: .04em; }
+  .cv-cal b { display: block; font-size: 22px; padding: 4px 0 5px; }
+  .cv-rdv-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .cv-rdv-t b { font-size: 14.5px; } .cv-rdv-t small { font-size: 12.5px; color: #64748B; }
+  .cv-lieu { display: inline-flex; align-items: center; gap: 4px; }
+  .cv-actions { display: flex; gap: 8px; padding: 0 14px 14px; }
+  .cv-actions button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 12px; border: none; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; background: #F1F5F9; color: #475569; }
+  .cv-actions button.oui { background: #22C55E; color: #fff; box-shadow: 0 4px 12px rgba(34,197,94,.3); }
+  .cv-actions button:disabled { opacity: .6; cursor: default; }
+  .cv-etat { display: flex; align-items: center; gap: 6px; margin: 0 14px 14px; padding: 9px 12px; border-radius: 12px; font-size: 12.5px; font-weight: 700; }
+  .cv-etat.ok { background: #DCFCE7; color: #15803D; } .cv-etat.gris { background: #F1F5F9; color: #64748B; } .cv-etat.attente { background: #FFF7ED; color: #C2410C; }
+  .cv-sugg { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+  .cv-sugg::-webkit-scrollbar { display: none; }
+  .cv-sugg button { flex: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; border: 1px solid #E3E8F0; background: #fff; border-radius: 999px; padding: 6px 12px; font-family: inherit; font-size: 12.5px; color: #334155; cursor: pointer; }
+  .cv-sugg button:hover { border-color: #BFD4FF; color: #1A6BFF; }
+  .cv-spark { color: #7C3AED; }
+  .cv-input { display: flex; align-items: flex-end; gap: 8px; background: #F3F5F9; border: 1px solid transparent; border-radius: 24px; padding: 5px 5px 5px 16px; transition: border-color .15s, background .15s; }
+  .cv-input:focus-within { background: #fff; border-color: #BFD4FF; box-shadow: 0 0 0 4px rgba(26,107,255,.08); }
+  .cv-input.note { background: #FFFBEB; } .cv-input.note:focus-within { border-color: #FCD34D; box-shadow: 0 0 0 4px rgba(245,158,11,.1); }
+  .cv-input textarea { flex: 1; border: none; background: transparent; resize: none; outline: none; font-family: inherit; font-size: 14.5px; line-height: 1.4; padding: 8px 0; color: #0D1B3E; max-height: 140px; min-height: 22px; }
+  .cv-send { width: 38px; height: 38px; flex: none; border-radius: 50%; border: none; background: linear-gradient(135deg, #2F7BFF, #1557E0); color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 12px rgba(26,107,255,.3); transition: transform .1s, opacity .15s; }
+  .cv-send:active:not(:disabled) { transform: scale(.94); }
+  .cv-send:disabled { background: #CBD5E1; box-shadow: none; cursor: default; }
+  .cv-input.note .cv-send:not(:disabled) { background: #F59E0B; box-shadow: 0 4px 12px rgba(245,158,11,.3); }
+  .cv-pop, .cv-ovr { font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; color: #0D1B3E; -webkit-font-smoothing: antialiased; }
+  .cv-pop { position: fixed; z-index: 10000; background: #fff; border: 1px solid #E5E7EB; border-radius: 16px; padding: 14px; box-shadow: 0 16px 40px rgba(13,27,62,.16); }
+  .cv-ovr { position: fixed; inset: 0; z-index: 10000; background: rgba(13,27,62,.35); display: flex; align-items: flex-end; }
+  .cv-sheet { width: 100%; max-height: 88vh; overflow-y: auto; background: #fff; border-radius: 20px 20px 0 0; padding: 8px 16px calc(16px + env(safe-area-inset-bottom)); }
+  .cv-grip { width: 40px; height: 4px; border-radius: 4px; background: #E5E7EB; margin: 4px auto 10px; }
+  .cv-pop-h b { display: block; font-size: 15px; } .cv-pop-h small { font-size: 12px; color: #64748B; }
+  .cv-pop-sub { font-size: 12px; font-weight: 600; color: #64748B; margin: 12px 0 7px; }
+  .cv-chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .cv-heures { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .cv-chips button, .cv-heures button { border: 1px solid #E5E7EB; background: #fff; font-family: inherit; font-size: 13px; font-weight: 600; color: #334155; cursor: pointer; }
+  .cv-chips button { padding: 7px 11px; border-radius: 999px; } .cv-heures button { padding: 8px 0; border-radius: 9px; }
+  .cv-chips button.on, .cv-heures button.on { background: #EEF4FF; border-color: #1A6BFF; color: #1A6BFF; }
+  .cv-lieu-in { width: 100%; box-sizing: border-box; border: 1px solid #E5E7EB; border-radius: 10px; padding: 10px 12px; font-family: inherit; font-size: 14px; color: #0D1B3E; }
+  .cv-err { margin-top: 8px; font-size: 12.5px; color: #B91C1C; font-weight: 600; }
+  .cv-go { width: 100%; margin-top: 14px; display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border: none; border-radius: 999px; background: #111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .cv-go:hover:not(:disabled) { background: #1A6BFF; }
+  .cv-go:disabled { background: #E5E7EB; color: #9CA3AF; cursor: default; }
+  .cv-img { display: block; border-radius: 14px; overflow: hidden; max-width: 240px; }
+  .cv-img img { display: block; width: 100%; height: auto; }
+  .cv-fichier { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(13,27,62,.05); color: inherit; text-decoration: none; min-width: 200px; }
+  .cv-bulle.moi .cv-fichier { background: rgba(255,255,255,.16); }
+  .cv-fichier-ic { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #64748B; color: #fff; flex: none; }
+  .cv-fichier-ic.pdf { background: #EF4444; }
+  .cv-fichier-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .cv-fichier-t b { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cv-fichier-t small { font-size: 11.5px; opacity: .7; }
+  @media (max-width: 760px) { .cv-bulle { max-width: 86%; } .cv-carte { width: 92%; } }
+`

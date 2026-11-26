@@ -6,6 +6,8 @@ import { requestPasswordReset } from '@/lib/password-reset'
 import SkeletonPage from '@/components/SkeletonPage'
 import { formatPhoneInput } from '@/lib/phone'
 import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles } from '@/components/HakiTeaser'
+import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
+import { regrouper, vueClient, suggestions, lireRdv, reponseClientRdv } from '@/lib/conversation'
 
 export const Route = createFileRoute('/client/$id')({
   component: ClientPortal,
@@ -75,51 +77,6 @@ function hakiAvatar(size: number) {
   )
 }
 
-/* ---------- Rendu message avec détection fichiers ---------- */
-function MessageContent({ content, isClient }: { content: string; isClient: boolean }) {
-  // Détecte "📎 nom.ext\nhttps://..." ou juste une URL de notre bucket Supabase
-  const lines = content.split('\n')
-  const fileLine = lines.find(l => l.startsWith('📎'))
-  const urlLine = lines.find(l => l.startsWith('http'))
-
-  if (fileLine && urlLine) {
-    const name = fileLine.replace('📎', '').trim()
-    const ext = (name.split('.').pop() || '').toLowerCase()
-    const isImage = ['jpg','jpeg','png','webp','gif'].includes(ext)
-    const isPdf = ext === 'pdf'
-    const text = lines.filter(l => !l.startsWith('📎') && !l.startsWith('http')).join('\n').trim()
-
-    if (isImage) {
-      return (
-        <>
-          <a href={urlLine} target="_blank" rel="noopener" className="c-msg-img-wrap">
-            <img src={urlLine} alt={name} className="c-msg-img"/>
-          </a>
-          <div className="c-msg-img-name">{name}</div>
-          {text && <div style={{ marginTop: 6 }}>{text}</div>}
-        </>
-      )
-    }
-    return (
-      <>
-        <a href={urlLine} target="_blank" rel="noopener" className={`c-msg-file ${isClient ? 'client' : ''}`}>
-          <div className={`c-msg-file-ic ${isPdf ? 'pdf' : 'doc'}`}>
-            {isPdf
-              ? <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm-1 7V3.5L18.5 9H13z"/></svg>
-              : <svg width="20" height="20" viewBox="0 0 24 24" fill="#fff"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm0 7V3.5L18.5 9H14z"/></svg>}
-          </div>
-          <div className="c-msg-file-info">
-            <div className="c-msg-file-name">{name}</div>
-            <div className="c-msg-file-sub">{isPdf ? 'Document PDF' : 'Fichier'} · Cliquez pour ouvrir</div>
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 4v12M6 10l6 6 6-6M4 20h16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </a>
-        {text && <div style={{ marginTop: 6 }}>{text}</div>}
-      </>
-    )
-  }
-  return <div>{content}</div>
-}
 
 /* ---------- Haki Assistant ---------- */
 type HakiAction = { label: string; onClick: () => void; primary?: boolean; icon?: ReactNode }
@@ -370,6 +327,15 @@ function ClientPortal() {
     if (m?.id) setMessages(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m])
   }
 
+  async function repondreRdv(b: { id: string; payload: any }, rep: 'confirme' | 'autre') {
+    const r = lireRdv(b.payload)
+    const { error } = await supabase.rpc('client_repondre_rdv', { p_message_id: b.id, p_reponse: rep, p_texte: r ? reponseClientRdv(r.at, rep) : '' })
+    if (error) { alert(error.message); return }
+    await loadMessages()
+    const { data } = await supabase.from('leads').select('*').eq('id', id).maybeSingle()
+    if (data) setLead(data)
+  }
+
   async function uploadFileToChat(file: File) {
     if (uploading) return
     setUploading(true)
@@ -419,7 +385,7 @@ function ClientPortal() {
   }
 
   useEffect(() => {
-    if (stage === 'portal' && activeTab === 'infos' && documents.length === 0) {
+    if (stage === 'portal' && (activeTab === 'infos' || activeTab === 'chat') && documents.length === 0) {
       loadDocuments()
     }
   }, [stage, activeTab])
@@ -440,7 +406,7 @@ function ClientPortal() {
     setHakiOpen(false)
     if (prefill) setNewMsg(prefill)
     setTimeout(() => {
-      const ta = document.querySelector('.c-msg-input-field textarea') as HTMLTextAreaElement | null
+      const ta = document.querySelector('.cv-input textarea') as HTMLTextAreaElement | null
       if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length) }
     }, 250)
   }
@@ -528,7 +494,7 @@ function ClientPortal() {
             setHakiOpen(false)
             closeAttach()
             setTimeout(() => {
-              const ta = document.querySelector('.c-msg-input-field textarea') as HTMLTextAreaElement
+              const ta = document.querySelector('.cv-input textarea') as HTMLTextAreaElement
               if (ta) { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length) }
             }, 200)
           },
@@ -754,7 +720,10 @@ function ClientPortal() {
         .c-msg-head-sub { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 2px; display: flex; align-items: center; gap: 5px; font-weight: 500; }
         .c-msg-head-sub::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: #34D058; }
 
-        .c-msg-scroll { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; background: linear-gradient(180deg, #F8FAFC 0%, #EEF2F7 100%); }
+        .c-msg-scroll { flex: 1; overflow-y: auto; padding: 6px 14px 16px; display: flex; flex-direction: column; background: #F5F7FB; }
+        .c-msg-sugg { background: #fff; border-top: 1px solid #EEF1F6; padding: 10px 12px 0; }
+        .c-msg-sugg + .c-msg-input-bar { border-top: none; }
+        .c-msg-input-bar .cv-input { flex: 1 1 0; min-width: 0; }
         .c-msg-empty { color: #999; text-align: center; padding: 60px 20px; font-size: 13px; line-height: 1.6; margin: auto; }
         .c-msg-empty svg { margin: 0 auto 14px; display: block; }
         .c-msg-date-sep { align-self: center; background: rgba(13,27,62,0.08); color: #666; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 100px; margin: 10px 0 2px; text-transform: uppercase; letter-spacing: 0.04em; }
@@ -1128,45 +1097,13 @@ function ClientPortal() {
 
             {/* Zone messages */}
             <div className="c-msg-scroll">
-              {messages.length === 0 && (
-                <div className="c-msg-empty">
-                  <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
-                    <circle cx="28" cy="28" r="26" fill="#EEF4FF"/>
-                    <path d="M18 24a2 2 0 012-2h16a2 2 0 012 2v10a2 2 0 01-2 2h-4l-6 6v-6h-6a2 2 0 01-2-2V24z" fill="#1A6BFF"/>
-                  </svg>
-                  Aucun message pour le moment.<br/>
-                  Écrivez votre premier message à votre conseiller !
-                </div>
-              )}
-              {messages.map((m, i) => {
-                // Afficher la date si c'est le premier message ou si la date change
-                const prevDate = i > 0 ? new Date(messages[i-1].created_at).toDateString() : null
-                const currDate = new Date(m.created_at).toDateString()
-                const showDate = !prevDate || prevDate !== currDate
-                const dateLabel = currDate === new Date().toDateString() ? "Aujourd'hui"
-                  : currDate === new Date(Date.now() - 86400000).toDateString() ? 'Hier'
-                  : new Date(m.created_at).toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' })
-                return (
-                  <div key={m.id} style={{ display: 'contents' }}>
-                    {showDate && <div className="c-msg-date-sep">{dateLabel}</div>}
-                    <div className={`c-msg ${m.sender === 'client' ? 'client' : 'admin'}`}>
-                      {m.sender !== 'client' && m.author_name && <div className="c-msg-author">{m.author_name}</div>}
-                      <MessageContent content={m.content} isClient={m.sender === 'client'}/>
-                      <div className="c-msg-meta">
-                        {new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
-                        {m.sender === 'client' && (
-                          <svg className="c-msg-check" width="14" height="10" viewBox="0 0 14 10" fill="none">
-                            <path d={m.read_at ? "M1 5l2 2 4-4M6 5l2 2 4-4" : "M1 5l2 2 4-4"} stroke={m.read_at ? '#86EFAC' : '#fff'} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.8"/>
-                          </svg>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )
-              })}
+              <Conversation viewer="client" docs={documents} bulles={regrouper(messages.map(vueClient), Date.now())}
+                onUploadDoc={uploadDocument} uploadingDocId={uploadingDocType || null} onRepondreRdv={repondreRdv}
+                vide={<>Aucun message pour le moment.<br/>Écrivez votre premier message à votre conseiller !</>}/>
               <div ref={chatEnd}/>
             </div>
 
+            {!newMsg && !uploading && <div className="c-msg-sugg"><Suggestions items={suggestions('client', messages.map(vueClient))} onPick={setNewMsg}/></div>}
             {/* Barre de saisie type WhatsApp avec bouton + à gauche */}
             <div className="c-msg-input-bar">
               {/* Bouton Haki : ouvre menu options */}
@@ -1199,21 +1136,8 @@ function ClientPortal() {
               <input ref={fileInput} type="file" style={{ display: 'none' }}
                 accept="image/*,application/pdf,.doc,.docx"
                 onChange={e => { const f = e.target.files?.[0]; if (f) uploadFileToChat(f); e.currentTarget.value = '' }}/>
-              <div className="c-msg-input-field">
-                <textarea
-                  placeholder={uploading ? "Envoi du fichier…" : "Écrire un message…"}
-                  value={newMsg}
-                  onChange={e => setNewMsg(e.target.value)}
-                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); envoyer() } }}
-                  rows={1}
-                  disabled={uploading}
-                />
-              </div>
-              <button className="c-msg-send" onClick={envoyer} disabled={!newMsg.trim() || sending || uploading} aria-label="Envoyer">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                  <path d="M3 11l18-8-8 18-3-8-7-2z" fill="#fff"/>
-                </svg>
-              </button>
+              <ChatInput value={newMsg} onChange={setNewMsg} onSend={envoyer} sending={sending} disabled={uploading}
+                placeholder={uploading ? 'Envoi du fichier…' : 'Écrire un message…'}/>
             </div>
           </div>
         )}

@@ -9,6 +9,8 @@ import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
 import CallButton from '@/components/CallButton'
+import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
+import { regrouper, vueAdmin, suggestions } from '@/lib/conversation'
 import NiceSelect from '@/components/NiceSelect'
 import { LEAD_ACTIONS, buildWhatsappUrl, fillTemplate, LIFECYCLE_STATUTS, STATUT_COLORS } from '@/lib/lead-templates'
 
@@ -918,8 +920,8 @@ function Admin({ session }: { session: any }) {
 
         /* ============ CHAT ============ */
         .chat-wrap { display: flex; flex-direction: column; height: 60vh; min-height: 400px; }
-        .chat-scroll { flex: 1; overflow-y: auto; padding: 12px 0;
-          display: flex; flex-direction: column; gap: 10px; }
+        .chat-scroll { flex: 1; overflow-y: auto; padding: 6px 12px 14px; background: #F5F7FB; border-radius: 16px;
+          display: flex; flex-direction: column; }
         .msg { max-width: 78%; padding: 11px 15px; border-radius: 16px; font-size: 14px;
           line-height: 1.45; word-break: break-word; }
         .msg.admin { align-self: flex-end; background: var(--blue); color: #fff;
@@ -2532,24 +2534,12 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
 
           {tab === 'chat' && <div className="chat-wrap">
             <div className="chat-scroll">
-              {messages.length === 0 && <div className="chat-empty">Aucun message. Démarrez la conversation.</div>}
-              {messages.map(m => (
-                <div key={m.id} className={`msg ${m.sender === 'client' ? 'client' : 'admin'}`} style={m.visibility === 'internal' ? { background: '#FEF3C7', color: '#78350F', border: '1.5px dashed #F59E0B' } : undefined}>
-                  {m.visibility === 'internal' && <div style={{ fontSize: 11, fontWeight: 800, marginBottom: 3 }}>Note interne · invisible pour le client</div>}
-                  <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{m.content}</div>
-                  <div className="msg-meta">
-                    {m.sender !== 'client' && m.author_name ? `${m.author_name} · ` : ''}
-                    {new Date(m.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
-                  </div>
-                </div>
-              ))}
+              <Conversation viewer="equipe" docs={documents} bulles={regrouper(messages.map(m => vueAdmin(m, adminId, nom)), Date.now())} vide="Aucun message. Démarrez la conversation."/>
               <div ref={chatEnd}/>
             </div>
-            <div className="chat-form">
-              <textarea placeholder="Votre message au client…" value={newMsg} onChange={e => setNewMsg(e.target.value)} onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMsg() } }} rows={1}/>
-              <button className="chat-send-btn" disabled={!newMsg.trim() || sending} onClick={sendMsg} aria-label="Envoyer">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11l17-7-7 17-3-7-7-3z" stroke="#fff" strokeWidth="2" strokeLinejoin="round"/></svg>
-              </button>
+            <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {!newMsg && <Suggestions items={suggestions('equipe', messages.map(m => vueAdmin(m, adminId, nom)), nom.split(' ')[0])} onPick={setNewMsg}/>}
+              <ChatInput value={newMsg} onChange={setNewMsg} onSend={sendMsg} sending={sending} placeholder="Votre message au client…"/>
             </div>
           </div>}
         </div>
