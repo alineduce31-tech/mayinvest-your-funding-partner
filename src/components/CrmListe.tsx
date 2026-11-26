@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Phone, MessageCircle, FileText, UserPlus, X, User, Building2 } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import NiceSelect from '@/components/NiceSelect'
+import ConseillerPicker from '@/components/ConseillerPicker'
 import CallButton from '@/components/CallButton'
 import { BK_CSS } from '@/components/BancarisationView'
 import { LIFECYCLE_STATUTS, STATUT_COLORS } from '@/lib/lead-templates'
@@ -53,8 +54,7 @@ export default function CrmListe({ leads, msgCounts, onOpen, updateStatut, assig
         {isDirector && selection.length > 0 && (
           <div className="cr-lot" role="region" aria-label="Actions sur la sélection">
             <span className="cr-lot-n">{selection.length} sélectionné{selection.length > 1 ? 's' : ''}</span>
-            <NiceSelect variant="compact" value="" onChange={assignerLot} title="Assigner la sélection" ariaLabel="Assigner la sélection" className="cr-lot-sel"
-              placeholder="Assigner à…" options={[{ value: '', label: 'Assigner à…', icon: <UserPlus size={14}/> }, ...optionsAgents()]}/>
+            <ConseillerPicker value={null} onChange={id => id && assignerLot(id)} placeholder="Assigner à…" retirer={false} className="cr-lot-sel"/>
             <NiceSelect variant="compact" value="" onChange={v => v && statutLot(v)} title="Changer le statut de la sélection" ariaLabel="Changer le statut" className="cr-lot-sel"
               placeholder="Changer le statut" options={[{ value: '', label: 'Changer le statut' }, ...LIFECYCLE_STATUTS.map(s => ({ value: s, label: s }))]}/>
             <button className="cr-lot-x" onClick={() => setChoix(new Set())} aria-label="Annuler la sélection"><X size={15}/></button>
@@ -87,9 +87,7 @@ export default function CrmListe({ leads, msgCounts, onOpen, updateStatut, assig
               </span>
               <span className="bk-cell">
                 {isDirector ? (
-                  <NiceSelect variant="compact" value={l.agent_commercial_id || ''} onChange={v => assignLead(l.id, v || null)} title="Assigner ce lead" ariaLabel="Conseiller"
-                    className={l.agent_commercial_id ? 'bk-ag' : 'bk-ag vide'}
-                    options={[{ value: '', label: 'À assigner', icon: <UserPlus size={14}/> }, ...optionsAgents(l.agent_commercial_id)]}/>
+                  <ConseillerPicker value={l.agent_commercial_id} onChange={id => assignLead(l.id, id)} villeLead={l.identite?.ville || l.ville} montant={l.montant_demande} nomSecours={l.agent_commercial_id ? nomAgent(l.agent_commercial_id) : undefined}/>
                 ) : null}
               </span>
               <span className="bk-amt"><b>{montantComplet(l.montant_demande)}</b><small>{dateRelative(l.created_at, now)}</small></span>

@@ -3,6 +3,7 @@ import { useNavigate } from '@tanstack/react-router'
 import { Search, Phone, MessageCircle, FileText, UserPlus, Ban, FileX, BarChart3, CircleCheck, CircleAlert, RefreshCw, Landmark, Wallet } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import NiceSelect from '@/components/NiceSelect'
+import ConseillerPicker from '@/components/ConseillerPicker'
 import CallButton from '@/components/CallButton'
 import { BK_CSS } from '@/components/BancarisationView'
 import { LIFECYCLE_STATUTS, STATUT_COLORS, LEAD_ACTIONS, fillTemplate, buildWhatsappUrl } from '@/lib/lead-templates'
@@ -93,13 +94,7 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
                       style={{ background: c.bg, color: c.fg, border: 'none', borderRadius: 999, padding: '5px 9px 5px 12px', fontSize: 12.5 }}
                       options={LIFECYCLE_STATUTS.map(s => ({ value: s, label: s }))}/>
                     {isDirector ? (
-                      <NiceSelect variant="compact" value={l.agent_commercial_id || ''} onChange={v => assignLead(l.id, v || null)} title="Assigner ce dossier" ariaLabel="Conseiller"
-                        className={l.agent_commercial_id ? 'bk-ag' : 'bk-ag vide'}
-                        options={[
-                          { value: '', label: 'Assigner', icon: <UserPlus size={14}/> },
-                          ...(l.agent_commercial_id && !equipe.some(m => m.id === l.agent_commercial_id) ? [{ value: l.agent_commercial_id, label: nomAgent(l.agent_commercial_id) }] : []),
-                          ...equipe.map(m => ({ value: m.id, label: m.nom })),
-                        ]}/>
+                      <ConseillerPicker value={l.agent_commercial_id} onChange={id => assignLead(l.id, id)} villeLead={l.identite?.ville || l.ville} montant={l.montant_demande} nomSecours={l.agent_commercial_id ? nomAgent(l.agent_commercial_id) : undefined}/>
                     ) : <span className="bk-ag-txt">{l.agent_commercial_id ? nomAgent(l.agent_commercial_id) : 'Sans conseiller'}</span>}
                   </span>
                   <span className="bk-amt"><b>{montantComplet(l.montant_demande)}</b><small>{dateRelative(l.created_at, now)}</small></span>

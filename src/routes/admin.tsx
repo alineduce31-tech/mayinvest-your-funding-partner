@@ -12,6 +12,7 @@ import CallButton from '@/components/CallButton'
 import { formatPhone } from '@/lib/phone'
 import BancarisationView from '@/components/BancarisationView'
 import CrmListe from '@/components/CrmListe'
+import ConseillerPicker from '@/components/ConseillerPicker'
 import { couleurAvatar, initialesNom, dateRelative } from '@/lib/affichage'
 import NonEligiblesView from '@/components/NonEligiblesView'
 import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
@@ -1648,10 +1649,7 @@ function LeadsTable({ leads, msgCounts, onOpen, agentEmailById, isDirector, upda
                 <td className="lt-td r"><span className={`lt-score ${scoreCls}`}>{l.score ?? 0}</span></td>
                 {isDirector && (
                   <td className="lt-td" onClick={e => e.stopPropagation()}>
-                    <NiceSelect variant="compact" value={l.agent_commercial_id || ''} onChange={v => assignLead(l.id, v || null)}
-                      title="Assigner ce lead" ariaLabel="Assigner ce lead"
-                      style={{ border: '1px solid transparent', background: 'transparent', padding: '4px 6px 4px 8px', borderRadius: 6, color: l.agent_commercial_id ? '#1A6BFF' : '#B45309', maxWidth: 130 }}
-                      options={[{ value: '', label: 'Non assigné' }, ...(teamMembers || []).filter((m: any) => m.role === 'commercial').map((m: any) => ({ value: m.id, label: m.email.split('@')[0] }))]}/>
+                    <ConseillerPicker value={l.agent_commercial_id} onChange={id => assignLead(l.id, id)} villeLead={l.ville} montant={l.montant_demande}/>
                   </td>
                 )}
                 <td className="lt-td" onClick={e => e.stopPropagation()}>
@@ -2346,10 +2344,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
           <div className="ld-pills">
             <StatusSelect value={lead.statut} onChange={s => onStatutChange(s)} size="md"/>
             {isDirector && (
-              <NiceSelect variant="compact" value={lead.agent_commercial_id || ''} onChange={v => onAssignAgent(v || null)}
-                title="Assigner ce lead" ariaLabel="Assigner ce lead à un commercial"
-                className={lead.agent_commercial_id ? 'ld-ag' : 'ld-ag vide'}
-                options={[{ value: '', label: 'À assigner', icon: <UserPlus size={14}/> }, ...(lead.agent_commercial_id && !(teamMembers || []).some((m: any) => m.id === lead.agent_commercial_id) ? [{ value: lead.agent_commercial_id, label: 'Conseiller assigné' }] : []), ...(teamMembers || []).filter((m: any) => m.role === 'commercial').map((m: any) => ({ value: m.id, label: m.email.split('@')[0] }))]}/>
+              <ConseillerPicker value={lead.agent_commercial_id} onChange={id => onAssignAgent(id)} villeLead={lead.identite?.ville || lead.ville} montant={lead.montant_demande} nomSecours={undefined}/>
             )}
             {!isDirector && lead.agent_commercial_id && <span className="ld-pill ok">Assigné à moi</span>}
             <span className={`ld-pill sc ${(lead.score ?? 0) >= 70 ? 'hi' : (lead.score ?? 0) < 40 ? 'lo' : 'mid'}`}>Score {lead.score ?? 0}</span>

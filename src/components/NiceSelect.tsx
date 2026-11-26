@@ -171,7 +171,7 @@ export default function NiceSelect({ value, onChange, options, placeholder = 'Ch
   )
 }
 
-function NiceSelectStyles() {
+export function NiceSelectStyles() {
   useEffect(() => {
     if (document.getElementById('ns-styles')) return
     const el = document.createElement('style')

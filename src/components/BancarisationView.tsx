@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client'
 import { useNavigate } from '@tanstack/react-router'
 import { Search, Phone, MessageCircle, FileText, UserPlus, Landmark, Wallet, UserX, PhoneCall } from 'lucide-react'
 import NiceSelect from '@/components/NiceSelect'
+import ConseillerPicker from '@/components/ConseillerPicker'
 import CallButton from '@/components/CallButton'
 import { LIFECYCLE_STATUTS, STATUT_COLORS } from '@/lib/lead-templates'
 import { estABancariser, chiffresB, compteFiltres, listeB, nomLead, estClos, estPme, type FiltreB, type LeadB } from '@/lib/bancarisation'
@@ -83,13 +84,7 @@ export default function BancarisationView({ leads, onOpen, updateStatut, assignL
                   </span>
                   <span className="bk-cell">
                     {isDirector ? (
-                      <NiceSelect variant="compact" value={l.agent_commercial_id || ''} onChange={v => assignLead(l.id, v || null)} title="Assigner ce prospect" ariaLabel="Conseiller"
-                        className={l.agent_commercial_id ? 'bk-ag' : 'bk-ag vide'}
-                        options={[
-                          { value: '', label: 'Assigner', icon: <UserPlus size={14}/> },
-                          ...(l.agent_commercial_id && !equipe.some(m => m.id === l.agent_commercial_id) ? [{ value: l.agent_commercial_id, label: nomAgent(l.agent_commercial_id) }] : []),
-                          ...equipe.map(m => ({ value: m.id, label: m.nom })),
-                        ]}/>
+                      <ConseillerPicker value={l.agent_commercial_id} onChange={id => assignLead(l.id, id)} villeLead={l.identite?.ville || l.ville} montant={l.montant_demande} nomSecours={l.agent_commercial_id ? nomAgent(l.agent_commercial_id) : undefined}/>
                     ) : <span className="bk-ag-txt">{l.agent_commercial_id ? nomAgent(l.agent_commercial_id) : '—'}</span>}
                   </span>
                   <span className="bk-amt"><b>{montantComplet(l.montant_demande)}</b><small>{dateRelative(l.created_at, now)}</small></span>
