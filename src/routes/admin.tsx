@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
-import { LogOut, Plus, ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
+import { Filter, LogOut, Plus, ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
 import MenuExporter from '@/components/MenuExporter'
 import DemandePieces from '@/components/DemandePieces'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
@@ -8,7 +8,6 @@ import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
 import { createPortal } from 'react-dom'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { ClipboardCheck, Lock, ArrowUp, Trash2, Eye, MessagesSquare, Star, MapPin, Download, FileSpreadsheet, FileDown, UserPlus, LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
-import { Button } from '@/components/ui/button'
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
@@ -1046,7 +1045,14 @@ function Admin({ session }: { session: any }) {
 
           {page === 'general' && <DashboardView onOpen={setSelectedLead} period={dashPeriod} setPeriod={setDashPeriod} onColle={setDashColle}/>}
           {page !== 'general' && (loading ? <SkeletonPage rows={3} label="Chargement des leads…" /> : <>
-            {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
+            {page === 'crm' && dashboardSearch.priority && (
+              <div className="crm-prio" role="status">
+                <span className="crm-prio-ic" aria-hidden="true"><Filter size={15}/></span>
+                <span className="crm-prio-t"><small>Filtre du dashboard</small><b>{({ ready: 'Dossiers prêts sans contact 48 h', impact: 'Non bancarisés cette semaine', followup: 'Pipeline à relancer' } as Record<string, string>)[dashboardSearch.priority]}</b></span>
+                <span className="crm-prio-n">{filtered.length} dossier{filtered.length > 1 ? 's' : ''}</span>
+                <button type="button" className="crm-prio-x" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}><X size={14}/>Retirer le filtre</button>
+              </div>
+            )}
             {page === 'crm' && <CRMView leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>}

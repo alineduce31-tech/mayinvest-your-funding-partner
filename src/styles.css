@@ -2307,3 +2307,14 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
 .drawer.ld-notes-on .ld-vide { margin: auto 0; }
 .drawer.ld-notes-on .ld-note-in { margin: 0; min-height: 0; border: 1.5px solid #C9B8FF; background: #F6F2FF; border-radius: 22px; padding: 6px 6px 6px 16px; align-items: center; }
 .drawer.ld-notes-on .ld-note-in textarea { max-height: 140px; field-sizing: content; }
+
+/* CRM : filtre venu du dashboard */
+.crm-prio { display: flex; align-items: center; gap: 12px; background: #fff; border: 1px solid #E2E8F2; border-radius: 16px; padding: 10px 10px 10px 12px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(13,27,62,.04); }
+.crm-prio-ic { width: 34px; height: 34px; border-radius: 10px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: #EAF1FF; color: #1A6BFF; }
+.crm-prio-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.crm-prio-t small { font-size: 11.5px !important; color: #94A3B8; font-weight: 500; }
+.crm-prio-t b { font-size: 14px !important; color: #0D1B3E; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crm-prio-n { font-size: 12px !important; font-weight: 700; color: #1A6BFF; background: #EAF1FF; border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+.crm-prio-x { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: none; border-radius: 999px; background: #F3F5F9; color: #0D1B3E; font-family: inherit; font-size: 13px !important; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.crm-prio-x:hover { background: #E8ECF3; }
+@media (max-width: 640px) { .crm-prio { flex-wrap: wrap; } .crm-prio-t { flex-basis: calc(100% - 46px); } .crm-prio-n { margin-left: 46px; } .crm-prio-x { margin-left: auto; } }
