@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
 import { LogOut, Plus, ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
 import MenuExporter from '@/components/MenuExporter'
+import DemandePieces from '@/components/DemandePieces'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
 import { createPortal } from 'react-dom'
@@ -23,7 +24,7 @@ import NonEligiblesView from '@/components/NonEligiblesView'
 import PacksView, { PackSuivi } from '@/components/PackAdmin'
 import StatutPicker from '@/components/StatutPicker'
 import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
-import { regrouper, vueAdmin, suggestions } from '@/lib/conversation'
+import { regrouper, vueAdmin, suggestions, texteSecoursPieces } from '@/lib/conversation'
 import NiceSelect from '@/components/NiceSelect'
 import { LEAD_ACTIONS, buildWhatsappUrl, fillTemplate, LIFECYCLE_STATUTS, STATUT_COLORS } from '@/lib/lead-templates'
 
@@ -2175,12 +2176,25 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     await supabase.from('documents').update({ status: 'rejected', admin_note: note }).eq('id', docId)
     loadDocuments()
   }
-  async function requestDocument() {
-    const label = await demanderTexte({ titre: 'Demander un document', label: 'Document à demander au client', placeholder: 'Ex. : attestation de domicile', bouton: 'Demander' })
-    if (!label) return
-    const { error } = await supabase.rpc('admin_request_document', { p_admin_id: adminId, p_lead_id: lead.id, p_label: label })
-    if (error) informer("Demande non enregistrée : " + error.message)
-    loadDocuments()
+  // Demande de pièces : même fenêtre que dans les messageries (pièces à cocher + pièce personnalisée), envoyée en carte dans la discussion
+  const [piecesOpen, setPiecesOpen] = useState(false)
+  const pressionFond = useRef(false)
+  function requestDocument() { setPiecesOpen(true) }
+  async function envoyerDemandePieces(ids: string[], labels: string[], nouvelles: string[]) {
+    const nouveaux: string[] = []
+    for (const l of nouvelles) {
+      const { data: docId, error } = await supabase.rpc('admin_request_document', { p_admin_id: adminId, p_lead_id: lead.id, p_label: l })
+      if (error) { informer('Pièce non demandée : ' + error.message); return }
+      if (docId) nouveaux.push(String(docId))
+    }
+    await loadDocuments()
+    const tous = [...ids, ...nouveaux]
+    if (tous.length) {
+      const { error } = await supabase.rpc('send_lead_card', { p_lead_id: lead.id, p_sender: 'admin', p_author_id: adminId, p_kind: 'pieces', p_payload: { doc_ids: tous }, p_content: texteSecoursPieces([...labels, ...nouvelles]) })
+      if (error) informer('Carte non envoyée : ' + error.message)
+      else loadMessages()
+    }
+    setPiecesOpen(false)
   }
 
   const isP = lead.type === 'physique' || lead.type === 'Personne physique'
@@ -2247,7 +2261,8 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
   }
 
   return (
-    <div className="drawer-ovr" onClick={onClose}>
+    <div className="drawer-ovr" onMouseDown={e => { pressionFond.current = e.target === e.currentTarget }} onClick={e => { if (pressionFond.current && e.target === e.currentTarget) onClose(); pressionFond.current = false }}>
+      {piecesOpen && <DemandePieces docs={documents} onClose={() => setPiecesOpen(false)} onSend={envoyerDemandePieces}/>}
       <div className={`drawer${tab === 'chat' ? ' ld-chat' : tab === 'notes' ? ' ld-chat ld-notes-on' : ''}`} onClick={e => e.stopPropagation()}>
         <div className="dr-head ld-head">
           <div className="ld-top">
