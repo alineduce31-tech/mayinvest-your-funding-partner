@@ -118,7 +118,7 @@ export function DialogueHote() {
             {q.type === 'texte' && <>
               {q.label && <label className="dlg-l">{q.label}</label>}
               {q.multiligne
-                ? <textarea ref={champ} className="dlg-in ta" rows={3} value={val} placeholder={q.placeholder} onChange={e => { setVal(e.target.value); setErr('') }}/>
+                ? <textarea ref={champ} className="dlg-in ta" rows={Math.min(10, Math.max(3, Math.ceil((q.valeur || '').length / 45) + (q.valeur || '').split('\n').length))} value={val} placeholder={q.placeholder} onChange={e => { setVal(e.target.value); setErr('') }}/>
                 : <input ref={champ} className="dlg-in" value={val} placeholder={q.placeholder} onChange={e => { setVal(e.target.value); setErr('') }} onKeyDown={e => { if (e.key === 'Enter') fermer(true) }}/>}
               {err && <div className="dlg-err">{err}</div>}
             </>}

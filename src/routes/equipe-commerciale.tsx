@@ -1,6 +1,7 @@
 import EquipeNav from '@/components/EquipeNav'
+import PerformanceCommerciaux from '@/components/PerformanceCommerciaux'
 import CarteAide, { BoutonAide } from '@/components/CarteAide'
-import { Users, Inbox, Landmark, Wallet, Trash2 } from 'lucide-react'
+import { Users, Inbox, Landmark, Wallet, Trash2, List, Trophy } from 'lucide-react'
 import { confirmer, informer } from '@/components/Dialogue'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useMemo, useRef } from 'react'
@@ -32,6 +33,7 @@ function EquipeCommercialePage() {
   const [sort, setSort] = useState<'activated_desc' | 'gains_desc' | 'leads_desc'>('activated_desc')
   const [deactivateModal, setDeactivateModal] = useState<Commercial | null>(null)
   const [deactivateReason, setDeactivateReason] = useState('')
+  const [vue, setVue] = useState<'liste' | 'performance'>(() => { try { return new URLSearchParams(window.location.search).get('vue') === 'performance' ? 'performance' : 'liste' } catch { return 'liste' } })
 
   useEffect(() => {
     try {
@@ -205,6 +207,11 @@ function EquipeCommercialePage() {
 
       <div className="wrap">
         <CarteAide cle="admin-equipe-commerciale"/>
+        <div className="pf-seg pf-vues" role="tablist" aria-label="Affichage">
+          <button type="button" role="tab" aria-selected={vue === 'liste'} className={vue === 'liste' ? 'on' : ''} onClick={() => setVue('liste')}><List size={14}/>Liste</button>
+          <button type="button" role="tab" aria-selected={vue === 'performance'} className={vue === 'performance' ? 'on' : ''} onClick={() => setVue('performance')}><Trophy size={14}/>Performance</button>
+        </div>
+        {vue === 'performance' ? <PerformanceCommerciaux/> : <>
         <div className="kpi-row">
           <div className="kpi"><i className="eq-ic b"><Users size={16}/></i><div className="kpi-lbl">Commerciaux actifs</div><div className="kpi-val">{totals.nb}</div></div>
           <div className="kpi"><i className="eq-ic n"><Inbox size={16}/></i><div className="kpi-lbl">Leads attribués</div><div className="kpi-val">{totals.totalLeads}</div></div>
@@ -271,6 +278,7 @@ function EquipeCommercialePage() {
             )
           })}
         </div>
+        </>}
       </div>
 
       {deactivateModal && (

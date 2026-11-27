@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import { CalendarRange, Landmark, BarChart3, CircleCheck, CircleAlert, Send, ChevronDown, Clock, Users, Wallet, Sprout, Ban, Building2, Hourglass, Info, Mail, UserRound, Package, FileCheck2, TrendingUp, Percent, Coins } from 'lucide-react'
+import PerformanceCommerciaux from '@/components/PerformanceCommerciaux'
+import { Trophy, CalendarRange, Landmark, BarChart3, CircleCheck, CircleAlert, Send, ChevronDown, Clock, Users, Wallet, Sprout, Ban, Building2, Hourglass, Info, Mail, UserRound, Package, FileCheck2, TrendingUp, Percent, Coins } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { confirmer, informer } from '@/components/Dialogue'
 import {
@@ -9,16 +10,21 @@ import {
 
 // Rapports automatiques du cahier des charges (§4) : phrase du rapport en direct, dernier envoi, détail complet, envoi immédiat.
 
-type Donnees = { destinataires: string[]; hebdo: any; bancarisation: any; banques: any; envois: Envoi[] }
+type Donnees = { destinataires: string[]; hebdo: any; bancarisation: any; banques: any; commerciaux: any; envois: Envoi[] }
 
 const ICONES: Record<TypeRapport, ReactNode> = {
-  hebdo: <CalendarRange size={17}/>, bancarisation: <Landmark size={17}/>, banques: <BarChart3 size={17}/>,
+  hebdo: <CalendarRange size={17}/>, bancarisation: <Landmark size={17}/>, banques: <BarChart3 size={17}/>, commerciaux: <Trophy size={17}/>,
 }
 
 function pluriel(n: number, un: string, plusieurs: string) { return `${nombre(n)} ${Number(n) > 1 ? plusieurs : un}` }
 
 function Phrase({ type, r }: { type: TypeRapport; r: any }) {
   if (type === 'hebdo') return <p className="ra-phr">Cette semaine <b>{pluriel(r.nouveaux, 'nouveau lead', 'nouveaux leads')}</b>. <b>{pluriel(r.non_eligibles, 'non éligible', 'non éligibles')}</b>. Potentiel Pack = <b className="bl">{xafTxt(r.potentiel_pack)}</b></p>
+  if (type === 'commerciaux') {
+    const e = r.equipe || {}
+    const top = (r.commerciaux || [])[0]
+    return <p className="ra-phr">Ce mois, l'équipe a financé <b>{pluriel(e.finances, 'dossier', 'dossiers')}</b>.{top && top.finances > 0 && <> Meilleur commercial : <b className="bl">{top.nom}</b> ({nombre(top.finances)}).</>}{e.retard > 0 && <> <b className="or">{pluriel(e.retard, 'lead', 'leads')}</b> sans contact depuis 48 h.</>}</p>
+  }
   if (type === 'bancarisation') return <p className="ra-phr">Ce mois on a bancarisé <b>{nombre(r.pme_bancarisees)} PME</b>. <b>{nombre(r.eligibles_3_mois)}</b> {r.eligibles_3_mois > 1 ? 'vont être éligibles' : 'va être éligible'} dans 3 mois</p>
   const actives = (r.banques || []).filter((b: any) => b.finances + b.refuses > 0)
   if (!actives.length) return <p className="ra-phr">Aucune décision de banque ce mois.{r.total?.en_cours ? <> <b>{pluriel(r.total.en_cours, 'dossier', 'dossiers')}</b> en attente de réponse.</> : null}</p>
@@ -218,6 +224,7 @@ export default function RapportsAuto() {
         {sel.type === 'hebdo' && <DetailHebdo r={d.hebdo}/>}
         {sel.type === 'bancarisation' && <DetailBancarisation r={d.bancarisation}/>}
         {sel.type === 'banques' && <DetailBanques r={d.banques}/>}
+        {sel.type === 'commerciaux' && <div style={{ marginTop: 14 }}><PerformanceCommerciaux/></div>}
         <h4 className="ra-st">Derniers envois</h4>
         <Historique envois={envoisDe(d.envois, sel.type)}/>
       </div>

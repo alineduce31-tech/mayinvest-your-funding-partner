@@ -1,7 +1,7 @@
 // Page Rapports : rapports automatiques du cahier des charges (module pur, testé).
 // Les chiffres viennent de la base (admin_rapports) ; ici seulement la mise en forme.
 
-export type TypeRapport = 'hebdo' | 'bancarisation' | 'banques'
+export type TypeRapport = 'hebdo' | 'bancarisation' | 'banques' | 'commerciaux'
 
 export type Envoi = {
   id: string
@@ -18,6 +18,7 @@ export const RAPPORTS: { type: TypeRapport; titre: string; rythme: string; perio
   { type: 'hebdo', titre: 'Rapport hebdo', rythme: 'Chaque lundi à 8 h', periode: 'la semaine écoulée', precedente: 'semaine précédente' },
   { type: 'bancarisation', titre: 'Rapport bancarisation', rythme: 'Le 1er du mois à 8 h', periode: 'le mois écoulé', precedente: 'mois précédent' },
   { type: 'banques', titre: 'Rapport banques', rythme: 'Le 1er du mois à 8 h', periode: 'le mois écoulé', precedente: 'mois précédent' },
+  { type: 'commerciaux', titre: 'Performance commerciaux', rythme: 'Le 1er du mois à 8 h', periode: 'le mois écoulé', precedente: 'mois précédent' },
 ]
 
 export const CATEGORIES_NON_ELIGIBLES: Record<string, { libelle: string; action: string }> = {

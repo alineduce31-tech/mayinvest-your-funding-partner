@@ -1,5 +1,5 @@
 // Rapports automatiques Mayinvest PréSelect (cahier des charges §4)
-// Une seule fonction pour les 3 rapports : { type: 'hebdo' | 'bancarisation' | 'banques', courante?: boolean, declencheur?: 'auto' | 'manuel' }
+// Une seule fonction pour les 4 rapports : { type: 'hebdo' | 'bancarisation' | 'banques' | 'commerciaux', courante?: boolean, declencheur?: 'auto' | 'manuel' }
 // Les chiffres viennent de la base (fonction SQL mi_rapport) : mêmes calculs que la page Rapports.
 // Appel protégé : la clé d'appel doit être celle du coffre (mi_cron_key), vérifiée en base.
 
@@ -21,6 +21,7 @@ const TYPES = {
   hebdo: { log: 'weekly_leads', titre: 'Rapport hebdo', emoji: '📊', onglet: 'rapports' },
   bancarisation: { log: 'monthly_bancarisation', titre: 'Rapport bancarisation', emoji: '🏦', onglet: 'rapports' },
   banques: { log: 'monthly_banks', titre: 'Rapport banques', emoji: '📈', onglet: 'rapports' },
+  commerciaux: { log: 'monthly_commercials', titre: 'Performance des commerciaux', emoji: '🏆', onglet: 'rapports' },
 } as const
 type TypeRapport = keyof typeof TYPES
 
@@ -109,10 +110,31 @@ function corpsBanques(r: any) {
     <p style="font-size:12px;color:${GRIS};margin:14px 0 0;line-height:1.5">Taux d'acceptation = financés ÷ (financés + refusés) sur la période. Le taux 12 mois (nombre de décisions entre parenthèses) est plus fiable quand une banque a peu de dossiers.${t.estimees ? `<br>${nb(t.estimees)} décision(s) sans banque de dépôt renseignée : la banque du client a été retenue.` : ''}</p>`
 }
 
+const heures = (h: unknown) => h === null || h === undefined ? '—' : Number(h) < 24 ? `${Math.round(Number(h))} h` : `${Math.round(Number(h) / 24)} j`
+
+function corpsCommerciaux(r: any) {
+  const e = r.equipe || {}
+  return `
+    <table role="presentation" style="width:100%;border-collapse:collapse">
+      ${ligne('👥 Leads reçus par l\'équipe', `${nb(e.recus)}<br><small style="font-weight:400;font-size:11px">${ecart(e.recus, e.precedent?.recus)}</small>`)}
+      ${ligne('⏱️ Délai du 1er contact (médiane)', heures(e.delai_h))}
+      ${ligne('✅ Dossiers financés', `${nb(e.finances)}<br><small style="font-weight:400;font-size:11px">${ecart(e.finances, e.precedent?.finances)}</small>`, true)}
+      ${ligne('💵 Montant financé', xaf(e.montant_finance))}
+      ${ligne('📦 Packs vendus · 🏦 Bancarisés', `${nb(e.packs)} · ${nb(e.bancarises)}`)}
+      ${ligne('⚠️ Leads sans contact depuis 48 h', `<span style="color:${e.retard ? '#B45309' : NAVY}">${nb(e.retard)}</span>`, true)}
+    </table>
+    ${titreSection('Classement')}
+    ${tableau(['#', 'Commercial', 'Reçus', '1er contact', 'Déposés', 'Financés', 'Transfo.', 'Montant', 'En retard'],
+      (r.commerciaux || []).map((c: any) => [String(c.rang), `<b>${esc(c.nom)}</b><br><span style="color:${GRIS};font-size:11px">${esc(c.ville || '')}</span>`, nb(c.recus), heures(c.delai_h), nb(c.deposes), `<b>${nb(c.finances)}</b>`,
+        c.transfo == null ? '—' : `${c.transfo} %${c.fiable ? '' : '<span style="color:#D9690B">*</span>'}`, xaf(c.montant_finance), c.retard ? `<span style="color:#B45309">${nb(c.retard)}</span>` : '0']),
+      [2, 3, 4, 5, 6, 7, 8])}
+    <p style="font-size:12px;color:${GRIS};margin:14px 0 0;line-height:1.5">Classement : financés, puis taux de transformation (financés ÷ leads reçus), puis montant financé. * Moins de 5 leads reçus : taux peu fiable. Délai du 1er contact = médiane entre l'arrivée du lead et son premier changement de statut.</p>`
+}
+
 function email(type: TypeRapport, r: any) {
   const t = TYPES[type]
   const phrase = String(r.phrase || '').split('\n').map(esc).join('<br>')
-  const corps = type === 'hebdo' ? corpsHebdo(r) : type === 'bancarisation' ? corpsBancarisation(r) : corpsBanques(r)
+  const corps = type === 'hebdo' ? corpsHebdo(r) : type === 'bancarisation' ? corpsBancarisation(r) : type === 'commerciaux' ? corpsCommerciaux(r) : corpsBanques(r)
   return `
   <div style="font-family:${FONT};max-width:640px;margin:0 auto;padding:24px 12px;background:#F8FAFC;color:${NAVY}">
     <div style="background:${NAVY};color:#fff;padding:22px 24px;border-radius:16px 16px 0 0">
