@@ -485,7 +485,8 @@ const CV_CSS = `
   .cv-send { width: 36px; height: 36px; flex: none; border-radius: 50%; border: none; background: #1A6BFF; color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform .1s, opacity .15s; }
   .cv-send:active:not(:disabled) { transform: scale(.94); }
   .cv-send:disabled { background: #C7C7CC; box-shadow: none; cursor: default; }
-  .cv-input.note .cv-send:not(:disabled) { background: #F59E0B; }
+  .cv-input.note .cv-send:not(:disabled) { background: #6D4AE0; }
+  .cv-input.note .cv-send:not(:disabled):hover { background: #5A38CC; }
   .cv-pop, .cv-ovr { font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; color: #0D1B3E; -webkit-font-smoothing: antialiased; }
   .cv-pop { position: fixed; z-index: 10000; background: #fff; border: 1px solid #E5E7EB; border-radius: 16px; padding: 14px; box-shadow: 0 16px 40px rgba(13,27,62,.16); }
   .cv-ovr { position: fixed; inset: 0; z-index: 10000; background: rgba(13,27,62,.35); display: flex; align-items: flex-end; }
