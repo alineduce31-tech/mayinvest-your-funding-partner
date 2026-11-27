@@ -5,6 +5,7 @@ import { informer } from '@/components/Dialogue'
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { formatPhone } from '@/lib/phone'
+import { GraduationCap, ListChecks, Laptop, MessageCircle, UserPlus, LayoutDashboard, Clock, Timer, Users, Gauge } from 'lucide-react'
 
 export const Route = createFileRoute('/candidatures')({
   component: CandidaturesPage,
@@ -232,21 +233,29 @@ function CandidaturesPage() {
 
         .cd-sec-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #6B7280; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid #F3F3F1; }
 
-        .cd-breakdown { background: #F3F3F1; border-radius: 10px; padding: 12px; margin-bottom: 10px; }
-        .cd-break-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 12px; }
-        .cd-break-row b { font-weight: 700; color: #111827; font-variant-numeric: tabular-nums; }
+        .cd-breakdown { background: #F5F7FB; border-radius: 12px; padding: 8px 12px; margin-bottom: 8px; }
+        .cd-break-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 5px 0; font-size: 13px; color: #0D1B3E; }
+        .cd-break-l { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .cd-break-l.sub { padding-left: 4px; }
+        .cd-break-v { display: flex; align-items: center; flex-shrink: 0; }
+        .cd-bk-ic { width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: #EAF1FF; color: #1A6BFF; font-style: normal; }
+        .cd-bk-sic { width: 22px; flex-shrink: 0; display: inline-flex; justify-content: center; color: #64748B; font-style: normal; }
+        .cd-break-row b { font-weight: 600; color: #0D1B3E; font-variant-numeric: tabular-nums; }
         .cd-break-row .pts { font-weight: 700; font-variant-numeric: tabular-nums; }
         .cd-break-row .pts.hi { color: #1A6BFF; }
         .cd-break-row .pts.mid { color: #B4871F; }
         .cd-break-row .pts.lo { color: #B42318; }
-        .cd-break-time { font-size: 10px; color: #9CA3AF; margin-left: 8px; font-weight: 500; }
+        .cd-break-time { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: #94A3B8; margin-left: 8px; font-weight: 500; min-width: 38px; justify-content: flex-end; font-variant-numeric: tabular-nums; }
 
-        .cd-chrono { background: #EDE9FE; border-radius: 10px; padding: 12px 14px; margin-top: 10px; }
-        .cd-chrono-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: #7C3AED; font-weight: 700; margin-bottom: 8px; letter-spacing: 0.05em; text-transform: uppercase; }
-        .cd-chrono-row { display: flex; justify-content: space-between; font-size: 11px; color: #374151; padding: 3px 0; }
-        .cd-chrono-row b { color: #111827; font-weight: 700; font-variant-numeric: tabular-nums; }
-        .cd-chrono-bar { height: 5px; background: white; border-radius: 3px; overflow: hidden; margin: 6px 0 4px; }
-        .cd-chrono-bar-fill { height: 100%; background: #7C3AED; }
+        .cd-chrono { background: #F3EFFE; border-radius: 12px; padding: 12px; margin-top: 10px; }
+        .cd-chrono-head { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #5B21B6; font-weight: 600; margin-bottom: 10px; }
+        .cd-chrono-head b { font-size: 13px; color: #5B21B6; font-weight: 700; font-variant-numeric: tabular-nums; }
+        .cd-ch-ic { width: 30px; height: 30px; border-radius: 9px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; background: #fff; color: #7C3AED; font-style: normal; }
+        .cd-chrono-row { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #3A3A3C; padding: 3px 0; }
+        .cd-chrono-row .cd-break-l { gap: 8px; } .cd-chrono-row svg { color: #7C3AED; }
+        .cd-chrono-row b { color: #111827; font-weight: 600; font-variant-numeric: tabular-nums; }
+        .cd-chrono-bar { height: 5px; background: #E4DBFC; border-radius: 999px; overflow: hidden; margin: 0 0 10px; }
+        .cd-chrono-bar-fill { height: 100%; background: #7C3AED; border-radius: 999px; }
 
         .cd-motivation { background: #FFF1E0; border-left: 3px solid #F59E0B; padding: 10px 14px; border-radius: 0 10px 10px 0; font-size: 12px; color: #D9690B; font-style: italic; line-height: 1.5; }
 
@@ -698,22 +707,22 @@ function CandidateBreakdown({ candidate, quizAttempts, simAttempts, pracAttempts
     <>
       <div className="cd-breakdown">
         <div className="cd-break-row">
-          <span>Formation · Modules validés</span>
-          <span><span className={`pts ${cls(quizPassed, 3)}`}>{quizPassed}/3</span><span className="cd-break-time">{fmt(quizTime)}</span></span>
+          <span className="cd-break-l"><i className="cd-bk-ic" aria-hidden="true"><GraduationCap size={16}/></i>Formation · modules validés</span>
+          <span className="cd-break-v"><span className={`pts ${cls(quizPassed, 3)}`}>{quizPassed}/3</span><span className="cd-break-time">{quizTime ? <Clock size={11}/> : null}{fmt(quizTime)}</span></span>
         </div>
       </div>
       <div className="cd-breakdown">
         <div className="cd-break-row">
-          <span>Simulation théorique · 5 scénarios</span>
-          <span><span className={`pts ${cls(simPts, 100)}`}>{simPts}/100</span><span className="cd-break-time">{fmt(simTime)}</span></span>
+          <span className="cd-break-l"><i className="cd-bk-ic" aria-hidden="true"><ListChecks size={16}/></i>Simulation théorique · 5 scénarios</span>
+          <span className="cd-break-v"><span className={`pts ${cls(simPts, 100)}`}>{simPts}/100</span><span className="cd-break-time">{simTime ? <Clock size={11}/> : null}{fmt(simTime)}</span></span>
         </div>
       </div>
       <div className="cd-breakdown">
-        <div className="cd-break-row"><b>Simulation pratique</b></div>
+        <div className="cd-break-row"><span className="cd-break-l"><i className="cd-bk-ic" aria-hidden="true"><Laptop size={16}/></i><b>Simulation pratique</b></span></div>
         {pracByEp.map(p => (
           <div key={p.ep} className="cd-break-row">
-            <span>Épreuve {p.ep} · {p.ep === 1 ? 'Chat' : p.ep === 2 ? 'Création lead' : 'Pilotage'}</span>
-            <span><span className={`pts ${cls(p.score, 20)}`}>{p.score}/20</span><span className="cd-break-time">{fmt(p.time)}</span></span>
+            <span className="cd-break-l sub"><i className="cd-bk-sic" aria-hidden="true">{p.ep === 1 ? <MessageCircle size={15}/> : p.ep === 2 ? <UserPlus size={15}/> : <LayoutDashboard size={15}/>}</i>Épreuve {p.ep} · {p.ep === 1 ? 'chat' : p.ep === 2 ? 'création lead' : 'pilotage'}</span>
+            <span className="cd-break-v"><span className={`pts ${cls(p.score, 20)}`}>{p.score}/20</span><span className="cd-break-time">{fmt(p.time)}</span></span>
           </div>
         ))}
       </div>
@@ -773,10 +782,10 @@ function CandidateChrono({ candidate, medianTime }: { candidate: Candidate; medi
   const vitesse = candidate.time_total_seconds < medianTime * 0.85 ? 'rapide (top 25%)' : candidate.time_total_seconds > medianTime * 1.3 ? 'lent (bottom 25%)' : 'normal'
   return (
     <div className="cd-chrono">
-      <div className="cd-chrono-head"><span>Temps total simulation</span><b>{mins}:{String(secs).padStart(2, '0')} min</b></div>
+      <div className="cd-chrono-head"><span className="cd-break-l"><i className="cd-ch-ic" aria-hidden="true"><Timer size={16}/></i>Temps total simulation</span><b>{mins}:{String(secs).padStart(2, '0')} min</b></div>
       <div className="cd-chrono-bar"><div className="cd-chrono-bar-fill" style={{ width: `${pct}%` }}/></div>
-      <div className="cd-chrono-row"><span>Médiane des candidats</span><b>{medMins} min</b></div>
-      <div className="cd-chrono-row"><span>Vitesse</span><b>{vitesse}</b></div>
+      <div className="cd-chrono-row"><span className="cd-break-l"><Users size={14}/>Médiane des candidats</span><b>{medMins} min</b></div>
+      <div className="cd-chrono-row"><span className="cd-break-l"><Gauge size={14}/>Vitesse</span><b>{vitesse}</b></div>
     </div>
   )
 }
