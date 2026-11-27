@@ -194,7 +194,7 @@ function RejoindreEquipePage() {
             Recrutement ouvert · <b>24 partenaires</b> au Congo
           </span>
           <h1>Rejoignez l'équipe commerciale <span>Mayinvest</span></h1>
-          <p className="sub">Gagnez jusqu'à <b>500 000 XAF par mois</b> en aidant les Congolais à obtenir leur crédit bancaire. Formation payée, dashboard temps réel, paiement garanti sur chaque Pack Formalisation.</p>
+          <p className="sub">Touchez <b>10 % de commission</b> sur chaque Pack Formalisation en aidant les Congolais à obtenir leur crédit bancaire. Formation payée, dashboard temps réel, paiement garanti sur chaque Pack Formalisation.</p>
           <div className="hero-ctas">
             <button className="btn-hero primary" onClick={() => setStep('form')}>
               Postuler maintenant

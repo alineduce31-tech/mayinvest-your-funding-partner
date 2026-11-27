@@ -1,5 +1,4 @@
 // Logique de la messagerie commerciale (module pur, testé)
-import { COMMISSION_PAR_DOSSIER } from './commercial-dashboard'
 
 export type ComRow = {
   lead_id: string
@@ -109,7 +108,7 @@ export function prochaineEtape(r: ComRow, now: number): { texte: string; action:
     const h = heuresDepuis(r.waiting_since, now)
     return { texte: h >= 1 ? `Le client attend ta réponse depuis ${h} h. Réponds-lui en premier.` : 'Le client vient de t\'écrire. Réponds-lui vite.', action: 'repondre', ton: 'warn' }
   }
-  if (r.statut === 'Financé') return { texte: `Dossier financé, bravo ! Ta commission : ${new Intl.NumberFormat('fr-FR').format(COMMISSION_PAR_DOSSIER)} XAF.`, action: null, ton: 'ok' }
+  if (r.statut === 'Financé') return { texte: 'Dossier financé, bravo !', action: null, ton: 'ok' }
   if (CLOS.includes(r.statut || '')) return { texte: 'Dossier clos. Tu peux garder le contact pour une prochaine demande.', action: null, ton: 'info' }
   if (r.statut === 'Nouveau') return { texte: 'Nouveau client : présente-toi et appelle-le aujourd\'hui.', action: 'appeler', bouton: 'Appeler', ton: 'info' }
   if (r.statut === 'Dossier Déposé') return { texte: 'Dossier en banque : suis la réponse et tiens le client informé.', action: null, ton: 'info' }

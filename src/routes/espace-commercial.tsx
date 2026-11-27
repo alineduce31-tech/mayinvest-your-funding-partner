@@ -14,14 +14,14 @@ import CallButton from '@/components/CallButton'
 import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
 import StatutPicker from '@/components/StatutPicker'
 import { RappelAlarme } from '@/components/Rappels'
-import { Copy, Download, MessageSquare, MessagesSquare, Share2, Coins, UserPlus, LogOut, RefreshCw, ChevronRight, AlertCircle, PhoneCall, CalendarDays, Landmark, Check, Clock, Phone, MessageCircle, ArrowRight } from 'lucide-react'
+import { Copy, Download, MessageSquare, MessagesSquare, Share2, Coins, UserPlus, LogOut, RefreshCw, ChevronRight, AlertCircle, PhoneCall, CalendarDays, Landmark, Check, Clock, Phone, MessageCircle, ArrowRight, Mail, MapPin, Wallet, Target, Info, KeyRound } from 'lucide-react'
 import { montantCourt, dateRelative, tonScore, tonStatut, initialesNom, couleurAvatar } from '@/lib/affichage'
 import { blocCalendrier } from '@/lib/conversation'
 import { heureTexte } from '@/lib/rappels'
 import { RappelPicker, useRappels } from '@/components/Rappels'
 import { QrSvg, telechargerQr } from '@/components/QrCode'
-import { scripts, lienWhatsappTexte, lienFacebook, lienSms, gains, chiffresParrainage } from '@/lib/outils'
-import { statutPourEtape, type Etape, aJourDepuis, urgence, trierParUrgence, nbEnRetard, totalMontant, piecesRecues, type InfoDossier, ETAPES, COMMISSION_PAR_DOSSIER, grouperParEtape, financesCeMois, progressionObjectif, gainsPour, tachesDuJour } from '@/lib/commercial-dashboard'
+import { scripts, lienWhatsappTexte, lienFacebook, lienSms, chiffresParrainage } from '@/lib/outils'
+import { statutPourEtape, type Etape, aJourDepuis, urgence, trierParUrgence, nbEnRetard, totalMontant, piecesRecues, type InfoDossier, ETAPES, grouperParEtape, financesCeMois, progressionObjectif, tachesDuJour } from '@/lib/commercial-dashboard'
 
 export const Route = createFileRoute('/espace-commercial')({
   component: EspaceCommercialPage,
@@ -390,7 +390,6 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
     })
   }, [leads])
   const [copied, setCopied] = useState(false)
-  const [calcNb, setCalcNb] = useState(3)
   const [done, setDone] = useState<Record<string, boolean>>({})
   const now = Date.now()
   const finances = financesCeMois(leads, now)
@@ -410,7 +409,7 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
     <>
       <div className="hero-strip cd-hero">
         <div className="cd-hero-left">
-          <div className="hero-tag"><span className="dot"/>Commercial validé · {session.ville}</div>
+          <div className="hero-tag"><span className="dot"/>Partenaire validé · {session.ville}</div>
           <h2>Salut {session.prenom}</h2>
           <p>{obj.atteint ? 'Objectif du mois atteint, bravo. Chaque dossier en plus est un bonus.' : `Encore ${obj.reste} dossier${obj.reste > 1 ? 's' : ''} financé${obj.reste > 1 ? 's' : ''} pour atteindre ton objectif du mois.`}</p>
           <div className="cd-goal">
@@ -490,9 +489,7 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
                         {e.key === 'depose' && <div className="pk-note"><Landmark size={13}/>{l.besoin?.banque || l.banque_actuelle || 'En banque'} · déposé il y a {u.jours ? `${u.jours} j` : "aujourd'hui"}</div>}
                         <div className="pk-ft">
                           <span className="pk-amt">{montantCourt(l.montant_demande)}</span>
-                          {e.key === 'depose'
-                            ? <span className="pk-bd vert">+{fmtK(COMMISSION_PAR_DOSSIER)} si financé</span>
-                            : p.total > 0 && <span className="pk-pc" title="Pièces reçues"><span className="pk-dots">{Array.from({ length: p.total }, (_, i) => <i key={i} className={i < p.recues ? 'on' : ''}/>)}</span>{p.recues}/{p.total}</span>}
+                          {p.total > 0 && <span className="pk-pc" title="Pièces reçues"><span className="pk-dots">{Array.from({ length: p.total }, (_, i) => <i key={i} className={i < p.recues ? 'on' : ''}/>)}</span>{p.recues}/{p.total}</span>}
                         </div>
                         <div className="pk-qa" onClick={ev => ev.stopPropagation()} onKeyDown={ev => ev.stopPropagation()}>
                           {tel && <CallButton tel={tel} nom={nom} leadId={l.id} className="pk-q call" title="Appeler"><Phone size={14}/></CallButton>}
@@ -532,13 +529,9 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
           </div>
 
           <div className="section-card">
-            <div className="section-head"><h3>Combien je peux gagner</h3><span className="section-sub">{xaf(COMMISSION_PAR_DOSSIER)} par dossier</span></div>
-            <div className="cd-chips">
-              {[3, 5, 10].map(n => (
-                <button key={n} className={`cd-chip ${calcNb === n ? 'on' : ''}`} onClick={() => setCalcNb(n)}>{n} dossiers</button>
-              ))}
-            </div>
-            <div className="cd-calc"><span>Gains du mois</span><b>{xaf(gainsPour(calcNb))}</b></div>
+            <div className="section-head"><h3>Ma commission</h3></div>
+            <div className="cd-calc"><b>10 %</b><span>sur chaque Pack Formalisation payé par tes clients</span></div>
+            <p className="cd-com-note">Ta commission s'ajoute à « Gains ce mois » dès que Mayinvest confirme le paiement du Pack.</p>
           </div>
         </div>
       </div>
@@ -641,49 +634,54 @@ function LeadDrawer({ lead, commercialId, onClose, onUpdated, onOpenThread }: { 
     : (lead.identite?.raison_sociale || lead.situation?.raison_sociale || '—')
   const tel = lead.identite?.telephone || lead.identite?.tel || ''
   const email = lead.identite?.email || ''
+  const av = couleurAvatar(nom || 'Client')
+  const sc = Number(lead.score) || 0
+  const ville = lead.identite?.ville || (lead as any).ville || ''
+  const dt = (v?: string | null) => v ? new Date(v).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
+  const waNum = tel ? tel.replace(/\D/g, '').replace(/^0/, '242') : ''
   return (
     <div className="drawer-ovr" onClick={onClose}>
       <div className="drawer" onClick={e => e.stopPropagation()}>
-        <button className="drawer-close" onClick={onClose} aria-label="Fermer">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-        <div className="drawer-body">
-          <h2 className="drawer-title">{nom}</h2>
-          <div className="drawer-sub">{lead.type === 'physique' ? 'Particulier' : 'PME'} · {lead.activite} · {lead.identite?.ville || ''}</div>
-
-          <div className="drawer-row">
-            <div className="drawer-chip">Score {lead.score || '—'}/100</div>
-            <StatutPicker value={statut} onChange={changeStatut} disabled={saving} statuts={STATUTS_DISPO} title="Statut du lead"/>
-          </div>
-
-          <div className="drawer-sec">
-            <div className="drawer-sec-title">Contact</div>
-            <div className="info-row"><span>Téléphone</span><b>{tel ? formatPhone(tel) : '—'}</b></div>
-            <div className="info-row"><span>Email</span><b>{email || '—'}</b></div>
-            <div className="drawer-actions-row">
-              {tel && <CallButton tel={tel} nom={nom} leadId={lead.id} className="btn-mini">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                Appeler
-              </CallButton>}
-              <button className="btn-mini" onClick={() => onOpenThread(lead.id)} style={{ border: 'none', cursor: 'pointer', fontFamily: 'inherit' }}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                Messagerie
-              </button>
+        <div className="ld-head">
+          <div className="ld-top">
+            <span className="ld-av" style={{ background: av.fond, color: av.texte }}>{initialesNom(nom || 'Client')}</span>
+            <div className="ld-id">
+              <h2 className="dr-name">{nom || 'Client'}</h2>
+              <div className="ld-meta">{[lead.type === 'physique' ? 'Particulier' : 'Entreprise', lead.activite, ville].filter(Boolean).join(' · ')}</div>
             </div>
+            <span className={`ld-score ${sc >= 70 ? 'hi' : sc < 40 ? 'lo' : 'mid'}`} title="Score du dossier"><b>{sc || '—'}</b><small>score</small></span>
+            <button className="ld-x" onClick={onClose} aria-label="Fermer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+          </div>
+          <div className="ld-pills">
+            <StatutPicker value={statut} onChange={changeStatut} disabled={saving} statuts={STATUTS_DISPO} title="Statut du lead" style={{ padding: '7px 10px 7px 14px', fontSize: 13 }}/>
+          </div>
+          <div className="ld-acts">
+            {tel && <CallButton tel={tel} nom={nom} leadId={lead.id} className="ld-act" title={`Appeler ${formatPhone(tel)}`}><span className="ld-act-ic call"><Phone size={13}/></span>Appeler</CallButton>}
+            <button type="button" className="ld-act" onClick={() => onOpenThread(lead.id)}><span className="ld-act-ic mail"><MessageCircle size={13}/></span>Messagerie</button>
+            {tel && <a className="ld-act" href={`https://wa.me/${waNum}`} target="_blank" rel="noopener noreferrer" title="Écrire sur WhatsApp"><span className="ld-act-ic wa"><WaIcon/></span>WhatsApp</a>}
+          </div>
+        </div>
+
+        <div className="drawer-body ld-com">
+          <div className="ld-gt"><Phone size={13}/>Contact</div>
+          <div className="ld-g">
+            <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Phone size={15}/></i><span>Téléphone</span><b>{tel ? formatPhone(tel) : '—'}</b></div>
+            <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Mail size={15}/></i><span>Email</span><b>{email || '—'}</b></div>
+            {ville && <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><MapPin size={15}/></i><span>Ville</span><b>{ville}</b></div>}
           </div>
 
-          <div className="drawer-sec">
-            <div className="drawer-sec-title">Besoin</div>
-            <div className="info-row"><span>Montant demandé</span><b>{lead.montant_demande ? xaf(lead.montant_demande) : '—'}</b></div>
-            <div className="info-row"><span>Objet</span><b>{lead.besoin?.objet || '—'}</b></div>
-            <div className="info-row"><span>Banque actuelle</span><b>{lead.besoin?.banque || lead.banque_actuelle || '—'}</b></div>
+          <div className="ld-gt"><Coins size={13}/>Besoin</div>
+          <div className="ld-g">
+            <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Wallet size={15}/></i><span>Montant demandé</span><b>{lead.montant_demande ? xaf(lead.montant_demande) : '—'}</b></div>
+            <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Target size={15}/></i><span>Objet</span><b>{lead.besoin?.objet || '—'}</b></div>
+            <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Landmark size={15}/></i><span>Banque actuelle</span><b>{lead.besoin?.banque || lead.banque_actuelle || '—'}</b></div>
           </div>
 
-          <div className="drawer-sec">
-            <div className="drawer-sec-title">Métadonnées</div>
-            <div className="info-row"><span>Créé le</span><b>{new Date(lead.created_at).toLocaleString('fr-FR')}</b></div>
-            <div className="info-row"><span>Mis à jour</span><b>{lead.updated_at ? new Date(lead.updated_at).toLocaleString('fr-FR') : '—'}</b></div>
-            <div className="info-row"><span>Code accès</span><b>{lead.access_code || '—'}</b></div>
+          <div className="ld-gt"><Info size={13}/>Dossier</div>
+          <div className="ld-g">
+            <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><CalendarDays size={15}/></i><span>Reçu le</span><b>{dt(lead.created_at)}</b></div>
+            <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Clock size={15}/></i><span>Mis à jour</span><b>{dt(lead.updated_at)}</b></div>
+            <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><KeyRound size={15}/></i><span>Code d'accès client</span><b>{lead.access_code || '—'}</b></div>
           </div>
         </div>
       </div>
@@ -781,13 +779,11 @@ function NewLeadModal({ commercialId, onClose, onCreated }: { commercialId: stri
 // ============ OUTILS TAB ============
 function OutilsTab({ refCode, refLink, session, leads }: { refCode?: string | undefined; refLink: string; session: Session; leads: Lead[] }) {
   const [copied, setCopied] = useState<string | null>(null)
-  const [nb, setNb] = useState(5)
   function copy(text: string, id: string) {
     navigator.clipboard.writeText(text).then(() => { setCopied(id); setTimeout(() => setCopied(null), 2000) })
   }
   const liste = scripts(session.prenom, refLink)
   const ch = chiffresParrainage(leads, Date.now())
-  const g = gains(nb)
   const invitation = `Bonjour ! Mayinvest vous dit sous 24 h si votre dossier de crédit est bancable. Gratuit, 2 minutes : ${refLink}`
   async function partager() {
     if (navigator.share) { try { await navigator.share({ title: 'Mayinvest', text: invitation, url: refLink }) } catch {} }
@@ -842,19 +838,8 @@ function OutilsTab({ refCode, refLink, session, leads }: { refCode?: string | un
       </div>
 
       <div className="section-card">
-        <div className="ot-h"><span className="ot-hi green"><Coins size={18}/></span><div><b>Combien je peux gagner</b><small>{fmtK(COMMISSION_PAR_DOSSIER)} par dossier financé</small></div></div>
-        <div className="ot-sim">
-          <div>
-            <div className="ot-sim-row"><span>Dossiers financés ce mois</span><b>{nb}</b></div>
-            <input type="range" min={1} max={20} step={1} value={nb} onChange={e => setNb(Number(e.target.value))} aria-label="Nombre de dossiers financés"/>
-            <div className="ot-pills">{[3, 5, 10, 20].map(n => <button key={n} className={nb === n ? 'on' : ''} onClick={() => setNb(n)}>{n}</button>)}</div>
-          </div>
-          <div className="ot-big">
-            <small>Tes gains ce mois</small>
-            <b>{fmtK(g.mois)}</b>
-            <small>Soit {fmtK(g.an)} sur un an à ce rythme</small>
-          </div>
-        </div>
+        <div className="ot-h"><span className="ot-hi green"><Coins size={18}/></span><div><b>Ma commission</b><small>Payée sur chaque Pack Formalisation</small></div></div>
+        <div className="ot-big ot-com"><b>10 %</b><small>de commission sur chaque Pack Formalisation payé par un client que tu as accompagné. Tu la retrouves dans « Gains ce mois » dès que le paiement est confirmé.</small></div>
       </div>
     </div>
   )
@@ -1096,7 +1081,8 @@ function GlobalStyles() {
       .cd-chip { border: 1.5px solid #E5E7EB; background: #fff; color: #334155; padding: 7px 14px; border-radius: 100px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; }
       .cd-chip.on { border-color: ${MI.blue}; background: ${MI.blueSoft}; color: ${MI.blue}; font-weight: 800; }
       .cd-calc { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, ${MI.blue}, ${MI.blueDark}); color: #fff; border-radius: 14px; padding: 14px 16px; font-size: 13px; font-weight: 700; }
-      .cd-calc b { font-size: 20px; font-weight: 800; }
+      .cd-calc b { font-size: 26px; font-weight: 800; } .cd-calc { justify-content: flex-start; gap: 12px; } .cd-calc span { font-weight: 600; line-height: 1.4; }
+      .cd-com-note { margin: 10px 2px 0; font-size: 12.5px; color: #64748B; line-height: 1.5; }
       .kpi.primary .kpi-sub { color: rgba(255,255,255,0.65); }
 
       /* En-tête « Tous tes leads » figé : il remonte dans la barre du haut, à droite du titre */
@@ -1208,6 +1194,7 @@ function GlobalStyles() {
       .ot-pills button { flex: 1; border: 1px solid #E3E8F0; background: #fff; border-radius: 999px; padding: 7px 0; font-family: inherit; font-size: 12.5px; font-weight: 700; color: #334155; cursor: pointer; }
       .ot-pills button.on { background: ${MI.blueSoft}; border-color: ${MI.blue}; color: ${MI.blue}; }
       .ot-big { background: linear-gradient(135deg, #2F7BFF, #1557E0); border-radius: 18px; padding: 18px; color: #fff; box-shadow: 0 10px 24px rgba(26,107,255,.25); }
+      .ot-com small { font-size: 13px; line-height: 1.5; display: block; max-width: 460px; }
       .ot-big b { display: block; font-size: 30px; font-weight: 800; margin: 4px 0; } .ot-big small { font-size: 12px; opacity: .85; }
       @media (max-width: 760px) {
         .ot-ref { grid-template-columns: minmax(0, 1fr); padding: 18px; }
@@ -1257,6 +1244,7 @@ function GlobalStyles() {
       .drawer-close { position: absolute; top: 20px; right: 20px; background: ${MI.grayHair}; border: none; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; color: ${MI.textMuted}; display: inline-flex; align-items: center; justify-content: center; padding: 0; }
       .drawer-close:hover { background: ${MI.redSoft}; color: ${MI.red}; }
       .drawer-body { padding: 36px 28px 24px; }
+      .drawer-body.ld-com { padding: 4px 16px 28px; }
       .drawer-title { font-size: 22px; font-weight: 800; color: ${MI.navy}; margin: 0 0 4px; letter-spacing: -0.01em; }
       .drawer-sub { font-size: 12px; color: ${MI.textMuted}; margin-bottom: 20px; }
       .drawer-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }

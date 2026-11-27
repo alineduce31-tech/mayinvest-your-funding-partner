@@ -1,6 +1,5 @@
 // Page « Mes outils » du commercial (module pur, testé) : messages prêts, liens de partage, gains.
 
-import { COMMISSION_PAR_DOSSIER } from './commercial-dashboard'
 
 export type Script = { k: string; etiquette: string; ton: 'vert' | 'orange' | 'violet'; titre: string; texte: string }
 
@@ -30,11 +29,6 @@ export function lienFacebook(url: string): string {
 }
 export function lienSms(texte: string): string {
   return `sms:?&body=${encodeURIComponent(texte)}`
-}
-
-export function gains(nb: number): { mois: number; an: number } {
-  const n = Math.max(0, Math.round(nb))
-  return { mois: n * COMMISSION_PAR_DOSSIER, an: n * COMMISSION_PAR_DOSSIER * 12 }
 }
 
 /** Chiffres du bandeau : dossiers attribués, reçus ce mois-ci, financés. */

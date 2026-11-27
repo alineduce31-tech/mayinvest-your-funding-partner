@@ -4,9 +4,8 @@ import {
   grouperParEtape,
   financesCeMois,
   progressionObjectif,
-  gainsPour,
   tachesDuJour,
-  COMMISSION_PAR_DOSSIER,
+  TAUX_COMMISSION_PACK,
   type CommercialLead,
 } from './commercial-dashboard'
 
@@ -51,8 +50,7 @@ describe('objectif et gains', () => {
     expect(progressionObjectif(5, 3)).toMatchObject({ pct: 100, reste: 0, atteint: true })
   })
   test('gains par dossier', () => {
-    expect(gainsPour(3)).toBe(3 * COMMISSION_PAR_DOSSIER)
-    expect(gainsPour(-2)).toBe(0)
+    expect(TAUX_COMMISSION_PACK).toBe(0.10)
   })
 })
 

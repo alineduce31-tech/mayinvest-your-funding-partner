@@ -6,7 +6,6 @@ import DemandePieces from '@/components/DemandePieces'
 import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { initiales, heureCourte } from '@/lib/messagerie'
-import { COMMISSION_PAR_DOSSIER } from '@/lib/commercial-dashboard'
 import { PackSuivi } from '@/components/PackAdmin'
 import CallButton from '@/components/CallButton'
 import BandeauEtape from '@/components/BandeauEtape'
@@ -348,7 +347,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
         </div>
 
         <PackSuivi leadId={row.lead_id} nom={row.nom || 'Client'} onChange={loadMsgs}/>
-        <div className="cm-commission"><span>Ta commission si financé</span><b>{fmtXaf(COMMISSION_PAR_DOSSIER)}</b></div>
+        <div className="cm-commission"><span>Ta commission sur le Pack Formalisation</span><b>10 %</b></div>
       </aside>
 
       {piecesOpen && (

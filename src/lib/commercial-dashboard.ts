@@ -1,6 +1,7 @@
 // Calculs du tableau de bord commercial (module pur, sans dépendance navigateur)
 
-export const COMMISSION_PAR_DOSSIER = 50_000
+/** Rémunération des partenaires : 10 % de commission sur chaque Pack Formalisation payé par leurs clients. */
+export const TAUX_COMMISSION_PACK = 0.10
 export const OBJECTIF_MENSUEL = 3
 export const DELAI_RELANCE_MS = 48 * 3_600_000
 
@@ -49,10 +50,6 @@ export function progressionObjectif(finances: number, objectif = OBJECTIF_MENSUE
   const fait = Math.max(0, finances)
   const pct = objectif > 0 ? Math.min(100, Math.round((fait / objectif) * 100)) : 0
   return { fait, objectif, pct, reste: Math.max(0, objectif - fait), atteint: fait >= objectif }
-}
-
-export function gainsPour(nbDossiers: number): number {
-  return Math.max(0, Math.floor(nbDossiers)) * COMMISSION_PAR_DOSSIER
 }
 
 export type Tache = { key: string; label: string; detail: string; nb: number; cible: 'clients' | 'leads' }

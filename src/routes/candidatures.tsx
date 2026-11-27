@@ -553,7 +553,7 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
       k: 'encourage',
       title: '🎉 Encouragement',
       subject: `${candidate.prenom}, vous êtes presque arrivé(e) !`,
-      body: `Bonjour ${candidate.prenom},\n\nFélicitations pour votre engagement jusqu'ici ! Il ne vous reste qu'une étape (${stage.label}) avant de rejoindre officiellement l'équipe commerciale Mayinvest.\n\n💚 Chaque dossier financé = 50 000 XAF de commission.\n\nContinuez ici : https://mayinvestcapitalstrategy.com/espace-commercial\n\nL'équipe Mayinvest`,
+      body: `Bonjour ${candidate.prenom},\n\nFélicitations pour votre engagement jusqu'ici ! Il ne vous reste qu'une étape (${stage.label}) avant de rejoindre officiellement l'équipe commerciale Mayinvest.\n\n💚 Chaque Pack Formalisation vendu = 10 % de commission pour vous.\n\nContinuez ici : https://mayinvestcapitalstrategy.com/espace-commercial\n\nL'équipe Mayinvest`,
     },
     {
       k: 'urgent',

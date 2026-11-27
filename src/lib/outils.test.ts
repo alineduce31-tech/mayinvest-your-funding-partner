@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'vitest'
-import { scripts, lienWhatsappTexte, lienFacebook, lienSms, gains, chiffresParrainage } from './outils'
+import { scripts, lienWhatsappTexte, lienFacebook, lienSms, chiffresParrainage } from './outils'
 
 describe('mes outils', () => {
   test('messages personnalisés et relance honnête', () => {
@@ -15,7 +15,6 @@ describe('mes outils', () => {
     expect(lienSms('Salut')).toBe('sms:?&body=Salut')
   })
   test('gains et chiffres', () => {
-    expect(gains(5)).toEqual({ mois: 250_000, an: 3_000_000 })
     const now = new Date(2026, 10, 26).getTime()
     const ls = [{ statut: 'Financé', created_at: new Date(2026, 10, 3).toISOString() }, { statut: 'Nouveau', created_at: new Date(2026, 9, 3).toISOString() }]
     expect(chiffresParrainage(ls, now)).toEqual({ total: 2, mois: 1, finances: 1 })
