@@ -2326,7 +2326,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
             </div>
 
             <PackSuivi leadId={lead.id} nom={nom} peutConfirmer={peutConfirmer} peutCocher={peutCocher} onChange={onPackChange}/>
-            <LeadActionsPanel lead={lead} onSendInternal={(msg) => { setTab('chat'); setNewMsg(msg); }} />
+            <LeadActionsPanel lead={lead} adminId={adminId} onCardSent={() => { setTab('chat'); loadMessages() }} onSendInternal={(msg) => { setTab('chat'); setNewMsg(msg); }} />
             <div className="ld-foot">Créé le {new Date(lead.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · mis à jour {dateRelative(lead.updated_at || lead.created_at, Date.now())}</div>
           </>}
 
@@ -2419,7 +2419,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
 
           {tab === 'chat' && <div className="chat-wrap">
             <div className="chat-scroll">
-              <Conversation viewer="equipe" docs={documents} bulles={regrouper(messages.map(m => vueAdmin(m, adminId, nom)), Date.now())} vide="Aucun message. Démarrez la conversation."/>
+              <Conversation viewer="equipe" leadId={lead.id} docs={documents} bulles={regrouper(messages.map(m => vueAdmin(m, adminId, nom)), Date.now())} vide="Aucun message. Démarrez la conversation."/>
               <div ref={chatEnd}/>
             </div>
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -2436,7 +2436,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
 /* ============================================================
  * LEAD ACTIONS PANEL — boutons WhatsApp (Pack formalisation, Couveuse)
  * ============================================================ */
-function LeadActionsPanel({ lead, onSendInternal }: { lead: any; onSendInternal: (msg: string) => void }) {
+function LeadActionsPanel({ lead, onSendInternal, adminId, onCardSent }: { lead: any; onSendInternal: (msg: string) => void; adminId?: string; onCardSent?: () => void }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [openDrawer, setOpenDrawer] = useState<string | null>(null)
 
@@ -2459,8 +2459,14 @@ function LeadActionsPanel({ lead, onSendInternal }: { lead: any; onSendInternal:
     }
   }
 
-  function sendInternal(template: string) {
+  async function sendInternal(template: string, key?: string) {
     const filled = fillTemplate(template, vars)
+    // Le pack part en carte dans la discussion (bouton « Je souscris » côté client)
+    if (key === 'pack_formalisation') {
+      const { error } = await supabase.rpc('send_lead_card', { p_lead_id: lead.id, p_sender: 'admin', p_author_id: adminId, p_kind: 'pack', p_payload: {}, p_content: filled })
+      if (error) { alert('Carte non envoyée : ' + error.message); return }
+      onCardSent?.(); return
+    }
     onSendInternal(filled)
   }
 
@@ -2477,7 +2483,7 @@ function LeadActionsPanel({ lead, onSendInternal }: { lead: any; onSendInternal:
                 <div className="ld-svc-n"><b>{action.short}</b><small>{action.prix === 0 ? 'Gratuit' : new Intl.NumberFormat('fr-FR').format(action.prix).replace(/[\u202F\u00A0]/g, '\u00A0') + ' XAF'}</small></div>
                 <button type="button" className={`ld-ib ${isOpen ? 'on' : ''}`} onClick={() => setOpenDrawer(isOpen ? null : action.key)} title={isOpen ? 'Masquer le message' : 'Voir le message'} aria-label="Aperçu"><Eye size={14}/></button>
                 <button type="button" className="ld-ib" onClick={() => copyToClipboard(filled, action.key)} title="Copier le message" aria-label="Copier">{copiedKey === action.key ? <Check size={14}/> : <Copy size={14}/>}</button>
-                <button type="button" className="ld-send" onClick={() => sendInternal(action.template)} title="Préparer ce message dans la discussion avec le client"><Send size={13}/>Envoyer</button>
+                <button type="button" className="ld-send" onClick={() => sendInternal(action.template, action.key)} title="Préparer ce message dans la discussion avec le client"><Send size={13}/>Envoyer</button>
               </div>
               {isOpen && <pre className="ld-prev">{filled}</pre>}
             </div>

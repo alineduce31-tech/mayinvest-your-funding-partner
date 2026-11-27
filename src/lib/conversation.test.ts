@@ -1,7 +1,7 @@
 import { describe, test, expect } from 'vitest'
 import {
   vueCommercial, vueAdmin, vueClient, vueEquipe, regrouper, libelleJour, lireRdv, blocCalendrier,
-  phraseRdv, reponseClientRdv, piecesDeCarte, suggestions, texteSecoursPieces,
+  phraseRdv, reponseClientRdv, piecesDeCarte, piecesDansTexte, carteDe, suggestions, texteSecoursPieces,
 } from './conversation'
 
 const now = new Date(2026, 10, 26, 15, 0).getTime()
@@ -63,6 +63,18 @@ describe('cartes', () => {
     expect(piecesDeCarte({ doc_ids: ['a', 'c'] }, docs).map(d => d.id)).toEqual(['a', 'c'])
     expect(piecesDeCarte({ doc_ids: [] }, docs)).toHaveLength(3)
     expect(piecesDeCarte({ doc_ids: ['zz'] }, docs)).toHaveLength(3)
+  })
+  test('anciens messages texte de pièces affichés en carte', () => {
+    const texte = "Bonjour, pour avancer sur votre dossier il nous manque encore :\n- Carte Nationale d'Identité (ou passeport)\n- Relevé bancaire (3 derniers mois)\nVous pouvez les envoyer directement depuis votre espace, rubrique Documents."
+    expect(piecesDansTexte(texte)).toEqual(["Carte Nationale d'Identité (ou passeport)", 'Relevé bancaire (3 derniers mois)'])
+    expect(piecesDansTexte('Bonjour, merci !')).toBeNull()
+    const c = carteDe({ kind: 'text', content: texte })
+    expect(c.kind).toBe('pieces')
+    const docs = [{ id: 'd1', doc_label: "Carte Nationale d'Identité (ou passeport)", status: 'uploaded' }]
+    const liste = piecesDeCarte(c.payload, docs)
+    expect(liste.map(d => d.id)).toEqual(['d1', 'texte-1'])
+    expect(liste[1]!.status).toBe('pending')
+    expect(carteDe({ kind: 'pack', payload: {} }).kind).toBe('pack')
     expect(texteSecoursPieces(['RIB'])).toContain('- RIB')
   })
 })

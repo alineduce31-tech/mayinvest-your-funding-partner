@@ -1,7 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import PieceIcone from '@/components/PieceIcone'
 import { createPortal } from 'react-dom'
-import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download } from 'lucide-react'
+import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download, FileBadge } from 'lucide-react'
+import { supabase } from '@/integrations/supabase/client'
 import {
   type BulleAffichee, heure, lireRdv, pieceJointe, blocCalendrier, phraseRdv, piecesDeCarte, estRecue,
 } from '@/lib/conversation'
@@ -10,8 +11,10 @@ import { joursProposes, HEURES_PROPOSEES, combiner, heureTexte, estDansLeFutur }
 import { positionCarte, estMobile, type Position } from '@/lib/nice-select'
 
 // ============ LISTE DES BULLES ============
-export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploadingDocId, onRepondreRdv, vide }: {
+export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploadingDocId, onRepondreRdv, vide, leadId }: {
   bulles: BulleAffichee[]
+  /** Dossier affiché (cartes « Pack » côté équipe). */
+  leadId?: string | undefined
   viewer: 'client' | 'equipe'
   docs?: any[]
   onUploadDoc?: (doc: any, file: File) => void
@@ -28,6 +31,7 @@ export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploading
           {b.jour && <div className="cv-jour">{b.jour}</div>}
           {b.kind === 'pieces' ? <CartePieces b={b} viewer={viewer} docs={docs} onUploadDoc={onUploadDoc} uploadingDocId={uploadingDocId}/>
             : b.kind === 'rdv' ? <CarteRdv b={b} viewer={viewer} onRepondre={onRepondreRdv}/>
+            : b.kind === 'pack' ? <CartePack viewer={viewer} leadId={leadId}/>
             : (
               <div className={`cv-bulle ${b.ton}`}>
                 {b.debut && b.etiquette && <span className={`cv-tag ${b.ton}`}>{b.ton === 'note' && <EyeOff size={11}/>}{b.etiquette}</span>}
@@ -98,18 +102,87 @@ function CartePieces({ b, viewer, docs, onUploadDoc, uploadingDocId }: { b: Bull
             <span className={`cv-coche ${e}`}>{ok && <Check size={12} strokeWidth={3}/>}{e === 'rejected' && <X size={12} strokeWidth={3}/>}</span>
             <span className="cv-piece-ic" aria-hidden="true"><PieceIcone docType={d.doc_type} titre={titre} size={15}/></span>
             <span className="cv-piece-t"><span className="cv-piece-nom">{titreCourt(titre)}</span>{e === 'rejected' && <small>Refusée{d.admin_note ? ` : ${d.admin_note}` : ''}, à renvoyer</small>}{e === 'uploaded' && <small>Reçue, en vérification</small>}</span>
-            {!ok && viewer === 'client' && onUploadDoc && (
+            {!ok && viewer === 'client' && onUploadDoc && !String(d.id).startsWith('texte-') && (
               <label className={`cv-envoyer ${uploadingDocId === d.id ? 'busy' : ''}`}>
                 {uploadingDocId === d.id ? 'Envoi…' : <><Upload size={13}/>Envoyer</>}
                 <input type="file" accept="image/*,application/pdf,.doc,.docx" hidden disabled={!!uploadingDocId}
                   onChange={ev => { const f = ev.target.files?.[0]; if (f) onUploadDoc(d, f); ev.currentTarget.value = '' }}/>
               </label>
             )}
-            {!ok && viewer === 'equipe' && <span className="cv-attente">{e === 'rejected' ? 'à renvoyer' : 'à envoyer'}</span>}
+            {!ok && (viewer === 'equipe' || String(d.id).startsWith('texte-')) && <span className="cv-attente">{e === 'rejected' ? 'à renvoyer' : 'à envoyer'}</span>}
           </div>
         )
       })}
       <div className="cv-carte-pied">{viewer === 'client' ? 'Photo ou PDF, 10 Mo maximum par pièce.' : 'La carte se met à jour dès que le client envoie une pièce.'}</div>
+    </div>
+  )
+}
+
+// ============ CARTE PACK FORMALISATION ============
+type PackEtat = { id: string; reference: string; statut: 'en_attente_paiement' | 'paye' | 'termine' | 'annule'; etapes?: Record<string, string> } | null
+const cachePack = new Map<string, { t: number; p: Promise<PackEtat> }>()
+function lirePack(cle: string, charger: () => PromiseLike<{ data: any; error: any }>, force = false): Promise<PackEtat> {
+  const c = cachePack.get(cle)
+  if (!force && c && Date.now() - c.t < 15_000) return c.p
+  const p = Promise.resolve(charger()).then(({ data, error }) => (error ? null : (data as PackEtat) || null))
+  cachePack.set(cle, { t: Date.now(), p })
+  return p
+}
+const ETAPES_PK = ['formalites', 'compte', 'eligible']
+
+function CartePack({ viewer, leadId }: { viewer: 'client' | 'equipe'; leadId?: string | undefined }) {
+  const [pack, setPack] = useState<PackEtat | undefined>(undefined)
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState('')
+  const cle = viewer === 'client' ? 'client' : `lead:${leadId || ''}`
+  useEffect(() => {
+    let vivant = true
+    if (viewer === 'equipe' && !leadId) { setPack(null); return }
+    lirePack(cle, () => viewer === 'client' ? supabase.rpc('client_pack') : supabase.rpc('lead_pack', { p_lead_id: leadId! })).then(p => { if (vivant) setPack(p) })
+    return () => { vivant = false }
+  }, [cle])
+
+  async function souscrire() {
+    setBusy(true); setErr('')
+    const { data, error } = await supabase.rpc('client_pack_souscrire')
+    setBusy(false)
+    if (error) { setErr(error.message); return }
+    cachePack.set('client', { t: Date.now(), p: Promise.resolve(data as PackEtat) })
+    setPack(data as PackEtat)
+  }
+
+  const faites = pack ? ETAPES_PK.filter(k => pack.etapes?.[k]).length : 0
+  const etat = !pack
+    ? { cls: 'att', txt: viewer === 'client' ? '' : 'Proposé · pas encore souscrit' }
+    : pack.statut === 'en_attente_paiement' ? { cls: 'att', txt: `Souscrit · ${pack.reference}` }
+    : pack.statut === 'paye' ? { cls: 'ok', txt: `Pack payé · ${faites}/3 étapes` }
+    : { cls: 'fin', txt: 'Pack terminé' }
+
+  return (
+    <div className="cv-carte cv-pk">
+      <div className="cv-carte-h">
+        <span className="cv-carte-ic"><FileBadge size={18}/></span>
+        <div><b>{viewer === 'client' ? 'Pack formalisation' : 'Pack formalisation proposé'}</b><small>{viewer === 'client' ? 'Proposé par votre conseiller' : 'Visible par le client dans sa discussion'}</small></div>
+        <span className="cv-pk-prix">50{'\u00A0'}000{'\u00A0'}XAF</span>
+      </div>
+      {viewer === 'client' && !pack && <p className="cv-pk-in">Il manque encore quelques éléments pour accéder au financement. Ce pack s'occupe de tout :</p>}
+      <div className="cv-pk-l">
+        {(viewer === 'client' ? ['RCCM', 'NIU et statuts', 'Ouverture du compte bancaire'] : ['RCCM, NIU et statuts', 'Ouverture du compte bancaire']).map(x => <div key={x}><Check size={15} strokeWidth={2.6}/>{x}</div>)}
+      </div>
+      <div className="cv-pk-pied">
+        {pack === undefined ? <span className="cv-pk-st att">…</span>
+          : viewer === 'client' && !pack ? <>
+            <button className="cv-pk-btn" onClick={souscrire} disabled={busy}>{busy ? 'Un instant…' : 'Je souscris'}</button>
+            <small>Paiement chez Mayinvest avec votre référence</small>
+          </> : viewer === 'client' && pack ? <>
+            <span className={`cv-pk-st ${etat.cls}`}>{pack.statut === 'en_attente_paiement' ? <Clock size={13}/> : <Check size={13} strokeWidth={2.6}/>}{etat.txt}</span>
+            <small>{pack.statut === 'en_attente_paiement' ? `Réglez 50\u00A0000\u00A0XAF chez Mayinvest en donnant la référence ${pack.reference}.` : 'Suivez chaque étape dans l\'onglet Suivi.'}</small>
+          </> : <div className="cv-pk-eq">
+            <span className={`cv-pk-st ${etat.cls}`}>{pack && pack.statut !== 'en_attente_paiement' ? <Check size={13} strokeWidth={2.6}/> : <Clock size={13}/>}{etat.txt}</span>
+            {pack?.statut === 'en_attente_paiement' && <b>À encaisser</b>}
+          </div>}
+        {err && <div className="cv-err">{err}</div>}
+      </div>
     </div>
   )
 }
@@ -301,6 +374,17 @@ const CV_CSS = `
   .cv-envoyer.busy { background: #93C5FD; cursor: default; }
   .cv-attente { font-size: 11px; color: #B45309; font-weight: 600; flex: none; }
   .cv-carte-pied { font-size: 11.5px; color: #8A94A6; padding: 6px 14px 13px; }
+  .cv-pk-prix { margin-left: auto; font-size: 14px; font-weight: 700; color: #0D1B3E; white-space: nowrap; }
+  .cv-pk-in { margin: 0 14px 6px; font-size: 13px; color: #64748B; line-height: 1.5; }
+  .cv-pk-l { padding: 0 14px 4px; } .cv-pk-l div { display: flex; align-items: center; gap: 9px; font-size: 13.5px; padding: 4px 0; color: #0F1729; } .cv-pk-l svg { color: #1A6BFF; flex: none; }
+  .cv-pk-pied { border-top: 1px solid #F1F5F9; margin-top: 8px; padding: 12px 14px 13px; display: flex; flex-direction: column; gap: 7px; }
+  .cv-pk-pied small { font-size: 11.5px; color: #8A94A6; text-align: center; line-height: 1.45; }
+  .cv-pk-btn { width: 100%; height: 40px; border: none; border-radius: 999px; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .cv-pk-btn:disabled { opacity: .6; cursor: default; }
+  .cv-pk-st { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 999px; }
+  .cv-pk-st.att { background: #FFF3E0; color: #B45309; } .cv-pk-st.ok { background: #EAF1FF; color: #1A6BFF; } .cv-pk-st.fin { background: #E8F8EE; color: #16A34A; }
+  .cv-pk-eq { display: flex; align-items: center; justify-content: space-between; gap: 8px; } .cv-pk-eq b { font-size: 12.5px; color: #1A6BFF; font-weight: 600; }
+  .cv-err { background: #FDECEC; color: #B42318; border-radius: 10px; padding: 7px 10px; font-size: 12.5px; }
   .cv-rdv { display: flex; gap: 12px; align-items: center; padding: 14px; }
   .cv-cal { width: 54px; border-radius: 12px; overflow: hidden; text-align: center; box-shadow: 0 0 0 1px #E3E8F0; flex: none; background: #fff; }
   .cv-cal span { display: block; background: #EF4444; color: #fff; font-size: 10px; font-weight: 700; padding: 3px 0; letter-spacing: .04em; }

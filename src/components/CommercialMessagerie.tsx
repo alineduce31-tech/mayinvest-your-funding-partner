@@ -258,7 +258,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
         </div>
 
         <div className="cm-msgs">
-          <Conversation viewer="equipe" docs={docs} bulles={regrouper(msgs.map(m => vueCommercial(m, commercialId, row.nom || 'Client')), now)}
+          <Conversation viewer="equipe" leadId={row.lead_id} docs={docs} bulles={regrouper(msgs.map(m => vueCommercial(m, commercialId, row.nom || 'Client')), now)}
             vide="Pas encore de message. Présente-toi avec un message type ou une suggestion ci-dessous."/>
           <div ref={endRef}/>
         </div>

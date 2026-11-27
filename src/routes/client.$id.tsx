@@ -272,8 +272,9 @@ function ClientPortal() {
   function startRecovery() { setRecoveryStep('ask'); setRecoveryEmail(''); setRecoveryMsg(''); setRecoveryLink('') }
 
   async function loadMessages() {
-    const { data } = await supabase.from('messages').select('*').eq('lead_id', id).order('created_at')
-    if (data) setMessages(data)
+    // La base ne renvoie jamais les notes internes au client ; on les écarte aussi ici par précaution
+    const { data } = await supabase.from('messages').select('*').eq('lead_id', id).neq('visibility', 'internal').order('created_at')
+    if (data) setMessages(data.filter((m: any) => m.visibility !== 'internal'))
   }
 
   useEffect(() => {

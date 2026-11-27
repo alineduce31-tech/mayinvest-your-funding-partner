@@ -8,7 +8,7 @@ export type Bulle = {
   ton: Ton
   etiquette: string | null
   contenu: string
-  kind: 'text' | 'pieces' | 'rdv'
+  kind: 'text' | 'pieces' | 'rdv' | 'pack'
   payload: any
   created_at: string
   vu: boolean
@@ -18,8 +18,18 @@ export type BulleAffichee = Bulle & { jour: string | null; debut: boolean; fin: 
 
 type RawLead = { id: string; sender: string; content: string; created_at: string; read_at?: string | null; author_id?: string | null; author_name?: string | null; visibility?: string | null; kind?: string | null; payload?: any }
 
-function kindDe(m: RawLead): Bulle['kind'] {
-  return m.kind === 'pieces' || m.kind === 'rdv' ? m.kind : 'text'
+/** Anciens messages « il nous manque encore : - X - Y » envoyés en simple texte : pièces citées, ou null. */
+export function piecesDansTexte(t: string | null | undefined): string[] | null {
+  if (!t || !/il nous manque encore\s*:/i.test(t)) return null
+  const items = t.split('\n').map(l => l.trim()).filter(l => /^[-•]\s+/.test(l)).map(l => l.replace(/^[-•]\s+/, '').trim()).filter(Boolean)
+  return items.length ? items : null
+}
+
+/** Type d'affichage et données de la carte (les anciens messages de pièces deviennent des cartes). */
+export function carteDe(m: { kind?: string | null; payload?: any; content?: string | null }): { kind: Bulle['kind']; payload: any } {
+  if (m.kind === 'pieces' || m.kind === 'rdv' || m.kind === 'pack') return { kind: m.kind, payload: m.payload }
+  const labels = piecesDansTexte(m.content)
+  return labels ? { kind: 'pieces', payload: { labels } } : { kind: 'text', payload: m.payload }
 }
 function prenom(n: string | null | undefined, defaut: string): string {
   return (n || '').trim().split(/\s+/)[0] || defaut
@@ -31,7 +41,7 @@ export function vueCommercial(m: RawLead, commercialId: string, nomClient: strin
   const moi = m.author_id === commercialId
   const client = m.sender === 'client'
   return {
-    id: m.id, contenu: m.content, kind: kindDe(m), payload: m.payload, created_at: m.created_at,
+    id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at,
     cote: client || (!moi && !interne) ? 'gauche' : 'droite',
     ton: interne ? 'note' : client ? 'client' : moi ? 'moi' : 'equipe',
     etiquette: interne ? (moi ? 'Ta note · invisible pour le client' : 'Note de la direction · invisible pour le client') : (!client && !moi ? (m.author_name || 'Direction') : null),
@@ -47,7 +57,7 @@ export function vueAdmin(m: RawLead, adminId: string, nomClient: string): Bulle 
   const moi = m.author_id === adminId
   const role = m.sender === 'commercial' ? 'commercial' : 'direction'
   return {
-    id: m.id, contenu: m.content, kind: kindDe(m), payload: m.payload, created_at: m.created_at,
+    id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at,
     cote: client ? 'gauche' : 'droite',
     ton: interne ? 'note' : client ? 'client' : moi ? 'moi' : 'equipe',
     etiquette: interne ? `Note interne · ${moi ? 'vous' : (m.author_name || role)}` : (!client && !moi ? `${m.author_name || (role === 'commercial' ? 'Commercial' : 'Direction')} · ${role}` : null),
@@ -60,7 +70,7 @@ export function vueAdmin(m: RawLead, adminId: string, nomClient: string): Bulle 
 export function vueClient(m: RawLead): Bulle {
   const moi = m.sender === 'client'
   return {
-    id: m.id, contenu: m.content, kind: kindDe(m), payload: m.payload, created_at: m.created_at,
+    id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at,
     cote: moi ? 'droite' : 'gauche',
     ton: moi ? 'moi' : 'equipe',
     etiquette: !moi ? (m.author_name || 'Conseiller Mayinvest') : null,
@@ -151,7 +161,17 @@ export function reponseClientRdv(at: number, rep: 'confirme' | 'autre'): string 
 }
 
 /** Pièces d'une carte : celles listées dans la carte, sinon toutes celles qui restent à envoyer. */
-export function piecesDeCarte<T extends { id: string; status?: string | null }>(payload: any, docs: T[]): T[] {
+const norm = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\(.*?\)/g, '').replace(/\s+/g, ' ').trim()
+
+export function piecesDeCarte<T extends { id: string; status?: string | null; doc_label?: string | null }>(payload: any, docs: T[]): T[] {
+  // Ancien message texte : on relie chaque pièce citée à celle du dossier (même intitulé), sinon « à envoyer »
+  if (Array.isArray(payload?.labels)) {
+    return (payload.labels as string[]).map((label, i) => {
+      const n = norm(label)
+      const doc = docs.find(d => d.doc_label && (norm(d.doc_label) === n || norm(d.doc_label).startsWith(n) || n.startsWith(norm(d.doc_label))))
+      return doc || ({ id: `texte-${i}`, doc_label: label, status: 'pending' } as unknown as T)
+    })
+  }
   const ids: string[] = Array.isArray(payload?.doc_ids) ? payload.doc_ids : []
   if (ids.length) {
     const choisies = docs.filter(d => ids.includes(d.id))

@@ -303,7 +303,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
         </div>
 
         <div className="am-msgs">
-          <Conversation viewer="equipe" docs={docs} bulles={regrouper(msgs.map(m => vueAdmin(m, session.id, nom)), Date.now())} vide="Pas encore de message. Écris le premier au groupe."/>
+          <Conversation viewer="equipe" leadId={leadId} docs={docs} bulles={regrouper(msgs.map(m => vueAdmin(m, session.id, nom)), Date.now())} vide="Pas encore de message. Écris le premier au groupe."/>
           <div ref={endRef}/>
         </div>
 
