@@ -13,16 +13,17 @@ describe('qui parle et de quel côté', () => {
   test('vu par le commercial', () => {
     expect(vueCommercial(msg({}), COM, 'Alin LN')).toMatchObject({ cote: 'gauche', ton: 'client', auteur: 'Alin' })
     expect(vueCommercial(msg({ sender: 'commercial', author_id: COM, read_at: t(11) }), COM, 'Alin')).toMatchObject({ cote: 'droite', ton: 'moi', vu: true })
-    expect(vueCommercial(msg({ sender: 'admin', author_id: ADM, author_name: 'Aldo' }), COM, 'Alin')).toMatchObject({ cote: 'gauche', ton: 'equipe', etiquette: 'Aldo' })
+    expect(vueCommercial(msg({ sender: 'admin', author_id: ADM, author_name: 'Aldo' }), COM, 'Alin')).toMatchObject({ cote: 'gauche', ton: 'equipe', etiquette: 'Aldo · direction' })
     expect(vueCommercial(msg({ sender: 'admin', author_id: ADM, visibility: 'internal' }), COM, 'Alin')).toMatchObject({ cote: 'droite', ton: 'note' })
   })
   test('vu par la direction', () => {
-    expect(vueAdmin(msg({ sender: 'commercial', author_id: COM, author_name: 'Démo' }), ADM, 'Alin')).toMatchObject({ cote: 'droite', ton: 'equipe', etiquette: 'Démo · commercial' })
-    expect(vueAdmin(msg({ sender: 'admin', author_id: ADM }), ADM, 'Alin')).toMatchObject({ cote: 'droite', ton: 'moi', etiquette: null })
+    expect(vueAdmin(msg({ sender: 'commercial', author_id: COM, author_name: 'Démo' }), ADM, 'Alin')).toMatchObject({ cote: 'droite', ton: 'equipe', etiquette: 'Démo · conseiller' })
+    expect(vueAdmin(msg({ sender: 'admin', author_id: ADM }), ADM, 'Alin')).toMatchObject({ cote: 'droite', ton: 'moi', etiquette: 'Vous' })
   })
   test('vu par le client', () => {
     expect(vueClient(msg({}))).toMatchObject({ cote: 'droite', ton: 'moi' })
-    expect(vueClient(msg({ sender: 'commercial', author_name: 'Ruth' }))).toMatchObject({ cote: 'gauche', etiquette: 'Ruth' })
+    expect(vueClient(msg({ sender: 'commercial', author_name: 'Ruth' }))).toMatchObject({ cote: 'gauche', etiquette: 'Ruth · Conseiller' })
+    expect(vueClient(msg({ sender: 'admin', author_name: 'Aldo' }))).toMatchObject({ etiquette: 'Aldo · Direction' })
   })
   test('fil direction <-> commercial', () => {
     const b = vueEquipe({ id: 'x', sender_type: 'director', body: 'Objectif', created_at: t(9) }, 'commercial')

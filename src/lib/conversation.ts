@@ -44,7 +44,7 @@ export function vueCommercial(m: RawLead, commercialId: string, nomClient: strin
     id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at,
     cote: client || (!moi && !interne) ? 'gauche' : 'droite',
     ton: interne ? 'note' : client ? 'client' : moi ? 'moi' : 'equipe',
-    etiquette: interne ? (moi ? 'Ta note · invisible pour le client' : 'Note de la direction · invisible pour le client') : (!client && !moi ? (m.author_name || 'Direction') : null),
+    etiquette: interne ? (moi ? 'Ta note · invisible pour le client' : 'Note de la direction · invisible pour le client') : client ? null : moi ? 'Vous' : `${m.author_name || 'Direction'} · direction`,
     vu: moi && !interne && !!m.read_at,
     auteur: client ? prenom(nomClient, 'Client') : moi ? 'Vous' : (m.author_name || 'Direction'),
   }
@@ -55,12 +55,12 @@ export function vueAdmin(m: RawLead, adminId: string, nomClient: string): Bulle 
   const interne = m.visibility === 'internal'
   const client = m.sender === 'client'
   const moi = m.author_id === adminId
-  const role = m.sender === 'commercial' ? 'commercial' : 'direction'
+  const role = m.sender === 'commercial' ? 'conseiller' : 'direction'
   return {
     id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at,
     cote: client ? 'gauche' : 'droite',
     ton: interne ? 'note' : client ? 'client' : moi ? 'moi' : 'equipe',
-    etiquette: interne ? `Note interne · ${moi ? 'vous' : (m.author_name || role)}` : (!client && !moi ? `${m.author_name || (role === 'commercial' ? 'Commercial' : 'Direction')} · ${role}` : null),
+    etiquette: interne ? `Note interne · ${moi ? 'vous' : (m.author_name || role)}` : client ? null : moi ? 'Vous' : `${m.author_name || (role === 'conseiller' ? 'Conseiller' : 'Direction')} · ${role}`,
     vu: !client && !interne && !!m.read_at,
     auteur: client ? prenom(nomClient, 'Client') : moi ? 'Vous' : (m.author_name || role),
   }
@@ -73,7 +73,7 @@ export function vueClient(m: RawLead): Bulle {
     id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at,
     cote: moi ? 'droite' : 'gauche',
     ton: moi ? 'moi' : 'equipe',
-    etiquette: !moi ? (m.author_name || 'Conseiller Mayinvest') : null,
+    etiquette: !moi ? `${m.author_name || 'Mayinvest'} · ${m.sender === 'admin' ? 'Direction' : 'Conseiller'}` : null,
     vu: moi && !!m.read_at,
     auteur: moi ? 'Vous' : (m.author_name || 'Conseiller'),
   }

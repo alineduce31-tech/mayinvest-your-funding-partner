@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import PieceIcone from '@/components/PieceIcone'
 import { createPortal } from 'react-dom'
-import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download, FileBadge } from 'lucide-react'
+import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download, FileBadge, Image as ImageIcon } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import {
   type BulleAffichee, heure, lireRdv, pieceJointe, blocCalendrier, phraseRdv, piecesDeCarte, estRecue,
@@ -34,7 +34,7 @@ export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploading
             : b.kind === 'pack' ? <CartePack viewer={viewer} leadId={leadId}/>
             : (
               <div className={`cv-bulle ${b.ton}`}>
-                {b.debut && b.etiquette && <span className={`cv-tag ${b.ton}`}>{b.ton === 'note' && <EyeOff size={11}/>}{b.etiquette}</span>}
+                {b.debut && b.etiquette && <span className={`cv-tag ${b.ton}`}>{b.ton === 'note' && <EyeOff size={11}/>}{viewer === 'client' && b.ton === 'equipe' && <i className="cv-av">{initialesAuteur(b.auteur)}</i>}{b.etiquette}</span>}
                 <Texte texte={b.contenu}/>
               </div>
             )}
@@ -43,6 +43,11 @@ export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploading
       ))}
     </div>
   )
+}
+
+function initialesAuteur(n: string): string {
+  const m = (n || '').trim().split(/\s+/).filter(Boolean)
+  return ((m[0]?.[0] || '') + (m[1]?.[0] || '')).toUpperCase() || 'M'
 }
 
 function Meta({ b }: { b: BulleAffichee }) {
@@ -60,7 +65,7 @@ function Texte({ texte }: { texte: string }) {
   if (pj) return (
     <div className="cv-txt">
       {pj.type === 'image'
-        ? <a href={pj.url} target="_blank" rel="noopener noreferrer" className="cv-img"><img src={pj.url} alt={pj.nom} loading="lazy"/></a>
+        ? <ImageJointe url={pj.url} nom={pj.nom}/>
         : <a href={pj.url} target="_blank" rel="noopener noreferrer" className="cv-fichier"><span className={`cv-fichier-ic ${pj.type}`}><FileText size={18}/></span><span className="cv-fichier-t"><b>{pj.nom}</b><small>{pj.type === 'pdf' ? 'Document PDF' : 'Fichier'} · ouvrir</small></span><Download size={16}/></a>}
       {pj.reste && <div className="cv-par">{pj.reste}</div>}
     </div>
@@ -71,6 +76,16 @@ function Texte({ texte }: { texte: string }) {
         ? <div key={i} className="cv-par">{liens(s.texte)}</div>
         : <div key={i} className="cv-puces">{s.items.map((it, j) => <span key={j}><i className="cv-puce-ic" aria-hidden="true"><PieceIcone titre={it} size={13}/></i>{it}</span>)}</div>)}
     </div>
+  )
+}
+function ImageJointe({ url, nom }: { url: string; nom: string }) {
+  const [ko, setKo] = useState(false)
+  if (ko) return <a href={url} target="_blank" rel="noopener noreferrer" className="cv-fichier"><span className="cv-fichier-ic img"><ImageIcon size={18}/></span><span className="cv-fichier-t"><b>{nom}</b><small>Photo · ouvrir</small></span><Download size={16}/></a>
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="cv-img">
+      <img src={url} alt={nom} loading="lazy" onError={() => setKo(true)}/>
+      <span className="cv-img-n"><ImageIcon size={12}/>{nom}</span>
+    </a>
   )
 }
 function liens(t: string): ReactNode[] {
@@ -101,7 +116,7 @@ function CartePieces({ b, viewer, docs, onUploadDoc, uploadingDocId }: { b: Bull
           <div key={d.id} className={`cv-piece ${ok ? 'ok' : ''}`}>
             <span className={`cv-coche ${e}`}>{ok && <Check size={12} strokeWidth={3}/>}{e === 'rejected' && <X size={12} strokeWidth={3}/>}</span>
             <span className="cv-piece-ic" aria-hidden="true"><PieceIcone docType={d.doc_type} titre={titre} size={15}/></span>
-            <span className="cv-piece-t"><span className="cv-piece-nom">{titreCourt(titre)}</span>{e === 'rejected' && <small>Refusée{d.admin_note ? ` : ${d.admin_note}` : ''}, à renvoyer</small>}{e === 'uploaded' && <small>Reçue, en vérification</small>}</span>
+            <span className="cv-piece-t"><span className="cv-piece-nom">{titreCourt(titre)}</span>{e === 'rejected' && <small>Refusée, à renvoyer</small>}{e === 'rejected' && d.admin_note && <small className="cv-motif">Motif : {d.admin_note}</small>}{e === 'uploaded' && <small>Reçue, en vérification</small>}</span>
             {!ok && viewer === 'client' && onUploadDoc && !String(d.id).startsWith('texte-') && (
               <label className={`cv-envoyer ${uploadingDocId === d.id ? 'busy' : ''}`}>
                 {uploadingDocId === d.id ? 'Envoi…' : <><Upload size={13}/>Envoyer</>}
@@ -335,20 +350,23 @@ const CV_CSS = `
   .cv-ligne.droite .cv-bulle { border-radius: 20px 6px 6px 20px; }
   .cv-ligne.droite.debut .cv-bulle { border-top-right-radius: 20px; }
   .cv-ligne.droite.debut.fin .cv-bulle { border-radius: 20px 20px 6px 20px; }
-  .cv-bulle.moi { background: linear-gradient(135deg, #2F7BFF, #1557E0); color: #fff; box-shadow: 0 4px 12px rgba(26,107,255,.22); }
+  .cv-bulle.moi { background: #E3ECFF; color: #0D1B3E; }
   .cv-ligne.droite .cv-bulle.equipe { background: #0D1B3E; color: #fff; }
   .cv-bulle.note { background: #FEF3C7; color: #78350F; }
   .cv-tag { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 2px 9px; margin-bottom: 5px; background: #0D1B3E; color: #fff; }
   .cv-ligne.droite .cv-tag.equipe { background: rgba(255,255,255,.16); }
   .cv-tag.note { background: rgba(120,53,15,.1); color: #92400E; }
+  .cv-tag.moi { background: none; color: #3D6FD6; padding: 0; font-weight: 600; font-size: 11px; margin-bottom: 3px; }
+  .cv-tag .cv-av { width: 18px; height: 18px; margin-left: -6px; border-radius: 50%; background: #E3ECFF; color: #2F5FC4; display: inline-flex; align-items: center; justify-content: center; font-size: 8.5px; font-weight: 800; font-style: normal; }
   .cv-txt { display: flex; flex-direction: column; gap: 6px; }
   .cv-par { white-space: pre-wrap; }
   .cv-par a { color: inherit; font-weight: 700; text-decoration: underline; }
   .cv-puces { display: flex; flex-wrap: wrap; gap: 5px; }
   .cv-puces span { display: inline-flex; align-items: center; gap: 6px; background: rgba(13,27,62,.06); border-radius: 999px; padding: 4px 11px 4px 5px; font-size: 12.5px; font-weight: 600; }
   .cv-puce-ic { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; font-style: normal; background: #E3ECFF; color: #3D6FD6; }
-  .cv-bulle.moi .cv-puces span, .cv-ligne.droite .cv-bulle.equipe .cv-puces span { background: rgba(255,255,255,.12); color: #fff; }
-  .cv-bulle.moi .cv-puce-ic, .cv-ligne.droite .cv-bulle.equipe .cv-puce-ic { background: rgba(160,190,255,.18); color: #B9CFFF; }
+  .cv-ligne.droite .cv-bulle.equipe .cv-puces span { background: rgba(255,255,255,.12); color: #fff; }
+  .cv-ligne.droite .cv-bulle.equipe .cv-puce-ic { background: rgba(160,190,255,.18); color: #B9CFFF; }
+  .cv-bulle.moi .cv-puces span { background: #fff; color: #0D1B3E; }
   .cv-piece-ic { width: 28px; height: 28px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: #EEF3FF; color: #4A73C9; }
   .cv-piece.ok .cv-piece-ic { background: #F1F5F9; color: #94A3B8; }
   .cv-meta { display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: #8A94A6; margin: 4px 8px 0; }
@@ -394,7 +412,7 @@ const CV_CSS = `
   .cv-lieu { display: inline-flex; align-items: center; gap: 4px; }
   .cv-actions { display: flex; gap: 8px; padding: 0 14px 14px; }
   .cv-actions button { flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 12px; border: none; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; background: #F1F5F9; color: #475569; }
-  .cv-actions button.oui { background: #22C55E; color: #fff; box-shadow: 0 4px 12px rgba(34,197,94,.3); }
+  .cv-actions button.oui { background: #1A6BFF; color: #fff; box-shadow: 0 4px 12px rgba(26,107,255,.25); }
   .cv-actions button:disabled { opacity: .6; cursor: default; }
   .cv-etat { display: flex; align-items: center; gap: 6px; margin: 0 14px 14px; padding: 9px 12px; border-radius: 12px; font-size: 12.5px; font-weight: 700; }
   .cv-etat.ok { background: #DCFCE7; color: #15803D; } .cv-etat.gris { background: #F1F5F9; color: #64748B; } .cv-etat.attente { background: #FFF7ED; color: #C2410C; }
@@ -433,7 +451,12 @@ const CV_CSS = `
   .cv-img { display: block; border-radius: 14px; overflow: hidden; max-width: 240px; }
   .cv-img img { display: block; width: 100%; height: auto; }
   .cv-fichier { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 14px; background: rgba(13,27,62,.05); color: inherit; text-decoration: none; min-width: 200px; }
-  .cv-bulle.moi .cv-fichier { background: rgba(255,255,255,.16); }
+  .cv-bulle.moi .cv-fichier { background: rgba(255,255,255,.7); }
+  .cv-fichier-ic.img { background: #3D6FD6; }
+  .cv-img { position: relative; text-decoration: none !important; color: inherit !important; }
+  .cv-img-n { display: flex; align-items: center; gap: 5px; font-size: 11.5px; padding: 6px 4px 0; opacity: .75; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cv-img img { border-radius: 14px; }
+  .cv-motif { color: #64748B !important; font-weight: 500; }
   .cv-fichier-ic { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; background: #64748B; color: #fff; flex: none; }
   .cv-fichier-ic.pdf { background: #EF4444; }
   .cv-fichier-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
