@@ -2007,7 +2007,7 @@ button:active, .lap-btn:active {
    ============================================================ */
 .toolbar.crm-v2 { background: #fff !important; border: none !important; border-radius: 18px !important; box-shadow: 0 1px 2px rgba(0,0,0,.04) !important; padding: 10px !important; gap: 8px !important; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; }
 .toolbar.crm-v2 > input { flex: 1 1 220px !important; min-width: 200px !important; background: #F5F5F7 !important; border: none !important; border-radius: 999px !important; font-size: 13.5px !important; padding: 9px 16px !important; }
-.toolbar.crm-v2 button:not(.crm-exp-btn):not(.btn-reset):not(.mx-btn):not(.mx-it):not(.crm-prio-chip), .toolbar.crm-v2 .msf-trigger { font-size: 13px !important; font-weight: 500 !important; background: #F5F5F7 !important; border: none !important; border-radius: 999px !important; color: #3A3A3C !important; height: 36px; }
+.toolbar.crm-v2 button:not(.crm-exp-btn):not(.btn-reset):not(.mx-btn):not(.mx-it):not(.crm-prio-x), .toolbar.crm-v2 .msf-trigger { font-size: 13px !important; font-weight: 500 !important; background: #F5F5F7 !important; border: none !important; border-radius: 999px !important; color: #3A3A3C !important; height: 36px; }
 .crm-exp { position: relative; margin-left: auto; }
 .crm-exp-btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; border-radius: 999px; border: none; background: #0D1B3E; color: #fff; font-family: inherit; font-size: 13px !important; font-weight: 500; cursor: pointer; }
 .crm-exp-menu { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; background: #fff; border-radius: 14px; box-shadow: 0 10px 30px rgba(13,27,62,.14), 0 0 0 1px #EEF1F6; padding: 6px; min-width: 180px; }
@@ -2318,13 +2318,15 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
 .crm-prio-x { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border: none; border-radius: 999px; background: #F3F5F9; color: #0D1B3E; font-family: inherit; font-size: 13px !important; font-weight: 600; cursor: pointer; white-space: nowrap; }
 .crm-prio-x:hover { background: #E8ECF3; }
 @media (max-width: 640px) { .crm-prio { flex-wrap: wrap; } .crm-prio-t { flex-basis: calc(100% - 46px); } .crm-prio-n { margin-left: 46px; } .crm-prio-x { margin-left: auto; } }
-.crm-prio-chip { display: inline-flex; align-items: center; gap: 6px; flex: none; height: 36px; padding: 0 10px 0 12px; border: none; border-radius: 999px; background: #EAF1FF !important; color: #1A6BFF !important; font-family: inherit; font-size: 12.5px !important; font-weight: 700; cursor: pointer; white-space: nowrap; max-width: 150px; }
-.crm-prio-chip span { overflow: hidden; text-overflow: ellipsis; }
-.crm-prio-chip:hover { background: #DCE7FF !important; }
+.crm-prio.mini { flex: 0 0 100%; margin: 0 0 2px; padding: 6px 6px 6px 8px; border-radius: 12px; box-shadow: none; border-color: #EEF1F6; background: #F7F9FD; flex-wrap: nowrap; }
+.crm-prio.mini .crm-prio-ic { width: 28px; height: 28px; border-radius: 8px; }
+.crm-prio.mini .crm-prio-t { flex-direction: row; align-items: baseline; gap: 8px; }
+.crm-prio.mini .crm-prio-t b { font-size: 13px !important; }
+.crm-prio.mini .crm-prio-x { height: 30px; }
+.crm-prio .crm-prio-ic svg, .crm-prio .crm-prio-x svg { width: 14px !important; height: 14px !important; flex: none; }
 
-/* Barre figée trop large pour tenir à côté du titre : elle reste sous l'en-tête et passe sur deux lignes si besoin */
+/* Barre figée trop large pour tenir à côté du titre (ou avec le bandeau de filtre) : elle reste sous l'en-tête et passe sur deux lignes */
 @media (min-width: 1280px) {
   .barre-fige.colle.etroit { top: 76px; z-index: 39; margin-left: 0 !important; flex-wrap: wrap !important; padding: 8px !important; box-shadow: 0 8px 24px rgba(13,27,62,.08) !important; }
   .barre-fige.colle.etroit .bk-chips { flex-wrap: wrap; }
 }
-.crm-prio-chip svg { width: 13px !important; height: 13px !important; flex: none; }

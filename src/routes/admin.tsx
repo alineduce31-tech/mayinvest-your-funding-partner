@@ -1542,8 +1542,15 @@ function CRMView({ prio, retirerPrio, leads, allLeads, msgCounts, search, setSea
   return (
     <>
       <div ref={fige.repere} className="barre-repere" aria-hidden="true"/>
-      <div ref={fige.barre} style={fige.style} className={`toolbar toolbar-advanced crm-v2 ${fige.classe}`}>
-        {prio && fige.colle && <button type="button" className="crm-prio-chip" onClick={retirerPrio} title={`${PRIO_LIBELLES[prio]} : cliquer pour retirer le filtre`} aria-label={`Retirer le filtre ${PRIO_LIBELLES[prio]}`}><Filter size={13}/><span>{PRIO_LIBELLES[prio]}</span><X size={13}/></button>}
+      <div ref={fige.barre} style={fige.style} className={`toolbar toolbar-advanced crm-v2 ${fige.classe}${prio && fige.colle ? ' etroit' : ''}`}>
+        {prio && fige.colle && (
+          <div className="crm-prio mini" role="status">
+            <span className="crm-prio-ic" aria-hidden="true"><Filter size={14}/></span>
+            <span className="crm-prio-t"><small>Filtre du dashboard</small><b>{PRIO_LIBELLES[prio]}</b></span>
+            <span className="crm-prio-n">{leads.length} dossier{leads.length > 1 ? 's' : ''}</span>
+            <button type="button" className="crm-prio-x" onClick={retirerPrio}><X size={14}/>Retirer le filtre</button>
+          </div>
+        )}
         <input placeholder="Rechercher nom, téléphone, code…" value={search} onChange={e => setSearch(e.target.value)}/>
         <MultiSelectFilter placeholder="Tous statuts" title="Statuts" options={STATUSES.map((s: string) => ({ value: s, label: s }))} value={filterStatut} onChange={setFilterStatut}/>
         <MultiSelectFilter placeholder="Tous types" title="Type de client" options={[{ value: 'physique', label: 'Particulier' }, { value: 'morale', label: 'PME' }]} value={filterType} onChange={setFilterType}/>
