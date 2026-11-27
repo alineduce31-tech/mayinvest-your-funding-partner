@@ -1127,7 +1127,7 @@ function ClientPortal() {
                       <div className="cx-at-t">Autre fichier</div>
                     </>}
                     <div className="cx-g">
-                      <button className="cx-op" onClick={() => { closeAttach(); photoInput.current?.click() }}><span className="cx-ic b"><Camera size={18}/></span><span><b>Prendre une photo</b><small>Pièce d'identité, bulletin…</small></span></button>
+                      <button className="cx-op" onClick={() => { closeAttach(); photoInput.current?.click() }}><span className="cx-ic b"><Camera size={18}/></span><span><b>Prendre une photo</b><small>{lead && !(lead.type === 'physique' || lead.type === 'Personne physique') ? 'RCCM, statuts, relevé…' : 'Pièce d\'identité, bulletin…'}</small></span></button>
                       <button className="cx-op" onClick={() => { closeAttach(); galerieInput.current?.click() }}><span className="cx-ic g"><ImageIcon size={18}/></span><span><b>Choisir une photo</b><small>Depuis la galerie</small></span></button>
                       <button className="cx-op" onClick={() => { closeAttach(); fileInput.current?.click() }}><span className="cx-ic o"><FileText size={18}/></span><span><b>Envoyer un document</b><small>PDF ou Word, 10 Mo maximum</small></span></button>
                     </div>

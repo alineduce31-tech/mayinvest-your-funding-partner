@@ -163,6 +163,7 @@ function Index() {
           display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
         .recrut-h3 { font-size: 15.5px; font-weight: 700; margin: 6px 0 0; letter-spacing: -0.01em; line-height: 1.35; }
         .recrut-villes { display: none; }
+        .recrut-acc { font-size: 13px; color: #BFD3FF; margin-top: 8px; line-height: 1.45; }
         .recrut-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .recrut-tag { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; background: #1A6BFF; border-radius: 999px; padding: 3px 9px; font-weight: 700; }
         .recrut-pl { font-size: 12px; color: #9FB3D9; }
@@ -421,6 +422,7 @@ function Index() {
           </div>
           <div>
             <div className="recrut-top"><span className="recrut-tag">Appel à partenariat</span><span className="recrut-pl">24 places · Brazzaville et Pointe-Noire</span></div>
+            <div className="recrut-acc">Vous êtes indépendant, entrepreneur, étudiant ou déjà en activité et vous voulez générer des revenus complémentaires ?</div>
             <div className="recrut-h3">Mayinvest recherche 24 Partenaires Commerciaux Indépendants<span className="recrut-villes"> à Brazzaville et Pointe-Noire</span></div>
             <div className="recrut-pills">
               <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>Formation payée</span>
