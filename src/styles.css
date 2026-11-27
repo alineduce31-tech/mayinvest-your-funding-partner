@@ -2120,7 +2120,7 @@ button:active, .lap-btn:active {
 /* ============================================================
    FICHE LEAD (drawer admin) · style Apple + notes internes
    ============================================================ */
-.drawer { background: #fff !important; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; color: #1D1D1F; }
+.drawer { background: #F8FAFC !important; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; color: #1D1D1F; }
 .drawer .ld-head { background: #fff !important; padding: 18px 20px 14px !important; border-bottom: 1px solid #EEF1F6 !important; }
 .ld-top { display: flex; align-items: center; gap: 12px; }
 .ld-av { width: 44px; height: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex: none; }
