@@ -8,7 +8,6 @@ import {
   matchesPriority,
   PRIX_OUVERTURE_COMPTE,
   PRIX_PACK_FORMALISATION,
-  PRIX_RESTRUCTURATION,
   TAUX_COMMISSION_CREDIT,
   type DashboardLead,
 } from './admin-dashboard'
@@ -42,13 +41,13 @@ describe('dashboard strategic rules', () => {
       [
         lead({ banque_actuelle: null }), // pas de compte -> ouverture compte
         lead({ type: 'morale', rccm: 'Non' }), // pas de RCCM -> pack formalisation
-        lead({ statut: 'Non Éligible', motif_refus: 'Refus banque' }), // refus -> restructuration
+        lead({ statut: 'Non Éligible', motif_refus: 'Refus banque' }), // refus -> aucun service payant
       ],
       '30j',
       now,
     )
     expect(m.bloc1.caImpactPotentiel).toBe(
-      PRIX_OUVERTURE_COMPTE + PRIX_PACK_FORMALISATION + PRIX_RESTRUCTURATION,
+      PRIX_OUVERTURE_COMPTE + PRIX_PACK_FORMALISATION,
     )
   })
 

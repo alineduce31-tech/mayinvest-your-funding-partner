@@ -5,7 +5,7 @@ import { nomLead, estPme, type LeadB } from './bancarisation'
 
 export type LeadNE = LeadB & { score?: number | null }
 export type Raison = { code: 'pack' | 'rccm' | 'score' | 'marque'; libelle: string }
-export type Offre = { key: 'pack_formalisation' | 'ouverture_compte' | 'restructuration' | 'repasser'; label: string }
+export type Offre = { key: 'pack_formalisation' | 'ouverture_compte' | 'repasser'; label: string }
 export type FiltreNE = 'tous' | 'rccm' | 'score' | 'pack' | 'sans_conseiller'
 
 const PACK = 'Pack Formalisation Vendu'
@@ -27,7 +27,8 @@ export function offre(l: LeadNE): Offre {
   if (r.code === 'pack') return { key: 'repasser', label: 'Repasser en éligible' }
   if (r.code === 'rccm') return { key: 'pack_formalisation', label: 'Pack formalisation' }
   if (l.banque_actuelle === 'Aucune' || l.eligibilite?.salaire_domic === 'Non') return { key: 'ouverture_compte', label: 'Ouverture compte' }
-  return { key: 'restructuration', label: 'Restructuration' }
+  // Mayinvest ne propose que ses packs : entreprise → Pack formalisation, particulier → Ouverture compte
+  return estPme(l) ? { key: 'pack_formalisation', label: 'Pack formalisation' } : { key: 'ouverture_compte', label: 'Ouverture compte' }
 }
 
 export function chiffresNE(liste: LeadNE[]) {

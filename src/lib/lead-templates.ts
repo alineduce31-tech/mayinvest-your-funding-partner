@@ -12,7 +12,6 @@ export function lienContact(sujet: string, corps = ''): string {
 
 export const PRIX_OUVERTURE_COMPTE = 30_000
 export const PRIX_PACK_FORMALISATION = 50_000
-export const PRIX_RESTRUCTURATION = 50_000
 
 export function fillTemplate(template: string, vars: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (_, key) => String(vars[key] ?? `[${key}]`))
@@ -56,21 +55,7 @@ On en discute ?
 
 Mayinvest · ${MAYINVEST_CONTACT}`
 
-export const TEMPLATE_RESTRUCTURATION = `Bonjour {prenom},
-
-Nous avons analysé votre situation Mayinvest. Un refus bancaire ne signifie pas la fin du projet, il faut juste restructurer le dossier.
-
-Mayinvest propose un service de restructuration : analyse du refus, correction des faiblesses, nouvelle approche bancaire ciblée.
-
-Tarif : 50 000 XAF (diagnostic + nouveau montage).
-
-Taux de succès après restructuration : 70%.
-
-On regarde ensemble ?
-
-Mayinvest · ${MAYINVEST_CONTACT}`
-
-export type LeadActionKey = 'ouverture_compte' | 'pack_formalisation' | 'couveuse' | 'restructuration'
+export type LeadActionKey = 'ouverture_compte' | 'pack_formalisation' | 'couveuse'
 
 export const LEAD_ACTIONS = [
   {
@@ -99,15 +84,6 @@ export const LEAD_ACTIONS = [
     template: TEMPLATE_COUVEUSE_3MOIS,
     color: '#047857',
     icon: '🌱',
-  },
-  {
-    key: 'restructuration' as const,
-    label: 'Proposer Restructuration 50 000 XAF',
-    short: 'Restructuration',
-    prix: PRIX_RESTRUCTURATION,
-    template: TEMPLATE_RESTRUCTURATION,
-    color: '#4338CA',
-    icon: '🔄',
   },
 ] as const
 

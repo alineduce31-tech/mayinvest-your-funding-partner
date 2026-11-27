@@ -55,7 +55,7 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
   return (
     <div className="bk ne">
       <style>{BK_CSS + NE_CSS}</style>
-      <p className="bk-sub">Dossiers refusés pour l'instant : on les aide à devenir éligibles (Pack formalisation, ouverture de compte, restructuration).</p>
+      <p className="bk-sub">Dossiers refusés pour l'instant : on les aide à devenir éligibles avec nos packs : Pack formalisation et Ouverture de compte.</p>
       <div className="bk-kpis">
         <div className="bk-k"><i className="bk-ic b"><RefreshCw size={16} strokeWidth={1.8}/></i><small>Dossiers à reconvertir</small><b>{ch.aReconvertir}</b><span>dont {ch.sansConseiller} sans conseiller</span></div>
         <div className="bk-k warn"><i className="bk-ic o"><FileX size={16} strokeWidth={1.8}/></i><small>Sans RCCM</small><b>{ch.sansRccm}</b><span>cible du Pack formalisation</span></div>
@@ -129,7 +129,7 @@ const NE_CSS = `
   .ne-st .ns-compact { max-width: 100%; font-size: 12px !important; font-weight: 700; }
   .ne-offre-c { display: flex; min-width: 0; }
   .ne-offre { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 999px; padding: 8px 13px; font-family: inherit; font-size: 12.5px !important; line-height: 1.2; font-weight: 700; cursor: pointer; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-  .ne-offre.pack_formalisation, .ne-offre.restructuration { background: #25D366; color: #fff; }
+  .ne-offre.pack_formalisation { background: #25D366; color: #fff; }
   .ne-offre.ouverture_compte { background: #EEF4FF; color: #1A6BFF; }
   .ne-offre.repasser { background: #F1F5F9; color: #334155; }
   @media (max-width: 1100px) {

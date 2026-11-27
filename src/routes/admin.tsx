@@ -1222,7 +1222,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
           </div>
         ))}
       </div>
-      <p className="sd-hint">Potentiel = nombre de dossiers × prix du service (Ouverture compte 30 000 XAF, Pack formalisation et Restructuration 50 000 XAF).</p>
+      <p className="sd-hint">Potentiel = nombre de dossiers × prix du service (Ouverture compte 30 000 XAF, Pack formalisation 50 000 XAF).</p>
     </section>
 
     <section className="sd-section"><h2><Zap size={14} strokeWidth={2}/>Actions prioritaires</h2><div className="sd-alerts">
@@ -2529,7 +2529,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
 }
 
 /* ============================================================
- * LEAD ACTIONS PANEL — 4 boutons WhatsApp (Ouverture Compte, Pack, Couveuse, Restructuration)
+ * LEAD ACTIONS PANEL — boutons WhatsApp (Ouverture Compte, Pack, Couveuse)
  * ============================================================ */
 function LeadActionsPanel({ lead, onSendInternal }: { lead: any; onSendInternal: (msg: string) => void }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
