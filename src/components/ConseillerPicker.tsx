@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { ChevronDown, Search, Sparkles, MapPin, UserPlus, UserX, Check } from 'lucide-react'
+import { ChevronDown, ChevronRight, ChevronLeft, Search, Sparkles, MapPin, UserPlus, UserX, Check } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import { NiceSelectStyles } from '@/components/NiceSelect'
 import { estMobile, positionCarte, type Position } from '@/lib/nice-select'
@@ -47,6 +47,13 @@ export default function ConseillerPicker({ value, onChange, villeLead, montant, 
   const btn = useRef<HTMLButtonElement>(null)
   const carte = useRef<HTMLDivElement>(null)
   const champ = useRef<HTMLInputElement>(null)
+  const rangee = useRef<HTMLDivElement>(null)
+  const [bords, setBords] = useState({ g: false, d: false })
+  function majBords() {
+    const el = rangee.current; if (!el) return
+    setBords({ g: el.scrollLeft > 2, d: el.scrollLeft + el.clientWidth < el.scrollWidth - 2 })
+  }
+  function defiler(sens: 1 | -1) { rangee.current?.scrollBy({ left: sens * 140, behavior: 'smooth' }) }
 
   useEffect(() => { chargerEquipe().then(setEquipe) }, [])
   const actuel = equipe.find(c => c.id === value)
@@ -68,6 +75,7 @@ export default function ConseillerPicker({ value, onChange, villeLead, montant, 
 
   useLayoutEffect(() => { if (open && !mobile) placer() }, [open, mobile])
   useEffect(() => { if (open && !mobile) setTimeout(() => champ.current?.focus(), 30) }, [open, mobile])
+  useEffect(() => { if (!open) return; const t = setTimeout(majBords, 40); window.addEventListener('resize', majBords); return () => { clearTimeout(t); window.removeEventListener('resize', majBords) } }, [open])
   useEffect(() => {
     if (!open) return
     const dehors = (e: MouseEvent | TouchEvent) => {
@@ -88,7 +96,13 @@ export default function ConseillerPicker({ value, onChange, villeLead, montant, 
   const contenu = (
     <div className="cp">
       <label className="cp-srch"><Search size={14}/><input ref={champ} value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher un conseiller…" aria-label="Rechercher un conseiller"/></label>
-      <div className="cp-f">{FILTRES.map(f => <button key={f.k} type="button" className={filtre === f.k ? 'on' : ''} onClick={() => setFiltre(f.k)}>{f.icon}{f.label}</button>)}</div>
+      <div className={`cp-fw${bords.d ? ' fade' : ''}${bords.g ? ' fade-g' : ''}`}>
+      <div className="cp-f" ref={rangee} onScroll={majBords}
+        onWheel={e => { const el = e.currentTarget; if (el.scrollWidth > el.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) el.scrollLeft += e.deltaY }}
+      >{FILTRES.map(f => <button key={f.k} type="button" className={filtre === f.k ? 'on' : ''} onClick={e => { setFiltre(f.k); e.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' }) }}>{f.icon}{f.label}</button>)}</div>
+      {bords.g && <button type="button" className="cp-fa g" aria-label="Filtres précédents" onClick={() => defiler(-1)}><ChevronLeft size={14}/></button>}
+      {bords.d && <button type="button" className="cp-fa d" aria-label="Autres filtres" onClick={() => defiler(1)}><ChevronRight size={14}/></button>}
+      </div>
       {(villeLead || montant) ? <div className="cp-lead">Lead : {[villeLead, montant ? montantComplet(montant) : ''].filter(Boolean).join(' · ')}</div> : null}
       <div className="cp-l" role="listbox" aria-label="Conseillers">
         {liste.length === 0 && <div className="cp-vide">{equipe.length ? 'Aucun conseiller pour ce filtre.' : 'Aucun commercial actif pour le moment.'}</div>}
@@ -151,7 +165,17 @@ const CP_CSS = `
   .cp { display: flex; flex-direction: column; min-height: 0; flex: 1; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; color: #1D1D1F; }
   .cp-srch { display: flex; align-items: center; gap: 8px; margin: 12px 12px 0; height: 36px; padding: 0 12px; border-radius: 999px; background: #F5F5F7; color: #A1A1A6; }
   .cp-srch input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 13.5px; color: #1D1D1F; min-width: 0; }
-  .cp-f { display: flex; gap: 6px; padding: 10px 12px 4px; overflow-x: auto; scrollbar-width: none; }
+  .cp-f { display: flex; gap: 6px; padding: 10px 12px 8px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #C7C7CC transparent; scroll-behavior: smooth; }
+  .cp-fw { position: relative; }
+  .cp-fa { position: absolute; z-index: 2; top: 10px; width: 28px; height: 28px; border-radius: 999px; border: none; display: grid; place-items: center; cursor: pointer; background: #fff; color: #1D1D1F; box-shadow: 0 1px 4px rgba(0,0,0,.14); }
+  .cp-fa.d { right: 8px; } .cp-fa.g { left: 8px; }
+  .cp-fa:hover { background: #F5F5F7; }
+  .cp-fw.fade-g::before { content: ''; position: absolute; z-index: 1; top: 10px; left: 0; width: 44px; height: 28px; pointer-events: none; background: linear-gradient(270deg, rgba(255,255,255,0), #fff 70%); }
+  .cp-fw.fade::after { content: ''; position: absolute; z-index: 1; top: 10px; right: 0; width: 44px; height: 28px; pointer-events: none; background: linear-gradient(90deg, rgba(255,255,255,0), #fff 70%); }
+  .cp-f::-webkit-scrollbar { height: 4px; }
+  .cp-f::-webkit-scrollbar-track { background: transparent; margin: 0 12px; }
+  .cp-f::-webkit-scrollbar-thumb { background: #C7C7CC; border-radius: 4px; }
+  .cp-f::-webkit-scrollbar-thumb:hover { background: #A1A1A6; }
   .cp-f button { flex: none; display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 11px; border-radius: 999px; border: none; background: #F5F5F7; color: #3A3A3C; font-family: inherit; font-size: 12px !important; font-weight: 500; cursor: pointer; }
   .cp-f button.on { background: #0D1B3E; color: #fff; }
   .cp-lead { font-size: 11.5px; color: #86868B; padding: 6px 14px 4px; }
