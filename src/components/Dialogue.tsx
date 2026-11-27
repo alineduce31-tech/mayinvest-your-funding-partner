@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, CircleAlert, CircleCheck, Info } from 'lucide-react'
+import { X, CircleAlert, CircleCheck, Info, Landmark } from 'lucide-react'
+import { formatMontant, lireMontant } from '@/lib/depot'
 
 // Fenêtres Mayinvest à la place des boîtes du navigateur (alert, confirm, prompt) : même style partout, croix de fermeture.
 
 type Question = {
-  type: 'confirmer' | 'texte'
+  type: 'confirmer' | 'texte' | 'depot'
+  banques?: string[] | undefined
+  banque?: string | undefined
+  montant?: number | null | undefined
+  avecMontant?: boolean | undefined
   titre: string
   texte?: string | undefined
   label?: string | undefined
@@ -33,6 +38,13 @@ export function demanderTexte(o: { titre: string; texte?: string; label?: string
   return new Promise(res => poser!({ type: 'texte', ...o, resoudre: res }))
 }
 
+export type ReponseDepot = { banque: string; montant: number | null }
+/** Demande la banque où le dossier est déposé (et le montant financé au financement). null si « Plus tard ». */
+export function demanderDepot(o: { titre: string; texte?: string; banques: string[]; banque?: string; avecMontant?: boolean; montant?: number | null }): Promise<ReponseDepot | null> {
+  if (!poser) return Promise.resolve(null)
+  return new Promise(res => poser!({ type: 'depot', bouton: 'Enregistrer', ...o, resoudre: res }))
+}
+
 /** Message court en bas de l'écran (erreur, succès, information), avec croix. */
 export function informer(texte: string, ton: Toast['ton'] = 'erreur') {
   if (!notifier) { if (typeof window !== 'undefined') window.alert(texte); return }
@@ -44,13 +56,20 @@ export function DialogueHote() {
   const [q, setQ] = useState<Question | null>(null)
   const [val, setVal] = useState('')
   const [err, setErr] = useState('')
+  const [banque, setBanque] = useState('')
+  const [autre, setAutre] = useState(false)
+  const [montant, setMontant] = useState('')
   const [toasts, setToasts] = useState<Toast[]>([])
   const champ = useRef<HTMLInputElement & HTMLTextAreaElement>(null)
   const [monte, setMonte] = useState(false)
 
   useEffect(() => {
     setMonte(true)
-    poser = nq => { setQ(nq); setVal(nq.valeur || ''); setErr('') }
+    poser = nq => {
+      setQ(nq); setVal(nq.valeur || ''); setErr('')
+      const b = nq.banque || ''
+      setBanque(b); setAutre(!!b && !(nq.banques || []).includes(b)); setMontant(formatMontant(nq.montant))
+    }
     let n = 0
     notifier = t => {
       const id = ++n
@@ -73,6 +92,12 @@ export function DialogueHote() {
     if (q.type === 'texte') {
       if (ok && !val.trim()) { setErr('Ce champ est vide.'); return }
       q.resoudre(ok ? val.trim() : null)
+    } else if (q.type === 'depot') {
+      if (!ok) { q.resoudre(null); setQ(null); return }
+      if (!banque.trim()) { setErr('Choisissez la banque.'); return }
+      const m = q.avecMontant ? lireMontant(montant) : null
+      if (m !== null && !Number.isFinite(m)) { setErr('Montant illisible. Exemple : 25 000 000'); return }
+      q.resoudre({ banque: banque.trim(), montant: m })
     } else q.resoudre(ok)
     setQ(null)
   }
@@ -97,8 +122,25 @@ export function DialogueHote() {
                 : <input ref={champ} className="dlg-in" value={val} placeholder={q.placeholder} onChange={e => { setVal(e.target.value); setErr('') }} onKeyDown={e => { if (e.key === 'Enter') fermer(true) }}/>}
               {err && <div className="dlg-err">{err}</div>}
             </>}
+            {q.type === 'depot' && <>
+              <label className="dlg-l">Banque de dépôt</label>
+              <div className="dlg-chips" role="radiogroup" aria-label="Banque de dépôt">
+                {(q.banques || []).map(b => (
+                  <button key={b} type="button" role="radio" aria-checked={!autre && banque === b} className={`dlg-chip ${!autre && banque === b ? 'on' : ''}`} onClick={() => { setBanque(b); setAutre(false); setErr('') }}>
+                    <Landmark size={14}/>{b}
+                  </button>
+                ))}
+                <button type="button" role="radio" aria-checked={autre} className={`dlg-chip ${autre ? 'on' : ''}`} onClick={() => { setAutre(true); setBanque(''); setErr('') }}>Autre banque</button>
+              </div>
+              {autre && <input ref={champ} className="dlg-in" style={{ marginTop: 8 }} value={banque} placeholder="Nom de la banque" onChange={e => { setBanque(e.target.value); setErr('') }}/>}
+              {q.avecMontant && <>
+                <label className="dlg-l">Montant financé par la banque</label>
+                <div className="dlg-mt"><input className="dlg-in" inputMode="numeric" value={montant} placeholder="Ex. : 25 000 000" onChange={e => { setMontant(e.target.value); setErr('') }} onBlur={() => { const m = lireMontant(montant); if (m !== null && Number.isFinite(m)) setMontant(formatMontant(m)) }}/><span>XAF</span></div>
+              </>}
+              {err && <div className="dlg-err">{err}</div>}
+            </>}
             <div className="dlg-act">
-              <button type="button" className="dlg-b sec" onClick={() => fermer(false)}>Annuler</button>
+              <button type="button" className="dlg-b sec" onClick={() => fermer(false)}>{q.type === 'depot' ? 'Plus tard' : 'Annuler'}</button>
               <button type="button" className={`dlg-b ${q.danger ? 'danger' : 'pri'}`} onClick={() => fermer(true)}>{q.bouton || (q.type === 'texte' ? 'Valider' : 'Confirmer')}</button>
             </div>
           </div>
@@ -139,6 +181,15 @@ export const DLG_CSS = `
   .dlg-h + .dlg-in, .dlg-h + .dlg-in.ta { margin-top: 14px; }
   .dlg-in:focus { border-color: #1A6BFF; box-shadow: 0 0 0 3px rgba(26,107,255,.15); }
   .dlg-err { margin-top: 8px; font-size: 12.5px; color: #B42318; }
+  .dlg-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .dlg-chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 13px; border-radius: 999px; border: 1px solid #E5E5EA; background: #fff; color: #1D1D1F; font-family: inherit; font-size: 13.5px !important; font-weight: 500; cursor: pointer; }
+  .dlg-chip svg { color: #86868B; }
+  .dlg-chip:hover { background: #F5F7FB; }
+  .dlg-chip.on { background: #EAF1FF; border-color: #1A6BFF; color: #1A6BFF; }
+  .dlg-chip.on svg { color: #1A6BFF; }
+  .dlg-mt { position: relative; }
+  .dlg-mt .dlg-in { padding-right: 52px; }
+  .dlg-mt span { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #86868B; }
   .dlg-act { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
   .dlg-b { height: 40px; padding: 0 18px; border-radius: 999px; border: none; font-family: inherit; font-size: 14px !important; font-weight: 600; cursor: pointer; }
   .dlg-b.sec { background: #F2F2F7; color: #1D1D1F; } .dlg-b.pri { background: #1A6BFF; color: #fff; } .dlg-b.danger { background: #DC2626; color: #fff; }

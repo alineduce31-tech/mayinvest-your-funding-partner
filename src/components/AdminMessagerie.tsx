@@ -1,4 +1,5 @@
 import CloseIcon from '@/components/CloseIcon'
+import { completerDepot } from '@/components/depotBanque'
 import CarteAide, { BoutonAide } from '@/components/CarteAide'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import DemandePieces from '@/components/DemandePieces'
@@ -284,6 +285,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
     const { error } = await supabase.rpc('admin_update_lead_status', { p_admin_id: session.id, p_lead_id: leadId, p_statut: s })
     if (error) { setErr(error.message); return }
     loadLead(); onChanged()
+    if (await completerDepot(leadId, s, lead)) loadLead()
   }
   async function reattribuer(id: string) {
     const { error } = await supabase.rpc('assign_lead_agent', { p_lead_id: leadId, p_agent_id: id || null })

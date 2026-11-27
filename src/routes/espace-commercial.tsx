@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { completerDepot } from '@/components/depotBanque'
 import CarteAide, { BoutonAide } from '@/components/CarteAide'
 import { useEffect, useState } from 'react'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
@@ -374,6 +375,7 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
     if (error) { setToast({ id: leadId, avant: l.statut, texte: error.message || 'Déplacement impossible', err: true }); return }
     setToast({ id: leadId, avant: l.statut, texte: `${leadNom(l)} passé à « ${ETAPES.find(x => x.key === cible)?.label} »` })
     onUpdated()
+    if (await completerDepot(leadId, nouveau, l as any)) onUpdated()
   }
   async function annuler() {
     if (!toast || toast.err) { setToast(null); return }
@@ -629,7 +631,10 @@ function LeadDrawer({ lead, commercialId, onClose, onUpdated, onOpenThread }: { 
       p_commercial_id: commercialId, p_lead_id: lead.id, p_statut: newS,
     })
     setSaving(false)
-    if (!error) { setStatut(newS); onUpdated() }
+    if (!error) {
+      setStatut(newS); onUpdated()
+      if (await completerDepot(lead.id, newS, lead as any)) onUpdated()
+    }
   }
   const nom = lead.type === 'physique'
     ? `${lead.identite?.prenom || ''} ${lead.identite?.nom || ''}`.trim()

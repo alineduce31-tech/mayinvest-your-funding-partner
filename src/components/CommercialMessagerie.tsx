@@ -1,4 +1,5 @@
 import CloseIcon from '@/components/CloseIcon'
+import { completerDepot } from '@/components/depotBanque'
 import CarteAide from '@/components/CarteAide'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import DemandePieces from '@/components/DemandePieces'
@@ -229,6 +230,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
     setBusyStep(false)
     if (error) { setErr(error.message); return }
     onChanged()
+    await completerDepot(row.lead_id, next, row as any)
   }
 
   const step = prochaineEtape(row, now)

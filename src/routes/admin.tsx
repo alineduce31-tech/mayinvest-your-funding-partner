@@ -1,7 +1,9 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import CarteAide, { BoutonAide } from '@/components/CarteAide'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
-import { Filter, LogOut, Plus, ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
+import { Filter, LogOut, Plus, ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity, Pencil } from 'lucide-react'
+import { completerDepot } from '@/components/depotBanque'
+import RapportsAuto from '@/components/RapportsAuto'
 import MenuExporter from '@/components/MenuExporter'
 import DemandePieces from '@/components/DemandePieces'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
@@ -287,9 +289,17 @@ function Admin({ session }: { session: any }) {
   useEffect(() => { if (page !== 'general') loadLeads() }, [page])
 
   async function updateStatut(id: string, statut: string) {
+    const avant = leads.find(l => l.id === id)
     const { error } = await supabase.rpc('admin_update_lead_status', { p_admin_id: session?.id, p_lead_id: id, p_statut: statut })
-    if (error) { informer("Statut non enregistré : " + error.message); loadLeads(); return }
+    if (error) { informer("Statut non enregistré : " + error.message); loadLeads(); return null }
     setLeads(prev => prev.map(l => l.id === id ? { ...l, statut } : l))
+    // Dépôt en banque / financement : banque de dépôt et montant financé (rapport Banques)
+    const depot = await completerDepot(id, statut, avant || selectedLead)
+    if (depot) {
+      setLeads(prev => prev.map(l => l.id === id ? { ...l, ...depot } : l))
+      setSelectedLead((s: any) => s && s.id === id ? { ...s, ...depot } : s)
+    }
+    return depot
   }
 
   async function logout() {
@@ -1070,7 +1080,8 @@ function Admin({ session }: { session: any }) {
         <LeadDrawer
           lead={selectedLead}
           onClose={() => { setSelectedLead(null); loadLeads() }}
-          onStatutChange={(s: string) => { updateStatut(selectedLead.id, s); setSelectedLead({ ...selectedLead, statut: s }) }}
+          onStatutChange={(s: string) => { setSelectedLead({ ...selectedLead, statut: s }); updateStatut(selectedLead.id, s) }}
+          onDepotChange={(d: any) => { setSelectedLead((x: any) => x ? { ...x, ...d } : x); setLeads(prev => prev.map(l => l.id === selectedLead.id ? { ...l, ...d } : l)) }}
           msgCount={msgCounts[selectedLead.id] || 0}
           onMsgRead={() => setMsgCounts(c => ({ ...c, [selectedLead.id]: 0 }))}
           teamMembers={teamMembers}
@@ -2122,6 +2133,8 @@ function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
 
   const maxN = Math.max(1, ...byStatut.map(r => r.n))
   return <div className="rap2">
+    <RapportsAuto/>
+    <h3 className="rap-sec">Tous les dossiers</h3>
     <div className="rap-grid">
       <div className="rap-kpi"><i className="eq-ic b"><Wallet size={16}/></i><div className="rap-kpi-lbl">Total demandé</div><div className="rap-kpi-val">{leads.length ? xaf(totalMontant) : '—'}</div><div className="rap-kpi-sub">sur {leads.length} dossier{leads.length > 1 ? 's' : ''}</div></div>
       <div className="rap-kpi"><i className="eq-ic n"><Coins size={16}/></i><div className="rap-kpi-lbl">Panier moyen</div><div className="rap-kpi-val">{leads.length ? xaf(avgMontant) : '—'}</div><div className="rap-kpi-sub">par dossier</div></div>
@@ -2166,7 +2179,7 @@ function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
 /* ============================================================
  * DRAWER DÉTAIL + CHAT
  * ============================================================ */
-function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMembers, onAssignAgent, isDirector, adminId, peutConfirmer, peutCocher, onPackChange }: any) {
+function LeadDrawer({ lead, onClose, onStatutChange, onDepotChange, msgCount, onMsgRead, teamMembers, onAssignAgent, isDirector, adminId, peutConfirmer, peutCocher, onPackChange }: any) {
   const [tab, setTab] = useState<'infos' | 'chat' | 'docs' | 'notes'>('infos')
   const [notes, setNotes] = useState<any[]>([])
   const [newNote, setNewNote] = useState('')
@@ -2368,6 +2381,14 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
               <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Wallet size={15}/></i><span>Montant demandé</span><b>{formatXAF(lead.montant_demande)}</b></div>
               <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Target size={15}/></i><span>Objet</span><b>{lead.besoin?.objet || '—'}</b></div>
               <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Landmark size={15}/></i><span>Banque actuelle</span><b>{lead.banque_actuelle || '—'}</b></div>
+              {(lead.banque_depot || ['Dossier Déposé', 'Éligible', 'Financé'].includes(lead.statut)) && (
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Building2 size={15}/></i><span>Banque de dépôt</span>
+                  <button type="button" className={`ld-depot ${lead.banque_depot ? '' : 'vide'}`} onClick={async () => { const d = await completerDepot(lead.id, lead.statut, lead, true); if (d) onDepotChange?.(d) }}>
+                    {lead.banque_depot || 'À renseigner'}<Pencil size={12}/>
+                  </button>
+                </div>
+              )}
+              {lead.montant_finance != null && <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><CheckCircle2 size={15}/></i><span>Montant financé</span><b>{formatXAF(lead.montant_finance)}</b></div>}
               {!isP && <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><ArrowLeftRight size={15}/></i><span>Flux mensuel</span><b>{formatXAF(lead.besoin?.flux_mois)}</b></div>}
             </div>
 
