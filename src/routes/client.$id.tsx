@@ -2,7 +2,7 @@ import { lienContact } from '@/lib/lead-templates'
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { informer } from '@/components/Dialogue'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
-import { Inbox, CalendarDays, MailCheck, Coins } from 'lucide-react'
+import { Inbox, CalendarDays, MailCheck, Coins, Briefcase, Wallet, Target, MapPin, Building2, UserCheck, ArrowLeftRight } from 'lucide-react'
 import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Landmark, FileBadge, FileText, BarChart3, CircleCheck, Clock, Camera, Lock, Search, ChevronLeft, Plus, Image as ImageIcon } from 'lucide-react'
 import PackClient from '@/components/PackClient'
 import { proposerPack } from '@/lib/pack'
@@ -1171,24 +1171,24 @@ function ClientPortal() {
         {activeTab === 'infos' && <>
           <div className="cx-gt">Votre demande</div>
           <div className="cx-g">
-            <div className="cx-r"><span>Type</span><b>{isP ? 'Particulier' : 'PME'}</b></div>
-            <div className="cx-r"><span>Activité</span><b>{lead?.activite || '—'}</b></div>
-            <div className="cx-r"><span>Montant demandé</span><b>{formatXAF(lead?.montant_demande)}</b></div>
-            <div className="cx-r"><span>Objet</span><b>{lead?.besoin?.objet || '—'}</b></div>
-            <div className="cx-r"><span>Banque</span><b>{lead?.banque_actuelle || '—'}</b></div>
-            <div className="cx-r"><span>Ville</span><b>{lead?.ville || '—'}</b></div>
+            <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><User size={15}/></i><span>Type</span><b>{isP ? 'Particulier' : 'PME'}</b></div>
+            <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><Briefcase size={15}/></i><span>Activité</span><b>{lead?.activite || '—'}</b></div>
+            <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><Wallet size={15}/></i><span>Montant demandé</span><b>{formatXAF(lead?.montant_demande)}</b></div>
+            <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><Target size={15}/></i><span>Objet</span><b>{lead?.besoin?.objet || '—'}</b></div>
+            <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><Landmark size={15}/></i><span>Banque</span><b>{lead?.banque_actuelle || '—'}</b></div>
+            <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><MapPin size={15}/></i><span>Ville</span><b>{lead?.ville || '—'}</b></div>
           </div>
           <div className="cx-gt">{isP ? 'Situation professionnelle' : 'Votre société'}</div>
           <div className="cx-g">
             {isP ? <>
-              <div className="cx-r"><span>Employeur</span><b>{lead?.situation?.employeur || '—'}</b></div>
-              <div className="cx-r"><span>Revenu mensuel</span><b>{lead?.situation?.revenu ? formatXAF(lead.situation.revenu) : '—'}</b></div>
-              <div className="cx-r"><span>Salaire domicilié</span><b>{lead?.eligibilite?.salaire_domic || '—'}</b></div>
+              <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><Building2 size={15}/></i><span>Employeur</span><b>{lead?.situation?.employeur || '—'}</b></div>
+              <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><Coins size={15}/></i><span>Revenu mensuel</span><b>{lead?.situation?.revenu ? formatXAF(lead.situation.revenu) : '—'}</b></div>
+              <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><Landmark size={15}/></i><span>Salaire domicilié</span><b>{lead?.eligibilite?.salaire_domic || '—'}</b></div>
             </> : <>
-              <div className="cx-r"><span>Dirigeant</span><b>{lead?.situation?.dirigeant || '—'}</b></div>
-              <div className="cx-r"><span>RCCM</span><b>{lead?.situation?.rccm || '—'}</b></div>
-              <div className="cx-r"><span>CA annuel</span><b>{lead?.situation?.ca_annuel ? formatXAF(lead.situation.ca_annuel) : '—'}</b></div>
-              <div className="cx-r"><span>Flux mensuel</span><b>{lead?.besoin?.flux_mois ? formatXAF(lead.besoin.flux_mois) : '—'}</b></div>
+              <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><UserCheck size={15}/></i><span>Dirigeant</span><b>{lead?.situation?.dirigeant || '—'}</b></div>
+              <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><FileBadge size={15}/></i><span>RCCM</span><b>{lead?.situation?.rccm || '—'}</b></div>
+              <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><BarChart3 size={15}/></i><span>CA annuel</span><b>{lead?.situation?.ca_annuel ? formatXAF(lead.situation.ca_annuel) : '—'}</b></div>
+              <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><ArrowLeftRight size={15}/></i><span>Flux mensuel</span><b>{lead?.besoin?.flux_mois ? formatXAF(lead.besoin.flux_mois) : '—'}</b></div>
             </>}
           </div>
           <div className="cx-note"><MessageCircle size={13}/>Une information à corriger ? Écrivez à votre conseiller dans l'onglet Discussion.</div>
@@ -1268,7 +1268,9 @@ const CX_CSS = `
   .cx-st { flex: none; } .cx-st.g { color: #16A34A; } .cx-st.o { color: #D9690B; }
   .cx-vide { padding: 22px; text-align: center; font-size: 13px; color: #86868B; }
   .cx-note { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #86868B; margin: 12px 6px 0; }
-  .cx-r { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: 14px; }
+  .cx-r { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; font-size: 14px; }
+  .cx-r-ic { width: 30px; height: 30px; border-radius: 9px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: #EAF1FF; color: #1A6BFF; margin: -4px 0; }
+  .cx-r-ic + span { flex: 1; }
   .cx-r + .cx-r { border-top: 1px solid #F0F0F2; }
   .cx-r span { color: #86868B; } .cx-r b { font-weight: 500; text-align: right; }
   .cx-out { height: 38px; padding: 0 14px; border-radius: 999px; border: none; background: #F5F5F7; color: #3A3A3C; display: inline-flex; align-items: center; gap: 7px; font-family: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; flex: none; }
