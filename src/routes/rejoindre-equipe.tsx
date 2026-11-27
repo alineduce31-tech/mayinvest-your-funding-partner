@@ -191,7 +191,7 @@ function RejoindreEquipePage() {
         <section className="hero">
           <span className="hero-pill">
             <span className="dot"></span>
-            Recrutement ouvert · <b>24 postes</b> au Congo
+            Recrutement ouvert · <b>24 partenaires</b> au Congo
           </span>
           <h1>Rejoignez l'équipe commerciale <span>Mayinvest</span></h1>
           <p className="sub">Gagnez jusqu'à <b>500 000 XAF par mois</b> en aidant les Congolais à obtenir leur crédit bancaire. Formation payée, dashboard temps réel, paiement garanti sur chaque dossier financé.</p>

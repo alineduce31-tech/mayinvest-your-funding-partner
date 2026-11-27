@@ -415,7 +415,7 @@ function Index() {
         <div className="recrut-main">
           <div className="recrut-top">
             <span className="recrut-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1a5 5 0 0 1 5-5h3a5 5 0 0 1 5 5v1"/><path d="M16 4.2a3.5 3.5 0 0 1 0 7"/><path d="M18.5 14.2a5 5 0 0 1 3 4.6V20"/></svg></span>
-            <span className="recrut-tag">Appel à partenariat · 24 places</span>
+            <span className="recrut-tag">Appel à partenariat · 24 partenaires</span>
           </div>
           <h2 className="recrut-h3">Devenez Partenaire Commercial Mayinvest</h2>
           <p className="recrut-acc">Indépendant, entrepreneur, étudiant ou déjà en activité ? Générez des revenus complémentaires à Brazzaville et Pointe-Noire.</p>
