@@ -5,25 +5,26 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from
  * Sur grand écran (≥ 1280 px), elle remonte dans l'en-tête, juste à droite du titre de la page (.page-title).
  * À utiliser avec les classes CSS globales « barre-fige » et « colle » (styles.css).
  */
-export function useBarreFigee<T extends HTMLElement = HTMLDivElement>() {
+export function useBarreFigee<T extends HTMLElement = HTMLDivElement>({ titre: selTitre = '.page-title', haut = 72 }: { titre?: string; haut?: number } = {}) {
   const repere = useRef<HTMLDivElement>(null)
   const barre = useRef<T>(null)
   const [colle, setColle] = useState(false)
   const [decalage, setDecalage] = useState(0)
 
+  // Écoute du défilement (fonctionne aussi si la barre apparaît après un chargement)
   useEffect(() => {
-    const el = repere.current
-    if (!el || typeof IntersectionObserver === 'undefined') return
-    const obs = new IntersectionObserver(([e]) => setColle(!!e && !e.isIntersecting && e.boundingClientRect.top < 80), { rootMargin: '-72px 0px 0px 0px', threshold: 0 })
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [])
+    const maj = () => { const el = repere.current; setColle(!!el && el.getBoundingClientRect().top < haut) }
+    maj()
+    window.addEventListener('scroll', maj, { passive: true })
+    window.addEventListener('resize', maj)
+    return () => { window.removeEventListener('scroll', maj); window.removeEventListener('resize', maj) }
+  }, [haut])
 
   // Distance entre le début de la barre et la fin du titre de la page, mesurée avant décalage
   useLayoutEffect(() => {
     if (!colle) { setDecalage(0); return }
     const mesurer = () => {
-      const titre = document.querySelector('.page-title')
+      const titre = document.querySelector(selTitre)
       const b = barre.current
       if (!titre || !b) return
       const gauche = b.getBoundingClientRect().left - (parseFloat(getComputedStyle(b).marginLeft) || 0)
@@ -36,7 +37,7 @@ export function useBarreFigee<T extends HTMLElement = HTMLDivElement>() {
     mesurer()
     window.addEventListener('resize', mesurer)
     return () => window.removeEventListener('resize', mesurer)
-  }, [colle])
+  }, [colle, selTitre])
 
   const style = { ['--decalage' as any]: `${decalage}px` } as CSSProperties
   return { repere, barre, colle, style, classe: `barre-fige${colle ? ' colle' : ''}` }

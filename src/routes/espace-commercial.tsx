@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
+import { useBarreFigee } from '@/hooks/useBarreFigee'
 import SkeletonPage from '@/components/SkeletonPage'
 import { Logo } from '@/components/Logo'
 import { AuthStyles, AuthHeader, AuthTitle, AuthTabs, PasswordField, IconPhone, IconMail, IconBriefcase, AlertIcon } from '@/components/AuthUI'
@@ -554,6 +555,8 @@ function KpiCard({ tone, label, value, sub, alert, onClick }: { tone?: 'primary'
 function LeadsTab({ leads, majA, onReload, onOpenLead, onNewLead }: { leads: Lead[]; majA: number; onReload: () => Promise<void> | void; onOpenLead: (l: Lead) => void; onNewLead: () => void }) {
   const [tourne, setTourne] = useState(false)
   const [now, setNow] = useState(Date.now())
+  // L'en-tête « Tous tes leads » remonte dans la barre du haut au défilement
+  const fige = useBarreFigee({ titre: '.ws-page-title', haut: 10 })
   useEffect(() => { const t = setInterval(() => setNow(Date.now()), 30_000); return () => clearInterval(t) }, [])
   useEffect(() => { setNow(Date.now()) }, [majA])
   if (leads.length === 0) {
@@ -570,7 +573,8 @@ function LeadsTab({ leads, majA, onReload, onOpenLead, onNewLead }: { leads: Lea
   }
   return (
     <div className="section-card">
-      <div className="section-head">
+      <div ref={fige.repere} aria-hidden="true" style={{ height: 1, marginBottom: -1 }}/>
+      <div ref={fige.barre} style={fige.style} className={`section-head lt-fige${fige.colle ? ' colle' : ''}`}>
         <div className="lt-title">
           <h3>Tous tes leads</h3>
           <button className="lt-fresh" onClick={async () => { setTourne(true); await onReload(); setTimeout(() => setTourne(false), 500) }} title="Actualiser la liste">
@@ -581,7 +585,7 @@ function LeadsTab({ leads, majA, onReload, onOpenLead, onNewLead }: { leads: Lea
           <button className={`btn-refresh ${tourne ? 'spin' : ''}`} onClick={async () => { setTourne(true); await onReload(); setTimeout(() => setTourne(false), 500) }} aria-label="Actualiser" title="Actualiser">
             <RefreshCw size={16} strokeWidth={2.2}/>
           </button>
-          <button className="btn-new-lead" onClick={onNewLead}><UserPlus size={17} strokeWidth={2.2}/>Nouveau lead</button>
+          <button className="btn-new-lead" onClick={onNewLead} aria-label="Nouveau lead"><UserPlus size={17} strokeWidth={2.2}/><span className="bnl-txt">Nouveau lead</span></button>
         </div>
       </div>
       <div className="leads-table">
@@ -1084,6 +1088,16 @@ function GlobalStyles() {
       .cd-calc b { font-size: 20px; font-weight: 800; }
       .kpi.primary .kpi-sub { color: rgba(255,255,255,0.65); }
 
+      /* En-tête « Tous tes leads » figé : il remonte dans la barre du haut, à droite du titre */
+      .lt-fige { position: sticky; top: 9px; z-index: 11; }
+      .lt-fige.colle { margin-left: var(--decalage, 0px); flex-wrap: nowrap; height: 38px; }
+      .lt-fige.colle .lt-title h3 { font-size: 14px; }
+      @media (max-width: 640px) {
+        .lt-fige.colle .lt-title { display: none; }
+        .lt-fige.colle { justify-content: flex-end; }
+        .lt-fige.colle .bnl-txt { display: none; }
+        .lt-fige.colle .btn-new-lead { width: 38px; padding: 0; justify-content: center; }
+      }
       .section-card { background: #fff; border: 1px solid ${MI.grayBorder}; border-radius: 16px; padding: 24px; margin-bottom: 16px; box-shadow: 0 2px 4px rgba(13,23,41,0.03); }
       .section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px; }
       .section-head h3 { font-size: 15px; font-weight: 800; color: ${MI.navy}; margin: 0; }
