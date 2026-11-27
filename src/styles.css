@@ -2121,7 +2121,7 @@ button:active, .lap-btn:active {
    FICHE LEAD (drawer admin) · style Apple + notes internes
    ============================================================ */
 .drawer { background: #fff !important; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; color: #1D1D1F; }
-.drawer .ld-head { background: #fff !important; padding: 18px 20px 14px !important; border-bottom: none !important; }
+.drawer .ld-head { background: #fff !important; padding: 18px 20px 14px !important; border-bottom: 1px solid #EEF1F6 !important; }
 .ld-top { display: flex; align-items: center; gap: 12px; }
 .ld-av { width: 44px; height: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex: none; }
 .ld-av.s { width: 26px; height: 26px; font-size: 10px; }
@@ -2158,8 +2158,8 @@ button:active, .lap-btn:active {
 .ld-seg button.on .ld-badge { border-color: #fff; }
 .ld-badge { font-style: normal; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #1A6BFF; color: #fff; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
 .ld-badge.o { background: #D9690B; } .ld-badge.n { background: #7C3AED; }
-.drawer .dr-body { padding: 4px 18px 40px !important; background: #fff; }
-.ld-gt { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #0D1B3E; margin: 18px 2px 6px; padding-bottom: 8px; border-bottom: 1px solid #EEF1F6; }
+.drawer .dr-body { padding: 4px 18px 40px !important; background: #F8FAFC; }
+.ld-gt { display: flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #0D1B3E; margin: 18px 2px 6px; padding-bottom: 8px; border-bottom: 1px solid #E8ECF2; }
 .ld-gt svg { display: none; }
 .ld-g { background: transparent; border-radius: 0; overflow: visible; border: none; box-shadow: none; }
 .ld-g .ld-r { padding: 8px 2px; }
@@ -2172,7 +2172,7 @@ button:active, .lap-btn:active {
 .ld-r-ic + span { flex: 1; }
 .ld-r b { font-weight: 500; text-align: right; color: #1D1D1F; min-width: 0; overflow-wrap: anywhere; }
 .ld-foot { text-align: center; font-size: 11.5px; color: #A1A1A6; margin-top: 16px; }
-.ld-lastnote { display: flex; align-items: flex-start; gap: 12px; width: 100%; margin-top: 12px; padding: 12px 14px; border: 1px solid #E9E3FB; border-radius: 16px; background: #FCFBFF; color: #0D1B3E; font-family: inherit; text-align: left; cursor: pointer; transition: border-color .15s; }
+.ld-lastnote { display: flex; align-items: flex-start; gap: 12px; width: 100%; margin-top: 12px; padding: 12px 14px; border: 1px solid #E9E3FB; border-radius: 16px; background: #fff; color: #0D1B3E; font-family: inherit; text-align: left; cursor: pointer; transition: border-color .15s; }
 .ld-lastnote:hover { border-color: #C4B5FD; }
 .ld-ln-ic { width: 32px; height: 32px; border-radius: 10px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: #F3EFFE; color: #7C3AED; }
 .ld-ln-c { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
@@ -2199,7 +2199,7 @@ button:active, .lap-btn:active {
 .ld-note-in textarea { flex: 1; border: none; outline: none; resize: none; font-family: inherit; font-size: 13.5px; background: transparent; color: #1D1D1F; padding: 4px 0; }
 .ld-note-in button { width: 32px; height: 32px; border-radius: 50%; border: none; background: #7C3AED; color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
 .ld-note-in button:disabled { background: #C7C7CC; cursor: default; }
-.ld-note { background: #F9FAFC; border: none; border-radius: 14px; padding: 11px 14px; margin-bottom: 8px; }
+.ld-note { background: #fff; border: 1px solid #EEF1F6; border-radius: 14px; padding: 11px 14px; margin-bottom: 8px; }
 .ld-note-h { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
 .ld-note-h b { font-weight: 600; }
 .ld-note-t { margin-left: auto; font-size: 11.5px; color: #86868B; }
@@ -2212,9 +2212,9 @@ button:active, .lap-btn:active {
 .eq-page, .ea-root { display: flow-root; }
 /* Fiche : seul le sélecteur d'onglets reste collé en haut au défilement */
 .drawer .ld-head { position: relative !important; top: auto !important; }
-.drawer .ld-seg { top: 10px; background: #F3F5F9 !important; border: none; box-shadow: 0 0 0 8px #fff; }
+.drawer .ld-seg { top: 10px; background: #EEF1F6 !important; border: none; box-shadow: 0 0 0 8px #F8FAFC; }
 .drawer .ld-seg button.on { box-shadow: 0 1px 3px rgba(13,27,62,.1); }
-.drawer .ld-seg .ld-badge { border-color: #F3F5F9; }
+.drawer .ld-seg .ld-badge { border-color: #EEF1F6; }
 
 /* Œil des champs mot de passe : centré sur la ligne de saisie, immobile au clic, partout */
 .mi-pw { position: relative; display: block; width: 100%; }
@@ -2268,7 +2268,7 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
 .ld-vide b { font-size: 14px !important; font-weight: 600; color: #0D1B3E; }
 .ld-vide small { font-size: 12.5px !important; color: #64748B; max-width: 240px; line-height: 1.5; }
 .ld-docs { padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
-.ld-dsum { background: #F5F7FB; border: none; border-radius: 14px; padding: 12px 14px; }
+.ld-dsum { background: #fff; border: 1px solid #EEF1F6; border-radius: 14px; padding: 12px 14px; }
 .ld-dsum-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; }
 .ld-dsum-h b { font-size: 13.5px !important; font-weight: 600; color: #0D1B3E; } .ld-dsum-h small { font-size: 11.5px !important; color: #94A3B8; }
 .ld-dsum-bar { height: 6px; background: #EEF2F8; border-radius: 999px; overflow: hidden; } .ld-dsum-bar i { display: block; height: 100%; background: #1A6BFF; border-radius: 999px; min-width: 4px; }
