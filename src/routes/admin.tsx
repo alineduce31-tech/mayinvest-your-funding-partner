@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
+import MenuExporter from '@/components/MenuExporter'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
 import { createPortal } from 'react-dom'
@@ -1523,7 +1524,6 @@ function CRMView({ leads, allLeads, msgCounts, search, setSearch, filterStatut, 
     const t = teamMembers?.find((m: any) => m.id === id)
     return t ? t.email.split('@')[0] : ''
   }
-  const [expOpen, setExpOpen] = useState(false)
   // Barre de filtres figée au défilement ; sur grand écran elle remonte dans l'en-tête, à côté du titre
   const fige = useBarreFigee()
   const iso30 = (() => { const d = new Date(now30); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })()
@@ -1545,14 +1545,7 @@ function CRMView({ leads, allLeads, msgCounts, search, setSearch, filterStatut, 
             Réinitialiser ({activeFiltersCount})
           </button>
         )}
-        <div className="crm-exp">
-          <button type="button" className="crm-exp-btn" onClick={() => setExpOpen(o => !o)} aria-expanded={expOpen}><Download size={14}/>Exporter<ChevronDown size={13}/></button>
-          {expOpen && <div className="crm-exp-menu" onMouseLeave={() => setExpOpen(false)}>
-            <button type="button" onClick={() => { setExpOpen(false); exportExcel() }}><FileSpreadsheet size={15}/>Excel (.xlsx)</button>
-            <button type="button" onClick={() => { setExpOpen(false); exportCSV() }}><FileText size={15}/>CSV</button>
-            <button type="button" onClick={() => { setExpOpen(false); exportPDF() }}><FileDown size={15}/>PDF</button>
-          </div>}
-        </div>
+        <MenuExporter titre={`Exporter ${leads.length} dossier${leads.length > 1 ? 's' : ''}`} onExcel={exportExcel} onCsv={exportCSV} onPdf={exportPDF}/>
       </div>
 
       <div className="crm-stats crm-v2">
@@ -2074,7 +2067,6 @@ function Donut({ items, capLabel }: { items: { label: string; value: number }[];
 
 
 function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
-  const [expOpen, setExpOpen] = useState(false)
   const fige = useBarreFigee()
   const totalMontant = leads.reduce((s: number, l: any) => s + (l.montant_demande || 0), 0)
   const avgMontant = leads.length ? Math.round(totalMontant / leads.length) : 0
@@ -2119,14 +2111,7 @@ function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
       <div ref={fige.repere} className="barre-repere" aria-hidden="true"/>
       <div ref={fige.barre} style={fige.style} className={`rap-pan-head ${fige.classe}`}>
         <div className="rap-pan-t"><i className="eq-ic b"><BarChart3 size={16}/></i>Résumé par statut <span>· {leads.length} dossier{leads.length > 1 ? 's' : ''}</span></div>
-        <div className="crm-exp">
-          <button type="button" className="crm-exp-btn" onClick={() => setExpOpen(o => !o)} aria-expanded={expOpen}><Download size={14}/>Exporter<ChevronDown size={13}/></button>
-          {expOpen && <div className="crm-exp-menu" onMouseLeave={() => setExpOpen(false)}>
-            <button type="button" onClick={() => { setExpOpen(false); exportExcel() }}><FileSpreadsheet size={15}/>Excel (.xlsx)</button>
-            <button type="button" onClick={() => { setExpOpen(false); exportCSV() }}><FileText size={15}/>CSV</button>
-            <button type="button" onClick={() => { setExpOpen(false); exportPDF() }}><FileDown size={15}/>PDF</button>
-          </div>}
-        </div>
+        <MenuExporter titre="Exporter les dossiers" onExcel={exportExcel} onCsv={exportCSV} onPdf={exportPDF}/>
       </div>
       {byStatut.length === 0 ? (
         <div className="rap-empty">

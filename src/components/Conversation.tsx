@@ -82,8 +82,8 @@ function MenuMessage({ b, onSupprimer }: { b: BulleAffichee; onSupprimer: (b: Bu
       <button type="button" className="cv-mm-b" onClick={() => setOpen(o => !o)} aria-label="Actions sur le message" title="Actions"><MoreHorizontal size={15}/></button>
       {open && (
         <div className="cv-mm-menu" role="menu">
-          {b.kind === 'text' && b.contenu && <button type="button" role="menuitem" onClick={copier}>{copie ? <Check size={15}/> : <Copy size={15}/>}{copie ? 'Copié' : 'Copier'}</button>}
-          <button type="button" role="menuitem" className="danger" onClick={supprimer}><Trash2 size={15}/>Supprimer</button>
+          {b.kind === 'text' && b.contenu && <button type="button" role="menuitem" onClick={copier}><span className="cv-mm-ic">{copie ? <Check size={15}/> : <Copy size={15}/>}</span>{copie ? 'Copié' : 'Copier'}</button>}
+          <button type="button" role="menuitem" className="danger" onClick={supprimer}><span className="cv-mm-ic"><Trash2 size={15}/></span>Supprimer</button>
         </div>
       )}
     </div>
@@ -388,10 +388,11 @@ const CV_CSS = `
   .cv-ligne:hover .cv-mm, .cv-mm.open, .cv-mm:focus-within { opacity: 1; }
   @media (hover: none) { .cv-mm { opacity: .7; } }
   .cv-mm-b { width: 28px; height: 28px; border-radius: 50%; border: none; background: #fff; color: #6E6E73; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(13,27,62,.12); padding: 0; }
-  .cv-mm-menu { position: absolute; z-index: 20; bottom: calc(100% + 6px); min-width: 160px; background: #fff; border-radius: 12px; box-shadow: 0 10px 28px rgba(13,27,62,.18); padding: 4px; display: flex; flex-direction: column; }
+  .cv-mm-menu { position: absolute; z-index: 20; bottom: calc(100% + 6px); min-width: 190px; background: #fff; border-radius: 16px; border: 1px solid #EEF1F6; box-shadow: 0 16px 40px rgba(13,27,62,.16); padding: 6px; display: flex; flex-direction: column; gap: 2px; }
   .cv-ligne.droite .cv-mm-menu { right: 0; } .cv-ligne.gauche .cv-mm-menu { left: 0; }
-  .cv-mm-menu button { display: flex; align-items: center; gap: 9px; border: none; background: none; border-radius: 9px; padding: 8px 10px; font-family: inherit; font-size: 13.5px; color: #1D1D1F; cursor: pointer; text-align: left; }
-  .cv-mm-menu button:hover { background: #F5F5F7; } .cv-mm-menu button.danger { color: #DC2626; }
+  .cv-mm-menu button { display: flex; align-items: center; gap: 11px; border: none; background: none; border-radius: 11px; padding: 8px; font-family: inherit; font-size: 13.5px; font-weight: 600; color: #0D1B3E; cursor: pointer; text-align: left; }
+  .cv-mm-ic { width: 32px; height: 32px; border-radius: 9px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #EAF1FF; color: #1A6BFF; }
+  .cv-mm-menu button:hover { background: #F5F7FB; } .cv-mm-menu button.danger { color: #C0392B; } .cv-mm-menu button.danger .cv-mm-ic { background: #FDECEC; color: #C0392B; }
   .cv-suppr { display: inline-flex; align-items: center; gap: 6px; border: 1px dashed #C7C7CC; color: #8E8E93; border-radius: 18px; padding: 7px 13px; font-size: 13px; font-style: italic; }
   .cv-jour { align-self: center; font-size: 11.5px; font-weight: 600; color: #8A94A6; margin: 14px 0 6px; }
   .cv-bulle { max-width: min(78%, 560px); padding: 10px 14px; font-size: 14px; line-height: 1.45; display: flex; flex-direction: column; word-break: break-word; }
