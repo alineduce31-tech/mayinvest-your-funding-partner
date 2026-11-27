@@ -154,29 +154,25 @@ function Index() {
         }
 
         /* ========== BANDE RECRUTEMENT (avant footer) ========== */
-        .recrut-strip { background: #0D1B3E; color: #fff; margin: 0 60px 48px; padding: 20px 28px; border-radius: 20px;
-          display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
-        @media (max-width: 900px) { .recrut-strip { margin: 0 32px 40px; } }
-        @media (max-width: 640px) { .recrut-strip { margin: 0 16px 32px; padding: 18px 20px; border-radius: 16px; flex-direction: column; text-align: left; align-items: stretch; } }
-        .recrut-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 240px; }
-        .recrut-ic { width: 48px; height: 48px; border-radius: 12px; background: rgba(26,107,255,0.18); color: #6DAFFF;
-          display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .recrut-h3 { font-size: 15.5px; font-weight: 700; margin: 6px 0 0; letter-spacing: -0.01em; line-height: 1.35; }
-        .recrut-villes { display: none; }
-        .recrut-acc { font-size: 13px; color: #BFD3FF; margin-top: 8px; line-height: 1.45; }
-        .recrut-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-        .recrut-tag { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; background: #1A6BFF; border-radius: 999px; padding: 3px 9px; font-weight: 700; }
-        .recrut-pl { font-size: 12px; color: #9FB3D9; }
-        .recrut-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
-        .recrut-pills span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.9); border-radius: 999px; padding: 5px 11px; }
-        .recrut-pills svg { color: #7FB0FF; flex: none; }
-        @media (max-width: 640px) { .recrut-ic { display: none; } .recrut-villes { display: inline; } .recrut-pl { display: none; } .recrut-opt { display: none !important; } .recrut-h3 { font-size: 15px; } }
-        .recrut-p { font-size: 12px; color: rgba(255,255,255,0.6); margin: 0; }
-        .recrut-btn { background: #1A6BFF; color: #fff; padding: 13px 24px; border-radius: 100px; font-size: 13px;
-          font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
-          white-space: nowrap; font-family: inherit; }
+        .recrut-strip { background: #fff; color: #0D1B3E; margin: 0 60px 48px; padding: 28px 30px; border-radius: 24px; border: 1px solid #E5ECF8;
+          box-shadow: 0 10px 34px rgba(13,27,62,.07); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; align-items: center; }
+        @media (max-width: 900px) { .recrut-strip { margin: 0 32px 40px; grid-template-columns: minmax(0, 1fr); gap: 20px; } }
+        @media (max-width: 640px) { .recrut-strip { margin: 0 16px 32px; padding: 22px 18px; border-radius: 20px; } }
+        .recrut-main { min-width: 0; }
+        .recrut-top { display: flex; align-items: center; gap: 12px; }
+        .recrut-ic { width: 46px; height: 46px; border-radius: 14px; background: #EAF1FF; color: #1A6BFF; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+        .recrut-tag { font-size: 12px; font-weight: 700; color: #1A6BFF; letter-spacing: .06em; text-transform: uppercase; }
+        .recrut-h3 { font-size: 26px; font-weight: 800; margin: 16px 0 0; letter-spacing: -0.02em; line-height: 1.2; color: #0D1B3E; }
+        .recrut-acc { font-size: 15px; color: #5B6B85; margin: 10px 0 0; line-height: 1.55; max-width: 520px; }
+        .recrut-btn { margin-top: 20px; background: #1A6BFF; color: #fff; padding: 13px 24px; border-radius: 100px; font-size: 14px;
+          font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; font-family: inherit; }
         .recrut-btn:hover { background: #0051D4; }
-        @media (max-width: 640px) { .recrut-btn { width: 100%; justify-content: center; padding: 14px 24px; } }
+        .recrut-pts { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+        .recrut-pt { display: flex; align-items: center; gap: 14px; background: #F5F8FF; border-radius: 16px; padding: 15px 18px; font-size: 14px; color: #0D1B3E; line-height: 1.4; }
+        .recrut-big, .recrut-pic { min-width: 62px; flex: none; color: #1A6BFF; display: inline-flex; align-items: center; }
+        .recrut-pic svg { width: 40px; height: 40px; padding: 9px; box-sizing: border-box; background: #fff; border-radius: 12px; box-shadow: 0 1px 2px rgba(13,27,62,.06); }
+        .recrut-big { font-size: 24px; font-weight: 800; letter-spacing: -0.02em; }
+        @media (max-width: 640px) { .recrut-h3 { font-size: 22px; } .recrut-acc { font-size: 14px; } .recrut-btn { width: 100%; justify-content: center; padding: 14px 24px; } .recrut-pt { padding: 13px 14px; font-size: 13.5px; } .recrut-big, .recrut-pic { min-width: 52px; } .recrut-big { font-size: 21px; } }
 
         .hero { padding: 90px 60px 80px; display: grid; grid-template-columns: 1fr 480px; gap: 60px; align-items: center; }
         @media (max-width: 900px) { .hero { grid-template-columns: 1fr; padding: 48px 32px 40px; gap: 40px; } }
@@ -416,26 +412,23 @@ function Index() {
 
       {/* ========== BANDE RECRUTEMENT (juste après le hero) ========== */}
       <div className="recrut-strip">
-        <div className="recrut-left">
-          <div className="recrut-ic">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2" strokeLinecap="round"/></svg>
+        <div className="recrut-main">
+          <div className="recrut-top">
+            <span className="recrut-ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20v-1a5 5 0 0 1 5-5h3a5 5 0 0 1 5 5v1"/><path d="M16 4.2a3.5 3.5 0 0 1 0 7"/><path d="M18.5 14.2a5 5 0 0 1 3 4.6V20"/></svg></span>
+            <span className="recrut-tag">Appel à partenariat · 24 places</span>
           </div>
-          <div>
-            <div className="recrut-top"><span className="recrut-tag">Appel à partenariat</span><span className="recrut-pl">24 places · Brazzaville et Pointe-Noire</span></div>
-            <div className="recrut-acc">Vous êtes indépendant, entrepreneur, étudiant ou déjà en activité et vous voulez générer des revenus complémentaires ?</div>
-            <div className="recrut-h3">Mayinvest recherche 24 Partenaires Commerciaux Indépendants<span className="recrut-villes"> à Brazzaville et Pointe-Noire</span></div>
-            <div className="recrut-pills">
-              <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>Formation payée</span>
-              <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>10 % de commission sur les Packs Formalisation</span>
-              <span className="recrut-opt"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Vous gérez votre temps</span>
-              <span className="recrut-opt"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>Suivi de vos gains en direct</span>
-            </div>
-          </div>
+          <h2 className="recrut-h3">Devenez Partenaire Commercial Mayinvest</h2>
+          <p className="recrut-acc">Indépendant, entrepreneur, étudiant ou déjà en activité ? Générez des revenus complémentaires à Brazzaville et Pointe-Noire.</p>
+          <button className="recrut-btn" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>
+            Devenir partenaire
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </button>
         </div>
-        <button className="recrut-btn" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>
-          Devenir partenaire
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        </button>
+        <div className="recrut-pts">
+          <div className="recrut-pt"><span className="recrut-big">10 %</span><span>de commission sur chaque Pack Formalisation</span></div>
+          <div className="recrut-pt"><span className="recrut-pic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg></span><span>Formation payée avant de commencer</span></div>
+          <div className="recrut-pt"><span className="recrut-pic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span>Vous gérez votre temps, gains suivis en direct</span></div>
+        </div>
       </div>
 
       <div className="proof">
