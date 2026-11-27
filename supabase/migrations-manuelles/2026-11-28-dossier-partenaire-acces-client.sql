@@ -1,0 +1,6 @@
+-- Appliqué le 28/11/2026 (migration dossier_partenaire_acces_client) :
+--  commercial_create_dossier(p_commercial_id, p_dossier jsonb) : dossier créé par un partenaire, même format que le site,
+--    attribué au partenaire, code d'accès MYI-XXXXXXX généré en base, score recalculé par le déclencheur.
+--  client_set_password(p_password) : le client connecté crée ou change lui-même son mot de passe.
+--  client_a_mot_de_passe() : le client a-t-il déjà un mot de passe ?
+-- Voir le texte complet dans l'historique des migrations Supabase.

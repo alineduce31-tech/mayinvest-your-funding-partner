@@ -19,6 +19,7 @@ import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles } from '@/comp
 import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
 import { regrouper, vueClient, suggestions, lireRdv, reponseClientRdv, piecesAttendues } from '@/lib/conversation'
 import PieceIcone from '@/components/PieceIcone'
+import MotDePasseClient from '@/components/MotDePasseClient'
 
 export const Route = createFileRoute('/client/$id')({
   component: ClientPortal,
@@ -1041,6 +1042,7 @@ function ClientPortal() {
         {activeTab === 'suivi' && <>
           <CarteAide cle="cli-suivi"/>
           <div className="cx-aide"><BoutonAide cle="cli-suivi"/></div>
+          <MotDePasseClient variante="carte"/>
           <div className={`cx-next ${prochaine.action === 'documents' ? 'warn' : ''}`}>
             <div className="cx-next-h">
               <span className="cx-next-ic" aria-hidden="true">{prochaine.action === 'documents' ? <FileText size={17}/> : lead?.statut === 'Financé' ? <CircleCheck size={17}/> : <Clock size={17}/>}</span>
@@ -1195,6 +1197,8 @@ function ClientPortal() {
         {activeTab === 'infos' && <>
           <CarteAide cle="cli-infos"/>
           <div className="cx-aide"><BoutonAide cle="cli-infos"/></div>
+          <div className="cx-gt">Connexion</div>
+          <MotDePasseClient variante="ligne"/>
           <div className="cx-gt">Votre demande</div>
           <div className="cx-g">
             <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><User size={15}/></i><span>Type</span><b>{isP ? 'Particulier' : 'PME'}</b></div>

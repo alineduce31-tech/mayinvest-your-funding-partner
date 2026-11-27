@@ -16,6 +16,9 @@ import StatutPicker from '@/components/StatutPicker'
 import { RappelAlarme } from '@/components/Rappels'
 import { Copy, Download, MessageSquare, MessagesSquare, Share2, Coins, UserPlus, LogOut, RefreshCw, ChevronRight, AlertCircle, PhoneCall, CalendarDays, Landmark, Check, Clock, Phone, MessageCircle, ArrowRight, Mail, MapPin, Wallet, Target, Info, KeyRound } from 'lucide-react'
 import { PRIX_PACK } from '@/lib/pack'
+import { buildWhatsappUrl } from '@/lib/lead-templates'
+import NouveauDossier from '@/components/NouveauDossier'
+import { messageAcces } from '@/lib/dossier'
 import { montantCourt, dateRelative, tonScore, tonStatut, initialesNom, couleurAvatar } from '@/lib/affichage'
 import { blocCalendrier } from '@/lib/conversation'
 import { heureTexte } from '@/lib/rappels'
@@ -296,6 +299,7 @@ function EspaceCommercialPage() {
           {selectedLead && (
             <LeadDrawer
               lead={selectedLead}
+              partenaire={`${session.prenom || ''} ${session.nom || ''}`.trim()}
               commercialId={session.id}
               onClose={() => setSelectedLead(null)}
               onUpdated={() => { loadLeads(); loadStats() }}
@@ -303,10 +307,12 @@ function EspaceCommercialPage() {
             />
           )}
           {newLeadOpen && (
-            <NewLeadModal
+            <NouveauDossier
               commercialId={session.id}
+              partenaire={`${session.prenom || ''} ${session.nom || ''}`.trim()}
               onClose={() => setNewLeadOpen(false)}
-              onCreated={() => { setNewLeadOpen(false); loadLeads(); loadStats() }}
+              onCreated={() => { loadLeads(); loadStats() }}
+              onOuvrir={(id) => { setNewLeadOpen(false); setOpenLeadId(id); setTab('messagerie'); window.scrollTo(0, 0) }}
             />
           )}
         </div>
@@ -564,7 +570,7 @@ function LeadsTab({ leads, majA, onReload, onOpenLead, onNewLead }: { leads: Lea
           <div className="empty-ic"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg></div>
           <h3>Aucun lead pour l'instant</h3>
           <p>Dès qu'un prospect remplit le formulaire via ton lien unique, il apparaît ici. Tu peux aussi en créer un à la main si un prospect t'appelle.</p>
-          <button className="btn-primary-sm" onClick={onNewLead} style={{ marginTop: 20 }}>+ Créer un lead à la main</button>
+          <button className="btn-primary-sm" onClick={onNewLead} style={{ marginTop: 20 }}>+ Créer un dossier client</button>
         </div>
       </>
     )
@@ -583,7 +589,7 @@ function LeadsTab({ leads, majA, onReload, onOpenLead, onNewLead }: { leads: Lea
           <button className={`btn-refresh ${tourne ? 'spin' : ''}`} onClick={async () => { setTourne(true); await onReload(); setTimeout(() => setTourne(false), 500) }} aria-label="Actualiser" title="Actualiser">
             <RefreshCw size={16} strokeWidth={2.2}/>
           </button>
-          <button className="btn-new-lead" onClick={onNewLead} aria-label="Nouveau lead"><UserPlus size={17} strokeWidth={2.2}/><span className="bnl-txt">Nouveau lead</span></button>
+          <button className="btn-new-lead" onClick={onNewLead} aria-label="Nouveau dossier"><UserPlus size={17} strokeWidth={2.2}/><span className="bnl-txt">Nouveau dossier</span></button>
         </div>
       </div>
       <div className="leads-table">
@@ -615,7 +621,7 @@ function LeadsTab({ leads, majA, onReload, onOpenLead, onNewLead }: { leads: Lea
 // ============ LEAD DRAWER ============
 const STATUTS_DISPO = ['Nouveau', 'Contacté', 'RDV', 'Éligible', 'Non Éligible', 'Dossier Déposé', 'Financé', 'Perdu']
 
-function LeadDrawer({ lead, commercialId, onClose, onUpdated, onOpenThread }: { lead: Lead; commercialId: string; onClose: () => void; onUpdated: () => void; onOpenThread: (leadId: string) => void }) {
+function LeadDrawer({ lead, commercialId, partenaire, onClose, onUpdated, onOpenThread }: { lead: Lead; commercialId: string; partenaire?: string; onClose: () => void; onUpdated: () => void; onOpenThread: (leadId: string) => void }) {
   const [statut, setStatut] = useState(lead.statut)
   const [saving, setSaving] = useState(false)
   async function changeStatut(newS: string) {
@@ -638,7 +644,6 @@ function LeadDrawer({ lead, commercialId, onClose, onUpdated, onOpenThread }: { 
   const sc = Number(lead.score) || 0
   const ville = lead.identite?.ville || (lead as any).ville || ''
   const dt = (v?: string | null) => v ? new Date(v).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'
-  const waNum = tel ? tel.replace(/\D/g, '').replace(/^0/, '242') : ''
   return (
     <div className="drawer-ovr" onClick={onClose}>
       <div className="drawer" onClick={e => e.stopPropagation()}>
@@ -658,7 +663,7 @@ function LeadDrawer({ lead, commercialId, onClose, onUpdated, onOpenThread }: { 
           <div className="ld-acts">
             {tel && <CallButton tel={tel} nom={nom} leadId={lead.id} className="ld-act" title={`Appeler ${formatPhone(tel)}`}><span className="ld-act-ic call"><Phone size={13}/></span>Appeler</CallButton>}
             <button type="button" className="ld-act" onClick={() => onOpenThread(lead.id)}><span className="ld-act-ic mail"><MessageCircle size={13}/></span>Messagerie</button>
-            {tel && <a className="ld-act" href={`https://wa.me/${waNum}`} target="_blank" rel="noopener noreferrer" title="Écrire sur WhatsApp"><span className="ld-act-ic wa"><WaIcon/></span>WhatsApp</a>}
+            {tel && <a className="ld-act" href={buildWhatsappUrl(tel, '')} target="_blank" rel="noopener noreferrer" title="Écrire sur WhatsApp"><span className="ld-act-ic wa"><WaIcon/></span>WhatsApp</a>}
           </div>
         </div>
 
@@ -683,6 +688,20 @@ function LeadDrawer({ lead, commercialId, onClose, onUpdated, onOpenThread }: { 
             <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Clock size={15}/></i><span>Mis à jour</span><b>{dt(lead.updated_at)}</b></div>
             <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><KeyRound size={15}/></i><span>Code d'accès client</span><b>{lead.access_code || '—'}</b></div>
           </div>
+          {lead.access_code && tel && (() => {
+            const lien = `${typeof window !== 'undefined' ? window.location.origin : 'https://mayinvestcapitalstrategy.com'}/client/${lead.id}`
+            const msg = messageAcces(lead.type === 'physique' ? (lead.identite?.prenom || '') : (lead.situation?.dirigeant || ''), lien, lead.access_code, partenaire || '')
+            return <>
+              <div className="ld-gt"><KeyRound size={13}/>Accès du client</div>
+              <div className="ld-acc">
+                <p>Le client a perdu son lien ou son mot de passe ? Renvoie-lui ses accès : il entre avec le code et choisit lui-même un nouveau mot de passe.</p>
+                <div className="ld-acc-b">
+                  <a className="ld-act" href={buildWhatsappUrl(tel, msg)} target="_blank" rel="noopener noreferrer"><span className="ld-act-ic wa"><WaIcon/></span>Renvoyer par WhatsApp</a>
+                  <a className="ld-act" href={`sms:${tel.replace(/\D/g, '')}?&body=${encodeURIComponent(msg)}`}><span className="ld-act-ic mail"><MessageSquare size={13}/></span>Par SMS</a>
+                </div>
+              </div>
+            </>
+          })()}
         </div>
       </div>
     </div>
@@ -703,93 +722,6 @@ function CalculCommission() {
         <div className="cc-r"><span>Ta commission (10 %)</span><b>{xaf(c.commission)}</b></div>
       </div>
       <p className="cd-com-note">Versée dès que Mayinvest confirme le paiement du Pack par ton client. Elle s'ajoute à « Gains ce mois ».</p>
-    </div>
-  )
-}
-
-// ============ NEW LEAD MODAL ============
-const ACTIVITES_PHYSIQUE = ['Fonctionnaire', 'Salarié Privé', 'Commerçant', 'Artisan', 'Profession Libérale', 'Agriculteur', 'Autre']
-const ACTIVITES_PME = ['Commerce', 'Tourisme', 'BTP', 'Industrie/Bois', 'Agriculture', 'Transport', 'Santé', 'Tech', 'Autre']
-
-function NewLeadModal({ commercialId, onClose, onCreated }: { commercialId: string; onClose: () => void; onCreated: () => void }) {
-  const [type, setType] = useState<'physique' | 'morale'>('physique')
-  const [activite, setActivite] = useState('')
-  const [form, setForm] = useState({ nom: '', prenom: '', raison_sociale: '', tel: '', email: '', ville: '', montant: '', objet: '', banque: '' })
-  const [err, setErr] = useState('')
-  const [loading, setLoading] = useState(false)
-
-  async function submit() {
-    setErr('')
-    const nomOk = type === 'physique' ? (form.nom && form.prenom) : form.raison_sociale
-    if (!nomOk || !form.tel || !form.ville || !activite || !form.montant) {
-      setErr('Remplis tous les champs obligatoires.')
-      return
-    }
-    setLoading(true)
-    const identite = type === 'physique'
-      ? { nom: form.nom, prenom: form.prenom, telephone: form.tel, email: form.email, ville: form.ville }
-      : { raison_sociale: form.raison_sociale, telephone: form.tel, email: form.email, ville: form.ville }
-    const besoin = { objet: form.objet, banque: form.banque }
-    const { error } = await supabase.rpc('commercial_create_lead', {
-      p_commercial_id: commercialId, p_type: type, p_activite: activite,
-      p_identite: identite, p_besoin: besoin,
-      p_montant_demande: parseInt(form.montant.replace(/\D/g, '')) || 0,
-    })
-    setLoading(false)
-    if (error) { setErr(error.message || 'Erreur lors de la création.'); return }
-    onCreated()
-  }
-
-  return (
-    <div className="modal-ovr" onClick={onClose}>
-      <div className="modal-card" onClick={e => e.stopPropagation()}>
-        <button className="drawer-close" onClick={onClose} aria-label="Fermer">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
-        <h2 className="modal-title">Nouveau lead</h2>
-        <p className="modal-sub">Crée un lead à la main (ex : un prospect t'a appelé).</p>
-
-        {err && <div className="form-err">{err}</div>}
-
-        <div className="type-switch">
-          <button className={type === 'physique' ? 'active' : ''} onClick={() => { setType('physique'); setActivite('') }}>Particulier</button>
-          <button className={type === 'morale' ? 'active' : ''} onClick={() => { setType('morale'); setActivite('') }}>PME</button>
-        </div>
-
-        <div className="field"><label>Activité <span style={{ color: MI.red }}>*</span></label>
-          <NiceSelect value={activite} onChange={setActivite} placeholder="Choisir une activité" title="Activité"
-            options={optionsActivite(type === 'physique' ? ACTIVITES_PHYSIQUE : ACTIVITES_PME)}/>
-        </div>
-
-        {type === 'physique' ? (
-          <div className="field-grid">
-            <div className="field"><label>Prénom <span style={{ color: MI.red }}>*</span></label><input value={form.prenom} onChange={e => setForm({ ...form, prenom: e.target.value })}/></div>
-            <div className="field"><label>Nom <span style={{ color: MI.red }}>*</span></label><input value={form.nom} onChange={e => setForm({ ...form, nom: e.target.value })}/></div>
-          </div>
-        ) : (
-          <div className="field"><label>Raison sociale <span style={{ color: MI.red }}>*</span></label><input value={form.raison_sociale} onChange={e => setForm({ ...form, raison_sociale: e.target.value })}/></div>
-        )}
-
-        <div className="field-grid">
-          <div className="field"><label>Téléphone <span style={{ color: MI.red }}>*</span></label><input type="tel" inputMode="numeric" placeholder="04 023 23 17" value={formatPhoneInput(form.tel)} onChange={e => setForm({ ...form, tel: e.target.value.replace(/\D/g, '').slice(0, 9) })}/></div>
-          <div className="field"><label>Email</label><input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}/></div>
-        </div>
-        <div className="field-grid">
-          <div className="field"><label>Ville <span style={{ color: MI.red }}>*</span></label><input value={form.ville} onChange={e => setForm({ ...form, ville: e.target.value })}/></div>
-          <div className="field"><label>Montant (XAF) <span style={{ color: MI.red }}>*</span></label><input value={form.montant} onChange={e => setForm({ ...form, montant: e.target.value })}/></div>
-        </div>
-        <div className="field-grid">
-          <div className="field"><label>Objet du crédit</label><input value={form.objet} onChange={e => setForm({ ...form, objet: e.target.value })}/></div>
-          <div className="field"><label>Banque actuelle</label><input value={form.banque} onChange={e => setForm({ ...form, banque: e.target.value })}/></div>
-        </div>
-
-        <div className="modal-actions">
-          <button className="btn-cancel" onClick={onClose}>Annuler</button>
-          <button className="btn-primary-full" onClick={submit} disabled={loading}>
-            {loading ? 'Création…' : <><UserPlus size={17} strokeWidth={2.2}/>Créer le lead</>}
-          </button>
-        </div>
-      </div>
     </div>
   )
 }
@@ -1270,6 +1202,10 @@ function GlobalStyles() {
       .drawer-close:hover { background: ${MI.redSoft}; color: ${MI.red}; }
       .drawer-body { padding: 36px 28px 24px; }
       .drawer-body.ld-com { padding: 4px 16px 28px; }
+      .ld-acc { background: #fff; border-radius: 16px; padding: 12px 14px; box-shadow: 0 1px 2px rgba(13,27,62,.04); }
+      .ld-acc p { margin: 0 0 10px; font-size: 12.5px; color: #64748B; line-height: 1.5; }
+      .ld-acc-b { display: grid; grid-template-columns: 1.4fr 1fr; gap: 8px; }
+      @media (max-width: 420px) { .ld-acc-b { grid-template-columns: 1fr; } }
       .drawer-title { font-size: 22px; font-weight: 800; color: ${MI.navy}; margin: 0 0 4px; letter-spacing: -0.01em; }
       .drawer-sub { font-size: 12px; color: ${MI.textMuted}; margin-bottom: 20px; }
       .drawer-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 20px; }

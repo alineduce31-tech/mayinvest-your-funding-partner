@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { proposerPack, PRIX_PACK } from '@/lib/pack'
+import { construireDossier } from '@/lib/dossier'
 import { Logo } from '@/components/Logo'
 import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles, vueMobile, petitEcranActuel } from '@/components/HakiTeaser'
 
@@ -873,54 +874,10 @@ function Simulation() {
     setLoading(true)
     setSubmitError('')
     const s = calc(type, form)
-    const ancP = tranche(form['anciennete_tr'] || '')
-    const ancM = tranche(form['anciennete_soc_tr'] || '')
-    const ancCpt = tranche(form['anciennete_cpt_tr'] || '')
-    const nonEligible = isP
-      ? (ancP < 6) || form['salaire_domic'] === 'Non' || form['contrat'] === 'Stage'
-      : form['rccm'] === 'Non'
     const code = generateAccessCode()
     const generatedId = crypto.randomUUID()
-    const payload = {
-      id: generatedId,
-      type: isP ? 'physique' : 'morale',
-      activite,
-      ville: form['ville'] || '',
-      montant_demande: parseInt(form['montant'] || '0'),
-      banque_actuelle: form['banque'] || '',
-      statut: 'Nouveau',
-      score: s,
-      access_code: code,
-      identite: { nom: form['nom'], prenom: form['prenom'], tel: form['tel'], email: form['email'] || '' },
-      situation: isP
-        ? {
-            employeur: form['employeur'],
-            contrat: form['contrat'] || null,
-            duree_restante: form['duree_restante'] || null,
-            anciennete_tranche: form['anciennete_tr'],
-            anciennete_mois_estim: ancP,
-            revenu: form['revenu'],
-          }
-        : {
-            raison_sociale: form['raison_sociale'],
-            dirigeant: form['dirigeant'],
-            rccm: form['rccm'],
-            niu: form['niu'] || null,
-            anciennete_tranche: form['anciennete_soc_tr'],
-            anciennete_mois_estim: ancM,
-            ca_annuel: form['ca_annuel'],
-          },
-      besoin: { montant: form['montant'], objet: form['objet'], banque: form['banque'], flux_mois: form['flux_mois'] },
-      eligibilite: isP
-        ? {
-            anciennete_ok: ancP >= 6,
-            salaire_domic: form['salaire_domic'],
-            anciennete_compte_tranche: form['anciennete_cpt_tr'] || null,
-            anciennete_compte_mois_estim: ancCpt,
-            non_eligible: nonEligible,
-          }
-        : { compte_mouvemente: form['compte_mouvemente'], refus_bancaire: form['refus_bancaire'], garanties: form['garanties'], non_eligible: nonEligible },
-    }
+    // Même format que les dossiers créés par un partenaire (src/lib/dossier.ts)
+    const payload = { id: generatedId, ...construireDossier(isP, activite, form), statut: 'Nouveau', score: s, access_code: code }
     const { error } = await supabase.from('leads').insert(payload)
     // Enregistrer le mot de passe hashé via RPC
     if (!error && form['password']) {
