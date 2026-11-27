@@ -48,3 +48,18 @@ describe('affichage', () => {
     expect(m).toContain('- Jeu. 10:00\n- Ven. 09:30')
   })
 })
+
+import { messageConseille, filtrerMessages, MESSAGES_TYPES as MT } from './messagerie'
+describe('menu des messages types', () => {
+  test('message conseillé selon le statut', () => {
+    expect(messageConseille('Nouveau')).toBe('prise')
+    expect(messageConseille('RDV')).toBe('pieces')
+    expect(messageConseille('Dossier Déposé')).toBe('depose')
+    expect(messageConseille('Perdu')).toBeNull()
+  })
+  test('recherche sans accents', () => {
+    expect(filtrerMessages(MT, 'depose').map(m => m.cle)).toContain('depose')
+    expect(filtrerMessages(MT, '')).toHaveLength(MT.length)
+    expect(filtrerMessages(MT, 'zzz')).toHaveLength(0)
+  })
+})

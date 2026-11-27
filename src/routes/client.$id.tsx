@@ -1,5 +1,6 @@
 import { lienContact } from '@/lib/lead-templates'
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
+import { informer } from '@/components/Dialogue'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
 import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Landmark, FileBadge, FileText, BarChart3, CircleCheck, Clock, Camera, Lock, Search, ChevronLeft, Plus, Image as ImageIcon } from 'lucide-react'
 import PackClient from '@/components/PackClient'
@@ -332,7 +333,7 @@ function ClientPortal() {
     setNewMsg('')
     const { data, error } = await supabase.rpc('client_send_message', { p_content: msg })
     setSending(false)
-    if (error) { setNewMsg(msg); alert("Impossible d'envoyer : " + error.message); return }
+    if (error) { setNewMsg(msg); informer("Impossible d'envoyer : " + error.message); return }
     const m = data as any
     if (m?.id) setMessages(prev => prev.some(x => x.id === m.id) ? prev : [...prev, m])
   }
@@ -340,7 +341,7 @@ function ClientPortal() {
   async function repondreRdv(b: { id: string; payload: any }, rep: 'confirme' | 'autre') {
     const r = lireRdv(b.payload)
     const { error } = await supabase.rpc('client_repondre_rdv', { p_message_id: b.id, p_reponse: rep, p_texte: r ? reponseClientRdv(r.at, rep) : '' })
-    if (error) { alert(error.message); return }
+    if (error) { informer(error.message); return }
     await loadMessages()
     const { data } = await supabase.from('leads').select('*').eq('id', id).maybeSingle()
     if (data) setLead(data)
@@ -359,7 +360,7 @@ function ClientPortal() {
       if (msgErr) throw msgErr
       await loadMessages()
     } catch (e: any) {
-      alert("Impossible d'uploader : " + (e?.message || 'erreur'))
+      informer("Impossible d'uploader : " + (e?.message || 'erreur'))
     }
     setUploading(false)
     closeAttach()
@@ -395,7 +396,7 @@ function ClientPortal() {
       }).eq('id', docRow.id)
       await loadDocuments()
     } catch (e: any) {
-      alert("Impossible d'uploader : " + (e?.message || 'erreur'))
+      informer("Impossible d'uploader : " + (e?.message || 'erreur'))
     }
     setUploadingDocType('')
   }

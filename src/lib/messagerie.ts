@@ -99,10 +99,28 @@ export function messageRdv(creneaux: string[]): string {
   return `Bonjour, je vous propose un rendez-vous pour avancer sur votre dossier. Quel créneau vous convient ?\n${liste}\nRépondez simplement avec le créneau choisi.`
 }
 
-export const MESSAGES_TYPES: { label: string; text: string }[] = [
-  { label: 'Prise en charge', text: 'Bonjour, je prends en charge votre dossier. Je reviens vers vous très vite avec les prochaines étapes.' },
-  { label: 'Pièces manquantes', text: 'Bonjour, pour avancer il nous manque quelques pièces. Vous pouvez les envoyer directement depuis votre espace, rubrique Documents.' },
-  { label: 'Dossier déposé', text: 'Bonne nouvelle : votre dossier vient d\'être déposé à la banque. Nous suivons la réponse et vous tenons informé.' },
-  { label: 'Relance', text: 'Bonjour, nous n\'avons pas eu de retour de votre part. Votre dossier est toujours en cours : avez-vous besoin d\'aide ?' },
-  { label: 'Remerciement', text: 'Merci pour votre confiance. N\'hésitez pas à nous écrire ici à tout moment.' },
+export type MessageType = { cle: 'prise' | 'pieces' | 'depose' | 'relance' | 'merci'; label: string; text: string }
+
+/** Message conseillé selon le statut du dossier (null si rien de particulier). */
+export function messageConseille(statut: string | null | undefined): MessageType['cle'] | null {
+  if (statut === 'Nouveau') return 'prise'
+  if (statut === 'Contacté' || statut === 'RDV') return 'pieces'
+  if (statut === 'Dossier Déposé') return 'depose'
+  if (statut === 'Éligible' || statut === 'Financé') return 'merci'
+  return null
+}
+
+/** Recherche sans accents dans le titre et le texte. */
+export function filtrerMessages<T extends { label: string; text: string }>(liste: T[], q: string): T[] {
+  const n = (t: string) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  const t = n(q.trim())
+  return t ? liste.filter(m => n(`${m.label} ${m.text}`).includes(t)) : liste
+}
+
+export const MESSAGES_TYPES: MessageType[] = [
+  { cle: 'prise', label: 'Prise en charge', text: 'Bonjour, je prends en charge votre dossier. Je reviens vers vous très vite avec les prochaines étapes.' },
+  { cle: 'pieces', label: 'Pièces manquantes', text: 'Bonjour, pour avancer il nous manque quelques pièces. Vous pouvez les envoyer directement depuis votre espace, rubrique Documents.' },
+  { cle: 'depose', label: 'Dossier déposé', text: 'Bonne nouvelle : votre dossier vient d\'être déposé à la banque. Nous suivons la réponse et vous tenons informé.' },
+  { cle: 'relance', label: 'Relance', text: 'Bonjour, nous n\'avons pas eu de retour de votre part. Votre dossier est toujours en cours : avez-vous besoin d\'aide ?' },
+  { cle: 'merci', label: 'Remerciement', text: 'Merci pour votre confiance. N\'hésitez pas à nous écrire ici à tout moment.' },
 ]

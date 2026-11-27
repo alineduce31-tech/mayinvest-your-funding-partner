@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import PieceIcone from '@/components/PieceIcone'
+import { CroixFermer } from '@/components/Dialogue'
 import { createPortal } from 'react-dom'
 import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download, FileBadge, Image as ImageIcon, Phone } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
@@ -312,7 +313,7 @@ export function RdvComposer({ ancre, onSend, onClose, lieuDefaut = '' }: { ancre
     <div ref={carte} className={mobile ? 'cv-sheet' : 'cv-pop'} role="dialog" aria-label="Proposer un rendez-vous" onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}
       style={!mobile && pos ? { left: pos.left, width: Math.max(pos.width, 340), ...(pos.versLeHaut ? { bottom: window.innerHeight - pos.top } : { top: pos.top }) } : undefined}>
       {mobile && <div className="cv-grip"/>}
-      <div className="cv-pop-h"><b>Proposer un rendez-vous</b><small>Le client confirme d'un clic dans la conversation.</small></div>
+      <div className="cv-pop-h"><div><b>Proposer un rendez-vous</b><small>Le client confirme d'un clic dans la conversation.</small></div><CroixFermer onClick={onClose}/></div>
       <div className="cv-pop-sub">Jour</div>
       <div className="cv-chips">{jours.map((j, i) => <button key={i} className={i === jour ? 'on' : ''} onClick={() => { setJour(i); setErr('') }}>{j.libelle}</button>)}</div>
       <div className="cv-pop-sub">Heure</div>
@@ -440,6 +441,7 @@ const CV_CSS = `
   .cv-ovr { position: fixed; inset: 0; z-index: 10000; background: rgba(13,27,62,.35); display: flex; align-items: flex-end; }
   .cv-sheet { width: 100%; max-height: 88vh; overflow-y: auto; background: #fff; border-radius: 20px 20px 0 0; padding: 8px 16px calc(16px + env(safe-area-inset-bottom)); }
   .cv-grip { width: 40px; height: 4px; border-radius: 4px; background: #E5E7EB; margin: 4px auto 10px; }
+  .cv-pop-h { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
   .cv-pop-h b { display: block; font-size: 15px; } .cv-pop-h small { font-size: 12px; color: #64748B; }
   .cv-pop-sub { font-size: 12px; font-weight: 600; color: #64748B; margin: 12px 0 7px; }
   .cv-chips { display: flex; gap: 6px; flex-wrap: wrap; }

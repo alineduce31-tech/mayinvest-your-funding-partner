@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { CroixFermer } from '@/components/Dialogue'
 import { createPortal } from 'react-dom'
 import { Bell, BellRing, Clock, Sunset, Sun, CalendarDays, CalendarClock, ChevronRight, ChevronLeft, X } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
@@ -111,7 +112,7 @@ export function RappelPicker({ value, onChange, className, compact }: { value: n
 
   const contenu = !libre ? (
     <>
-      <div className="rp-head">Me rappeler de ce client</div>
+      <div className="rp-head"><span>Me rappeler de ce client</span><CroixFermer onClick={() => setOpen(false)}/></div>
       {choixRapides(now).map(c => (
         <button key={c.cle} className={`rp-opt${value === c.at ? ' sel' : ''}`} onClick={() => valider(c.at)}>
           <span className="rp-ic">{ICONES[c.cle]}</span><span className="rp-lbl">{c.libelle}</span>
@@ -131,7 +132,7 @@ export function RappelPicker({ value, onChange, className, compact }: { value: n
     </>
   ) : (
     <div className="rp-free">
-      <button className="rp-back" onClick={() => setLibre(false)}><ChevronLeft size={16}/>Retour</button>
+      <div className="rp-head"><button className="rp-back" onClick={() => setLibre(false)}><ChevronLeft size={16}/>Retour</button><CroixFermer onClick={() => setOpen(false)}/></div>
       <div className="rp-sub">Jour</div>
       <div className="rp-chips">
         {jours.map((j, i) => <button key={i} className={`rp-chip${i === jour ? ' on' : ''}`} onClick={() => { setJour(i); setErr('') }}>{j.libelle}</button>)}
@@ -255,7 +256,7 @@ const RP_CSS = `
   .rp-card, .rp-ovr, .ra-stack { font-family: 'Inter', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; color: #0D1B3E; }
   .rp-card { position: fixed; z-index: 10000; background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; padding: 6px; box-shadow: 0 16px 40px rgba(13,27,62,.16), 0 2px 6px rgba(13,27,62,.06); animation: rpIn .12s ease-out; }
   @keyframes rpIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
-  .rp-head { font-size: 13px; font-weight: 700; padding: 8px 10px 6px; }
+  .rp-head { font-size: 13px; font-weight: 700; padding: 6px 6px 6px 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
   .rp-opt { width: 100%; display: flex; align-items: center; gap: 12px; padding: 9px 10px; border: none; background: none; border-radius: 10px; font-family: inherit; font-size: 14px; color: #0D1B3E; cursor: pointer; text-align: left; }
   .rp-opt:hover { background: #F6F7F9; }
   .rp-opt.sel { background: #EEF4FF; color: #1A6BFF; }

@@ -1,10 +1,14 @@
 import CloseIcon from '@/components/CloseIcon'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import DemandePieces from '@/components/DemandePieces'
+import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { LIFECYCLE_STATUTS } from '@/lib/lead-templates'
 import CallButton from '@/components/CallButton'
 import PieceIcone from '@/components/PieceIcone'
 import ConseillerPicker from '@/components/ConseillerPicker'
+import MessagesTypesMenu from '@/components/MessagesTypesMenu'
+import { MessageSquareText, CalendarPlus, FolderPlus, BellRing } from 'lucide-react'
 import StatutPicker from '@/components/StatutPicker'
 import ScrollRow from '@/components/ScrollRow'
 import NiceSelect from '@/components/NiceSelect'
@@ -249,19 +253,24 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
     await sendCard('pieces', { doc_ids: restantes.map(d => d.id) }, texteSecoursPieces(restantes.map(d => d.doc_label || 'Document')))
   }
 
-  async function demanderPiece() {
-    const label = prompt('Quelle pièce demander au client ?')
-    if (!label || !label.trim()) return
-    const { data: docId, error } = await supabase.rpc('admin_request_document', { p_admin_id: session.id, p_lead_id: leadId, p_label: label.trim() })
-    if (error) { setErr(error.message); return }
+  const [piecesOpen, setPiecesOpen] = useState(false)
+  function demanderPiece() { setPiecesOpen(true) }
+  async function envoyerDemande(ids: string[], labels: string[], nouvelles: string[]) {
+    const nouveaux: string[] = []
+    for (const l of nouvelles) {
+      const { data: docId, error } = await supabase.rpc('admin_request_document', { p_admin_id: session.id, p_lead_id: leadId, p_label: l })
+      if (error) { informer('Pièce non demandée : ' + error.message); return }
+      if (docId) nouveaux.push(String(docId))
+    }
     await loadDocs()
-    await sendCard('pieces', { doc_ids: docId ? [String(docId)] : [] }, texteSecoursPieces([label.trim()]))
+    await sendCard('pieces', { doc_ids: [...ids, ...nouveaux] }, texteSecoursPieces([...labels, ...nouvelles]))
+    setPiecesOpen(false)
   }
 
   async function docStatus(id: string, status: 'validated' | 'rejected') {
     let note: string | null = null
     if (status === 'rejected') {
-      note = prompt('Raison du refus (visible par le client) :')
+      note = await demanderTexte({ titre: 'Refuser cette pièce', texte: 'Le client verra ce motif et pourra renvoyer la pièce.', label: 'Motif du refus', placeholder: 'Ex. : photo floue, document expiré', bouton: 'Refuser la pièce', multiligne: true })
       if (!note) return
     }
     await supabase.from('documents').update({ status, admin_note: note }).eq('id', id)
@@ -314,16 +323,15 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
               <button className={mode === 'note' ? 'on note' : ''} onClick={() => setMode('note')}>Note interne</button>
               <button className={mode === 'commercial' ? 'on' : ''} disabled={!agentIsCommercial} title={agentIsCommercial ? '' : 'Aucun commercial terrain sur ce dossier'} onClick={() => setMode('commercial')}>Au commercial seul</button>
             </div>
-            <button className={`am-tool ${typesOpen ? 'active' : ''}`} onClick={() => { setTypesOpen(o => !o); setRdvOpen(false) }}>Message type</button>
-            <button ref={rdvBtn} className={`am-tool ${rdvOpen ? 'active' : ''}`} onClick={() => { setRdvOpen(o => !o); setTypesOpen(false) }}>Proposer un RDV</button>
-            <button className="am-tool" onClick={demanderPiece}>Demander une pièce</button>
-            {docs.some(d => d.status === 'pending' || d.status === 'rejected' || !d.status) && <button className="am-tool" onClick={relancerPieces}>Relancer les pièces</button>}
+            <button data-mt-toggle className={`am-tool ${typesOpen ? 'active' : ''}`} onClick={() => { setTypesOpen(o => !o); setRdvOpen(false) }}><MessageSquareText size={14}/>Message type</button>
+            <button ref={rdvBtn} className={`am-tool ${rdvOpen ? 'active' : ''}`} onClick={() => { setRdvOpen(o => !o); setTypesOpen(false) }}><CalendarPlus size={14}/>Proposer un RDV</button>
+            <button className="am-tool" onClick={demanderPiece}><FolderPlus size={14}/>Demander une pièce</button>
+            {docs.some(d => d.status === 'pending' || d.status === 'rejected' || !d.status) && <button className="am-tool" onClick={relancerPieces}><BellRing size={14}/>Relancer les pièces</button>}
           </ScrollRow>
           {typesOpen && (
-            <div className="am-pop">
-              {MESSAGES_TYPES.map(q => <button key={q.label} onClick={() => { setText(q.text); setMode('groupe'); setTypesOpen(false) }}><b>{q.label}</b><span>{q.text}</span></button>)}
-            </div>
+            <MessagesTypesMenu messages={MESSAGES_TYPES} statut={lead?.statut} onClose={() => setTypesOpen(false)} onPick={t => { setText(t); setMode('groupe'); setTypesOpen(false) }}/>
           )}
+          {piecesOpen && <DemandePieces docs={docs} onClose={() => setPiecesOpen(false)} onSend={envoyerDemande}/>}
           {rdvOpen && <RdvComposer ancre={rdvBtn.current} onClose={() => setRdvOpen(false)}
             onSend={(at, lieu) => sendCard('rdv', { at: new Date(at).toISOString(), lieu }, texteSecoursRdv(at, lieu))}/>}
           {err && <div className="am-err">{err}</div>}
@@ -457,7 +465,7 @@ function Broadcast({ team, onBack, onSent }: { team: TeamRow[]; onBack: () => vo
 
   async function send() {
     if (!text.trim() || sending) return
-    if (!confirm(`Envoyer ce message à ${cibles} commercial${cibles > 1 ? 'aux' : ''} ?`)) return
+    if (!(await confirmer({ titre: `Envoyer ce message à ${cibles} commercial${cibles > 1 ? 'aux' : ''} ?`, texte: text.trim().slice(0, 180), bouton: 'Envoyer' }))) return
     setSending(true); setRes('')
     const { data, error } = await supabase.rpc('admin_broadcast_team', { p_ville: ville || null, p_body: text.trim() })
     setSending(false)
@@ -627,7 +635,7 @@ function MessagerieStyles() {
     .am-seg button.on.note { color: #B45309; }
     .am-seg button:disabled { opacity: 0.4; cursor: not-allowed; }
     .am-tool { border: 1.5px solid #E5E7EB; background: #fff; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; }
-    .am-tool { white-space: nowrap; }
+    .am-tool { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
     .am-tool:hover, .am-tool.active { border-color: #BFD4FF; color: #1A6BFF; }
     .am-tool.active { background: #EEF4FF; }
     .am-pop { position: absolute; bottom: calc(100% + 6px); left: 14px; width: 320px; max-width: 80vw; background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; box-shadow: 0 16px 40px rgba(13,27,62,0.16); padding: 6px; z-index: 20; display: flex; flex-direction: column; gap: 2px; max-height: 340px; overflow-y: auto; }

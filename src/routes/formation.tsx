@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useMemo } from 'react'
+import { informer } from '@/components/Dialogue'
 import { supabase } from '@/integrations/supabase/client'
 import { getCommercialToken } from '@/lib/session-tokens'
 import SkeletonPage from '@/components/SkeletonPage'
@@ -78,7 +79,7 @@ function FormationPage() {
     const timeSeconds = Math.round((Date.now() - quizStartTime) / 1000)
     // La correction se fait sur le serveur : les bonnes réponses ne sont jamais envoyées au navigateur.
     const { data, error } = await supabase.rpc('commercial_submit_quiz', { p_module_id: currentModule.id, p_answers: answers, p_time_seconds: timeSeconds })
-    if (error || !data) { alert('Quiz non enregistré : ' + (error?.message || 'réessayez.')); return }
+    if (error || !data) { informer('Quiz non enregistré : ' + (error?.message || 'réessayez.')); return }
     const r = data as { score: number; passed: boolean }
     if (r.passed) {
       setCompletedModules(new Set([...completedModules, currentModule.id]))

@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { CroixFermer } from '@/components/Dialogue'
 import { createPortal } from 'react-dom'
 import {
   Landmark, Briefcase, Store, Hammer, Award, Sprout, MoreHorizontal, ShoppingBag, Palmtree,
@@ -155,7 +156,7 @@ export default function NiceSelect({ value, onChange, options, placeholder = 'Ch
           <div className="ns-ovr" onKeyDown={clavier} onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
             <div ref={carte} className="ns-sheet">
               <div className="ns-grip"/>
-              {title && <div className="ns-title">{title}</div>}
+              <div className="ns-title ns-title-x"><span>{title || ''}</span><CroixFermer onClick={() => fermer()}/></div>
               {liste}
             </div>
           </div>
@@ -217,5 +218,6 @@ const NS_CSS = `
     @keyframes nsUp { from { transform: translateY(100%); } to { transform: none; } }
     .ns-grip { width: 40px; height: 4px; border-radius: 4px; background: #E5E7EB; margin: 4px auto 10px; }
     .ns-title { font-size: 15px; font-weight: 700; color: #0D1B3E; padding: 2px 10px 10px; }
+    .ns-title-x { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-right: 4px; }
     .ns-sheet .ns-opt { padding: 12px 10px; font-size: 15px; }
 `

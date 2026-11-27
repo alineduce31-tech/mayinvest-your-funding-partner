@@ -1,5 +1,6 @@
 import EquipeNav from '@/components/EquipeNav'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { informer } from '@/components/Dialogue'
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { formatPhone } from '@/lib/phone'
@@ -540,9 +541,9 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
   async function copyToClipboard() {
     try {
       await navigator.clipboard.writeText(`À : ${candidate.email}\nObjet : ${subject}\n\n${body}`)
-      alert('✓ Email copié dans le presse-papiers')
+      informer('Email copié dans le presse-papiers.', 'ok')
     } catch {
-      alert('Impossible de copier automatiquement — sélectionnez le texte à la main.')
+      informer('Impossible de copier automatiquement — sélectionnez le texte à la main.')
     }
   }
 

@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type 
 import { createPortal } from 'react-dom'
 import { Check, ChevronDown, Ban, FileBadge, Landmark, Archive } from 'lucide-react'
 import { NiceSelectStyles } from '@/components/NiceSelect'
+import { CroixFermer } from '@/components/Dialogue'
 import { estMobile, positionCarte, type Position } from '@/lib/nice-select'
 import { STATUT_COLORS } from '@/lib/lead-templates'
 import { PARCOURS, etatStatut, groupesStatuts, libelleStatut } from '@/lib/statuts'
@@ -65,6 +66,7 @@ export default function StatutPicker({ value, onChange, statuts, disabled, place
 
   const contenu = (
     <div className="sp" role="listbox" aria-label="Statut du dossier">
+      {!mobile && <div className="sp-top"><b>Statut du dossier</b><CroixFermer onClick={fermer}/></div>}
       {groupes.map((g, gi) => (
         <div key={gi} className="sp-g">
           {gi > 0 && <div className="sp-sep"/>}
@@ -102,7 +104,7 @@ export default function StatutPicker({ value, onChange, statuts, disabled, place
       {open && typeof document !== 'undefined' && createPortal(
         mobile ? (
           <div className="ns-ovr" onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-            <div ref={carte} className="ns-sheet sp-sheet"><div className="ns-grip"/><div className="ns-title">Statut du dossier</div>{contenu}</div>
+            <div ref={carte} className="ns-sheet sp-sheet"><div className="ns-grip"/><div className="ns-title ns-title-x"><span>Statut du dossier</span><CroixFermer onClick={fermer}/></div>{contenu}</div>
           </div>
         ) : pos && (
           <div ref={carte} className="ns-card sp-card" onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}
@@ -121,6 +123,7 @@ const SP_CSS = `
   .sp-btn { gap: 6px !important; }
   .sp-card { padding: 6px !important; }
   .sp { display: flex; flex-direction: column; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; color: #1D1D1F; }
+  .sp-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 4px 4px 10px; } .sp-top b { font-size: 13.5px; font-weight: 600; }
   .sp-t { font-size: 11.5px; color: #86868B; font-weight: 500; padding: 6px 10px 4px; }
   .sp-sep { height: 1px; background: #F0F0F2; margin: 6px 6px; }
   .sp-r { width: 100%; display: flex; align-items: center; gap: 10px; border: none; background: none; padding: 7px 10px; border-radius: 10px; font-family: inherit; font-size: 13.5px !important; color: #1D1D1F; text-align: left; cursor: pointer; }

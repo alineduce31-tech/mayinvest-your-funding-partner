@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState } from 'react'
+import { informer } from '@/components/Dialogue'
 import { supabase } from '@/integrations/supabase/client'
 import { getCommercialToken } from '@/lib/session-tokens'
 import SkeletonPage from '@/components/SkeletonPage'
@@ -75,7 +76,7 @@ function SimulationPage() {
     const timeSeconds = Math.round((Date.now() - startTime) / 1000)
     // Le serveur calcule les points et renvoie la correction seulement après la réponse
     const { data, error } = await supabase.rpc('commercial_pick_choice', { p_scenario_id: current.id, p_choice_id: choiceId, p_time_seconds: timeSeconds })
-    if (error || !data) { setSelected(null); alert('Réponse non enregistrée : ' + (error?.message || 'réessayez.')); return }
+    if (error || !data) { setSelected(null); informer('Réponse non enregistrée : ' + (error?.message || 'réessayez.')); return }
     const r = data as { points: number; choice_id: string; choices: Choice[]; best_choice_id: string; feedback: string }
     setScenarios(list => list.map(sc => sc.id === current.id ? { ...sc, choices: r.choices, best_choice_id: r.best_choice_id, feedback: r.feedback } : sc))
     setSelected(r.choice_id)
@@ -93,7 +94,7 @@ function SimulationPage() {
       // Fin de la simu théorique → persiste le score dans commercial_candidates
       if (candidateId) {
         const { error } = await supabase.rpc('commercial_finish_theo')
-        if (error) { alert('Score non enregistré : ' + error.message); return }
+        if (error) { informer('Score non enregistré : ' + error.message); return }
       }
       setDone(true)
     }

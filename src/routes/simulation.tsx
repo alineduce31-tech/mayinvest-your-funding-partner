@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
+import { informer } from '@/components/Dialogue'
 import { supabase } from '@/integrations/supabase/client'
 import { getCommercialToken } from '@/lib/session-tokens'
 import SkeletonPage from '@/components/SkeletonPage'
@@ -144,7 +145,7 @@ function Epreuve1Chat({ onComplete }: { onComplete: (time: number, data: any) =>
     const time = Math.round((Date.now() - startTime) / 1000)
     const e = await onComplete(time, { messages })
     setEnvoi(false)
-    if (e) alert(e)
+    if (e) informer(e)
   }
 
   return (
@@ -381,7 +382,7 @@ function Epreuve3Pilotage({ onComplete }: { onComplete: (time: number, data: any
     const time = Math.round((Date.now() - startTime) / 1000)
     const e = await onComplete(time, { lu: steps.lu, statut, statuts: statutsVus, messages: chatMsgs, docsRequested })
     setEnvoi(false)
-    if (e) alert(e)
+    if (e) informer(e)
   }
 
   return (

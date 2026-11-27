@@ -2,6 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { ChevronDown, ChevronRight, ChevronLeft, Search, Sparkles, MapPin, UserPlus, UserX, Check } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
+import { CroixFermer } from '@/components/Dialogue'
 import { NiceSelectStyles } from '@/components/NiceSelect'
 import { estMobile, positionCarte, type Position } from '@/lib/nice-select'
 import { versConseiller, listeConseillers, suggere, charge, tauxReussite, memeVille, type Conseiller, type FiltreConseiller } from '@/lib/conseillers'
@@ -95,7 +96,7 @@ export default function ConseillerPicker({ value, onChange, villeLead, montant, 
 
   const contenu = (
     <div className="cp">
-      <label className="cp-srch"><Search size={14}/><input ref={champ} value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher un conseiller…" aria-label="Rechercher un conseiller"/></label>
+      <div className="cp-top"><label className="cp-srch"><Search size={14}/><input ref={champ} value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher un conseiller…" aria-label="Rechercher un conseiller"/></label><CroixFermer onClick={fermer}/></div>
       <div className={`cp-fw${bords.d ? ' fade' : ''}${bords.g ? ' fade-g' : ''}`}>
       <div className="cp-f" ref={rangee} onScroll={majBords}
         onWheel={e => { const el = e.currentTarget; if (el.scrollWidth > el.clientWidth && Math.abs(e.deltaY) > Math.abs(e.deltaX)) el.scrollLeft += e.deltaY }}
@@ -143,7 +144,7 @@ export default function ConseillerPicker({ value, onChange, villeLead, montant, 
       {open && typeof document !== 'undefined' && createPortal(
         mobile ? (
           <div className="ns-ovr" onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}>
-            <div ref={carte} className="ns-sheet cp-sheet"><div className="ns-grip"/><div className="ns-title">Choisir le conseiller</div>{contenu}</div>
+            <div ref={carte} className="ns-sheet cp-sheet"><div className="ns-grip"/><div className="ns-title ns-title-x"><span>Choisir le conseiller</span><CroixFermer onClick={fermer}/></div>{contenu}</div>
           </div>
         ) : pos && (
           <div ref={carte} className="ns-card cp-card" onClick={e => e.stopPropagation()} onMouseDown={e => e.stopPropagation()}
@@ -163,7 +164,8 @@ const CP_CSS = `
   .cp-btn.vide { background: #FFF3E0 !important; color: #C2410C !important; border: none !important; border-radius: 999px !important; }
   .cp-card { padding: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
   .cp { display: flex; flex-direction: column; min-height: 0; flex: 1; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; color: #1D1D1F; }
-  .cp-srch { display: flex; align-items: center; gap: 8px; margin: 12px 12px 0; height: 36px; padding: 0 12px; border-radius: 999px; background: #F5F5F7; color: #A1A1A6; }
+  .cp-top { display: flex; align-items: center; gap: 8px; margin: 12px 12px 0; }
+  .cp-srch { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; margin: 0; height: 36px; padding: 0 12px; border-radius: 999px; background: #F5F5F7; color: #A1A1A6; }
   .cp-srch input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 13.5px; color: #1D1D1F; min-width: 0; }
   .cp-f { display: flex; gap: 6px; padding: 10px 12px 8px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #C7C7CC transparent; scroll-behavior: smooth; }
   .cp-fw { position: relative; }

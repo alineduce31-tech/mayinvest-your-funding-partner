@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
+import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
 import { createPortal } from 'react-dom'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { ClipboardCheck, Lock, ArrowUp, Trash2, Eye, MessagesSquare, Star, MapPin, Download, FileSpreadsheet, FileDown, UserPlus, LayoutGrid, PieChart, Zap, TrendingUp, FileX, Sprout, Ban, ArrowUpRight, Users, CheckCircle2, AlertTriangle, FileText, Landmark, Wallet, BarChart3, Coins, Flame, Briefcase, AlertOctagon, Target, MessageCircle, Copy, ChevronDown, ChevronUp, Crown, User, Phone, Mail, Check, X, Clock, Send } from 'lucide-react'
@@ -280,7 +281,7 @@ function Admin({ session }: { session: any }) {
 
   async function updateStatut(id: string, statut: string) {
     const { error } = await supabase.rpc('admin_update_lead_status', { p_admin_id: session?.id, p_lead_id: id, p_statut: statut })
-    if (error) { alert("Statut non enregistré : " + error.message); loadLeads(); return }
+    if (error) { informer("Statut non enregistré : " + error.message); loadLeads(); return }
     setLeads(prev => prev.map(l => l.id === id ? { ...l, statut } : l))
   }
 
@@ -376,7 +377,7 @@ function Admin({ session }: { session: any }) {
       })
     }
     const XLSX = w.XLSX
-    if (!XLSX) { alert('Librairie Excel non disponible'); return }
+    if (!XLSX) { informer('Librairie Excel non disponible'); return }
 
     // Prépare les données
     const headers = ['Date création', 'Type', 'Activité', 'Nom', 'Prénom/Dirigeant', 'Téléphone', 'Email', 'Ville', 'Montant XAF', 'Banque', 'RCCM', 'Flux mensuel', 'Score /100', 'Statut', 'Code accès', 'Créé le']
@@ -507,7 +508,7 @@ function Admin({ session }: { session: any }) {
       <script>window.onload = () => { setTimeout(() => window.print(), 300) }</script>
       </body></html>`
     const w = window.open('', '_blank')
-    if (!w) { alert("Impossible d'ouvrir la fenêtre. Autorise les popups."); return }
+    if (!w) { informer("Impossible d'ouvrir la fenêtre. Autorise les popups."); return }
     w.document.write(html); w.document.close()
   }
 
@@ -2157,16 +2158,16 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     loadDocuments()
   }
   async function rejectDocument(docId: string) {
-    const note = prompt('Raison du rejet (visible par le client) :')
+    const note = await demanderTexte({ titre: 'Refuser cette pièce', texte: 'Le client verra ce motif et pourra renvoyer la pièce.', label: 'Motif du refus', placeholder: 'Ex. : photo floue, document expiré', bouton: 'Refuser la pièce', multiligne: true })
     if (!note) return
     await supabase.from('documents').update({ status: 'rejected', admin_note: note }).eq('id', docId)
     loadDocuments()
   }
   async function requestDocument() {
-    const label = prompt('Nom du document à demander :')
+    const label = await demanderTexte({ titre: 'Demander un document', label: 'Document à demander au client', placeholder: 'Ex. : attestation de domicile', bouton: 'Demander' })
     if (!label) return
     const { error } = await supabase.rpc('admin_request_document', { p_admin_id: adminId, p_lead_id: lead.id, p_label: label })
-    if (error) alert("Demande non enregistrée : " + error.message)
+    if (error) informer("Demande non enregistrée : " + error.message)
     loadDocuments()
   }
 
@@ -2200,12 +2201,12 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     setNoteSending(true)
     const { error } = await supabase.rpc('admin_add_lead_note', { p_lead_id: lead.id, p_body: t })
     setNoteSending(false)
-    if (error) { alert('Note non enregistrée : ' + error.message); return }
+    if (error) { informer('Note non enregistrée : ' + error.message); return }
     setNewNote('')
     loadNotes()
   }
   async function deleteNote(id: string) {
-    if (!confirm('Supprimer cette note ?')) return
+    if (!(await confirmer({ titre: 'Supprimer cette note ?', texte: 'Elle sera supprimée pour toute la direction.', bouton: 'Supprimer', danger: true }))) return
     await supabase.rpc('admin_delete_lead_note', { p_note_id: id })
     loadNotes()
   }
@@ -2230,7 +2231,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
     setNewMsg('')
     const { error } = await supabase.rpc('send_lead_message', { p_lead_id: lead.id, p_sender: 'admin', p_author_id: adminId, p_content: t })
     setSending(false)
-    if (error) { setNewMsg(t); alert("Message non envoyé : " + error.message) }
+    if (error) { setNewMsg(t); informer("Message non envoyé : " + error.message) }
   }
 
   return (
@@ -2455,7 +2456,7 @@ function LeadActionsPanel({ lead, onSendInternal, adminId, onCardSent }: { lead:
       setCopiedKey(key)
       setTimeout(() => setCopiedKey(null), 2000)
     } catch {
-      alert('Copie impossible — sélectionne et copie le texte manuellement.')
+      informer('Copie impossible — sélectionne et copie le texte manuellement.')
     }
   }
 
@@ -2464,7 +2465,7 @@ function LeadActionsPanel({ lead, onSendInternal, adminId, onCardSent }: { lead:
     // Le pack part en carte dans la discussion (bouton « Je souscris » côté client)
     if (key === 'pack_formalisation') {
       const { error } = await supabase.rpc('send_lead_card', { p_lead_id: lead.id, p_sender: 'admin', p_author_id: adminId, p_kind: 'pack', p_payload: {}, p_content: filled })
-      if (error) { alert('Carte non envoyée : ' + error.message); return }
+      if (error) { informer('Carte non envoyée : ' + error.message); return }
       onCardSent?.(); return
     }
     onSendInternal(filled)

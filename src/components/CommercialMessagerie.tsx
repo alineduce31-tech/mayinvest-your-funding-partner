@@ -1,5 +1,7 @@
 import CloseIcon from '@/components/CloseIcon'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import DemandePieces from '@/components/DemandePieces'
+import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { initiales, heureCourte } from '@/lib/messagerie'
 import { COMMISSION_PAR_DOSSIER } from '@/lib/commercial-dashboard'
@@ -11,6 +13,9 @@ import { Conversation, ChatInput, Suggestions, RdvComposer } from '@/components/
 import { regrouper, vueCommercial, vueEquipe, suggestions, texteSecoursRdv, texteSecoursPieces } from '@/lib/conversation'
 import { EyeOff, Send, Check } from 'lucide-react'
 import PieceIcone from '@/components/PieceIcone'
+import MessagesTypesMenu from '@/components/MessagesTypesMenu'
+import { MessageSquareText, CalendarPlus, FolderPlus } from 'lucide-react'
+import type { MessageType } from '@/lib/messagerie'
 import { decouperLibelle, titreCourt, etatPiece, LIBELLE_ETAT, piecesARelancer, progressionPieces } from '@/lib/affichage'
 
 
@@ -23,12 +28,12 @@ type Sel = { kind: 'dir' } | { kind: 'lead'; id: string } | null
 
 const fmtXaf = (n: any) => new Intl.NumberFormat('fr-FR').format(Number(n || 0)) + ' XAF'
 
-const MESSAGES_TYPES: { label: string; text: string }[] = [
-  { label: 'Prise en charge', text: "Bonjour, je suis votre conseiller Mayinvest. J'ai bien reçu votre dossier et je m'en occupe. Avez-vous un moment pour un appel aujourd'hui ?" },
-  { label: 'Pièces à fournir', text: "Pour avancer, merci de déposer dans votre espace, rubrique Documents : votre pièce d'identité, vos 3 derniers bulletins de salaire et vos relevés bancaires des 3 derniers mois." },
-  { label: 'Dossier déposé', text: "Bonne nouvelle : votre dossier vient d'être déposé à la banque. Je suis la réponse et je vous tiens informé." },
-  { label: 'Relance', text: "Bonjour, je reviens vers vous au sujet de votre dossier. Êtes-vous toujours intéressé ? Je reste disponible pour répondre à vos questions." },
-  { label: 'Merci', text: "Merci pour votre confiance. N'hésitez pas à m'écrire ici à tout moment." },
+const MESSAGES_TYPES: MessageType[] = [
+  { cle: 'prise', label: 'Prise en charge', text: "Bonjour, je suis votre conseiller Mayinvest. J'ai bien reçu votre dossier et je m'en occupe. Avez-vous un moment pour un appel aujourd'hui ?" },
+  { cle: 'pieces', label: 'Pièces à fournir', text: "Pour avancer, merci de déposer dans votre espace, rubrique Documents : votre pièce d'identité, vos 3 derniers bulletins de salaire et vos relevés bancaires des 3 derniers mois." },
+  { cle: 'depose', label: 'Dossier déposé', text: "Bonne nouvelle : votre dossier vient d'être déposé à la banque. Je suis la réponse et je vous tiens informé." },
+  { cle: 'relance', label: 'Relance', text: "Bonjour, je reviens vers vous au sujet de votre dossier. Êtes-vous toujours intéressé ? Je reste disponible pour répondre à vos questions." },
+  { cle: 'merci', label: 'Merci', text: "Merci pour votre confiance. N'hésitez pas à m'écrire ici à tout moment." },
 ]
 
 const ArrowDot = () => (
@@ -218,7 +223,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
   async function passerEtape() {
     const next = etapeSuivante(row.statut)
     if (!next || busyStep) return
-    if (next === 'Financé' && !confirm('Confirmer que la banque a financé ce dossier ?')) return
+    if (next === 'Financé' && !(await confirmer({ titre: 'La banque a-t-elle financé ce dossier ?', texte: 'Le dossier passera au statut « Financé ».', bouton: 'Oui, financé' }))) return
     setBusyStep(true); setErr('')
     const { error } = await supabase.rpc('commercial_update_lead_status', { p_commercial_id: commercialId, p_lead_id: row.lead_id, p_statut: next })
     setBusyStep(false)
@@ -269,15 +274,13 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
               <button className={!note ? 'on' : ''} onClick={() => setNote(false)}>Au client</button>
               <button className={note ? 'on note' : ''} onClick={() => setNote(true)}>Note pour la direction</button>
             </div>
-            <button className={`cm-tool ${pop === 'types' ? 'active' : ''}`} onClick={() => setPop(p => (p === 'types' ? null : 'types'))}>Message type</button>
-            <button ref={rdvBtn} className={`cm-tool ${pop === 'rdv' ? 'active' : ''}`} onClick={() => setPop(p => (p === 'rdv' ? null : 'rdv'))}>Proposer un RDV</button>
-            <button className="cm-tool" onClick={() => setPiecesOpen(true)}>Demander une pièce</button>
+            <button data-mt-toggle className={`cm-tool ${pop === 'types' ? 'active' : ''}`} onClick={() => setPop(p => (p === 'types' ? null : 'types'))}><MessageSquareText size={14}/>Message type</button>
+            <button ref={rdvBtn} className={`cm-tool ${pop === 'rdv' ? 'active' : ''}`} onClick={() => setPop(p => (p === 'rdv' ? null : 'rdv'))}><CalendarPlus size={14}/>Proposer un RDV</button>
+            <button className="cm-tool" onClick={() => setPiecesOpen(true)}><FolderPlus size={14}/>Demander une pièce</button>
             <RappelPicker className="cm-tool" value={rappel} onChange={onRappel}/>
           </ScrollRow>
           {pop === 'types' && (
-            <div className="cm-pop">
-              {MESSAGES_TYPES.map(t => <button key={t.label} onClick={() => { setText(t.text); setNote(false); setPop(null); inputRef.current?.focus() }}><b>{t.label}</b><span>{t.text}</span></button>)}
-            </div>
+            <MessagesTypesMenu messages={MESSAGES_TYPES} statut={row.statut} onClose={() => setPop(null)} onPick={t => { setText(t); setNote(false); setPop(null); inputRef.current?.focus() }}/>
           )}
           {pop === 'rdv' && <RdvComposer ancre={rdvBtn.current} onClose={() => setPop(null)}
             onSend={(at, lieu) => sendCard('rdv', { at: new Date(at).toISOString(), lieu }, texteSecoursRdv(at, lieu))}/>}
@@ -347,7 +350,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
       </aside>
 
       {piecesOpen && (
-        <PiecesModal docs={docs} onClose={() => setPiecesOpen(false)} onSend={async (ids, labels, extra) => {
+        <DemandePieces docs={docs} onClose={() => setPiecesOpen(false)} onSend={async (ids, labels, extra) => {
           const nouveaux: string[] = []
           for (const l of extra) {
             const { data, error } = await supabase.rpc('commercial_request_document', { p_lead_id: row.lead_id, p_label: l })
@@ -361,38 +364,6 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
     </div>
   )
 }
-
-function PiecesModal({ docs, onClose, onSend }: { docs: any[]; onClose: () => void; onSend: (ids: string[], labels: string[], extra: string[]) => Promise<void> }) {
-  const manquantes = docs.filter(d => d.status === 'pending' || d.status === 'rejected' || !d.status)
-  const [checked, setChecked] = useState<Record<string, boolean>>(() => Object.fromEntries(manquantes.map(d => [d.id, true])))
-  const [autre, setAutre] = useState('')
-  const [busy, setBusy] = useState(false)
-  const choisies = manquantes.filter(d => checked[d.id])
-  const labels = choisies.map(d => d.doc_label || 'Document')
-  const extra = autre.trim() ? [autre.trim()] : []
-  return (
-    <div className="cm-modal-bg" onClick={onClose}>
-      <div className="cm-modal" onClick={e => e.stopPropagation()}>
-        <div className="cm-side-h"><span>Demander des pièces</span><button className="cm-x show" onClick={onClose} aria-label="Fermer"><CloseIcon size={13}/></button></div>
-        {manquantes.length === 0 && <div className="cm-empty sm">Toutes les pièces prévues sont déjà envoyées.</div>}
-        {manquantes.map(d => (
-          <label key={d.id} className="cm-check">
-            <input type="checkbox" checked={!!checked[d.id]} onChange={e => setChecked(c => ({ ...c, [d.id]: e.target.checked }))}/>
-            <span>{d.doc_label || 'Document'}{d.status === 'rejected' && <small> · refusée, à renvoyer</small>}</span>
-          </label>
-        ))}
-        <input className="cm-search" placeholder="Autre pièce (ex : facture proforma)" value={autre} onChange={e => setAutre(e.target.value)}/>
-        <div className="cm-modal-foot">
-          <button className="cm-tool" onClick={onClose}>Annuler</button>
-          <button className="cm-pill solid" disabled={busy || (labels.length + extra.length === 0)} onClick={async () => { setBusy(true); await onSend(choisies.map(d => d.id), labels, extra); setBusy(false) }}>
-            {busy ? 'Envoi…' : `Envoyer la demande`}<ArrowDot/>
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 
 // ============ FIL DIRECTION ============
 function DirectionThread({ commercialId, tick, onBack, onRead }: { commercialId: string; tick: number; onBack: () => void; onRead: () => void }) {
@@ -533,7 +504,7 @@ function CmStyles() {
     .cm-seg button { border: none; background: transparent; color: #5B6478; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
     .cm-seg button.on { background: #fff; color: #1A6BFF; font-weight: 800; box-shadow: 0 1px 4px rgba(13,27,62,0.08); }
     .cm-seg button.on.note { color: #B45309; }
-    .cm-tool { border: 1.5px solid #E5E7EB; background: #fff; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
+    .cm-tool { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid #E5E7EB; background: #fff; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .cm-tool:hover { border-color: #BFD4FF; color: #1A6BFF; }
     .cm-tool.active { border-color: #1A6BFF; color: #1A6BFF; background: #EEF4FF; }
     .cm-tool.on { border-color: #FCD34D; background: #FFFBEB; color: #B45309; }
