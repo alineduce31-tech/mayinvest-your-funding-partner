@@ -720,6 +720,16 @@ function Admin({ session }: { session: any }) {
 
         /* Filtres avancés */
         .toolbar-advanced { background: #FFFFFF; padding: 14px; border: 1px solid var(--border); border-radius: 14px; }
+        .crm-repere { height: 1px; margin-bottom: -1px; }
+        @media (min-width: 901px) {
+          .crm-fige { position: sticky; top: 76px; z-index: 39; transition: box-shadow .15s, margin .15s; }
+          .crm-fige.colle { box-shadow: 0 8px 24px rgba(13,27,62,.08) !important; }
+        }
+        @media (min-width: 1280px) {
+          .crm-fige { top: 8px; }
+          .crm-fige.colle { z-index: 41; margin-left: 96px !important; flex-wrap: nowrap !important; padding: 7px !important; box-shadow: 0 6px 18px rgba(13,27,62,.08) !important; }
+          .crm-fige.colle > input { min-width: 160px !important; }
+        }
         .toolbar-advanced .date-range { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ink-dim); font-weight: 600; }
         .toolbar-advanced .date-range input[type="date"] { padding: 10px 12px; font-size: 13px !important; }
         .toolbar-advanced .date-range label { font-weight: 600; color: var(--ink-dim); }
@@ -1504,11 +1514,22 @@ function CRMView({ leads, allLeads, msgCounts, search, setSearch, filterStatut, 
     return t ? t.email.split('@')[0] : ''
   }
   const [expOpen, setExpOpen] = useState(false)
+  // Barre de filtres figée au défilement ; sur grand écran elle remonte dans l'en-tête, à côté du titre « CRM »
+  const repere = useRef<HTMLDivElement>(null)
+  const [colle, setColle] = useState(false)
+  useEffect(() => {
+    const el = repere.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const obs = new IntersectionObserver(([e]) => setColle(!!e && !e.isIntersecting && e.boundingClientRect.top < 80), { rootMargin: '-72px 0px 0px 0px', threshold: 0 })
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [])
   const iso30 = (() => { const d = new Date(now30); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` })()
   const agentOptions = [{ value: 'none', label: 'Non assigné' }, ...(teamMembers?.filter((m: any) => m.role === 'commercial').map((m: any) => ({ value: m.id, label: m.email.split('@')[0] })) || [])]
   return (
     <>
-      <div className="toolbar toolbar-advanced crm-v2">
+      <div ref={repere} className="crm-repere" aria-hidden="true"/>
+      <div className={`toolbar toolbar-advanced crm-v2 crm-fige${colle ? ' colle' : ''}`}>
         <input placeholder="Rechercher nom, téléphone, code…" value={search} onChange={e => setSearch(e.target.value)}/>
         <MultiSelectFilter placeholder="Tous statuts" title="Statuts" options={STATUSES.map((s: string) => ({ value: s, label: s }))} value={filterStatut} onChange={setFilterStatut}/>
         <MultiSelectFilter placeholder="Tous types" title="Type de client" options={[{ value: 'physique', label: 'Particulier' }, { value: 'morale', label: 'PME' }]} value={filterType} onChange={setFilterType}/>
