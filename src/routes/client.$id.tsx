@@ -2,6 +2,8 @@ import { lienContact } from '@/lib/lead-templates'
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
 import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Landmark, FileBadge, FileText, BarChart3, CircleCheck, Clock, Camera, Lock, Search, ChevronLeft, Plus, Image as ImageIcon } from 'lucide-react'
+import PackClient from '@/components/PackClient'
+import { proposerPack } from '@/lib/pack'
 import { ETAPES_CLIENT, etapeCourante, compteDocs, prochaineEtape, decoupePiece } from '@/lib/espace-client'
 import { initialesNom, couleurAvatar } from '@/lib/affichage'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
@@ -436,7 +438,6 @@ function ClientPortal() {
     if (!lead) return { body: '' }
     const isP = lead.type === 'physique' || lead.type === 'Personne physique'
     const nom = isP ? (lead.identite?.prenom || 'cher client') : (lead.situation?.raison_sociale || lead.identite?.raison_sociale || 'cher client')
-    const packNeeded = !isP && lead.situation?.rccm === 'Non'
 
     if (activeTab === 'suivi') {
       const statutIdx = STEPS.indexOf(lead.statut)
@@ -456,7 +457,7 @@ function ClientPortal() {
         success: ['Éligible','Financé'].includes(lead.statut),
         actions: [
           { label: 'Écrire à mon conseiller', onClick: () => openAdvisorChat(), primary: true },
-          ...(packNeeded ? [{ label: '📄 Je veux le Pack Formalisation', onClick: () => openAdvisorChat('Bonjour, je suis intéressé par le Pack Formalisation pour ma société.') }] : []),
+          ...(proposerPack(lead) ? [{ label: 'Découvrir le Pack formalisation', onClick: () => { setHakiOpen(false); setTimeout(() => document.querySelector('.pk')?.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100) } }] : []),
         ],
       }
     }
@@ -993,7 +994,6 @@ function ClientPortal() {
   const nom = isP ? `${lead?.identite?.prenom || ''} ${lead?.identite?.nom || ''}`.trim() : (lead?.situation?.raison_sociale || lead?.identite?.raison_sociale || 'Mon dossier')
   const statutIdx = STEPS.indexOf(lead?.statut)
   const col = statutColor(lead?.statut)
-  const packNeeded = !isP && lead?.situation?.rccm === 'Non'
   const tel = lead?.identite?.tel || ''
   const unreadMsgs = messages.filter(m => m.sender !== 'client' && !m.read_at).length
 
@@ -1050,13 +1050,7 @@ function ClientPortal() {
             ))}
           </div>
 
-          {packNeeded && (
-            <div className="cx-g cx-pack">
-              <b>Pack Formalisation Mayinvest</b>
-              <p>Votre société n'a pas encore de RCCM. Nous pouvons nous charger de la création : statuts, immatriculation, NIU et compte bancaire.</p>
-              <button onClick={() => openAdvisorChat('Bonjour, je suis intéressé par le Pack Formalisation pour ma société.')}>Je suis intéressé</button>
-            </div>
-          )}
+          <PackClient lead={lead} onChat={openAdvisorChat}/>
 
           <div className="cx-gt">Votre conseiller</div>
           <div className="cx-g cx-cons">

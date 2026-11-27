@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import { proposerPack, PRIX_PACK } from '@/lib/pack'
 import { Logo } from '@/components/Logo'
 import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles, vueMobile, petitEcranActuel } from '@/components/HakiTeaser'
 
@@ -1082,6 +1083,11 @@ function Simulation() {
         /* Bouton partage */
         .btn-share { width: 100%; background: rgba(255,255,255,0.08); border: 1.5px solid rgba(255,255,255,0.2); color: #fff; font-family: inherit; font-size: 14px; font-weight: 700; padding: 14px 20px; border-radius: 100px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; position: relative; z-index: 1; transition: all 0.15s; }
         .btn-share:hover { background: rgba(255,255,255,0.14); border-color: rgba(255,255,255,0.35); }
+        .pack-teaser { position: relative; z-index: 1; text-align: left; background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.14); border-radius: 18px; padding: 16px 16px 14px; margin: -8px 0 20px; }
+        .pack-teaser-h { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+        .pack-teaser-h b { font-size: 15.5px; font-weight: 700; } .pack-teaser-h span { font-size: 14px; font-weight: 700; color: #8FB6FF; white-space: nowrap; }
+        .pack-teaser p { margin: 6px 0 12px; font-size: 13.5px; line-height: 1.5; color: rgba(255,255,255,0.72); }
+        .pack-teaser button { height: 40px; padding: 0 18px; border: none; border-radius: 999px; background: #fff; color: #0D1B3E; font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
         .code-box { background: linear-gradient(145deg, #1A6BFF, #0D4FD1); border-radius: 18px; padding: 20px; margin-bottom: 20px; position: relative; z-index: 1; box-shadow: 0 12px 28px rgba(26,107,255,0.4); border: 2px solid rgba(255,255,255,0.15); }
         .code-label { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.75); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .code-value { font-family: 'SF Mono', 'Monaco', 'Consolas', monospace; font-size: 28px; font-weight: 800; color: #fff; letter-spacing: 0.08em; margin-bottom: 12px; }
@@ -1475,6 +1481,19 @@ function Simulation() {
             {score >= 70 ? 'Dossier excellent' : score >= 50 ? 'Dossier éligible' : 'Dossier à renforcer'}
           </div>
           <p className="score-sub">{score >= 70 ? 'Votre dossier est très éligible. Un conseiller Mayinvest vous contacte sous 24h.' : score >= 50 ? 'Éligible. Notre équipe va renforcer votre dossier avec vous.' : 'Améliorons votre dossier ensemble. Un conseiller vous rappelle sous 24h.'}</p>
+
+          {(() => {
+            const ancP = tranche(form['anciennete_tr'] || '')
+            const nonElig = isP ? (ancP < 6) || form['salaire_domic'] === 'Non' || form['contrat'] === 'Stage' : form['rccm'] === 'Non'
+            if (!proposerPack({ score, banque_actuelle: form['banque'] || '', eligibilite: { non_eligible: nonElig, salaire_domic: form['salaire_domic'] }, situation: { rccm: form['rccm'] } })) return null
+            return (
+              <div className="pack-teaser">
+                <div className="pack-teaser-h"><b>Pack formalisation</b><span>{new Intl.NumberFormat('fr-FR').format(PRIX_PACK).replace(/[\u202F\u00A0]/g, '\u00A0')}{'\u00A0'}XAF</span></div>
+                <p>RCCM, NIU, statuts et ouverture de votre compte bancaire : tout ce qu'il faut pour devenir finançable.</p>
+                <button type="button" onClick={() => { window.location.href = `/client/${leadId}?pack=1` }}>Découvrir le pack</button>
+              </div>
+            )
+          })()}
 
           <div className="code-box">
             <div className="code-label">

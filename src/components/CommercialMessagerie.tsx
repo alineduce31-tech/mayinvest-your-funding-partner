@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { initiales, heureCourte } from '@/lib/messagerie'
 import { COMMISSION_PAR_DOSSIER } from '@/lib/commercial-dashboard'
+import { PackSuivi } from '@/components/PackAdmin'
 import CallButton from '@/components/CallButton'
 import ScrollRow from '@/components/ScrollRow'
 import { useRappels, RappelPicker } from '@/components/Rappels'
@@ -344,6 +345,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
           })()}
         </div>
 
+        <PackSuivi leadId={row.lead_id} nom={row.nom || 'Client'} onChange={loadMsgs}/>
         <div className="cm-commission"><span>Ta commission si financé</span><b>{fmtXaf(COMMISSION_PAR_DOSSIER)}</b></div>
       </aside>
 

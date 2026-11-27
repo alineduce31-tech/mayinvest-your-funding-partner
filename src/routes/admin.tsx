@@ -15,6 +15,7 @@ import CrmListe from '@/components/CrmListe'
 import ConseillerPicker from '@/components/ConseillerPicker'
 import { couleurAvatar, initialesNom, dateRelative } from '@/lib/affichage'
 import NonEligiblesView from '@/components/NonEligiblesView'
+import PacksView, { PackSuivi } from '@/components/PackAdmin'
 import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
 import { regrouper, vueAdmin, suggestions } from '@/lib/conversation'
 import NiceSelect from '@/components/NiceSelect'
@@ -180,7 +181,7 @@ function _UnusedLoginScreen() {
 /* ============================================================
  * ADMIN APP
  * ============================================================ */
-type Page = 'general' | 'crm' | 'segments' | 'bancarisation' | 'non-eligibles' | 'rapports'
+type Page = 'general' | 'crm' | 'segments' | 'bancarisation' | 'non-eligibles' | 'packs' | 'rapports'
 
 function Admin({ session }: { session: any }) {
   const navigate = useNavigate()
@@ -210,6 +211,7 @@ function Admin({ session }: { session: any }) {
   // Role-based access : commercial ne voit que ses leads assignés
   const isDirector = session?.role === 'director'
   const isCommercial = session?.role === 'commercial'
+  const peutConfirmerPaiement = session?.role === 'director' || session?.role === 'operator'
   const [selectedLead, setSelectedLead] = useState<any>(null)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [toast, setToast] = useState<{ msg: string; score: number } | null>(null)
@@ -514,6 +516,7 @@ function Admin({ session }: { session: any }) {
     segments: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M10 2.5v15M2.5 10h15" stroke="currentColor" strokeWidth="1.6"/><circle cx="10" cy="10" r="2.5" fill="currentColor"/></svg>,
     bank: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M2.5 8L10 3l7.5 5v1h-15V8z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M4.5 9v7M8 9v7M12 9v7M15.5 9v7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><path d="M2 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
     noelig: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M4.5 4.5l11 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
+    pack: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2.5l6.5 3.2v8.6L10 17.5l-6.5-3.2V5.7L10 2.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M3.7 5.8L10 9l6.3-3.2M10 9v8.3" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>,
     report: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="2.5" width="15" height="15" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M6 14V9M10 14V6M14 14v-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>,
   }
   const unreadTotal = Object.values(msgCounts).reduce((a, b) => a + (b || 0), 0)
@@ -523,6 +526,7 @@ function Admin({ session }: { session: any }) {
     { k: 'segments', label: 'Segments', icon: ICON.segments },
     { k: 'bancarisation', label: 'Bancarisation', icon: ICON.bank },
     { k: 'non-eligibles', label: 'Non éligibles', icon: ICON.noelig },
+    { k: 'packs', label: 'Packs', icon: ICON.pack },
     { k: 'rapports', label: 'Rapports', icon: ICON.report },
   ]
 
@@ -1034,6 +1038,7 @@ function Admin({ session }: { session: any }) {
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>}
+            {page === 'packs' && <PacksView leads={leads} onOpen={setSelectedLead} peutConfirmer={peutConfirmerPaiement} onChange={loadLeads}/>}
             {page === 'rapports' && <RapportsView leads={leads} exportCSV={exportCSV} exportExcel={exportExcel} exportPDF={exportPDF}/>}
           </>)}
         </main>
@@ -1051,6 +1056,9 @@ function Admin({ session }: { session: any }) {
           onAssignAgent={(agentId: string | null) => assignLead(selectedLead.id, agentId)}
           isDirector={isDirector}
           adminId={session?.id}
+          peutConfirmer={peutConfirmerPaiement}
+          peutCocher={session?.role !== 'viewer'}
+          onPackChange={loadLeads}
         />
       )}
 
@@ -2229,7 +2237,7 @@ function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
 /* ============================================================
  * DRAWER DÉTAIL + CHAT
  * ============================================================ */
-function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMembers, onAssignAgent, isDirector, adminId }: any) {
+function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMembers, onAssignAgent, isDirector, adminId, peutConfirmer, peutCocher, onPackChange }: any) {
   const [tab, setTab] = useState<'infos' | 'chat' | 'docs' | 'notes'>('infos')
   const [notes, setNotes] = useState<any[]>([])
   const [newNote, setNewNote] = useState('')
@@ -2421,6 +2429,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
               </>}
             </div>
 
+            <PackSuivi leadId={lead.id} nom={nom} peutConfirmer={peutConfirmer} peutCocher={peutCocher} onChange={onPackChange}/>
             <LeadActionsPanel lead={lead} onSendInternal={(msg) => { setTab('chat'); setNewMsg(msg); }} />
             <div className="ld-foot">Créé le {new Date(lead.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · mis à jour {dateRelative(lead.updated_at || lead.created_at, Date.now())}</div>
           </>}
