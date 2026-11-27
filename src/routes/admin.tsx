@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
+import { StickyNote } from 'lucide-react'
 import MenuExporter from '@/components/MenuExporter'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
@@ -2273,14 +2274,22 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
         </div>
 
         <div className="ld-seg" role="tablist">
-          <button className={tab === 'infos' ? 'on' : ''} onClick={() => setTab('infos')}>Infos</button>
-          <button className={tab === 'chat' ? 'on' : ''} onClick={() => setTab('chat')}>
-            Discussion {messages.filter(m => m.sender === 'client' && !m.read_at).length > 0 && <i className="ld-badge">{messages.filter(m => m.sender === 'client' && !m.read_at).length}</i>}
-          </button>
-          <button className={tab === 'docs' ? 'on' : ''} onClick={() => setTab('docs')}>
-            Documents {documents.filter(d => d.status === 'uploaded').length > 0 && <i className="ld-badge o">{documents.filter(d => d.status === 'uploaded').length}</i>}
-          </button>
-          <button className={tab === 'notes' ? 'on' : ''} onClick={() => setTab('notes')}>Notes {notes.length > 0 && <i className="ld-badge n">{notes.length}</i>}</button>
+          {(() => {
+            const nb = (n: number) => n > 99 ? '99+' : n
+            const nonLus = messages.filter(m => m.sender === 'client' && !m.read_at).length
+            const aVerifier = documents.filter(d => d.status === 'uploaded').length
+            const onglets = [
+              { k: 'infos', l: 'Infos', ic: <User size={19}/>, n: 0, c: '' },
+              { k: 'chat', l: 'Discussion', ic: <MessageCircle size={19}/>, n: nonLus, c: '' },
+              { k: 'docs', l: 'Documents', ic: <FileText size={19}/>, n: aVerifier, c: 'o' },
+              { k: 'notes', l: 'Notes', ic: <StickyNote size={19}/>, n: notes.length, c: 'n' },
+            ] as const
+            return onglets.map(o => (
+              <button key={o.k} className={tab === o.k ? 'on' : ''} onClick={() => setTab(o.k)} aria-label={o.n > 0 ? `${o.l}, ${o.n}` : o.l}>
+                <span className="ld-seg-ic">{o.ic}{o.n > 0 && <i className={`ld-badge ${o.c}`}>{nb(o.n)}</i>}</span><span className="ld-seg-l">{o.l}</span>
+              </button>
+            ))
+          })()}
         </div>
 
         <div className="dr-body">
