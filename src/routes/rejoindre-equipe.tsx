@@ -208,7 +208,7 @@ function RejoindreEquipePage() {
           <div className="benefit" data-n="01">
             <div className="benefit-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
             <h3>Commission attractive</h3>
-            <p><b>50 000 XAF</b> par dossier financé. Paiement sous 7 jours après déblocage des fonds. Pas de plafond.</p>
+            <p><b>10 %</b> de commission sur chaque Pack Formalisation vendu. Pas de plafond.</p>
           </div>
           <div className="benefit" data-n="02">
             <div className="benefit-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
