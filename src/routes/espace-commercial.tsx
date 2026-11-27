@@ -41,7 +41,7 @@ const MI = {
 }
 
 type Session = { id: string; nom: string; prenom: string; email: string; telephone: string; ville: string; status: string; activated_at: string | null; ref_code?: string }
-type Stats = { total_leads: number; leads_actifs: number; dossiers_finances: number; gains_total_xaf: number; gains_mois_xaf: number; classement: number }
+type Stats = { total_leads: number; leads_actifs: number; dossiers_finances: number; packs_vendus?: number; packs_vendus_mois?: number; gains_total_xaf: number; gains_mois_xaf: number; classement: number }
 type Lead = any
 
 const SITE_URL = typeof window !== 'undefined' ? window.location.origin : 'https://mayinvestcapitalstrategy.com'
@@ -536,7 +536,12 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
           </div>
 
           <div className="section-card">
-            <div className="section-head"><h3>Combien je peux gagner</h3><span className="section-sub">10 % par Pack Formalisation</span></div>
+            <div className="section-head"><h3>Ma commission</h3><span className="section-sub">10 % par Pack Formalisation</span></div>
+            <div className="mc-reel">
+              <div><span>Packs vendus ce mois</span><b>{stats ? nombreFr(stats.packs_vendus_mois || 0) : '—'}</b><small>{stats ? `${nombreFr(stats.packs_vendus || 0)} au total` : ''}</small></div>
+              <div className="bl"><span>Ma commission ce mois</span><b>{stats ? xaf(stats.gains_mois_xaf || 0) : '—'}</b><small>{stats ? `${xaf(stats.gains_total_xaf || 0)} au total` : ''}</small></div>
+            </div>
+            <div className="mc-sim-t">Simuler</div>
             <CalculCommission/>
           </div>
         </div>
@@ -708,6 +713,8 @@ function LeadDrawer({ lead, commercialId, partenaire, onClose, onUpdated, onOpen
   )
 }
 
+const nombreFr = (n: number) => new Intl.NumberFormat('fr-FR').format(n)
+
 // ============ CALCUL DE COMMISSION (10 % des Packs Formalisation) ============
 function CalculCommission() {
   const [nb, setNb] = useState(3)
@@ -717,10 +724,7 @@ function CalculCommission() {
       <div className="cd-chips">
         {[1, 3, 5, 10].map(n => <button key={n} className={`cd-chip ${nb === n ? 'on' : ''}`} onClick={() => setNb(n)}>{n} Pack{n > 1 ? 's' : ''}</button>)}
       </div>
-      <div className="cc-box">
-        <div className="cc-l"><span>Montant généré</span><small>{nb} Pack{nb > 1 ? 's' : ''} × {xaf(PRIX_PACK)}</small><b>{xaf(c.genere)}</b></div>
-        <div className="cc-r"><span>Ta commission (10 %)</span><b>{xaf(c.commission)}</b></div>
-      </div>
+      <div className="cc-r solo"><span>Ta commission (10 %) pour {nb} Pack{nb > 1 ? 's' : ''} vendu{nb > 1 ? 's' : ''}</span><b>{xaf(c.commission)}</b></div>
       <p className="cd-com-note">Versée dès que Mayinvest confirme le paiement du Pack par ton client. Elle s'ajoute à « Gains ce mois ».</p>
     </div>
   )
@@ -1039,6 +1043,12 @@ function GlobalStyles() {
       .cc-l small { font-size: 11.5px; color: #64748B; }
       .cc-l b { font-size: 18px; font-weight: 800; color: ${MI.navy}; margin-top: 4px; } .cc-r b { font-size: 22px; font-weight: 800; margin-top: 4px; }
       @media (max-width: 420px) { .cc-box { grid-template-columns: minmax(0, 1fr); } }
+      .cc-r.solo { border-radius: 16px; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 18px; } .cc-r.solo span { font-size: 13px; }
+      .mc-reel { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      .mc-reel > div { background: #F5F7FB; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 3px; }
+      .mc-reel > div.bl { background: linear-gradient(135deg, ${MI.blue}, ${MI.blueDark}); color: #fff; }
+      .mc-reel span { font-size: 12.5px; font-weight: 600; } .mc-reel b { font-size: 22px; font-weight: 800; } .mc-reel small { font-size: 11.5px; opacity: .75; }
+      .mc-sim-t { font-size: 12px; font-weight: 600; color: #64748B; margin: 16px 0 8px; }
       .cd-com-note { margin: 10px 2px 0; font-size: 12.5px; color: #64748B; line-height: 1.5; }
       .kpi.primary .kpi-sub { color: rgba(255,255,255,0.65); }
 
