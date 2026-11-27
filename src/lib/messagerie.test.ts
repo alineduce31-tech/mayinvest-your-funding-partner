@@ -63,3 +63,27 @@ describe('menu des messages types', () => {
     expect(filtrerMessages(MT, 'zzz')).toHaveLength(0)
   })
 })
+
+import { etapeDirection } from './messagerie'
+describe('étape vue par la direction', () => {
+  const base = { statut: 'Contacté', agentId: 'a1', unread: 0, waitingSince: null, docs: [] as any[] }
+  const now = Date.parse('2026-11-27T12:00:00Z')
+  test('sans conseiller : attribuer', () => {
+    expect(etapeDirection({ ...base, agentId: null }, now).action).toBe('attribuer')
+  })
+  test('client en attente : répondre', () => {
+    const e = etapeDirection({ ...base, unread: 2, waitingSince: '2026-11-27T09:00:00Z' }, now)
+    expect(e.action).toBe('repondre'); expect(e.texte).toContain('3 h')
+  })
+  test('pièces reçues à vérifier, avec progression', () => {
+    const e = etapeDirection({ ...base, docs: [{ status: 'uploaded' }, { status: 'pending' }, { status: 'validated' }] }, now)
+    expect(e.action).toBe('verifier'); expect(e.progression).toEqual({ recu: 2, total: 3 })
+  })
+  test('pièces manquantes au RDV', () => {
+    const e = etapeDirection({ ...base, statut: 'RDV', docs: [{ status: 'pending' }, { status: 'rejected' }, { status: 'validated' }] }, now)
+    expect(e.action).toBe('pieces'); expect(e.texte).toContain('2 pièces')
+  })
+  test('financé : rien à faire', () => {
+    expect(etapeDirection({ ...base, statut: 'Financé' }, now).action).toBeNull()
+  })
+})

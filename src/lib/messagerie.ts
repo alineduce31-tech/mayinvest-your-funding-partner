@@ -124,3 +124,40 @@ export const MESSAGES_TYPES: MessageType[] = [
   { cle: 'relance', label: 'Relance', text: 'Bonjour, nous n\'avons pas eu de retour de votre part. Votre dossier est toujours en cours : avez-vous besoin d\'aide ?' },
   { cle: 'merci', label: 'Remerciement', text: 'Merci pour votre confiance. N\'hésitez pas à nous écrire ici à tout moment.' },
 ]
+
+/** Prochaine étape d'un dossier, vue par la direction (bandeau en haut de la discussion). */
+export type EtapeDirection = {
+  texte: string
+  action: 'attribuer' | 'repondre' | 'verifier' | 'pieces' | 'relancer' | null
+  bouton?: string
+  ton: 'info' | 'warn' | 'ok'
+  progression?: { recu: number; total: number } | undefined
+}
+type DocEtat = { status?: string | null }
+export function etapeDirection(
+  p: { statut: string | null | undefined; agentId: string | null | undefined; unread: number; waitingSince: string | null; docs: DocEtat[] },
+  now: number,
+): EtapeDirection {
+  const total = p.docs.length
+  const aVerifier = p.docs.filter(d => d.status === 'uploaded').length
+  const recu = p.docs.filter(d => d.status === 'uploaded' || d.status === 'validated').length
+  const manque = total - recu
+  const prog = total > 0 ? { recu, total } : undefined
+  const s = (n: number, mot: string) => `${n} ${mot}${n > 1 ? 's' : ''}`
+  if (p.statut === 'Financé') return { texte: 'Dossier financé. Il n\'y a plus rien à faire.', action: null, ton: 'ok' }
+  if (p.statut === 'Perdu' || p.statut === 'Non Éligible') return { texte: 'Dossier clos.', action: null, ton: 'info' }
+  if (!p.agentId) return { texte: 'Aucun conseiller sur ce dossier : attribue-le pour qu\'il soit suivi.', action: 'attribuer', bouton: 'Attribuer', ton: 'warn' }
+  if (p.unread > 0) {
+    const h = heuresAttente(p.waitingSince, now)
+    return { texte: h >= 1 ? `Le client attend une réponse depuis ${h} h.` : 'Le client vient d\'écrire.', action: 'repondre', bouton: 'Répondre', ton: 'warn' }
+  }
+  if (aVerifier > 0) return { texte: `${s(aVerifier, 'pièce')} à vérifier.`, action: 'verifier', bouton: 'Vérifier', ton: 'warn', progression: prog }
+  if (p.statut === 'Dossier Déposé') return { texte: 'Dossier en banque : en attente de la réponse.', action: null, ton: 'info' }
+  if (manque > 0) {
+    if (p.statut === 'RDV' || p.statut === 'Éligible') return { texte: `Il manque ${s(manque, 'pièce')} avant le dépôt en banque.`, action: 'pieces', bouton: 'Demander les pièces', ton: 'warn', progression: prog }
+    return { texte: `Le client doit encore envoyer ${s(manque, 'pièce')}.`, action: 'relancer', bouton: 'Relancer', ton: 'warn', progression: prog }
+  }
+  if (p.statut === 'Nouveau') return { texte: 'Nouveau dossier : le conseiller doit appeler le client.', action: null, ton: 'info' }
+  if (total > 0) return { texte: 'Toutes les pièces sont validées.', action: null, ton: 'ok', progression: prog }
+  return { texte: 'Dossier en cours de suivi par le conseiller.', action: null, ton: 'info' }
+}

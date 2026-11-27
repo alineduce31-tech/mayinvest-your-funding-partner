@@ -5,6 +5,7 @@ import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { LIFECYCLE_STATUTS } from '@/lib/lead-templates'
 import CallButton from '@/components/CallButton'
+import BandeauEtape from '@/components/BandeauEtape'
 import PieceIcone from '@/components/PieceIcone'
 import ConseillerPicker from '@/components/ConseillerPicker'
 import MessagesTypesMenu from '@/components/MessagesTypesMenu'
@@ -17,7 +18,7 @@ import { Conversation, ChatInput, Suggestions, RdvComposer } from '@/components/
 import { regrouper, vueAdmin, vueEquipe, suggestions, texteSecoursRdv, texteSecoursPieces } from '@/lib/conversation'
 import {
   filtrerInbox, filtrerEquipe, compteurs, heuresAttente, enRetard, apercu, heureCourte, initiales,
-  MESSAGES_TYPES, type InboxRow, type TeamRow, type Filtre,
+  MESSAGES_TYPES, etapeDirection, type InboxRow, type TeamRow, type Filtre,
 } from '@/lib/messagerie'
 
 type Fil = { kind: 'lead'; id: string } | { kind: 'team'; id: string } | { kind: 'broadcast' } | null
@@ -290,6 +291,23 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
 
   const placeholder = mode === 'groupe' ? 'Écrire au groupe (client, commercial, direction)…' : mode === 'note' ? 'Note interne : le client ne la verra pas…' : `Message privé à ${agentNom || 'son commercial'}…`
   const docsOk = docs.filter(d => d.status === 'validated').length
+  const etape = etapeDirection({ statut: lead?.statut || row?.statut, agentId, unread: Number(row?.unread || 0), waitingSince: row?.waiting_since || null, docs }, Date.now())
+  // Amène l'œil vers la bonne zone du panneau « Le dossier »
+  function allerA(sel: string) {
+    setInfoOpen(true)
+    setTimeout(() => {
+      const el = document.querySelector(sel) as HTMLElement | null
+      if (!el) return
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      el.classList.add('am-flash'); setTimeout(() => el.classList.remove('am-flash'), 1400)
+    }, 80)
+  }
+  function actionEtape() {
+    if (etape.action === 'attribuer') allerA('.am-kv-cons')
+    else if (etape.action === 'verifier') allerA('.am-docs')
+    else if (etape.action === 'pieces' || etape.action === 'relancer') setPiecesOpen(true)
+    else if (etape.action === 'repondre') (document.querySelector('.am-thread textarea') as HTMLTextAreaElement | null)?.focus()
+  }
 
   return (
     <div className="am-thread-wrap">
@@ -310,6 +328,9 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
           <CallButton tel={lead?.identite?.tel} nom={nom} leadId={leadId} className="am-call" onLogged={loadMsgs}>Appeler<span className="am-adot green"><svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" stroke="#fff" strokeWidth="2.4" strokeLinejoin="round"/></svg></span></CallButton>
           <button className="am-info-btn" onClick={() => setInfoOpen(o => !o)}>Dossier</button>
         </div>
+
+        {lead && <BandeauEtape ton={etape.ton} action={etape.action} texte={etape.texte} progression={etape.progression}
+          libelle={etape.action === 'attribuer' && !isDirector ? undefined : etape.bouton} onClick={actionEtape}/>}
 
         <div className="am-msgs">
           <Conversation viewer="equipe" leadId={leadId} peutSupprimer={b => !!b.mien || (isDirector && b.ton !== 'client')} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMsgs() }} docs={docs} bulles={regrouper(msgs.map(m => vueAdmin(m, session.id, nom)), Date.now())} vide="Pas encore de message. Écris le premier au groupe."/>
@@ -350,7 +371,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
           <div><span>Statut</span>
             <StatutPicker value={lead?.statut || ''} onChange={changerStatut} title="Statut du dossier" style={{ maxWidth: 180 }}/>
           </div>
-          <div><span>Conseiller</span>
+          <div className="am-kv-cons"><span>Conseiller</span>
             {isDirector ? (
               <ConseillerPicker value={agentId || null} onChange={id => reattribuer(id || '')} villeLead={lead?.identite?.ville || lead?.ville} montant={lead?.montant_demande} nomSecours={agentNom || undefined} placeholder="Sans conseiller"/>
             ) : <b>{agentNom || 'Sans conseiller'}</b>}
@@ -661,6 +682,8 @@ function MessagerieStyles() {
     .am-send:disabled { background: #CBD5E1; cursor: default; }
     .am-err { background: #FEE2E2; color: #B91C1C; border-radius: 10px; padding: 8px 12px; font-size: 12.5px; font-weight: 600; }
     .am-ok { background: #DCFCE7; color: #166534; border-radius: 10px; padding: 8px 12px; font-size: 13px; font-weight: 700; }
+    .am-flash { animation: amFlash 1.4s ease; border-radius: 12px; }
+    @keyframes amFlash { 0%, 60% { box-shadow: 0 0 0 3px rgba(26,107,255,.35); } 100% { box-shadow: 0 0 0 0 rgba(26,107,255,0); } }
     .am-side { width: 300px; flex-shrink: 0; background: #fff; border-left: 1px solid #E8ECF3; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box; }
     .am-side-head { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 800; color: #64748B; letter-spacing: 0.08em; text-transform: uppercase; }
     .am-x { display: none; border: none; background: #F1F5F9; width: 28px; height: 28px; border-radius: 50%; padding: 0; align-items: center; justify-content: center; cursor: pointer; color: #0D1B3E; }

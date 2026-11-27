@@ -1033,10 +1033,16 @@ function ClientPortal() {
         </div>
 
         {activeTab === 'suivi' && <>
-          <div className="cx-next">
-            <small>Prochaine étape</small>
-            <b>{prochaine.titre}</b>
+          <div className={`cx-next ${prochaine.action === 'documents' ? 'warn' : ''}`}>
+            <div className="cx-next-h">
+              <span className="cx-next-ic" aria-hidden="true">{prochaine.action === 'documents' ? <FileText size={17}/> : lead?.statut === 'Financé' ? <CircleCheck size={17}/> : <Clock size={17}/>}</span>
+              <div className="cx-next-tt"><small>Prochaine étape</small><b>{prochaine.titre}</b></div>
+            </div>
             <p>{prochaine.texte}</p>
+            {prochaine.action === 'documents' && docsC.total > 0 && <div className="cx-next-prog">
+              <span className="cx-next-bar"><i style={{ width: `${Math.round(docsC.envoyes / docsC.total * 100)}%` }}/></span>
+              <span className="cx-next-nb">{docsC.envoyes} sur {docsC.total} envoyé{docsC.envoyes > 1 ? 's' : ''}</span>
+            </div>}
             {prochaine.action && <button onClick={() => prochaine.action === 'documents' ? setActiveTab('docs') : openAdvisorChat()}>{prochaine.action === 'documents' ? <Upload size={14}/> : <MessageCircle size={14}/>}{prochaine.bouton}</button>}
           </div>
 
@@ -1215,10 +1221,18 @@ const CX_CSS = `
   .cx-seg button.on { background: #fff; color: #1D1D1F; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
   .cx-seg i { font-style: normal; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #1A6BFF; color: #fff; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
   .cx-seg i.o { background: #DC2626; }
-  .cx-next { background: #EAF1FF; border-radius: 18px; padding: 14px 16px; }
-  .cx-next small { font-size: 12px; color: #1A6BFF; font-weight: 600; }
-  .cx-next b { display: block; font-size: 16px; font-weight: 700; margin: 2px 0 4px; }
+  .cx-next { background: #fff; border: 1px solid #E2E8F2; border-radius: 18px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(13,27,62,.04); }
+  .cx-next-h { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .cx-next-ic { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #EAF1FF; color: #1A6BFF; }
+  .cx-next.warn .cx-next-ic { background: #FFF1E0; color: #D9690B; }
+  .cx-next-tt { min-width: 0; }
+  .cx-next small { font-size: 12px; color: #64748B; font-weight: 500; }
+  .cx-next b { display: block; font-size: 16px; font-weight: 700; margin-top: 1px; color: #0D1B3E; }
   .cx-next p { margin: 0; font-size: 13.5px; color: #3A3A3C; line-height: 1.5; }
+  .cx-next-prog { display: flex; align-items: center; gap: 10px; margin-top: 12px; }
+  .cx-next-bar { flex: 1; height: 6px; background: #EEF2F8; border-radius: 999px; overflow: hidden; }
+  .cx-next-bar i { display: block; height: 100%; background: #1A6BFF; border-radius: 999px; }
+  .cx-next-nb { font-size: 12px; font-weight: 700; color: #D9690B; background: #FFF1E0; border-radius: 999px; padding: 3px 9px; white-space: nowrap; }
   .cx-next button, .cx-pack button { margin-top: 12px; display: inline-flex; align-items: center; gap: 7px; height: 38px; padding: 0 16px; border: none; border-radius: 999px; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
   .cx-gt { font-size: 12.5px; font-weight: 500; color: #86868B; margin: 18px 6px 7px; }
   .cx-g { background: #fff; border-radius: 18px; overflow: hidden; }
