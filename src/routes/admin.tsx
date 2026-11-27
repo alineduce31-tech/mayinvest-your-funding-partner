@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
-import { StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
+import { ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
 import MenuExporter from '@/components/MenuExporter'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
@@ -2296,7 +2296,12 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
           {tab === 'infos' && <>
             {notes[0] && (
               <button type="button" className="ld-lastnote" onClick={() => setTab('notes')}>
-                <Lock size={13}/><span><b>{notes[0].auteur}</b> · {notes[0].body}</span>
+                <span className="ld-ln-ic" aria-hidden="true"><StickyNote size={17}/></span>
+                <span className="ld-ln-c">
+                  <span className="ld-ln-h"><b>{notes.length > 1 ? 'Dernière note interne' : 'Note interne'}</b><small>· {notes[0].auteur} · {dateRelative(notes[0].created_at, Date.now())}</small></span>
+                  <span className="ld-ln-t">{notes[0].body}</span>
+                </span>
+                <ChevronRight size={16} className="ld-ln-ch"/>
               </button>
             )}
             <div className="ld-gt"><Phone size={13}/>Contact</div>
