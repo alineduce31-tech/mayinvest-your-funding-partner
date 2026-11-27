@@ -1,5 +1,6 @@
 import EquipeNav from '@/components/EquipeNav'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { CroixFermer } from '@/components/Dialogue'
 import { informer } from '@/components/Dialogue'
 import { useEffect, useState, useMemo } from 'react'
 import { supabase } from '@/integrations/supabase/client'
@@ -555,7 +556,7 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
             <h3 style={{ margin: 0 }}>Notifier {candidate.prenom}</h3>
             <div style={{ fontSize: 12, color: '#6B7280', marginTop: 4, fontFamily: 'monospace' }}>{candidate.email || 'Email non renseigné'}</div>
           </div>
-          <button className="nmodal-close" onClick={onClose} aria-label="Fermer">✕</button>
+          <CroixFermer onClick={onClose}/>
         </div>
 
         <div className="nmodal-body">

@@ -1094,9 +1094,10 @@ function Simulation() {
         @media (max-width: 480px) { .code-value { font-size: 22px; } }
         .code-copy { background: rgba(255,255,255,0.15); border: 1.5px solid rgba(255,255,255,0.25); color: #fff; font-family: inherit; font-size: 12px; font-weight: 700; padding: 8px 20px; border-radius: 100px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s; }
         .code-copy:hover { background: rgba(255,255,255,0.25); }
-        .code-copy.copied { background: #34D058; border-color: #34D058; }
+        .code-copy.copied { background: #1A6BFF; border-color: #1A6BFF; }
         .code-warn { font-size: 11px; color: rgba(255,255,255,0.7); margin-top: 10px; line-height: 1.4; }
-        .btn-chat { background: #34D058 !important; }
+        .btn-chat { background: #fff !important; color: #0D1B3E !important; }
+        .btn-chat svg path { stroke: #0D1B3E; }
         .btn-wa { width: 100%; background: #25D366; color: #fff; font-family: inherit; font-size: 15px; font-weight: 700; padding: 16px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 10px; position: relative; z-index: 1; }
         .btn-home { width: 100%; background: transparent; color: rgba(255,255,255,0.7); border: 1.5px solid rgba(255,255,255,0.2); font-family: inherit; font-size: 14px; font-weight: 600; padding: 12px 24px; border-radius: 100px; cursor: pointer; position: relative; z-index: 1; text-decoration: none; display: block; text-align: center; box-sizing: border-box; }
         .btn-home:hover { color: #fff; border-color: rgba(255,255,255,0.4); }

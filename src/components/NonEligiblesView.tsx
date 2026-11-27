@@ -44,6 +44,8 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
   const now = Date.now()
   const base = useMemo(() => (leads as LeadNE[]).filter(estNonEligible), [leads])
   const ch = chiffresNE(base)
+  // Montant réellement encaissé (paiements confirmés dans la page Packs)
+  const encaisseReel = Object.values(packs).reduce((t, p) => t + (p.statut === 'paye' || p.statut === 'termine' ? Number(p.paiement_montant) || 0 : 0), 0)
   const nb = compteFiltresNE(base)
   const liste = listeNE(base, filtre, q)
   const nomAgent = (id: string): string => {
@@ -76,7 +78,7 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
       <div className="bk-kpis">
         <div className="bk-k"><i className="bk-ic b"><RefreshCw size={16} strokeWidth={1.8}/></i><small>Dossiers à reconvertir</small><b>{ch.aReconvertir}</b><span>dont {ch.sansConseiller} sans conseiller</span></div>
         <div className="bk-k warn"><i className="bk-ic o"><FileX size={16} strokeWidth={1.8}/></i><small>Sans RCCM</small><b>{ch.sansRccm}</b><span>cible du Pack formalisation</span></div>
-        <div className="bk-k ok"><i className="bk-ic g"><CircleCheck size={16} strokeWidth={1.8}/></i><small>Packs vendus</small><b>{ch.packs}</b><span>{montantComplet(ch.encaisse).replace('—', '0 XAF')} encaissés</span></div>
+        <div className="bk-k ok"><i className="bk-ic g"><CircleCheck size={16} strokeWidth={1.8}/></i><small>Packs vendus</small><b>{ch.packs}</b><span>{montantComplet(encaisseReel).replace('—', '0 XAF')} encaissés</span></div>
         <div className="bk-k"><i className="bk-ic n"><Wallet size={16} strokeWidth={1.8}/></i><small>Potentiel restant</small><b>{montantComplet(ch.potentiel).replace('—', '0 XAF')}</b><span>si chaque dossier sans RCCM prend le Pack</span></div>
       </div>
 

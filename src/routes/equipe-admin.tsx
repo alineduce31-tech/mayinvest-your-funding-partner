@@ -1,5 +1,6 @@
 import EquipeNav from '@/components/EquipeNav'
-import { Users, CircleCheck, Crown, UserCog } from 'lucide-react'
+import { Users, CircleCheck, Crown, UserCog, CircleAlert } from 'lucide-react'
+import { CroixFermer } from '@/components/Dialogue'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
@@ -153,8 +154,8 @@ function EquipeAdminPage() {
       <div className="wrap">
         {notice && (
           <div className={`notice ${notice.type}`}>
-            {notice.type === 'ok' ? '✓ ' : '⚠ '}{notice.msg}
-            <button onClick={() => setNotice(null)} aria-label="Fermer">✕</button>
+            {notice.type === 'ok' ? <CircleCheck size={16}/> : <CircleAlert size={16}/>}<span style={{ flex: 1 }}>{notice.msg}</span>
+            <CroixFermer onClick={() => setNotice(null)}/>
           </div>
         )}
 
@@ -279,7 +280,7 @@ function AddAdminModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (
       <form className="modal" onClick={e => e.stopPropagation()} onSubmit={submit}>
         <div className="modal-head">
           <h3>Nouvel administrateur</h3>
-          <button type="button" className="modal-close" onClick={onClose} aria-label="Fermer">✕</button>
+          <CroixFermer onClick={onClose}/>
         </div>
         <div className="modal-body">
           <div className="field-row">
@@ -290,7 +291,7 @@ function AddAdminModal({ onClose, onSubmit }: { onClose: () => void; onSubmit: (
           <Field label="Mot de passe temporaire (min. 8 caractères)" type="text" value={form.password} onChange={v => setForm({ ...form, password: v })}/>
           <FieldSelect label="Ville" value={form.ville} onChange={v => setForm({ ...form, ville: v })} options={VILLES}/>
           <FieldSelect label="Rôle" value={form.role} onChange={v => setForm({ ...form, role: v })} options={ROLES.map(r => r.k)} labels={Object.fromEntries(ROLES.map(r => [r.k, r.label]))}/>
-          {err && <div className="field-err">⚠ {err}</div>}
+          {err && <div className="field-err"><CircleAlert size={14}/>{err}</div>}
         </div>
         <div className="modal-actions stacked">
           <PillBtn type="submit" disabled={submitting}>{submitting ? 'Création…' : 'Créer l\'admin'}</PillBtn>
@@ -317,7 +318,7 @@ function EditAdminModal({ admin, onClose, onSubmit }: { admin: Admin; onClose: (
       <form className="modal" onClick={e => e.stopPropagation()} onSubmit={submit}>
         <div className="modal-head">
           <h3>Modifier · {admin.email}</h3>
-          <button type="button" className="modal-close" onClick={onClose}>✕</button>
+          <CroixFermer onClick={onClose}/>
         </div>
         <div className="modal-body">
           <div className="field-row">
@@ -355,12 +356,12 @@ function ResetPwdModal({ admin, onClose, onSubmit }: { admin: Admin; onClose: ()
       <form className="modal" onClick={e => e.stopPropagation()} onSubmit={submit}>
         <div className="modal-head">
           <h3>Réinitialiser le mot de passe</h3>
-          <button type="button" className="modal-close" onClick={onClose}>✕</button>
+          <CroixFermer onClick={onClose}/>
         </div>
         <div className="modal-body">
           <p className="hint">Pour <b>{admin.email}</b>. Transmets le nouveau mot de passe à la personne concernée après avoir cliqué sur Enregistrer.</p>
           <Field label="Nouveau mot de passe (min. 8 caractères)" type="text" value={pwd} onChange={setPwd}/>
-          {err && <div className="field-err">⚠ {err}</div>}
+          {err && <div className="field-err"><CircleAlert size={14}/>{err}</div>}
         </div>
         <div className="modal-actions stacked">
           <PillBtn type="submit" variant="danger" disabled={submitting}>{submitting ? 'Reset…' : 'Réinitialiser le mot de passe'}</PillBtn>
@@ -394,11 +395,11 @@ function DeleteAdminModal({ admin, onClose, onConfirm }: { admin: Admin; onClose
       <form className="modal" onClick={e => e.stopPropagation()} onSubmit={handleConfirm}>
         <div className="modal-head">
           <h3 style={{ color: '#B42318' }}>Supprimer définitivement</h3>
-          <button type="button" className="modal-close" onClick={onClose}>✕</button>
+          <CroixFermer onClick={onClose}/>
         </div>
         <div className="modal-body">
           <div style={{ padding: 12, background: '#FEE2E2', borderLeft: '3px solid #B42318', borderRadius: '0 8px 8px 0', fontSize: 13, color: '#991B1B', marginBottom: 14, lineHeight: 1.55 }}>
-            <b style={{ display: 'block', marginBottom: 4 }}>⚠ Action irréversible</b>
+            <b style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}><CircleAlert size={15}/>Action irréversible</b>
             Vous allez supprimer définitivement le compte <b>{admin.email}</b>. L'historique et les traces liés à cet admin seront perdus. Pour désactiver temporairement, utilisez plutôt le bouton <b>Désactiver</b>.
           </div>
           <label className="flabel">Pour confirmer, tape l'email : <code style={{ background: '#F3F3F1', padding: '1px 6px', borderRadius: 4, fontFamily: 'monospace', fontSize: 12 }}>{expected}</code></label>
