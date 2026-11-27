@@ -16,6 +16,7 @@ import ConseillerPicker from '@/components/ConseillerPicker'
 import { couleurAvatar, initialesNom, dateRelative } from '@/lib/affichage'
 import NonEligiblesView from '@/components/NonEligiblesView'
 import PacksView, { PackSuivi } from '@/components/PackAdmin'
+import StatutPicker from '@/components/StatutPicker'
 import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
 import { regrouper, vueAdmin, suggestions } from '@/lib/conversation'
 import NiceSelect from '@/components/NiceSelect'
@@ -1661,10 +1662,7 @@ function LeadsTable({ leads, msgCounts, onOpen, agentEmailById, isDirector, upda
                   </td>
                 )}
                 <td className="lt-td" onClick={e => e.stopPropagation()}>
-                  <NiceSelect variant="compact" value={l.statut} onChange={v => updateStatut(l.id, v)}
-                    title="Changer le statut" ariaLabel="Changer le statut"
-                    style={{ background: c.bg, color: c.fg, border: 'none', padding: '3px 8px 3px 10px', borderRadius: 999, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}
-                    options={STATUSES.map(s => ({ value: s, label: s }))}/>
+                  <StatutPicker value={l.statut} onChange={v => updateStatut(l.id, v)} style={{ padding: '3px 8px 3px 10px', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}/>
                 </td>
                 <td className="lt-td r lt-dim">{new Date(l.created_at).toLocaleDateString('fr-FR')}</td>
               </tr>
@@ -1909,108 +1907,6 @@ const STATUS_GROUPS: { group: string; items: { k: string; sub: string; dot: stri
   ]},
 ]
 
-function StatusSelect({ value, onChange, size = 'md' }: { value: string; onChange: (v: string) => void; size?: 'sm' | 'md' }) {
-  const [open, setOpen] = useState(false)
-  const [panelPos, setPanelPos] = useState<{ top: number; left: number } | null>(null)
-  const ref = useRef<HTMLButtonElement>(null)
-  const panelRef = useRef<HTMLDivElement>(null)
-
-  // Repositionne le panel pour suivre le trigger (au scroll, au resize)
-  useEffect(() => {
-    if (!open) return
-    const reposition = () => {
-      if (!ref.current) return
-      const rect = ref.current.getBoundingClientRect()
-      // Si le trigger est hors viewport, ferme
-      if (rect.bottom < 0 || rect.top > window.innerHeight) { setOpen(false); return }
-      const panelW = 300
-      const willOverflowRight = rect.left + panelW > window.innerWidth - 16
-      setPanelPos({
-        top: rect.bottom + 6,
-        left: willOverflowRight ? Math.max(16, rect.right - panelW) : rect.left,
-      })
-    }
-    reposition()
-    const onDoc = (e: MouseEvent) => {
-      const t = e.target as Node
-      if (ref.current?.contains(t) || panelRef.current?.contains(t)) return
-      setOpen(false)
-    }
-    document.addEventListener('mousedown', onDoc)
-    window.addEventListener('scroll', reposition, true)
-    window.addEventListener('resize', reposition)
-    return () => {
-      document.removeEventListener('mousedown', onDoc)
-      window.removeEventListener('scroll', reposition, true)
-      window.removeEventListener('resize', reposition)
-    }
-  }, [open])
-
-  const c = STATUS_COLORS[value] || { bg: '#F1F5F9', fg: '#475569' }
-  const padBtn = size === 'sm' ? '6px 10px' : '8px 12px'
-  const fontBtn = size === 'sm' ? 11 : 12
-
-  return (
-    <>
-      <button ref={ref} type="button" onClick={e => { e.stopPropagation(); setOpen(o => !o) }}
-        style={{
-          display: 'inline-flex', alignItems: 'center', gap: 6,
-          padding: padBtn, background: c.bg, color: c.fg,
-          border: 'none', borderRadius: 999,
-          fontFamily: 'inherit', fontSize: fontBtn, fontWeight: 700,
-          textTransform: 'uppercase', letterSpacing: '0.04em',
-          cursor: 'pointer', boxShadow: 'none', whiteSpace: 'nowrap',
-        }}>
-        {value}
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-      </button>
-      {open && panelPos && createPortal(
-        <div ref={panelRef} onClick={e => e.stopPropagation()} style={{
-          position: 'fixed', top: panelPos.top, left: panelPos.left,
-          zIndex: 10000,
-          background: '#FFFFFF', border: '1px solid #ECECEA', borderRadius: 10,
-          boxShadow: '0 10px 30px rgba(0,0,0,0.15)', padding: 4,
-          width: 300, maxWidth: 'calc(100vw - 32px)',
-          maxHeight: 440, overflowY: 'auto',
-          fontFamily: 'Inter, system-ui, -apple-system, Segoe UI, sans-serif',
-          color: '#111827',
-        }}>
-          {STATUS_GROUPS.map(g => (
-            <div key={g.group}>
-              <div style={{ padding: '8px 12px 4px', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#9CA3AF' }}>{g.group}</div>
-              {g.items.map(it => {
-                const sel = it.k === value
-                return (
-                  <div key={it.k}
-                    onClick={() => { onChange(it.k); setOpen(false) }}
-                    style={{
-                      display: 'flex', alignItems: 'flex-start', gap: 10,
-                      padding: '9px 12px', borderRadius: 7, cursor: 'pointer',
-                      background: sel ? '#EAF1FF' : 'transparent',
-                    }}
-                    onMouseOver={e => { if (!sel) e.currentTarget.style.background = '#F3F3F1' }}
-                    onMouseOut={e => { e.currentTarget.style.background = sel ? '#EAF1FF' : 'transparent' }}
-                  >
-                    <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: it.dot, marginTop: 5, flexShrink: 0 }}/>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: sel ? 600 : 500, color: sel ? '#1A6BFF' : '#111827', lineHeight: 1.3, wordBreak: 'break-word' }}>{it.k}</div>
-                      <div style={{ fontSize: 11, color: '#6B7280', marginTop: 2, lineHeight: 1.3, wordBreak: 'break-word' }}>{it.sub}</div>
-                    </span>
-                    {sel && (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A6BFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: 3, flexShrink: 0 }}><polyline points="20 6 9 17 4 12"/></svg>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          ))}
-        </div>,
-        document.body
-      )}
-    </>
-  )
-}
-
 function LeadRow({ lead, msgCount, onOpen, updateStatut, agentName }: any) {
   const c = STATUS_COLORS[lead.statut] || { bg: '#F1F5F9', fg: '#475569' }
   const isP = lead.type === 'physique' || lead.type === 'Personne physique'
@@ -2034,7 +1930,7 @@ function LeadRow({ lead, msgCount, onOpen, updateStatut, agentName }: any) {
       <div className="lead-r" onClick={e => e.stopPropagation()}>
         <div className={`lead-score ${scoreCls}`}>{lead.score}</div>
         <div onClick={e => e.stopPropagation()}>
-          <StatusSelect value={lead.statut} onChange={s => updateStatut(lead.id, s)} size="sm"/>
+          <StatutPicker value={lead.statut} onChange={s => updateStatut(lead.id, s)} style={{ padding: "4px 8px 4px 11px", fontSize: 12 }}/>
         </div>
       </div>
     </div>
@@ -2350,7 +2246,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
             <button className="ld-x" onClick={onClose} aria-label="Fermer"><X size={16} strokeWidth={2.2}/></button>
           </div>
           <div className="ld-pills">
-            <StatusSelect value={lead.statut} onChange={s => onStatutChange(s)} size="md"/>
+            <StatutPicker value={lead.statut} onChange={s => onStatutChange(s)} title="Statut du dossier" style={{ padding: '7px 10px 7px 14px', fontSize: 13 }}/>
             {isDirector && (
               <ConseillerPicker value={lead.agent_commercial_id} onChange={id => onAssignAgent(id)} villeLead={lead.identite?.ville || lead.ville} montant={lead.montant_demande} nomSecours={undefined}/>
             )}

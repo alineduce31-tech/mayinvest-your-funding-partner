@@ -5,6 +5,7 @@ import { LIFECYCLE_STATUTS } from '@/lib/lead-templates'
 import CallButton from '@/components/CallButton'
 import PieceIcone from '@/components/PieceIcone'
 import ConseillerPicker from '@/components/ConseillerPicker'
+import StatutPicker from '@/components/StatutPicker'
 import ScrollRow from '@/components/ScrollRow'
 import NiceSelect from '@/components/NiceSelect'
 import { formatPhone } from '@/lib/phone'
@@ -339,8 +340,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
         </div>
         <div className="am-kv">
           <div><span>Statut</span>
-            <NiceSelect variant="compact" value={lead?.statut || ''} onChange={changerStatut} title="Statut du dossier" ariaLabel="Statut du dossier" style={{ maxWidth: 170 }}
-              options={LIFECYCLE_STATUTS.map(s => ({ value: s, label: s }))}/>
+            <StatutPicker value={lead?.statut || ''} onChange={changerStatut} title="Statut du dossier" style={{ maxWidth: 180 }}/>
           </div>
           <div><span>Conseiller</span>
             {isDirector ? (

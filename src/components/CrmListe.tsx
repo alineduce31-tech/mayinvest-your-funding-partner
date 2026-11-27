@@ -4,6 +4,7 @@ import { Phone, MessageCircle, FileText, UserPlus, X, User, Building2 } from 'lu
 import { supabase } from '@/integrations/supabase/client'
 import NiceSelect from '@/components/NiceSelect'
 import ConseillerPicker from '@/components/ConseillerPicker'
+import StatutPicker from '@/components/StatutPicker'
 import CallButton from '@/components/CallButton'
 import { BK_CSS } from '@/components/BancarisationView'
 import { LIFECYCLE_STATUTS, STATUT_COLORS } from '@/lib/lead-templates'
@@ -55,8 +56,7 @@ export default function CrmListe({ leads, msgCounts, onOpen, updateStatut, assig
           <div className="cr-lot" role="region" aria-label="Actions sur la sélection">
             <span className="cr-lot-n">{selection.length} sélectionné{selection.length > 1 ? 's' : ''}</span>
             <ConseillerPicker value={null} onChange={id => id && assignerLot(id)} placeholder="Assigner à…" retirer={false} className="cr-lot-sel"/>
-            <NiceSelect variant="compact" value="" onChange={v => v && statutLot(v)} title="Changer le statut de la sélection" ariaLabel="Changer le statut" className="cr-lot-sel"
-              placeholder="Changer le statut" options={[{ value: '', label: 'Changer le statut' }, ...LIFECYCLE_STATUTS.map(s => ({ value: s, label: s }))]}/>
+            <StatutPicker value="" onChange={v => v && statutLot(v)} title="Changer le statut de la sélection" className="cr-lot-sel" placeholder="Changer le statut"/>
             <button className="cr-lot-x" onClick={() => setChoix(new Set())} aria-label="Annuler la sélection"><X size={15}/></button>
           </div>
         )}
@@ -81,9 +81,7 @@ export default function CrmListe({ leads, msgCounts, onOpen, updateStatut, assig
               </button>
               <span className={`bk-ring ${tonScore(l.score)}`} title="Score sur 100">{l.score ?? '—'}</span>
               <span className="bk-cell">
-                <NiceSelect variant="compact" value={l.statut} onChange={v => updateStatut(l.id, v)} title="Changer le statut" ariaLabel="Changer le statut"
-                  style={{ background: c.bg, color: c.fg, border: 'none', borderRadius: 999, padding: '5px 9px 5px 12px', fontSize: 12.5 }}
-                  options={LIFECYCLE_STATUTS.map(s => ({ value: s, label: s }))}/>
+                <StatutPicker value={l.statut} onChange={v => updateStatut(l.id, v)} style={{ padding: '5px 9px 5px 12px', fontSize: 12.5 }}/>
               </span>
               <span className="bk-cell">
                 {isDirector ? (

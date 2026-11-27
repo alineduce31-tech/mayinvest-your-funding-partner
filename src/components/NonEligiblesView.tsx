@@ -4,6 +4,7 @@ import { Search, Phone, MessageCircle, FileText, UserPlus, Ban, FileX, BarChart3
 import { supabase } from '@/integrations/supabase/client'
 import NiceSelect from '@/components/NiceSelect'
 import ConseillerPicker from '@/components/ConseillerPicker'
+import StatutPicker from '@/components/StatutPicker'
 import CallButton from '@/components/CallButton'
 import { BK_CSS } from '@/components/BancarisationView'
 import { LIFECYCLE_STATUTS, STATUT_COLORS, TEMPLATE_PACK_FORMALISATION, fillTemplate } from '@/lib/lead-templates'
@@ -106,9 +107,7 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
                   </button>
                   <span className={`ne-why ${r.code}`}>{ICONE_RAISON[r.code]}{r.libelle}</span>
                   <span className="ne-st">
-                    <NiceSelect variant="compact" value={l.statut} onChange={v => updateStatut(l.id, v)} title="Changer le statut" ariaLabel="Changer le statut"
-                      style={{ background: c.bg, color: c.fg, border: 'none', borderRadius: 999, padding: '5px 9px 5px 12px', fontSize: 12.5 }}
-                      options={LIFECYCLE_STATUTS.map(s => ({ value: s, label: s }))}/>
+                    <StatutPicker value={l.statut} onChange={v => updateStatut(l.id, v)} style={{ padding: '5px 9px 5px 12px', fontSize: 12.5 }}/>
                     {isDirector ? (
                       <ConseillerPicker value={l.agent_commercial_id} onChange={id => assignLead(l.id, id)} villeLead={l.identite?.ville || l.ville} montant={l.montant_demande} nomSecours={l.agent_commercial_id ? nomAgent(l.agent_commercial_id) : undefined}/>
                     ) : <span className="bk-ag-txt">{l.agent_commercial_id ? nomAgent(l.agent_commercial_id) : 'Sans conseiller'}</span>}

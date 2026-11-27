@@ -9,6 +9,7 @@ import { formatPhone, formatPhoneInput } from '@/lib/phone'
 import CommercialMessagerie from '@/components/CommercialMessagerie'
 import CallButton from '@/components/CallButton'
 import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
+import StatutPicker from '@/components/StatutPicker'
 import { RappelAlarme } from '@/components/Rappels'
 import { Copy, Download, MessageSquare, MessagesSquare, Share2, Coins, UserPlus, LogOut, RefreshCw, ChevronRight, AlertCircle, PhoneCall, CalendarDays, Landmark, Check, Clock, Phone, MessageCircle, ArrowRight } from 'lucide-react'
 import { montantCourt, dateRelative, tonScore, tonStatut, initialesNom, couleurAvatar } from '@/lib/affichage'
@@ -640,8 +641,7 @@ function LeadDrawer({ lead, commercialId, onClose, onUpdated, onOpenThread }: { 
 
           <div className="drawer-row">
             <div className="drawer-chip">Score {lead.score || '—'}/100</div>
-            <NiceSelect variant="compact" value={statut} onChange={changeStatut} disabled={saving} title="Statut du lead" ariaLabel="Statut du lead"
-              options={STATUTS_DISPO.map(s => ({ value: s, label: s }))}/>
+            <StatutPicker value={statut} onChange={changeStatut} disabled={saving} statuts={STATUTS_DISPO} title="Statut du lead"/>
           </div>
 
           <div className="drawer-sec">

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
+import StatutPicker from '@/components/StatutPicker'
 import { useNavigate } from '@tanstack/react-router'
 import { Search, Phone, MessageCircle, FileText, UserPlus, Landmark, Wallet, UserX, PhoneCall } from 'lucide-react'
 import NiceSelect from '@/components/NiceSelect'
@@ -78,9 +79,7 @@ export default function BancarisationView({ leads, onOpen, updateStatut, assignL
                   </button>
                   <span className={`bk-ring ${tonScore((l as any).score)}`} title="Score sur 100">{(l as any).score || '—'}</span>
                   <span className="bk-cell">
-                    <NiceSelect variant="compact" value={l.statut} onChange={v => updateStatut(l.id, v)} title="Changer le statut" ariaLabel="Changer le statut"
-                      style={{ background: c.bg, color: c.fg, border: 'none', borderRadius: 999, padding: '5px 9px 5px 12px', fontSize: 12.5 }}
-                      options={LIFECYCLE_STATUTS.map(s => ({ value: s, label: s }))}/>
+                    <StatutPicker value={l.statut} onChange={v => updateStatut(l.id, v)} style={{ padding: '5px 9px 5px 12px', fontSize: 12.5 }}/>
                   </span>
                   <span className="bk-cell">
                     {isDirector ? (
