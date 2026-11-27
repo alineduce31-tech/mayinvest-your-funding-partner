@@ -146,7 +146,7 @@ export default function AdminMessagerie({ session, onOpenLead, onLeadChanged, on
                   <span className="am-item-txt">
                     <span className="am-item-row"><b>{t.nom}</b><small>{heureCourte(t.last_at, now)}</small></span>
                     <span className="am-item-kind team">Commercial · {t.ville || '—'}</span>
-                    <span className="am-item-row"><span className="am-item-prev">{t.last_body ? `${t.last_sender === 'director' ? 'Vous' : 'Lui'} : ${t.last_body}` : 'Pas encore de message'}</span>{Number(t.unread) > 0 && <span className="am-count">{t.unread}</span>}</span>
+                    <span className="am-item-row"><span className="am-item-prev">{t.last_body ? `${t.last_sender === 'director' ? 'Vous' : 'Lui'} : ${t.last_body}` : t.last_at ? 'Message supprimé' : 'Pas encore de message'}</span>{Number(t.unread) > 0 && <span className="am-count">{t.unread}</span>}</span>
                   </span>
                 </button>
               )
@@ -168,7 +168,7 @@ export default function AdminMessagerie({ session, onOpenLead, onLeadChanged, on
               onChanged={() => { loadInbox(); onLeadChanged() }}/>
           )}
           {fil?.kind === 'team' && (
-            <TeamThread key={fil.id} row={team.find(t => t.commercial_id === fil.id)} commercialId={fil.id} tick={tick}
+            <TeamThread key={fil.id} row={team.find(t => t.commercial_id === fil.id)} commercialId={fil.id} tick={tick} estDirecteur={isDirector}
               dossiers={inbox.filter(r => r.agent_id === fil.id)} onBack={() => setFil(null)} onRead={loadTeam}
               onOpenDossier={(id) => setFil({ kind: 'lead', id })}/>
           )}
@@ -312,7 +312,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
         </div>
 
         <div className="am-msgs">
-          <Conversation viewer="equipe" leadId={leadId} docs={docs} bulles={regrouper(msgs.map(m => vueAdmin(m, session.id, nom)), Date.now())} vide="Pas encore de message. Écris le premier au groupe."/>
+          <Conversation viewer="equipe" leadId={leadId} peutSupprimer={b => !!b.mien || (isDirector && b.ton !== 'client')} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMsgs() }} docs={docs} bulles={regrouper(msgs.map(m => vueAdmin(m, session.id, nom)), Date.now())} vide="Pas encore de message. Écris le premier au groupe."/>
           <div ref={endRef}/>
         </div>
 
@@ -388,7 +388,8 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
 
 
 // ============ FIL DIRECTION <-> COMMERCIAL ============
-function TeamThread({ commercialId, row, dossiers, tick, onBack, onRead, onOpenDossier }: {
+function TeamThread({ commercialId, row, dossiers, tick, onBack, onRead, onOpenDossier, estDirecteur = false }: {
+  estDirecteur?: boolean
   commercialId: string; row?: TeamRow | undefined; dossiers: InboxRow[]; tick: number
   onBack: () => void; onRead: () => void; onOpenDossier: (id: string) => void
 }) {
@@ -427,7 +428,7 @@ function TeamThread({ commercialId, row, dossiers, tick, onBack, onRead, onOpenD
           <div className="am-th-title"><b>{row?.nom || 'Commercial'}</b><small>Échange privé direction · {row?.ville || ''}</small></div>
         </div>
         <div className="am-msgs">
-          <Conversation viewer="equipe" bulles={regrouper(msgs.map(m => vueEquipe(m, 'director', row?.nom || 'Commercial')), Date.now())} vide="Aucun échange pour l'instant."/>
+          <Conversation viewer="equipe" peutSupprimer={() => estDirecteur} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_team_message', { p_id: b.id }); if (error) informer(error.message); else load() }} bulles={regrouper(msgs.map(m => vueEquipe(m, 'director', row?.nom || 'Commercial')), Date.now())} vide="Aucun échange pour l'instant."/>
           <div ref={endRef}/>
         </div>
         <div className="am-composer">
@@ -623,7 +624,7 @@ function MessagerieStyles() {
     .am-bubble.in { align-self: flex-start; background: #fff; border: 1px solid #E5E7EB; border-radius: 16px 16px 16px 4px; }
     .am-bubble.out { align-self: flex-end; background: #1A6BFF; color: #fff; border-radius: 16px 16px 4px 16px; }
     .am-bubble.out.com { background: #0D1B3E; }
-    .am-bubble.note { background: #FEF3C7; color: #78350F; border: 1.5px dashed #F59E0B; }
+    .am-bubble.note { background: #F1ECFF; color: #3F2A8C; border: 1.5px dashed #B9A6FF; }
     .am-who { font-size: 11px; font-weight: 800; margin-bottom: 2px; opacity: 0.85; }
     .am-txt { white-space: pre-wrap; word-break: break-word; }
     .am-time { font-size: 10.5px; opacity: 0.7; margin-top: 3px; text-align: right; }
@@ -632,7 +633,7 @@ function MessagerieStyles() {
     .am-seg button { white-space: nowrap; }
     .am-seg button { border: none; background: transparent; color: #5B6478; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
     .am-seg button.on { background: #fff; color: #1A6BFF; font-weight: 800; box-shadow: 0 1px 4px rgba(13,27,62,0.08); }
-    .am-seg button.on.note { color: #B45309; }
+    .am-seg button.on.note { color: #5B3FC4; }
     .am-seg button:disabled { opacity: 0.4; cursor: not-allowed; }
     .am-tool { border: 1.5px solid #E5E7EB; background: #fff; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; }
     .am-tool { white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
@@ -655,7 +656,7 @@ function MessagerieStyles() {
     .am-input-row { display: flex; gap: 8px; align-items: flex-end; }
     .am-input-row textarea { flex: 1; min-width: 0; border: 1.5px solid #E5E7EB; border-radius: 22px; padding: 11px 16px; font-family: inherit; font-size: 14px; outline: none; resize: none; max-height: 140px; field-sizing: content; }
     .am-input-row textarea:focus { border-color: #1A6BFF; }
-    .am-input-row.note textarea { background: #FFFBEB; border-color: #FCD34D; }
+    .am-input-row.note textarea { background: #F6F2FF; border-color: #C9B8FF; }
     .am-send { width: 44px; height: 44px; border-radius: 50%; border: none; background: #1A6BFF; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
     .am-send:disabled { background: #CBD5E1; cursor: default; }
     .am-err { background: #FEE2E2; color: #B91C1C; border-radius: 10px; padding: 8px 12px; font-size: 12.5px; font-weight: 600; }

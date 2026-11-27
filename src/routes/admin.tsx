@@ -2420,7 +2420,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
 
           {tab === 'chat' && <div className="chat-wrap">
             <div className="chat-scroll">
-              <Conversation viewer="equipe" leadId={lead.id} docs={documents} bulles={regrouper(messages.map(m => vueAdmin(m, adminId, nom)), Date.now())} vide="Aucun message. Démarrez la conversation."/>
+              <Conversation viewer="equipe" leadId={lead.id} peutSupprimer={b => !!b.mien || (isDirector && b.ton !== 'client')} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMessages() }} docs={documents} bulles={regrouper(messages.map(m => vueAdmin(m, adminId, nom)), Date.now())} vide="Aucun message. Démarrez la conversation."/>
               <div ref={chatEnd}/>
             </div>
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>

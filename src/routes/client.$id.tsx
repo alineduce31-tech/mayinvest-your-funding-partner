@@ -1084,7 +1084,7 @@ function ClientPortal() {
 
             {/* Zone messages */}
             <div className="c-msg-scroll">
-              <Conversation viewer="client" docs={documents} bulles={regrouper(messages.map(vueClient), Date.now())}
+              <Conversation viewer="client" peutSupprimer={b => !!b.mien} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMessages() }} docs={documents} bulles={regrouper(messages.map(vueClient), Date.now())}
                 onUploadDoc={uploadDocument} uploadingDocId={uploadingDocType || null} onRepondreRdv={repondreRdv}
                 vide={<><span className="cx-vide-ic"><MessageCircle size={22}/></span><b>{nomConseiller ? `Écrivez à ${conseiller?.prenom || 'votre conseiller'}` : 'Écrivez à l\'équipe Mayinvest'}</b><span>Posez votre question ou envoyez un document. Réponse en général sous 24{'\u00a0'}h.</span></>}/>
               <div ref={chatEnd}/>

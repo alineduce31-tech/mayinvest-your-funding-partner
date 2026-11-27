@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import PieceIcone from '@/components/PieceIcone'
-import { CroixFermer } from '@/components/Dialogue'
+import { CroixFermer, confirmer } from '@/components/Dialogue'
 import { createPortal } from 'react-dom'
-import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download, FileBadge, Image as ImageIcon, Phone } from 'lucide-react'
+import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download, FileBadge, Image as ImageIcon, Phone, Trash2, MoreHorizontal, Copy } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import {
   type BulleAffichee, heure, lireRdv, pieceJointe, blocCalendrier, phraseRdv, piecesDeCarte, estRecue,
@@ -12,8 +12,11 @@ import { joursProposes, HEURES_PROPOSEES, combiner, heureTexte, estDansLeFutur }
 import { positionCarte, estMobile, type Position } from '@/lib/nice-select'
 
 // ============ LISTE DES BULLES ============
-export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploadingDocId, onRepondreRdv, vide, leadId }: {
+export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploadingDocId, onRepondreRdv, vide, leadId, peutSupprimer, onSupprimer }: {
   bulles: BulleAffichee[]
+  /** Qui peut supprimer quel message (par défaut : personne). */
+  peutSupprimer?: ((b: BulleAffichee) => boolean) | undefined
+  onSupprimer?: ((b: BulleAffichee) => Promise<void> | void) | undefined
   /** Dossier affiché (cartes « Pack » côté équipe). */
   leadId?: string | undefined
   viewer: 'client' | 'equipe'
@@ -30,7 +33,9 @@ export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploading
       {bulles.map(b => (
         <div key={b.id} className={`cv-ligne ${b.cote} ${b.debut ? 'debut' : ''} ${b.fin ? 'fin' : ''}`}>
           {b.jour && <div className="cv-jour">{b.jour}</div>}
-          {b.kind === 'pieces' ? <CartePieces b={b} viewer={viewer} docs={docs} onUploadDoc={onUploadDoc} uploadingDocId={uploadingDocId}/>
+          <div className="cv-row">
+          {b.kind === 'supprime' ? <div className="cv-suppr"><Trash2 size={13}/>Message supprimé</div>
+            : b.kind === 'pieces' ? <CartePieces b={b} viewer={viewer} docs={docs} onUploadDoc={onUploadDoc} uploadingDocId={uploadingDocId}/>
             : b.kind === 'rdv' ? <CarteRdv b={b} viewer={viewer} onRepondre={onRepondreRdv}/>
             : b.kind === 'pack' ? <CartePack viewer={viewer} leadId={leadId}/>
             : b.kind === 'evenement' ? <div className={`cv-ev ${b.payload?.etat || ''}`}>{b.payload?.icone === 'rdv' ? <CalendarClock size={14}/> : b.payload?.icone === 'appel' ? <Phone size={14}/> : <FileBadge size={14}/>}{b.payload?.texte}</div>
@@ -40,6 +45,8 @@ export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploading
                 <Texte texte={b.contenu}/>
               </div>
             )}
+          {b.kind !== 'supprime' && b.kind !== 'evenement' && onSupprimer && peutSupprimer?.(b) && <MenuMessage b={b} onSupprimer={onSupprimer}/>}
+          </div>
           {b.fin && <Meta b={b}/>}
         </div>
       ))}
@@ -50,6 +57,37 @@ export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploading
 function initialesAuteur(n: string): string {
   const m = (n || '').trim().split(/\s+/).filter(Boolean)
   return ((m[0]?.[0] || '') + (m[1]?.[0] || '')).toUpperCase() || 'M'
+}
+
+function MenuMessage({ b, onSupprimer }: { b: BulleAffichee; onSupprimer: (b: BulleAffichee) => Promise<void> | void }) {
+  const [open, setOpen] = useState(false)
+  const [copie, setCopie] = useState(false)
+  const zone = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return
+    const dehors = (e: MouseEvent | TouchEvent) => { if (!zone.current?.contains(e.target as Node)) setOpen(false) }
+    const echap = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    document.addEventListener('mousedown', dehors); document.addEventListener('touchstart', dehors); document.addEventListener('keydown', echap)
+    return () => { document.removeEventListener('mousedown', dehors); document.removeEventListener('touchstart', dehors); document.removeEventListener('keydown', echap) }
+  }, [open])
+  async function copier() {
+    try { await navigator.clipboard.writeText(b.contenu); setCopie(true); setTimeout(() => { setCopie(false); setOpen(false) }, 900) } catch { setOpen(false) }
+  }
+  async function supprimer() {
+    setOpen(false)
+    if (await confirmer({ titre: 'Supprimer ce message ?', texte: 'Il disparaît pour tout le monde dans la discussion. Une mention « Message supprimé » reste à sa place.', bouton: 'Supprimer', danger: true })) await onSupprimer(b)
+  }
+  return (
+    <div ref={zone} className={`cv-mm ${open ? 'open' : ''}`}>
+      <button type="button" className="cv-mm-b" onClick={() => setOpen(o => !o)} aria-label="Actions sur le message" title="Actions"><MoreHorizontal size={15}/></button>
+      {open && (
+        <div className="cv-mm-menu" role="menu">
+          {b.kind === 'text' && b.contenu && <button type="button" role="menuitem" onClick={copier}>{copie ? <Check size={15}/> : <Copy size={15}/>}{copie ? 'Copié' : 'Copier'}</button>}
+          <button type="button" role="menuitem" className="danger" onClick={supprimer}><Trash2 size={15}/>Supprimer</button>
+        </div>
+      )}
+    </div>
+  )
 }
 
 function Meta({ b }: { b: BulleAffichee }) {
@@ -343,6 +381,18 @@ const CV_CSS = `
   .cv-ligne { display: flex; flex-direction: column; margin-top: 2px; }
   .cv-ligne.debut { margin-top: 10px; }
   .cv-ligne.gauche { align-items: flex-start; } .cv-ligne.droite { align-items: flex-end; }
+  .cv-row { display: flex; align-items: center; gap: 6px; max-width: 100%; width: 100%; }
+  .cv-ligne.gauche .cv-row { justify-content: flex-start; } .cv-ligne.droite .cv-row { justify-content: flex-start; flex-direction: row-reverse; }
+  .cv-ligne:has(> .cv-row > .cv-ev) .cv-row { justify-content: center; }
+  .cv-mm { position: relative; flex: none; opacity: 0; transition: opacity .12s; }
+  .cv-ligne:hover .cv-mm, .cv-mm.open, .cv-mm:focus-within { opacity: 1; }
+  @media (hover: none) { .cv-mm { opacity: .7; } }
+  .cv-mm-b { width: 28px; height: 28px; border-radius: 50%; border: none; background: #fff; color: #6E6E73; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 1px 3px rgba(13,27,62,.12); padding: 0; }
+  .cv-mm-menu { position: absolute; z-index: 20; bottom: calc(100% + 6px); min-width: 160px; background: #fff; border-radius: 12px; box-shadow: 0 10px 28px rgba(13,27,62,.18); padding: 4px; display: flex; flex-direction: column; }
+  .cv-ligne.droite .cv-mm-menu { right: 0; } .cv-ligne.gauche .cv-mm-menu { left: 0; }
+  .cv-mm-menu button { display: flex; align-items: center; gap: 9px; border: none; background: none; border-radius: 9px; padding: 8px 10px; font-family: inherit; font-size: 13.5px; color: #1D1D1F; cursor: pointer; text-align: left; }
+  .cv-mm-menu button:hover { background: #F5F5F7; } .cv-mm-menu button.danger { color: #DC2626; }
+  .cv-suppr { display: inline-flex; align-items: center; gap: 6px; border: 1px dashed #C7C7CC; color: #8E8E93; border-radius: 18px; padding: 7px 13px; font-size: 13px; font-style: italic; }
   .cv-jour { align-self: center; font-size: 11.5px; font-weight: 600; color: #8A94A6; margin: 14px 0 6px; }
   .cv-bulle { max-width: min(78%, 560px); padding: 10px 14px; font-size: 14px; line-height: 1.45; display: flex; flex-direction: column; word-break: break-word; }
   .cv-ligne.gauche .cv-bulle { background: #fff; box-shadow: 0 1px 2px rgba(13,27,62,.07); border-radius: 6px 20px 20px 6px; }
@@ -354,10 +404,10 @@ const CV_CSS = `
   .cv-ligne.droite.debut.fin .cv-bulle { border-radius: 20px 20px 6px 20px; }
   .cv-bulle.moi { background: #E3ECFF; color: #0D1B3E; }
   .cv-ligne.droite .cv-bulle.equipe { background: #EDF0F5; color: #0D1B3E; }
-  .cv-bulle.note { background: #FEF3C7; color: #78350F; }
+  .cv-bulle.note { background: #F1ECFF; color: #3F2A8C; }
   .cv-tag { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-size: 11px; font-weight: 600; border-radius: 999px; padding: 0; margin-bottom: 4px; background: none; color: #475569; }
   .cv-ligne.droite .cv-tag.equipe { color: #475569; }
-  .cv-tag.note { background: rgba(120,53,15,.1); color: #92400E; padding: 2px 9px; }
+  .cv-tag.note { background: rgba(108,76,224,.12); color: #5B3FC4; padding: 2px 9px; }
   .cv-tag.moi { background: none; color: #3D6FD6; padding: 0; font-weight: 600; font-size: 11px; margin-bottom: 3px; }
   .cv-tag .cv-av { width: 18px; height: 18px; border-radius: 50%; background: #E3ECFF; color: #2F5FC4; display: inline-flex; align-items: center; justify-content: center; font-size: 8.5px; font-weight: 800; font-style: normal; }
   .cv-txt { display: flex; flex-direction: column; gap: 6px; }
@@ -396,7 +446,7 @@ const CV_CSS = `
   .cv-ev { align-self: center; display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; padding: 6px 13px; border-radius: 999px; background: #FFF3E0; color: #B45309; margin: 4px 0; }
   .cv-ev.paye { background: #E8F8EE; color: #16A34A; }
   .cv-ev.ok { background: #E8F8EE; color: #16A34A; } .cv-ev.att { background: #FFF3E0; color: #B45309; } .cv-ev.neutre { background: #EDF0F5; color: #475569; }
-  .cv-ligne:has(> .cv-ev) { align-items: center; }
+  .cv-ligne:has(> .cv-row > .cv-ev) { align-items: center; }
   .cv-pk-prix { margin-left: auto; font-size: 14px; font-weight: 700; color: #0D1B3E; white-space: nowrap; }
   .cv-pk-in { margin: 0 14px 6px; font-size: 13px; color: #64748B; line-height: 1.5; }
   .cv-pk-l { padding: 0 14px 4px; } .cv-pk-l div { display: flex; align-items: center; gap: 9px; font-size: 13.5px; padding: 4px 0; color: #0F1729; } .cv-pk-l svg { color: #1A6BFF; flex: none; }
@@ -428,7 +478,7 @@ const CV_CSS = `
   .cv-spark { color: #7C3AED; }
   .cv-input { flex: 1; min-width: 0; display: flex; align-items: flex-end; gap: 8px; background: #F5F5F7; border: 1px solid transparent; border-radius: 22px; padding: 4px 4px 4px 16px; transition: border-color .15s, background .15s; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; }
   .cv-input:focus-within { background: #fff; border-color: #CFE0FF; box-shadow: 0 0 0 3px rgba(26,107,255,.08); }
-  .cv-input.note { background: #FFFBEB; } .cv-input.note:focus-within { border-color: #FCD34D; box-shadow: 0 0 0 4px rgba(245,158,11,.1); }
+  .cv-input.note { background: #F6F2FF; } .cv-input.note:focus-within { border-color: #C9B8FF; box-shadow: 0 0 0 4px rgba(124,92,240,.12); }
   .cv-input textarea { flex: 1; min-width: 0; box-sizing: border-box !important; border: none !important; background: transparent !important; resize: none; outline: none; box-shadow: none !important; font-family: inherit; font-size: 15px !important; line-height: 20px !important; padding: 8px 0 !important; margin: 0; height: 36px; min-height: 36px !important; max-height: 140px; color: #1D1D1F; overflow-y: hidden; scrollbar-width: none; }
   .cv-input textarea::-webkit-scrollbar { display: none; }
   .cv-input textarea::placeholder { color: #A1A1A6; }

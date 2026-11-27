@@ -75,7 +75,7 @@ export function compteurs(rows: InboxRow[], team: TeamRow[], now: number) {
 
 export function apercu(r: Pick<InboxRow, 'last_message' | 'last_sender' | 'last_visibility'>): string {
   const qui = r.last_sender === 'client' ? 'Client' : r.last_sender === 'commercial' ? 'Commercial' : 'Direction'
-  const txt = (r.last_message || '').replace(/\s+/g, ' ').trim()
+  const txt = (r.last_message || '').replace(/\s+/g, ' ').trim() || 'Message supprimé'
   return `${r.last_visibility === 'internal' ? 'Note · ' : ''}${qui} : ${txt}`
 }
 

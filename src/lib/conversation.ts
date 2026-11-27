@@ -8,7 +8,9 @@ export type Bulle = {
   ton: Ton
   etiquette: string | null
   contenu: string
-  kind: 'text' | 'pieces' | 'rdv' | 'pack' | 'evenement'
+  kind: 'text' | 'pieces' | 'rdv' | 'pack' | 'evenement' | 'supprime'
+  /** Message écrit par la personne qui regarde (elle peut le supprimer). */
+  mien?: boolean
   payload: any
   created_at: string
   vu: boolean
@@ -16,7 +18,7 @@ export type Bulle = {
 }
 export type BulleAffichee = Bulle & { jour: string | null; debut: boolean; fin: boolean }
 
-type RawLead = { id: string; sender: string; content: string; created_at: string; read_at?: string | null; author_id?: string | null; author_name?: string | null; visibility?: string | null; kind?: string | null; payload?: any }
+type RawLead = { id: string; sender: string; content: string; created_at: string; read_at?: string | null; author_id?: string | null; author_name?: string | null; visibility?: string | null; kind?: string | null; payload?: any; deleted_at?: string | null }
 
 /** Anciens messages « il nous manque encore : - X - Y » envoyés en simple texte : pièces citées, ou null. */
 export function piecesDansTexte(t: string | null | undefined): string[] | null {
@@ -47,7 +49,8 @@ export function estTextePack(t: string | null | undefined): boolean {
 }
 
 /** Type d'affichage et données de la carte (les anciens messages de pièces deviennent des cartes). */
-export function carteDe(m: { kind?: string | null; payload?: any; content?: string | null }): { kind: Bulle['kind']; payload: any } {
+export function carteDe(m: { kind?: string | null; payload?: any; content?: string | null; deleted_at?: string | null }): { kind: Bulle['kind']; payload: any } {
+  if (m.deleted_at) return { kind: 'supprime', payload: null }
   if (m.kind === 'pieces' || m.kind === 'rdv' || m.kind === 'pack') return { kind: m.kind, payload: m.payload }
   // Messages automatiques du pack : petite ligne d'événement
   const ev = evenementPack(m.content)
@@ -67,7 +70,7 @@ export function vueCommercial(m: RawLead, commercialId: string, nomClient: strin
   const moi = m.author_id === commercialId
   const client = m.sender === 'client'
   return {
-    id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at,
+    id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at, mien: moi,
     cote: client || (!moi && !interne) ? 'gauche' : 'droite',
     ton: interne ? 'note' : client ? 'client' : moi ? 'moi' : 'equipe',
     etiquette: interne ? (moi ? 'Ta note · invisible pour le client' : 'Note de la direction · invisible pour le client') : client ? null : moi ? 'Vous' : `${m.author_name || 'Direction'} · direction`,
@@ -83,7 +86,7 @@ export function vueAdmin(m: RawLead, adminId: string, nomClient: string): Bulle 
   const moi = m.author_id === adminId
   const role = m.sender === 'commercial' ? 'conseiller' : 'direction'
   return {
-    id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at,
+    id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at, mien: moi,
     cote: client ? 'gauche' : 'droite',
     ton: interne ? 'note' : client ? 'client' : moi ? 'moi' : 'equipe',
     etiquette: interne ? `Note interne · ${moi ? 'vous' : (m.author_name || role)}` : client ? null : moi ? 'Vous' : `${m.author_name || (role === 'conseiller' ? 'Conseiller' : 'Direction')} · ${role}`,
@@ -96,7 +99,7 @@ export function vueAdmin(m: RawLead, adminId: string, nomClient: string): Bulle 
 export function vueClient(m: RawLead): Bulle {
   const moi = m.sender === 'client'
   return {
-    id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at,
+    id: m.id, contenu: m.content, ...carteDe(m), created_at: m.created_at, mien: moi,
     cote: moi ? 'droite' : 'gauche',
     ton: moi ? 'moi' : 'equipe',
     etiquette: !moi ? `${m.author_name || 'Mayinvest'} · ${m.sender === 'admin' ? 'Direction' : 'Conseiller'}` : null,
@@ -106,10 +109,10 @@ export function vueClient(m: RawLead): Bulle {
 }
 
 /** Fil direction <-> commercial. */
-export function vueEquipe(m: { id: string; sender_type: string; body: string; created_at: string; read_at?: string | null }, viewer: 'commercial' | 'director', nomCommercial = 'Commercial'): Bulle {
+export function vueEquipe(m: { id: string; sender_type: string; body: string; created_at: string; read_at?: string | null; deleted_at?: string | null }, viewer: 'commercial' | 'director', nomCommercial = 'Commercial'): Bulle {
   const moi = m.sender_type === viewer
   return {
-    id: m.id, contenu: m.body, kind: 'text', payload: null, created_at: m.created_at,
+    id: m.id, contenu: m.body, kind: m.deleted_at ? 'supprime' : 'text', payload: null, created_at: m.created_at, mien: moi,
     cote: moi ? 'droite' : 'gauche',
     ton: moi ? 'moi' : 'equipe',
     etiquette: moi ? null : (m.sender_type === 'director' ? 'Direction Mayinvest' : nomCommercial),

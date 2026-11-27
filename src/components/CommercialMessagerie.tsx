@@ -128,7 +128,7 @@ export default function CommercialMessagerie({ commercialId, onCountsChange, onT
                     {retard ? 'Attend ta réponse' : `${r.statut || ''}${r.montant ? ' · ' + fmtXaf(r.montant) : ''}`}
                     {relance && !retard && <span className="cm-tag">À relancer</span>}
                   </span>
-                  <span className="cm-row"><span className="cm-prev">{r.last_message ? `${r.last_sender === 'client' ? '' : r.last_visibility === 'internal' ? 'Note : ' : 'Vous : '}${r.last_message}` : 'Pas encore de message'}</span>{r.unread > 0 && <span className="cm-count">{r.unread}</span>}</span>
+                  <span className="cm-row"><span className="cm-prev">{r.last_message ? `${r.last_sender === 'client' ? '' : r.last_visibility === 'internal' ? 'Note : ' : 'Vous : '}${r.last_message}` : r.last_at ? 'Message supprimé' : 'Pas encore de message'}</span>{r.unread > 0 && <span className="cm-count">{r.unread}</span>}</span>
                 </span>
               </button>
             )
@@ -263,7 +263,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
         </div>
 
         <div className="cm-msgs">
-          <Conversation viewer="equipe" leadId={row.lead_id} docs={docs} bulles={regrouper(msgs.map(m => vueCommercial(m, commercialId, row.nom || 'Client')), now)}
+          <Conversation viewer="equipe" leadId={row.lead_id} peutSupprimer={b => !!b.mien} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMsgs() }} docs={docs} bulles={regrouper(msgs.map(m => vueCommercial(m, commercialId, row.nom || 'Client')), now)}
             vide="Pas encore de message. Présente-toi avec un message type ou une suggestion ci-dessous."/>
           <div ref={endRef}/>
         </div>
@@ -403,7 +403,7 @@ function DirectionThread({ commercialId, tick, onBack, onRead }: { commercialId:
           <div className="cm-head-t"><b>Direction Mayinvest</b><small>Consignes, questions sur un dossier, aide</small></div>
         </div>
         <div className="cm-msgs">
-          <Conversation viewer="equipe" bulles={regrouper(msgs.map(m => vueEquipe(m, 'commercial')), Date.now())} vide="Pas encore de message. Pose ta question à la direction."/>
+          <Conversation viewer="equipe" peutSupprimer={b => !!b.mien} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_team_message', { p_id: b.id }); if (error) informer(error.message); else load() }} bulles={regrouper(msgs.map(m => vueEquipe(m, 'commercial')), Date.now())} vide="Pas encore de message. Pose ta question à la direction."/>
           <div ref={endRef}/>
         </div>
         <div className="cm-composer">
@@ -485,9 +485,9 @@ function CmStyles() {
     .cm-bubble { max-width: min(76%, 560px); padding: 10px 14px; font-size: 14px; line-height: 1.45; border-radius: 20px; }
     .cm-bubble.in, .cm-bubble.staff { align-self: flex-start; background: #fff; color: #0D1B3E; box-shadow: 0 1px 2px rgba(13,27,62,0.08); }
     .cm-bubble.out { align-self: flex-end; background: #1A6BFF; color: #fff; }
-    .cm-bubble.note { align-self: flex-end; background: #FEF3C7; color: #78350F; }
+    .cm-bubble.note { align-self: flex-end; background: #F1ECFF; color: #3F2A8C; }
     .cm-tag { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; background: #0D1B3E; color: #fff; font-size: 10.5px; font-weight: 700; border-radius: 999px; padding: 2px 9px; margin-bottom: 5px; }
-    .cm-tag.note { background: rgba(120,53,15,0.1); color: #92400E; }
+    .cm-tag.note { background: rgba(108,76,224,.12); color: #5B3FC4; }
     .cm-bubble { display: flex; flex-direction: column; }
     .cm-txt { display: flex; flex-direction: column; gap: 6px; word-break: break-word; }
     .cm-par { white-space: pre-wrap; }
@@ -503,7 +503,7 @@ function CmStyles() {
     .cm-seg { display: flex; background: #F0F2F5; border-radius: 100px; padding: 3px; flex-shrink: 0; }
     .cm-seg button { border: none; background: transparent; color: #5B6478; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
     .cm-seg button.on { background: #fff; color: #1A6BFF; font-weight: 800; box-shadow: 0 1px 4px rgba(13,27,62,0.08); }
-    .cm-seg button.on.note { color: #B45309; }
+    .cm-seg button.on.note { color: #5B3FC4; }
     .cm-tool { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid #E5E7EB; background: #fff; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .cm-tool:hover { border-color: #BFD4FF; color: #1A6BFF; }
     .cm-tool.active { border-color: #1A6BFF; color: #1A6BFF; background: #EEF4FF; }
@@ -525,7 +525,7 @@ function CmStyles() {
     .cm-input { display: flex; gap: 8px; align-items: flex-end; }
     .cm-input textarea { flex: 1; min-width: 0; border: 1.5px solid #E5E7EB; border-radius: 22px; padding: 11px 16px; font-family: inherit; font-size: 16px; outline: none; resize: none; max-height: 140px; field-sizing: content; line-height: 1.35; }
     .cm-input textarea:focus { border-color: #1A6BFF; }
-    .cm-input.note textarea { background: #FFFBEB; border-color: #FCD34D; }
+    .cm-input.note textarea { background: #F6F2FF; border-color: #C9B8FF; }
     .cm-send { width: 46px; height: 46px; border-radius: 50%; border: none; background: #1A6BFF; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
     .cm-send:disabled { background: #CBD5E1; cursor: default; }
     .cm-err { background: #FEE2E2; color: #B91C1C; border-radius: 10px; padding: 8px 12px; font-size: 12.5px; font-weight: 600; }

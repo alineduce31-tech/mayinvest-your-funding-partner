@@ -12,7 +12,7 @@ const msg = (o: any) => ({ id: Math.random().toString(36).slice(2), sender: 'cli
 describe('qui parle et de quel côté', () => {
   test('vu par le commercial', () => {
     expect(vueCommercial(msg({}), COM, 'Alin LN')).toMatchObject({ cote: 'gauche', ton: 'client', auteur: 'Alin' })
-    expect(vueCommercial(msg({ sender: 'commercial', author_id: COM, read_at: t(11) }), COM, 'Alin')).toMatchObject({ cote: 'droite', ton: 'moi', vu: true })
+    expect(vueCommercial(msg({ sender: 'commercial', author_id: COM, read_at: t(11) }), COM, 'Alin')).toMatchObject({ cote: 'droite', ton: 'moi', vu: true, mien: true })
     expect(vueCommercial(msg({ sender: 'admin', author_id: ADM, author_name: 'Aldo' }), COM, 'Alin')).toMatchObject({ cote: 'gauche', ton: 'equipe', etiquette: 'Aldo · direction' })
     expect(vueCommercial(msg({ sender: 'admin', author_id: ADM, visibility: 'internal' }), COM, 'Alin')).toMatchObject({ cote: 'droite', ton: 'note' })
   })
@@ -76,6 +76,7 @@ describe('cartes', () => {
     expect(liste.map(d => d.id)).toEqual(['d1', 'texte-1'])
     expect(liste[1]!.status).toBe('pending')
     expect(carteDe({ kind: 'pack', payload: {} }).kind).toBe('pack')
+    expect(carteDe({ kind: 'text', content: '', deleted_at: '2026-11-27T10:00:00Z' }).kind).toBe('supprime')
     const ancien = "Bonjour Scierie du Niari,\n\nNous avons étudié votre dossier Mayinvest. Votre projet est viable, mais il manque encore quelques éléments pour accéder au financement bancaire.\n\nLe Pack Formalisation s'occupe de tout : création RCCM + NIU + statuts, et ouverture de votre compte bancaire auprès de nos banques partenaires. Tarif : 50 000 XAF."
     expect(carteDe({ kind: 'text', content: ancien }).kind).toBe('pack')
     expect(carteDe({ kind: 'text', content: 'Je suis intéressé par le Pack formalisation.' }).kind).toBe('text')
