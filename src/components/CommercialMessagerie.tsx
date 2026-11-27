@@ -9,14 +9,11 @@ import ScrollRow from '@/components/ScrollRow'
 import { useRappels, RappelPicker } from '@/components/Rappels'
 import { Conversation, ChatInput, Suggestions, RdvComposer } from '@/components/Conversation'
 import { regrouper, vueCommercial, vueEquipe, suggestions, texteSecoursRdv, texteSecoursPieces } from '@/lib/conversation'
-import { EyeOff, IdCard, Receipt, Landmark, FileBadge, Building2, FileText, File as FileIcon, Send, Check } from 'lucide-react'
-import { decouperLibelle, titreCourt, etatPiece, LIBELLE_ETAT, iconePiece, piecesARelancer, progressionPieces } from '@/lib/affichage'
+import { EyeOff, Send, Check } from 'lucide-react'
+import PieceIcone from '@/components/PieceIcone'
+import { decouperLibelle, titreCourt, etatPiece, LIBELLE_ETAT, piecesARelancer, progressionPieces } from '@/lib/affichage'
 
 
-const ICONES_PIECE = {
-  id: <IdCard size={16}/>, salaire: <Receipt size={16}/>, banque: <Landmark size={16}/>, attestation: <FileBadge size={16}/>,
-  societe: <Building2 size={16}/>, fiscal: <FileText size={16}/>, doc: <FileIcon size={16}/>,
-}
 import {
   SUIVI, aRelancer, etapeFaite, etapeSuivante, filtrerCom, heuresDepuis, indexSuivi,
   prochaineEtape, type ComRow, type FiltreCom, type Rappels,
@@ -324,7 +321,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
             const detail = e === 'rejected' && d.admin_note ? d.admin_note : precision
             return (
               <div key={d.id} className="cm-doc">
-                <span className={`cm-doc-ic ${e}`}>{ICONES_PIECE[iconePiece(d.doc_type, titre)]}</span>
+                <span className={`cm-doc-ic ${e}`}><PieceIcone docType={d.doc_type} titre={titre}/></span>
                 <div className="cm-doc-txt"><b>{titreCourt(titre)}</b>{detail && <small>{detail}</small>}</div>
                 <span className={`cm-doc-pill ${e}`}>{LIBELLE_ETAT[e]}</span>
               </div>

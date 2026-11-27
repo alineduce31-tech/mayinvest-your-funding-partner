@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Search, Phone, MessageCircle, FileText, UserPlus, Ban, FileX, BarChart3, CircleCheck, CircleAlert, RefreshCw, Wallet } from 'lucide-react'
+import { Search, Phone, MessageCircle, FileText, UserPlus, Ban, FileX, BarChart3, CircleCheck, CircleAlert, RefreshCw, Wallet, Send, Check, FileBadge } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import NiceSelect from '@/components/NiceSelect'
 import ConseillerPicker from '@/components/ConseillerPicker'
 import CallButton from '@/components/CallButton'
 import { BK_CSS } from '@/components/BancarisationView'
-import { LIFECYCLE_STATUTS, STATUT_COLORS, LEAD_ACTIONS, fillTemplate, buildWhatsappUrl } from '@/lib/lead-templates'
+import { LIFECYCLE_STATUTS, STATUT_COLORS, TEMPLATE_PACK_FORMALISATION, fillTemplate } from '@/lib/lead-templates'
+import { libelleStatutPack, type Pack } from '@/lib/pack'
 import { nomLead, estPme } from '@/lib/bancarisation'
 import { estNonEligible, raison, offre, chiffresNE, compteFiltresNE, listeNE, variablesModele, type FiltreNE, type LeadNE } from '@/lib/non-eligibles'
 import { montantComplet, dateRelative, initialesNom, couleurAvatar } from '@/lib/affichage'
@@ -17,9 +18,9 @@ const FILTRES: { k: FiltreNE; label: string }[] = [
 ]
 const ICONE_RAISON = { pack: <CircleCheck size={13}/>, rccm: <FileX size={13}/>, score: <BarChart3 size={13}/>, marque: <CircleAlert size={13}/> }
 
-export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLead, teamMembers, isDirector }: {
+export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLead, teamMembers, isDirector, adminId }: {
   leads: any[]; onOpen: (l: any) => void; updateStatut: (id: string, s: string) => void
-  assignLead: (id: string, agent: string | null) => void; teamMembers: any[]; isDirector: boolean
+  assignLead: (id: string, agent: string | null) => void; teamMembers: any[]; isDirector: boolean; adminId?: string
 }) {
   const navigate = useNavigate()
   const [filtre, setFiltre] = useState<FiltreNE>('tous')
@@ -28,6 +29,15 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
   useEffect(() => {
     supabase.rpc('admin_team_threads').then(({ data }) => {
       if (data) setEquipe((data as any[]).map(t => ({ id: t.commercial_id, nom: t.nom || 'Commercial' })))
+    })
+  }, [])
+  // Souscriptions déjà faites (pour afficher où en est le client au lieu de reproposer le pack)
+  const [packs, setPacks] = useState<Record<string, Pack>>({})
+  const [proposes, setProposes] = useState<Record<string, 'envoi' | 'ok'>>({})
+  const [errProp, setErrProp] = useState('')
+  useEffect(() => {
+    supabase.rpc('admin_packs').then(({ data }) => {
+      if (data) setPacks(Object.fromEntries((data as Pack[]).map(p => [p.lead_id, p])))
     })
   }, [])
   const now = Date.now()
@@ -45,11 +55,16 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
   function proposer(l: LeadNE) {
     const o = offre(l)
     if (o.key === 'repasser') { updateStatut(l.id, 'Éligible'); return }
-    const a = LEAD_ACTIONS.find(x => x.key === o.key)
-    if (!a) return
-    const v = variablesModele(l)
-    const msg = fillTemplate(a.template, v)
-    window.open(v['telephone'] ? buildWhatsappUrl(v['telephone'], msg) : `https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank', 'noopener')
+    // Le pack se souscrit sur la plateforme : on l'envoie dans la discussion de l'espace client
+    if (proposes[l.id]) return
+    setErrProp(''); setProposes(p => ({ ...p, [l.id]: 'envoi' }))
+    const msg = fillTemplate(TEMPLATE_PACK_FORMALISATION, variablesModele(l))
+    supabase.rpc('send_lead_message', { p_lead_id: l.id, p_sender: 'admin', p_author_id: adminId, p_content: msg }).then(({ error }) => {
+      if (error) {
+        setErrProp(`Message non envoyé à ${nomLead(l)} : ${error.message}`)
+        setProposes(p => { const n = { ...p }; delete n[l.id]; return n })
+      } else setProposes(p => ({ ...p, [l.id]: 'ok' }))
+    })
   }
 
   return (
@@ -69,6 +84,7 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
           <div className="bk-chips">{FILTRES.map(f => <button key={f.k} className={filtre === f.k ? 'on' : ''} onClick={() => setFiltre(f.k)}>{f.label}<b>{nb[f.k]}</b></button>)}</div>
         </div>
 
+        {errProp && <div className="ne-err">{errProp}</div>}
         {liste.length === 0 ? (
           <div className="bk-vide"><span><Ban size={22}/></span><b>{base.length ? 'Aucun dossier pour ce filtre' : 'Aucun dossier non éligible'}</b><small>Les dossiers sans RCCM, avec un score trop bas ou marqués non éligibles apparaissent ici.</small></div>
         ) : (
@@ -99,9 +115,15 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
                   </span>
                   <span className="bk-amt"><b>{montantComplet(l.montant_demande)}</b><small>{dateRelative(l.created_at, now)}</small></span>
                   <span className="ne-offre-c">
-                    <button className={`ne-offre ${o.key}`} onClick={() => proposer(l)} title={o.key === 'repasser' ? 'Passer le statut à Éligible' : 'Ouvre WhatsApp avec le message déjà rédigé'}>
-                      {o.key === 'repasser' ? <RefreshCw size={14}/> : <WaIcon/>}{o.label}
-                    </button>
+                    {o.key !== 'repasser' && packs[l.id] ? (
+                      <span className={`ne-pk ${packs[l.id]!.statut}`} title={`Souscription ${packs[l.id]!.reference}`}><FileBadge size={13}/>{packs[l.id]!.statut === 'en_attente_paiement' ? `Souscrit · ${packs[l.id]!.reference}` : libelleStatutPack(packs[l.id]!.statut)}</span>
+                    ) : proposes[l.id] === 'ok' ? (
+                      <span className="ne-pk prop"><Check size={13} strokeWidth={2.6}/>Pack proposé</span>
+                    ) : (
+                      <button className={`ne-offre ${o.key}`} disabled={proposes[l.id] === 'envoi'} onClick={() => proposer(l)} title={o.key === 'repasser' ? 'Passer le statut à Éligible' : 'Envoie la proposition dans la discussion de son espace client'}>
+                        {o.key === 'repasser' ? <RefreshCw size={14}/> : <Send size={13}/>}{proposes[l.id] === 'envoi' ? 'Envoi…' : o.key === 'repasser' ? o.label : 'Proposer le pack'}
+                      </button>
+                    )}
                   </span>
                   <span className="bk-qa">
                     {tel && <CallButton tel={tel} nom={nom} leadId={l.id} className="bk-q call" title="Appeler"><Phone size={14}/></CallButton>}
@@ -118,9 +140,12 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
   )
 }
 
-const WaIcon = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.6.8-.8 1-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.2-.4.2-.4.7-1.2.1-.2 0-.3 0-.5l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.7 11.8 11.8 0 0 0 4.5 4c1.7.7 2.3.8 3.2.6.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg>
 
 const NE_CSS = `
+  .ne-pk { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 999px; white-space: nowrap; }
+  .ne-pk.en_attente_paiement { background: #FFF3E0; color: #B45309; } .ne-pk.paye { background: #EAF1FF; color: #1A6BFF; } .ne-pk.termine, .ne-pk.prop { background: #E8F8EE; color: #16A34A; }
+  .ne-err { background: #FDECEC; color: #B42318; border-radius: 10px; padding: 8px 11px; font-size: 13px; margin-bottom: 10px; }
+
   .bk.ne .bk-hd, .bk.ne .bk-row { grid-template-columns: minmax(0, 1fr) 150px 160px 130px 180px 104px; }
   .ne-why { display: inline-flex; align-items: center; gap: 5px; justify-self: start; font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 8px; white-space: nowrap; }
   .ne-why.rccm { background: #FEF3C7; color: #92400E; } .ne-why.score { background: #FEE2E2; color: #991B1B; }
@@ -129,7 +154,7 @@ const NE_CSS = `
   .ne-st .ns-compact { max-width: 100%; font-size: 12px !important; font-weight: 700; }
   .ne-offre-c { display: flex; min-width: 0; }
   .ne-offre { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 999px; padding: 8px 13px; font-family: inherit; font-size: 12.5px !important; line-height: 1.2; font-weight: 700; cursor: pointer; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-  .ne-offre.pack_formalisation { background: #25D366; color: #fff; }
+  .ne-offre.pack_formalisation { background: #1A6BFF; color: #fff; } .ne-offre:disabled { opacity: .6; cursor: default; }
   .ne-offre.repasser { background: #F1F5F9; color: #334155; }
   @media (max-width: 1100px) {
     .bk.ne .bk-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "who who" "why amt" "st st" "offre qa"; }

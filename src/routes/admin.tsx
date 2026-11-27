@@ -1037,7 +1037,7 @@ function Admin({ session }: { session: any }) {
             {page === 'crm' && <CRMView leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>}
-            {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>}
+            {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector} adminId={session?.id}/>}
             {page === 'packs' && <PacksView leads={leads} onOpen={setSelectedLead} peutConfirmer={peutConfirmerPaiement} onChange={loadLeads}/>}
             {page === 'rapports' && <RapportsView leads={leads} exportCSV={exportCSV} exportExcel={exportExcel} exportPDF={exportPDF}/>}
           </>)}

@@ -3,6 +3,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { LIFECYCLE_STATUTS } from '@/lib/lead-templates'
 import CallButton from '@/components/CallButton'
+import PieceIcone from '@/components/PieceIcone'
+import ConseillerPicker from '@/components/ConseillerPicker'
 import ScrollRow from '@/components/ScrollRow'
 import NiceSelect from '@/components/NiceSelect'
 import { formatPhone } from '@/lib/phone'
@@ -342,12 +344,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
           </div>
           <div><span>Conseiller</span>
             {isDirector ? (
-              <NiceSelect variant="compact" value={agentId || ''} onChange={reattribuer} title="Conseiller" ariaLabel="Conseiller" style={{ maxWidth: 170 }}
-                options={[
-                  { value: '', label: 'Sans conseiller' },
-                  ...(agentId && !team.some(t => t.commercial_id === agentId) ? [{ value: agentId, label: agentNom || 'Membre de la direction' }] : []),
-                  ...team.map(t => ({ value: t.commercial_id, label: `${t.nom} · ${t.ville || '—'}` })),
-                ]}/>
+              <ConseillerPicker value={agentId || null} onChange={id => reattribuer(id || '')} villeLead={lead?.identite?.ville || lead?.ville} montant={lead?.montant_demande} nomSecours={agentNom || undefined} placeholder="Sans conseiller"/>
             ) : <b>{agentNom || 'Sans conseiller'}</b>}
           </div>
           <div><span>Pièces validées</span><b className={docsOk < docs.length ? 'warn' : 'ok'}>{docsOk} / {docs.length}</b></div>
@@ -360,6 +357,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
             {docs.map(d => (
               <div key={d.id} className={`am-doc ${d.status}`}>
                 <div className="am-doc-top">
+                  <i className={`am-doc-ic ${d.status || 'pending'}`} aria-hidden="true"><PieceIcone docType={d.doc_type} titre={d.doc_label || d.file_name || 'Document'} size={15}/></i>
                   {d.file_url ? <a href={d.file_url} target="_blank" rel="noopener">{d.doc_label || d.file_name || 'Document'}</a> : <span>{d.doc_label || 'Document'}</span>}
                   <small>{d.status === 'validated' ? 'Validée' : d.status === 'rejected' ? 'Refusée' : d.status === 'uploaded' ? 'À vérifier' : 'Demandée'}</small>
                 </div>
@@ -675,7 +673,9 @@ function MessagerieStyles() {
     .am-doc.link { cursor: pointer; }
     .am-doc.link:hover { border-color: #BFD4FF; }
     .am-doc-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; }
-    .am-doc-top a, .am-doc-top span { font-weight: 700; color: #0D1B3E; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .am-doc-ic { width: 28px; height: 28px; flex: none; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-style: normal; background: #FEF3C7; color: #92400E; }
+    .am-doc-ic.validated { background: #DCFCE7; color: #166534; } .am-doc-ic.uploaded { background: #DBEAFE; color: #1E40AF; } .am-doc-ic.rejected { background: #FEE2E2; color: #991B1B; }
+    .am-doc-top a, .am-doc-top span { flex: 1; min-width: 0; font-weight: 700; color: #0D1B3E; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .am-doc-top a { color: #1A6BFF; }
     .am-doc-top small { font-size: 11px; font-weight: 800; color: #64748B; flex-shrink: 0; }
     .am-doc.validated .am-doc-top small { color: #15803D; }

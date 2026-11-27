@@ -20,11 +20,9 @@ export const TEMPLATE_PACK_FORMALISATION = `Bonjour {prenom},
 
 Nous avons étudié votre dossier Mayinvest. Votre projet est viable, mais il manque encore quelques éléments pour accéder au financement bancaire.
 
-Mayinvest propose le Pack Formalisation, tout inclus : création RCCM + NIU + statuts, et ouverture de votre compte bancaire auprès de nos banques partenaires.
+Le Pack Formalisation s'occupe de tout : création RCCM + NIU + statuts, et ouverture de votre compte bancaire auprès de nos banques partenaires. Tarif : 50 000 XAF.
 
-Tarif : 50 000 XAF (facture détaillée fournie).
-
-Je peux vous envoyer le devis complet ?
+Vous pouvez y souscrire directement depuis votre espace Mayinvest, onglet Suivi. Vous recevrez une référence à donner au moment de payer chez Mayinvest.
 
 Mayinvest · ${MAYINVEST_CONTACT}`
 
