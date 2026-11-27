@@ -10,6 +10,8 @@ export function useBarreFigee<T extends HTMLElement = HTMLDivElement>({ titre: s
   const barre = useRef<T>(null)
   const [colle, setColle] = useState(false)
   const [decalage, setDecalage] = useState(0)
+  // Vrai quand la barre ne tient pas en entier à côté du titre : elle reste alors sous l'en-tête
+  const [etroit, setEtroit] = useState(false)
 
   // Écoute du défilement (fonctionne aussi si la barre apparaît après un chargement)
   useEffect(() => {
@@ -22,7 +24,7 @@ export function useBarreFigee<T extends HTMLElement = HTMLDivElement>({ titre: s
 
   // Distance entre le début de la barre et la fin du titre de la page, mesurée avant décalage
   useLayoutEffect(() => {
-    if (!colle) { setDecalage(0); return }
+    if (!colle) { setDecalage(0); setEtroit(false); return }
     const mesurer = () => {
       const titre = document.querySelector(selTitre)
       const b = barre.current
@@ -34,11 +36,20 @@ export function useBarreFigee<T extends HTMLElement = HTMLDivElement>({ titre: s
       const finTexte = plage.getBoundingClientRect().right
       setDecalage(Math.max(0, Math.round(finTexte + 24 - gauche)))
     }
+    const auRedim = () => { setEtroit(false); mesurer() }
     mesurer()
-    window.addEventListener('resize', mesurer)
-    return () => window.removeEventListener('resize', mesurer)
+    window.addEventListener('resize', auRedim)
+    return () => window.removeEventListener('resize', auRedim)
   }, [colle, selTitre])
 
+  // Une fois placée à côté du titre, on vérifie que rien ne déborde (boutons coupés)
+  useLayoutEffect(() => {
+    if (!colle || etroit) return
+    const b = barre.current
+    if (!b || window.innerWidth < 1280) return
+    if (b.scrollWidth > b.clientWidth + 1) setEtroit(true)
+  })
+
   const style = { ['--decalage' as any]: `${decalage}px` } as CSSProperties
-  return { repere, barre, colle, style, classe: `barre-fige${colle ? ' colle' : ''}` }
+  return { repere, barre, colle, style, classe: `barre-fige${colle ? ' colle' : ''}${colle && etroit ? ' etroit' : ''}` }
 }

@@ -1048,12 +1048,12 @@ function Admin({ session }: { session: any }) {
             {page === 'crm' && dashboardSearch.priority && (
               <div className="crm-prio" role="status">
                 <span className="crm-prio-ic" aria-hidden="true"><Filter size={15}/></span>
-                <span className="crm-prio-t"><small>Filtre du dashboard</small><b>{({ ready: 'Dossiers prêts sans contact 48 h', impact: 'Non bancarisés cette semaine', followup: 'Pipeline à relancer' } as Record<string, string>)[dashboardSearch.priority]}</b></span>
+                <span className="crm-prio-t"><small>Filtre du dashboard</small><b>{PRIO_LIBELLES[dashboardSearch.priority]}</b></span>
                 <span className="crm-prio-n">{filtered.length} dossier{filtered.length > 1 ? 's' : ''}</span>
                 <button type="button" className="crm-prio-x" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}><X size={14}/>Retirer le filtre</button>
               </div>
             )}
-            {page === 'crm' && <CRMView leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
+            {page === 'crm' && <CRMView prio={dashboardSearch.priority} retirerPrio={() => navigate({ to: '/admin', search: { view: 'crm' } })} leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector} adminId={session?.id}/>}
@@ -1516,7 +1516,9 @@ function StrategicFunnel({ title, tone, rows }: { title: string; tone: string; r
   return <article className={`sd-funnel ${tone}`}><h3>{title}</h3>{rows.map(row => <div className="sd-funnel-row" key={row.label}><div><span>{row.label}</span><strong>{row.count}</strong></div><progress max={max} value={row.count} aria-label={row.label}/></div>)}</article>
 }
 
-function CRMView({ leads, allLeads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, assignLead, exportCSV, exportPDF, exportExcel, isDirector }: any) {
+const PRIO_LIBELLES: Record<string, string> = { ready: 'Dossiers prêts sans contact 48 h', impact: 'Non bancarisés cette semaine', followup: 'Pipeline à relancer' }
+
+function CRMView({ prio, retirerPrio, leads, allLeads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, assignLead, exportCSV, exportPDF, exportExcel, isDirector }: any) {
   const activeFiltersCount = (filterStatut?.length || 0) + (filterType?.length || 0) + (filterActivite?.length || 0) + (filterAgent?.length || 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (search ? 1 : 0)
   const total = (allLeads || leads).length
   const now30 = Date.now() - 30 * 24 * 3600 * 1000
@@ -1541,6 +1543,7 @@ function CRMView({ leads, allLeads, msgCounts, search, setSearch, filterStatut, 
     <>
       <div ref={fige.repere} className="barre-repere" aria-hidden="true"/>
       <div ref={fige.barre} style={fige.style} className={`toolbar toolbar-advanced crm-v2 ${fige.classe}`}>
+        {prio && fige.colle && <button type="button" className="crm-prio-chip" onClick={retirerPrio} title={`${PRIO_LIBELLES[prio]} : cliquer pour retirer le filtre`} aria-label={`Retirer le filtre ${PRIO_LIBELLES[prio]}`}><Filter size={13}/><span>{PRIO_LIBELLES[prio]}</span><X size={13}/></button>}
         <input placeholder="Rechercher nom, téléphone, code…" value={search} onChange={e => setSearch(e.target.value)}/>
         <MultiSelectFilter placeholder="Tous statuts" title="Statuts" options={STATUSES.map((s: string) => ({ value: s, label: s }))} value={filterStatut} onChange={setFilterStatut}/>
         <MultiSelectFilter placeholder="Tous types" title="Type de client" options={[{ value: 'physique', label: 'Particulier' }, { value: 'morale', label: 'PME' }]} value={filterType} onChange={setFilterType}/>
