@@ -14,7 +14,7 @@ import { ClipboardCheck, Lock, ArrowUp, Trash2, Eye, MessagesSquare, Star, MapPi
 import { dashboardMetrics, periodBounds, matchesPriority, isCompany, opportunity, amount, xaf, pct, type DashboardLead, type DashboardPeriod, type PriorityFilter } from '@/lib/admin-dashboard'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import SkeletonPage from '@/components/SkeletonPage'
-import { Logo } from '@/components/Logo'
+import { Logo, logoSvg } from '@/components/Logo'
 import CallButton from '@/components/CallButton'
 import { formatPhone } from '@/lib/phone'
 import BancarisationView from '@/components/BancarisationView'
@@ -490,7 +490,7 @@ function Admin({ session }: { session: any }) {
         @page { size: A4 landscape; margin: 12mm; }
         body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; color: #0D1B3E; margin: 0; padding: 20px; }
         .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 16px; border-bottom: 3px solid #1A6BFF; margin-bottom: 20px; }
-        .logo { font-size: 24px; font-weight: 800; color: #1A6BFF; letter-spacing: -0.02em; }
+        .logo { line-height: 0; }
         .logo-sub { font-size: 12px; color: #64748B; margin-top: 4px; font-weight: 500; }
         .date { font-size: 13px; color: #64748B; font-weight: 600; text-align: right; }
         .meta { background: #F8FAFC; border-left: 4px solid #1A6BFF; padding: 12px 16px; margin-bottom: 16px; border-radius: 6px; font-size: 12px; color: #334155; }
@@ -507,7 +507,7 @@ function Admin({ session }: { session: any }) {
       </head><body>
       <div class="header">
         <div>
-          <div class="logo">Mayinvest</div>
+          <div class="logo">${logoSvg(120)}</div>
           <div class="logo-sub">PréSelect · Rapport Leads</div>
         </div>
         <div class="date">${today}<br/><small>${filtered.length} lead${filtered.length > 1 ? 's' : ''}</small></div>

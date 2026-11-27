@@ -291,3 +291,12 @@ export function Logo({
 }
 
 export default Logo;
+
+/** Logo en texte SVG, pour les documents générés hors React (export PDF, impression). */
+export function logoSvg(width = 140, tone: "light" | "dark" = "light"): string {
+  const h = Math.round(width * RATIO);
+  const waveColor = tone === "dark" ? "#E1EBF7" : "#8FB0DA";
+  const waveOpacity = tone === "dark" ? 0.55 : 0.75;
+  const textColor = tone === "dark" ? "#FFFFFF" : "#0A1F42";
+  return `<svg viewBox="0 0 540 320" width="${width}" height="${h}" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Mayinvest" style="display:block"><g transform="translate(0,320) scale(0.1,-0.1)" fill="${waveColor}" fill-opacity="${waveOpacity}" fill-rule="evenodd"><path d="${WAVES}"/></g><g transform="translate(0,320) scale(0.1,-0.1)" fill="${textColor}" fill-rule="evenodd"><path d="${WORDMARK}"/></g></svg>`;
+}
