@@ -206,7 +206,7 @@ function EspaceCommercialPage() {
           <div className="pre-wrap">
             <div className="welcome-card">
               <span className="welcome-badge"><span className="dot"/>Connecté</span>
-              <h2>Bonjour {session.prenom}</h2>
+              <h2>Bonjour {session.prenom} 👋</h2>
               <p>Voici où tu en es dans ton parcours Mayinvest.</p>
             </div>
             {session.status === 'formation' && (

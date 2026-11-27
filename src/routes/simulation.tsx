@@ -1,5 +1,4 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
-import { Check, Plus } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { informer } from '@/components/Dialogue'
 import { supabase } from '@/integrations/supabase/client'
@@ -447,7 +446,7 @@ function Epreuve3Pilotage({ onComplete }: { onComplete: (time: number, data: any
                 <div className="e3-docs-title">Clique sur les documents à demander (minimum 3) :</div>
                 {['Pièce d\'identité', 'Fiche de paie (3 derniers mois)', 'Relevés de compte (3 mois)', 'Justificatif de domicile', 'Devis véhicule'].map(d => (
                   <button key={d} className={`doc-pill${docsRequested.includes(d) ? ' asked' : ''}`} onClick={() => requestDoc(d)}>
-                    {docsRequested.includes(d) ? <Check size={12} strokeWidth={3}/> : <Plus size={12}/>}{d}
+                    {docsRequested.includes(d) ? '✓ ' : '+ '}{d}
                   </button>
                 ))}
                 <div className="e3-docs-count">{docsRequested.length} document{docsRequested.length > 1 ? 's' : ''} demandé{docsRequested.length > 1 ? 's' : ''}</div>
@@ -513,7 +512,7 @@ function StatutPill({ current, onChange }: { current: string; onChange: (s: stri
 function StepItem({ ok, num, label }: { ok: boolean; num: number; label: string }) {
   return (
     <div className={`e3-step ${ok ? 'done' : 'todo'}`}>
-      <span className="num">{ok ? <Check size={13} strokeWidth={3}/> : num}</span>
+      <span className="num">{ok ? '✓' : num}</span>
       <span className="txt">{label}</span>
     </div>
   )

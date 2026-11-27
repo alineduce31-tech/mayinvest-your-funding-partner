@@ -1,5 +1,4 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { User, Building2, Wallet, TrendingUp, MessageCircle } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { Logo } from '@/components/Logo'
 import { trackHaki } from '@/lib/haki-tracking'
@@ -570,13 +569,13 @@ function Index() {
                 <div className="ix-row">
                   <div className="ix-mini-ava">{hakiEye(32)}</div>
                   <div className="ix-bubble">
-                    <div className="ix-step">BONJOUR</div>
+                    <div className="ix-step">👋 BONJOUR</div>
                     <div><strong>Je suis Haki, votre conseillère Mayinvest.</strong></div>
                     <div style={{ marginTop: 6 }}>En <strong>2 minutes</strong>, je peux évaluer votre éligibilité à un financement <strong>avant même d'aller voir la banque</strong>. Prêt·e à voir si votre projet passe ?</div>
                   </div>
                 </div>
                 <button className="ix-cta" onClick={() => setHakiStage('profile')}>
-                  Oui, évaluons mon projet
+                  🚀 Oui, évaluons mon projet
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
                 <button className="ix-decline" onClick={declineHakiHome}>Non merci, je navigue seul</button>
@@ -595,11 +594,11 @@ function Index() {
                 </div>
                 <div className="ix-options">
                   <button className="ix-option" onClick={() => pickProfile('p')}>
-                    <div className="ix-option-title"><User size={16} style={{ verticalAlign: '-3px', marginRight: 6 }}/>À titre personnel</div>
+                    <div className="ix-option-title">👤 À titre personnel</div>
                     <div className="ix-option-ex">Fonctionnaire, salarié, commerçant, artisan…</div>
                   </button>
                   <button className="ix-option" onClick={() => pickProfile('m')}>
-                    <div className="ix-option-title"><Building2 size={16} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Pour mon entreprise / PME</div>
+                    <div className="ix-option-title">🏢 Pour mon entreprise / PME</div>
                     <div className="ix-option-ex">Société, coopérative, groupement, entreprise individuelle</div>
                   </button>
                 </div>
@@ -614,14 +613,14 @@ function Index() {
                   <div className="ix-mini-ava">{hakiEye(32)}</div>
                   <div className="ix-bubble">
                     <div className="ix-step">ÉTAPE 2 SUR 2 · VOTRE BESOIN</div>
-                    <div><strong>Super ! Particulier.</strong></div>
+                    <div><strong>Super ! 👤 Particulier.</strong></div>
                     <div style={{ marginTop: 4 }}>Quel est votre projet de financement ?</div>
                   </div>
                 </div>
                 <div className="ix-options">
                   {needsP.map(n => (
                     <button key={n.k} className="ix-option" onClick={() => pickNeed(n.label)}>
-                      <div className="ix-option-title"><Wallet size={16} style={{ verticalAlign: '-3px', marginRight: 6 }}/>{n.label}</div>
+                      <div className="ix-option-title">💰 {n.label}</div>
                       <div className="ix-option-ex">{n.ex}</div>
                     </button>
                   ))}
@@ -637,14 +636,14 @@ function Index() {
                   <div className="ix-mini-ava">{hakiEye(32)}</div>
                   <div className="ix-bubble">
                     <div className="ix-step">ÉTAPE 2 SUR 2 · VOTRE BESOIN</div>
-                    <div><strong>Super ! Entreprise.</strong></div>
+                    <div><strong>Super ! 🏢 Entreprise.</strong></div>
                     <div style={{ marginTop: 4 }}>Pour quel usage avez-vous besoin de ce financement ?</div>
                   </div>
                 </div>
                 <div className="ix-options">
                   {needsM.map(n => (
                     <button key={n.k} className="ix-option" onClick={() => pickNeed(n.label)}>
-                      <div className="ix-option-title"><TrendingUp size={16} style={{ verticalAlign: '-3px', marginRight: 6 }}/>{n.label}</div>
+                      <div className="ix-option-title">📈 {n.label}</div>
                       <div className="ix-option-ex">{n.ex}</div>
                     </button>
                   ))}
@@ -659,13 +658,13 @@ function Index() {
                 <div className="ix-row">
                   <div className="ix-mini-ava">{hakiEye(32)}</div>
                   <div className="ix-bubble">
-                    <div className="ix-step">ANALYSE PRÉLIMINAIRE</div>
+                    <div className="ix-step">✓ ANALYSE PRÉLIMINAIRE</div>
                     <div><strong>Excellent choix !</strong> {profile === 'p' ? 'Un financement personnel' : 'Un financement entreprise'} pour <strong>{need}</strong> est tout à fait réalisable au Congo.</div>
                   </div>
                 </div>
 
                 <div className="ix-result">
-                  <strong>Ce que je peux faire pour vous :</strong>
+                  <strong>📊 Ce que je peux faire pour vous :</strong>
                   <div style={{ marginTop: 6, fontSize: 12.5 }}>
                     En 2 minutes, je calcule votre <strong>score d'éligibilité</strong> sur 100 selon les critères des banques partenaires. Vous saurez immédiatement si votre dossier a toutes ses chances, ou ce qu'il faut améliorer avant.
                   </div>
@@ -677,7 +676,7 @@ function Index() {
                 </div>
 
                 <button className="ix-cta" onClick={hakiGoPreselection}>
-                  Démarrer ma présélection gratuite
+                  🎯 Démarrer ma présélection gratuite
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                 </button>
                 <button className="ix-back" onClick={resetHaki}>↺ Recommencer avec Haki</button>
@@ -716,7 +715,7 @@ function Index() {
       {!hakiOpen && <HakiBulle texte={bulle.texte} onFermer={bulle.fermer} onOuvrir={() => { bulle.fermer(); setHakiOpen(true); trackHaki(PAGE, 'haki_open', { trigger: 'bulle' }) }}/>}
       <button className="ix-fab" onClick={() => { bulle.fermer(); toggleHakiHome() }} aria-label="Haki">
         {hakiEye(46)}
-        {!hakiOpen && !hakiDeclined && <span className="ix-fab-tag"><MessageCircle size={13} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Besoin d'aide ?</span>}
+        {!hakiOpen && !hakiDeclined && <span className="ix-fab-tag">💬 Besoin d'aide ?</span>}
       </button>
     </div>
   )

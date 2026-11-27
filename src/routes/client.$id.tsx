@@ -2,7 +2,7 @@ import { lienContact } from '@/lib/lead-templates'
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { informer } from '@/components/Dialogue'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
-import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Landmark, FileBadge, FileText, BarChart3, CircleCheck, Clock, Camera, Lock, Search, ChevronLeft, Plus, Image as ImageIcon, KeyRound, Smartphone, Mail } from 'lucide-react'
+import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Landmark, FileBadge, FileText, BarChart3, CircleCheck, Clock, Camera, Lock, Search, ChevronLeft, Plus, Image as ImageIcon } from 'lucide-react'
 import PackClient from '@/components/PackClient'
 import { proposerPack } from '@/lib/pack'
 import { ETAPES_CLIENT, etapeCourante, compteDocs, prochaineEtape, decoupePiece } from '@/lib/espace-client'
@@ -268,7 +268,7 @@ function ClientPortal() {
     const res = await requestPasswordReset(recoveryEmail, 'client')
     setRecoveryBusy(false)
     if (res.ok) setRecoveryStep('sent')
-    setRecoveryMsg(res.message)
+    setRecoveryMsg((res.ok ? '✓ ' : '') + res.message)
   }
   function startRecovery() { setRecoveryStep('ask'); setRecoveryEmail(''); setRecoveryMsg(''); setRecoveryLink('') }
 
@@ -432,7 +432,7 @@ function ClientPortal() {
   const hakiMsg: HakiMsg = (() => {
     if (stage === 'needsCode') {
       return {
-        title: 'Accès sécurisé',
+        title: '🔐 Accès sécurisé',
         body: "Pour voir votre dossier, entrez votre code d'accès reçu lors de l'inscription (format MYI-XXXXXXX). Ce code protège vos informations.",
         actions: [{ label: 'Code perdu ? Écrire à Mayinvest', onClick: () => { window.location.href = lienContact('Code d\'accès perdu', "Bonjour, j'ai perdu mon code d'accès. Mon numéro ou email : ") } }],
       }
@@ -449,12 +449,12 @@ function ClientPortal() {
         'RDV': "Un rendez-vous est prévu. Préparez vos documents (CNI, justificatifs de revenus).",
         'Dossier Déposé': "Votre dossier est en analyse à la banque. Patience, cela prend quelques jours.",
         'Éligible': "Félicitations ! Votre dossier est accepté. La banque va vous proposer les conditions.",
-        'Financé': "Votre prêt est débloqué ! Les fonds sont sur votre compte.",
+        'Financé': "🎉 Votre prêt est débloqué ! Les fonds sont sur votre compte.",
         'Non Éligible': "Le dossier n'a pas pu aboutir cette fois. Discutons de solutions alternatives.",
         'Perdu': "Le dossier a été archivé. Vous pouvez relancer un nouveau dossier à tout moment.",
       }
       return {
-        title: `Bonjour ${nom}`,
+        title: `Bonjour ${nom} 👋`,
         body: `Votre dossier est au statut : « ${lead.statut} » (étape ${statutIdx + 1} sur 6).\n\n${explanations[lead.statut] || "Suivez l'avancement dans la timeline."}`,
         success: ['Éligible','Financé'].includes(lead.statut),
         actions: [
@@ -499,7 +499,7 @@ function ClientPortal() {
         ]
       })()
       return {
-        title: unread > 0 ? `${unread} nouveau${unread > 1 ? 'x' : ''} message${unread > 1 ? 's' : ''}` : 'Messages pré-écrits',
+        title: unread > 0 ? `💬 ${unread} nouveau${unread > 1 ? 'x' : ''} message${unread > 1 ? 's' : ''}` : '💬 Messages pré-écrits',
         body: unread > 0
           ? "Votre conseiller vous a écrit. Lisez le message et répondez-lui ci-dessous. Je peux aussi vous proposer des réponses rapides."
           : "Pas d'inspiration ? Choisissez un message prêt-à-envoyer ci-dessous, ou écrivez le vôtre dans la zone de saisie.",
@@ -577,6 +577,7 @@ function ClientPortal() {
         .c-haki-btn:hover { background: #EEF4FF; border-color: #1A6BFF; color: #1A6BFF; }
         .c-haki-btn.primary { background: #1A6BFF; color: #fff; border-color: #1A6BFF; justify-content: center; font-weight: 700; font-size: 13px; padding: 12px 14px; }
         .c-haki-btn.primary:hover { background: #1560E0; color: #fff; }
+        .c-haki-btn::before { content: '💬'; font-size: 14px; flex-shrink: 0; }
         .c-haki-btn.primary::before { display: none; }
         .c-haki-settings { border-top: 1px solid #E5E7EB; background: #FAFBFD; padding: 12px 16px; }
         .c-haki-auto-row { display: flex; align-items: center; gap: 10px; }
@@ -841,18 +842,18 @@ function ClientPortal() {
             {/* Tabs : mot de passe (par défaut) ou code d'accès */}
             <div className="c-gate-tabs">
               <button className={`c-gate-tab ${loginMode === 'password' ? 'on' : ''}`} onClick={() => { setLoginMode('password'); setCodeError('') }}>
-                <Lock size={15} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Mot de passe
+                🔐 Mot de passe
               </button>
               <button className={`c-gate-tab ${loginMode === 'code' ? 'on' : ''}`} onClick={() => { setLoginMode('code'); setCodeError('') }}>
-                <KeyRound size={15} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Code d'accès
+                📄 Code d'accès
               </button>
             </div>
 
             {loginMode === 'password' ? <>
               {/* Sous-tabs : identifiant téléphone ou email */}
               <div className="c-gate-subtabs">
-                <button className={`c-gate-subtab ${identifierType === 'phone' ? 'on' : ''}`} onClick={() => { setIdentifierType('phone'); setIdentifierInput('') }}><Smartphone size={14} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Téléphone</button>
-                <button className={`c-gate-subtab ${identifierType === 'email' ? 'on' : ''}`} onClick={() => { setIdentifierType('email'); setIdentifierInput('') }}><Mail size={14} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Email</button>
+                <button className={`c-gate-subtab ${identifierType === 'phone' ? 'on' : ''}`} onClick={() => { setIdentifierType('phone'); setIdentifierInput('') }}>📱 Téléphone</button>
+                <button className={`c-gate-subtab ${identifierType === 'email' ? 'on' : ''}`} onClick={() => { setIdentifierType('email'); setIdentifierInput('') }}>✉️ Email</button>
               </div>
 
               {identifierType === 'phone' ? (
@@ -925,7 +926,7 @@ function ClientPortal() {
               <div className="c-gate-recovery">
                 {recoveryStep === '' && (
                   <button className="c-btn-recovery" onClick={startRecovery}>
-                    <KeyRound size={14} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Mot de passe oublié ?
+                    🔑 Mot de passe oublié ?
                   </button>
                 )}
 
@@ -956,7 +957,7 @@ function ClientPortal() {
 
                 {recoveryStep === 'sent' && (
                   <>
-                    <div style={{ textAlign: 'center', marginBottom: 8, color: '#1A6BFF' }}><Mail size={32}/></div>
+                    <div style={{ fontSize: 32, textAlign: 'center', marginBottom: 8 }}>📧</div>
                     <div style={{ fontSize: 13, color: '#166534', marginBottom: 10, textAlign: 'center', fontWeight: 700 }}>{recoveryMsg}</div>
                     {recoveryLink && (
                       <>

@@ -2402,8 +2402,8 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
                     )}
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       {isUploaded && <>
-                        <button onClick={() => validateDocument(d.id)} style={{ background: '#166534', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}><Check size={13} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Valider</button>
-                        <button onClick={() => rejectDocument(d.id)} style={{ background: '#DC2626', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}><X size={13} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Rejeter</button>
+                        <button onClick={() => validateDocument(d.id)} style={{ background: '#166534', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>✓ Valider</button>
+                        <button onClick={() => rejectDocument(d.id)} style={{ background: '#DC2626', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>✗ Rejeter</button>
                       </>}
                       {isValidated && <button onClick={() => rejectDocument(d.id)} style={{ background: 'transparent', color: '#DC2626', border: '1.5px solid #DC2626', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>Rejeter</button>}
                       {isRejected && <button onClick={() => validateDocument(d.id)} style={{ background: '#166534', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>Finalement valider</button>}

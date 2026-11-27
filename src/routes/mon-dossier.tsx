@@ -529,8 +529,8 @@ function MonDossier() {
           : !password ? 'pwd'
           : 'ready'
         const stepLabel = step === 'start' ? 'ÉTAPE 1 SUR 3 · IDENTIFICATION'
-          : step === 'id-focus' ? 'ASTUCE · IDENTIFIANT'
-          : step === 'pwd-focus' ? 'ASTUCE · MOT DE PASSE'
+          : step === 'id-focus' ? '💡 ASTUCE · IDENTIFIANT'
+          : step === 'pwd-focus' ? '💡 ASTUCE · MOT DE PASSE'
           : step === 'pwd' ? 'ÉTAPE 2 SUR 3 · SÉCURITÉ'
           : step === 'ready' ? 'ÉTAPE 3 SUR 3 · CONNEXION'
           : 'OUPS, UNE ERREUR'
@@ -556,27 +556,27 @@ function MonDossier() {
                 <div className="hk-bubble">
                   <div className="hk-step">{stepLabel}</div>
                   {step === 'start' && <>
-                    <div><strong>Bienvenue sur Mayinvest !</strong></div>
+                    <div><strong>Bienvenue sur Mayinvest ! 👋</strong></div>
                     <div style={{ marginTop: 6 }}>Comment préférez-vous vous connecter ?</div>
                   </>}
                   {step === 'id-focus' && <>
-                    <div><strong>Je vous accompagne</strong></div>
+                    <div><strong>Je vous accompagne 👀</strong></div>
                     <div style={{ marginTop: 6 }}>{tab === 'phone' ? 'Tapez votre numéro à 9 chiffres (ex : 06 655 32 18).' : 'Tapez l\'adresse email que vous avez utilisée à l\'inscription.'}</div>
                   </>}
                   {step === 'pwd-focus' && <>
-                    <div><strong>Mot de passe sécurisé</strong></div>
-                    <div style={{ marginTop: 6 }}>Minimum 8 caractères, lettres + chiffres. Cliquez sur l'œil pour vérifier ce que vous tapez.</div>
+                    <div><strong>Mot de passe sécurisé 🔒</strong></div>
+                    <div style={{ marginTop: 6 }}>Minimum 8 caractères, lettres + chiffres. Cliquez sur l'œil 👁️ pour vérifier ce que vous tapez.</div>
                   </>}
                   {step === 'pwd' && <>
-                    <div><strong>Super ! {tab === 'phone' ? formatPhoneInput(phone) : email}</strong></div>
+                    <div><strong>Super ! {tab === 'phone' ? '📱 ' + formatPhoneInput(phone) : '✉️ ' + email}</strong></div>
                     <div style={{ marginTop: 6 }}>Entrez maintenant votre mot de passe. Si vous l'avez oublié, pas de souci, je peux vous aider.</div>
                   </>}
                   {step === 'ready' && <>
-                    <div><strong>Parfait, tout est prêt !</strong></div>
+                    <div><strong>Parfait, tout est prêt ! ✓</strong></div>
                     <div style={{ marginTop: 6 }}>Je peux vous connecter maintenant.</div>
                   </>}
                   {step === 'error' && <>
-                    <div><strong>Oups</strong></div>
+                    <div><strong>Oups 💪</strong></div>
                     <div style={{ marginTop: 6 }}>{error}. Essayons autre chose :</div>
                   </>}
                 </div>
@@ -586,7 +586,7 @@ function MonDossier() {
               <div className="hk-actions">
                 {(step === 'id-focus' || step === 'pwd-focus') && (
                   <div className="hk-ex" style={{ marginTop: 0, marginBottom: 4 }}>
-                    {step === 'pwd-focus' ? 'Exemples : Mayinvest2026, MonProjet123, Credit2025' : (tab === 'phone' ? 'Format : 06 ou 05 + 7 chiffres' : 'Format : nom.prenom@domaine.com')}
+                    💡 {step === 'pwd-focus' ? 'Exemples : Mayinvest2026, MonProjet123, Credit2025' : (tab === 'phone' ? 'Format : 06 ou 05 + 7 chiffres' : 'Format : nom.prenom@domaine.com')}
                   </div>
                 )}
                 {step === 'start' && demoStage === 'idle' && <>
@@ -599,7 +599,7 @@ function MonDossier() {
                     <span>Voir une démo · Email</span>
                   </button>
                   <div className="hk-ex">
-                    Je vais vous montrer comment faire avant de vous laisser essayer
+                    💡 Je vais vous montrer comment faire avant de vous laisser essayer
                   </div>
                 </>}
 
@@ -607,9 +607,9 @@ function MonDossier() {
                 {demoStage !== 'idle' && (
                   <div className="hk-demo">
                     <div className="hk-demo-head">
-                      {demoStage === 'mockup' && 'Regardez bien l\'exemple…'}
+                      {demoStage === 'mockup' && '👀 Regardez bien l\'exemple…'}
                       {demoStage === 'typing' && '⌨️ Simulation en cours…'}
-                      {demoStage === 'done' && 'Voilà ! C\'est à votre tour'}
+                      {demoStage === 'done' && '✓ Voilà ! C\'est à votre tour'}
                     </div>
                     <div className="hk-demo-card">
                       <div className="hk-demo-field">
@@ -627,14 +627,14 @@ function MonDossier() {
                         </div>
                       </div>
                       {demoStage === 'done' && (
-                        <div className="hk-demo-badge">Formulaire rempli correctement</div>
+                        <div className="hk-demo-badge">✓ Formulaire rempli correctement</div>
                       )}
                     </div>
 
                     {demoStage === 'done' ? (
                       <>
                         <button className="hk-btn primary" onClick={jumpToRealForm}>
-                          C'est à votre tour !
+                          🚀 C'est à votre tour !
                         </button>
                         <button className="hk-btn outline" onClick={() => setDemoStage('idle')}>
                           Revoir une autre démo
@@ -650,7 +650,7 @@ function MonDossier() {
 
                 {step === 'pwd' && <>
                   <button className="hk-btn primary" onClick={() => { setShowForgot(true); setHakiOpen(false) }}>
-                    J'ai oublié mon mot de passe
+                    🔑 J'ai oublié mon mot de passe
                   </button>
                   <button className="hk-btn outline" onClick={() => { setTab(tab === 'phone' ? 'email' : 'phone'); setError('') }}>
                     {tab === 'phone' ? <><IconMail /><span>Me connecter avec email</span></> : <><IconPhone /><span>Me connecter avec téléphone</span></>}
@@ -659,16 +659,16 @@ function MonDossier() {
 
                 {step === 'ready' && <>
                   <button className="hk-btn primary" onClick={() => { setHakiOpen(false); tryLogin() }}>
-                    Me connecter maintenant
+                    ✓ Me connecter maintenant
                   </button>
                 </>}
 
                 {step === 'error' && <>
                   <button className="hk-btn primary" onClick={() => { setError(''); setPassword('') }}>
-                    Je réessaie mon mot de passe
+                    🔄 Je réessaie mon mot de passe
                   </button>
                   <button className="hk-btn outline" onClick={() => { setShowForgot(true); setHakiOpen(false); setError('') }}>
-                    Mot de passe oublié
+                    🔑 Mot de passe oublié
                   </button>
                   <button className="hk-btn outline" onClick={() => { setTab(tab === 'phone' ? 'email' : 'phone'); setError(''); setPassword('') }}>
                     {tab === 'phone' ? <><IconMail /><span>Essayer avec email</span></> : <><IconPhone /><span>Essayer avec téléphone</span></>}
@@ -738,7 +738,7 @@ function MonDossier() {
               </div>
             </div>
             <div className="md-info">
-              Entrez l'email de votre dossier. Je vous enverrai un lien pour choisir un nouveau mot de passe (valable 1h).
+              📧 Entrez l'email de votre dossier. Je vous enverrai un lien pour choisir un nouveau mot de passe (valable 1h).
             </div>
             <div className="md-field">
               <label>Email du dossier</label>
