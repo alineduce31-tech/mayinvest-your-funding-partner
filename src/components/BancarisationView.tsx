@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useBarreFigee } from '@/hooks/useBarreFigee'
 import { supabase } from '@/integrations/supabase/client'
 import StatutPicker from '@/components/StatutPicker'
 import { useNavigate } from '@tanstack/react-router'
@@ -19,6 +20,7 @@ export default function BancarisationView({ leads, onOpen, updateStatut, assignL
   leads: any[]; onOpen: (l: any) => void; updateStatut: (id: string, s: string) => void
   assignLead: (id: string, agent: string | null) => void; teamMembers: any[]; isDirector: boolean
 }) {
+  const fige = useBarreFigee()
   const navigate = useNavigate()
   const [filtre, setFiltre] = useState<FiltreB>('tous')
   const [q, setQ] = useState('')
@@ -53,7 +55,8 @@ export default function BancarisationView({ leads, onOpen, updateStatut, assignL
       </div>
 
       <div className="bk-card">
-        <div className="bk-tb">
+        <div ref={fige.repere} className="barre-repere" aria-hidden="true"/>
+        <div ref={fige.barre} style={fige.style} className={`bk-tb ${fige.classe}`}>
           <label className="bk-srch"><Search size={15}/><input value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher un prospect, une ville…" aria-label="Rechercher"/></label>
           <div className="bk-chips">
             {FILTRES.map(f => <button key={f.k} className={filtre === f.k ? 'on' : ''} onClick={() => setFiltre(f.k)}>{f.label}<b>{nb[f.k]}</b></button>)}

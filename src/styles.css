@@ -2205,3 +2205,16 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
 }
 .me-field .mi-eye { color: rgba(255,255,255,.6) !important; }
 .me-field .mi-eye:hover { background: rgba(255,255,255,.1) !important; color: #fff !important; }
+
+/* Barres de recherche / filtres figées au défilement (CRM, Bancarisation, Non éligibles, Packs) */
+.barre-repere { height: 1px; margin-bottom: -1px; }
+@media (min-width: 901px) {
+  .barre-fige { position: sticky; top: 76px; z-index: 39; transition: box-shadow .15s; }
+  .barre-fige.colle { background: #fff !important; border-radius: 18px !important; box-shadow: 0 8px 24px rgba(13,27,62,.08) !important; padding: 8px !important; }
+}
+@media (min-width: 1280px) {
+  .barre-fige { top: 8px; }
+  .barre-fige.colle { z-index: 41; margin-left: var(--decalage, 96px) !important; flex-wrap: nowrap !important; padding: 7px !important; box-shadow: 0 6px 18px rgba(13,27,62,.08) !important; }
+  .barre-fige.colle input { min-width: 140px !important; }
+  .barre-fige.colle .bk-chips { flex-wrap: nowrap; }
+}

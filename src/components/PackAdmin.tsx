@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useBarreFigee } from '@/hooks/useBarreFigee'
 import { createPortal } from 'react-dom'
 import { Search, Wallet, Clock, CircleCheck, FileBadge, Check, X, Receipt, MessageCircle } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
@@ -139,6 +140,7 @@ const FILTRES: { k: FiltrePack; label: string }[] = [
 ]
 
 export default function PacksView({ leads, onOpen, peutConfirmer, onChange }: { leads: any[]; onOpen: (l: any) => void; peutConfirmer: boolean; onChange: () => void }) {
+  const fige = useBarreFigee()
   const navigate = useNavigate()
   const [packs, setPacks] = useState<Pack[] | null>(null)
   const [err, setErr] = useState('')
@@ -184,7 +186,8 @@ export default function PacksView({ leads, onOpen, peutConfirmer, onChange }: { 
       </div>
 
       <div className="bk-card">
-        <div className="bk-tb">
+        <div ref={fige.repere} className="barre-repere" aria-hidden="true"/>
+        <div ref={fige.barre} style={fige.style} className={`bk-tb ${fige.classe}`}>
           <label className="bk-srch"><Search size={15}/><input value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher un nom, une référence, un reçu…" aria-label="Rechercher"/></label>
           <div className="bk-chips">{FILTRES.map(f => <button key={f.k} className={filtre === f.k ? 'on' : ''} onClick={() => setFiltre(f.k)}>{f.label}<b>{nb[f.k]}</b></button>)}</div>
         </div>

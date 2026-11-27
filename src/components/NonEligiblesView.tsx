@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useBarreFigee } from '@/hooks/useBarreFigee'
 import { useNavigate } from '@tanstack/react-router'
 import { Search, Phone, MessageCircle, FileText, UserPlus, Ban, FileX, BarChart3, CircleCheck, CircleAlert, RefreshCw, Wallet, Send, Check, FileBadge } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
@@ -23,6 +24,7 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
   leads: any[]; onOpen: (l: any) => void; updateStatut: (id: string, s: string) => void
   assignLead: (id: string, agent: string | null) => void; teamMembers: any[]; isDirector: boolean; adminId?: string
 }) {
+  const fige = useBarreFigee()
   const navigate = useNavigate()
   const [filtre, setFiltre] = useState<FiltreNE>('tous')
   const [q, setQ] = useState('')
@@ -83,7 +85,8 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
       </div>
 
       <div className="bk-card">
-        <div className="bk-tb">
+        <div ref={fige.repere} className="barre-repere" aria-hidden="true"/>
+        <div ref={fige.barre} style={fige.style} className={`bk-tb ${fige.classe}`}>
           <label className="bk-srch"><Search size={15}/><input value={q} onChange={e => setQ(e.target.value)} placeholder="Rechercher un dossier, une ville…" aria-label="Rechercher"/></label>
           <div className="bk-chips">{FILTRES.map(f => <button key={f.k} className={filtre === f.k ? 'on' : ''} onClick={() => setFiltre(f.k)}>{f.label}<b>{nb[f.k]}</b></button>)}</div>
         </div>
