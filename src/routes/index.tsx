@@ -161,7 +161,15 @@ function Index() {
         .recrut-left { display: flex; align-items: center; gap: 16px; flex: 1; min-width: 240px; }
         .recrut-ic { width: 48px; height: 48px; border-radius: 12px; background: rgba(26,107,255,0.18); color: #6DAFFF;
           display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .recrut-h3 { font-size: 15px; font-weight: 800; margin: 0 0 3px; letter-spacing: -0.01em; }
+        .recrut-h3 { font-size: 15.5px; font-weight: 700; margin: 6px 0 0; letter-spacing: -0.01em; line-height: 1.35; }
+        .recrut-villes { display: none; }
+        .recrut-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .recrut-tag { font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; background: #1A6BFF; border-radius: 999px; padding: 3px 9px; font-weight: 700; }
+        .recrut-pl { font-size: 12px; color: #9FB3D9; }
+        .recrut-pills { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 9px; }
+        .recrut-pills span { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; background: rgba(255,255,255,.08); color: rgba(255,255,255,.9); border-radius: 999px; padding: 5px 11px; }
+        .recrut-pills svg { color: #7FB0FF; flex: none; }
+        @media (max-width: 640px) { .recrut-ic { display: none; } .recrut-villes { display: inline; } .recrut-pl { display: none; } .recrut-opt { display: none !important; } .recrut-h3 { font-size: 15px; } }
         .recrut-p { font-size: 12px; color: rgba(255,255,255,0.6); margin: 0; }
         .recrut-btn { background: #1A6BFF; color: #fff; padding: 13px 24px; border-radius: 100px; font-size: 13px;
           font-weight: 700; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
@@ -412,12 +420,18 @@ function Index() {
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a4 4 0 014-4h8a4 4 0 014 4v2" strokeLinecap="round"/></svg>
           </div>
           <div>
-            <div className="recrut-h3">Mayinvest recrute 24 commerciaux au Congo</div>
-            <div className="recrut-p">Formation payée · 50 000 XAF par dossier · Dashboard temps réel</div>
+            <div className="recrut-top"><span className="recrut-tag">Appel à partenariat</span><span className="recrut-pl">24 places · Brazzaville et Pointe-Noire</span></div>
+            <div className="recrut-h3">Mayinvest recherche 24 Partenaires Commerciaux Indépendants<span className="recrut-villes"> à Brazzaville et Pointe-Noire</span></div>
+            <div className="recrut-pills">
+              <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg>Formation payée</span>
+              <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M19 5 5 19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg>10 % de commission sur les Packs Formalisation</span>
+              <span className="recrut-opt"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Vous gérez votre temps</span>
+              <span className="recrut-opt"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>Suivi de vos gains en direct</span>
+            </div>
           </div>
         </div>
         <button className="recrut-btn" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>
-          Postuler
+          Devenir partenaire
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
         </button>
       </div>
