@@ -2136,7 +2136,14 @@ button:active, .lap-btn:active {
 .ld-pill.sc.hi { background: #E8F8EE; color: #16A34A; } .ld-pill.sc.mid { background: #FFF1E0; color: #D9690B; } .ld-pill.sc.lo { background: #FDECEC; color: #DC2626; }
 .ld-ag { background: #E8F8EE !important; color: #16A34A !important; border: none !important; border-radius: 999px !important; font-size: 12.5px !important; font-weight: 600 !important; }
 .ld-ag.vide { background: #FFF1E0 !important; color: #D9690B !important; }
-.ld-acts { display: flex; gap: 8px; margin-top: 12px; }
+.ld-acts { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.ld-act { display: inline-flex; align-items: center; justify-content: center; gap: 7px; height: 40px; border: none; border-radius: 12px; background: #F5F7FB; color: #0D1B3E; font-family: inherit; font-size: 13px !important; font-weight: 600; text-decoration: none; cursor: pointer; padding: 0 8px; white-space: nowrap; }
+.ld-act:hover { background: #EDF1F8; }
+.ld-act-ic { width: 24px; height: 24px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: #fff; flex: none; }
+.ld-act-ic.call { background: #1A6BFF; } .ld-act-ic.wa { background: #25D366; } .ld-act-ic.mail { background: #0D1B3E; }
+.ld-score { width: 46px; height: 46px; border-radius: 50%; border: 3px solid #F59E0B; box-sizing: border-box; display: inline-flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; flex: none; }
+.ld-score.hi { border-color: #1A6BFF; } .ld-score.lo { border-color: #DC2626; }
+.ld-score b { font-size: 14px !important; font-weight: 700; color: #0D1B3E; } .ld-score small { font-size: 9px !important; color: #94A3B8; }
 .ld-rb { width: 36px; height: 36px; border-radius: 50%; border: none; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; text-decoration: none; padding: 0; }
 .ld-rb.g { background: #E8F8EE; color: #16A34A; } .ld-rb.b { background: #EAF1FF; color: #1A6BFF; }
 .ld-seg { display: flex; background: #E8E8ED; border-radius: 11px; padding: 3px; margin: 12px 16px 4px; position: sticky; top: 0; z-index: 2; }
