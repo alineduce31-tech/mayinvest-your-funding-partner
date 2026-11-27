@@ -32,6 +32,7 @@ export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploading
           {b.kind === 'pieces' ? <CartePieces b={b} viewer={viewer} docs={docs} onUploadDoc={onUploadDoc} uploadingDocId={uploadingDocId}/>
             : b.kind === 'rdv' ? <CarteRdv b={b} viewer={viewer} onRepondre={onRepondreRdv}/>
             : b.kind === 'pack' ? <CartePack viewer={viewer} leadId={leadId}/>
+            : b.kind === 'evenement' ? <div className={`cv-ev ${b.payload?.etat || ''}`}><FileBadge size={14}/>{b.payload?.texte}</div>
             : (
               <div className={`cv-bulle ${b.ton}`}>
                 {b.debut && b.etiquette && <span className={`cv-tag ${b.ton}`}>{b.ton === 'note' && <EyeOff size={11}/>}{viewer === 'client' && b.ton === 'equipe' && <i className="cv-av">{initialesAuteur(b.auteur)}</i>}{b.etiquette}</span>}
@@ -391,6 +392,9 @@ const CV_CSS = `
   .cv-envoyer.busy { background: #93C5FD; cursor: default; }
   .cv-attente { font-size: 11px; color: #B45309; font-weight: 600; flex: none; }
   .cv-carte-pied { font-size: 11.5px; color: #8A94A6; padding: 6px 14px 13px; }
+  .cv-ev { align-self: center; display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; padding: 6px 13px; border-radius: 999px; background: #FFF3E0; color: #B45309; margin: 4px 0; }
+  .cv-ev.paye { background: #E8F8EE; color: #16A34A; }
+  .cv-ligne:has(> .cv-ev) { align-items: center; }
   .cv-pk-prix { margin-left: auto; font-size: 14px; font-weight: 700; color: #0D1B3E; white-space: nowrap; }
   .cv-pk-in { margin: 0 14px 6px; font-size: 13px; color: #64748B; line-height: 1.5; }
   .cv-pk-l { padding: 0 14px 4px; } .cv-pk-l div { display: flex; align-items: center; gap: 9px; font-size: 13.5px; padding: 4px 0; color: #0F1729; } .cv-pk-l svg { color: #1A6BFF; flex: none; }

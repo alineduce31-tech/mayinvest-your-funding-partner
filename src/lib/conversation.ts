@@ -8,7 +8,7 @@ export type Bulle = {
   ton: Ton
   etiquette: string | null
   contenu: string
-  kind: 'text' | 'pieces' | 'rdv' | 'pack'
+  kind: 'text' | 'pieces' | 'rdv' | 'pack' | 'evenement'
   payload: any
   created_at: string
   vu: boolean
@@ -25,9 +25,28 @@ export function piecesDansTexte(t: string | null | undefined): string[] | null {
   return items.length ? items : null
 }
 
+/** Messages automatiques du pack (souscription, paiement) → événement court. */
+export function evenementPack(t: string | null | undefined): { texte: string; etat: 'souscrit' | 'paye' } | null {
+  if (!t) return null
+  const ref = /\((?:référence\s+)?(PF-[A-Z0-9]+)\)/i.exec(t)?.[1]
+  if (/^J'ai souscrit au Pack formalisation/i.test(t)) return { texte: `Pack formalisation souscrit${ref ? ` · ${ref}` : ''}`, etat: 'souscrit' }
+  if (/^Paiement du Pack formalisation reçu/i.test(t)) return { texte: `Paiement du pack confirmé${ref ? ` · ${ref}` : ''}`, etat: 'paye' }
+  return null
+}
+
+/** Ancien message texte de proposition du Pack formalisation. */
+export function estTextePack(t: string | null | undefined): boolean {
+  return !!t && /pack formalisation/i.test(t) && /(50\s?000|tarif|souscri)/i.test(t) && t.length > 120
+}
+
 /** Type d'affichage et données de la carte (les anciens messages de pièces deviennent des cartes). */
 export function carteDe(m: { kind?: string | null; payload?: any; content?: string | null }): { kind: Bulle['kind']; payload: any } {
   if (m.kind === 'pieces' || m.kind === 'rdv' || m.kind === 'pack') return { kind: m.kind, payload: m.payload }
+  // Messages automatiques du pack : petite ligne d'événement
+  const ev = evenementPack(m.content)
+  if (ev) return { kind: 'evenement', payload: ev }
+  // Anciens messages texte proposant le Pack formalisation : affichés comme la carte
+  if (estTextePack(m.content)) return { kind: 'pack', payload: { produit: 'pack_formalisation', montant: 50000 } }
   const labels = piecesDansTexte(m.content)
   return labels ? { kind: 'pieces', payload: { labels } } : { kind: 'text', payload: m.payload }
 }
