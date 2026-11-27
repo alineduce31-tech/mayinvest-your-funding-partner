@@ -2,7 +2,7 @@ import EquipeNav from '@/components/EquipeNav'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { CroixFermer } from '@/components/Dialogue'
 import { informer } from '@/components/Dialogue'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { formatPhone } from '@/lib/phone'
 
@@ -28,6 +28,21 @@ function CandidaturesPage() {
   const navigate = useNavigate()
   const [authChecked, setAuthChecked] = useState(false)
   const [candidates, setCandidates] = useState<Candidate[]>([])
+  // En-tête et filtres figés au défilement
+  const [colle, setColle] = useState(false)
+  const [hTete, setHTete] = useState(64)
+  useEffect(() => {
+    const maj = () => setColle(window.scrollY > 8)
+    maj(); window.addEventListener('scroll', maj, { passive: true })
+    return () => window.removeEventListener('scroll', maj)
+  }, [])
+  // La page peut s'afficher après un chargement : on observe l'en-tête dès qu'il existe
+  const roTete = useRef<ResizeObserver | null>(null)
+  const tete = (el: HTMLElement | null) => {
+    roTete.current?.disconnect(); roTete.current = null
+    if (!el || typeof ResizeObserver === 'undefined') return
+    const ro = new ResizeObserver(() => setHTete(el.offsetHeight)); ro.observe(el); roTete.current = ro
+  }
   const [filter, setFilter] = useState<'all' | 'pending' | 'valide' | 'refuse' | 'en_cours'>('pending')
   const [notifyCandidate, setNotifyCandidate] = useState<Candidate | null>(null)
   const [selected, setSelected] = useState<Candidate | null>(null)
@@ -115,7 +130,7 @@ function CandidaturesPage() {
   if (loading) return <SkeletonPage/>
 
   return (
-    <div className="eq-page" style={{ minHeight: '100vh', background: '#F5F5F7', color: '#1D1D1F' }}>
+    <div className={`eq-page${colle ? ' cd-colle' : ''}`} style={{ minHeight: '100vh', background: '#F5F5F7', color: '#1D1D1F', ['--cd-h' as any]: `${hTete}px` }}>
       <style>{`
         * { box-sizing: border-box; }
         .cd-header { padding: 20px 32px; background: #FFFFFF; border-bottom: 1px solid #ECECEA; margin: 20px 32px 0; border-radius: 16px; box-shadow: 0 2px 4px rgba(13,23,41,0.03); border: 1px solid #ECECEA; display: flex; align-items: center; gap: 20px; }
@@ -248,6 +263,23 @@ function CandidaturesPage() {
         .cd-btn-ref .cd-btn-ar { background: #F3F3F1; }
         .cd-btn-ref:hover { background: #FEE2E2; border-color: #FEE2E2; }
 
+        /* Figé au défilement : la carte du haut et les filtres restent visibles */
+        .cd-tabs { transition: box-shadow .15s; }
+        .cd-wrap > div { min-width: 0; }
+        @media (min-width: 761px) {
+          .cd-header { position: sticky; top: 12px; z-index: 30; transition: padding .15s, box-shadow .15s; }
+          .cd-colle .cd-header { padding-top: 12px; padding-bottom: 12px; box-shadow: 0 8px 24px rgba(13,27,62,.08) !important; }
+          .cd-colle .cd-header h1 { font-size: 18px; }
+          .cd-colle .cd-header .cd-sub { display: none; }
+          .cd-tabs { position: sticky; top: calc(var(--cd-h) + 20px); z-index: 29; }
+        }
+        @media (max-width: 760px) { .cd-tabs { position: sticky; top: 8px; z-index: 29; } }
+        .cd-colle .cd-tabs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; background: #fff; border-radius: 999px;
+          padding: 6px; box-shadow: 0 8px 24px rgba(13,27,62,.08); width: fit-content; max-width: 100%; }
+        .cd-colle .cd-tabs::-webkit-scrollbar { display: none; }
+        .cd-colle .cd-tab { white-space: nowrap; flex-shrink: 0; box-shadow: none !important; background: #F5F5F7 !important; }
+        .cd-colle .cd-tab.active { background: #0D1B3E !important; }
+
         /* Modal refus */
         .modal-ovr { position: fixed; inset: 0; background: rgba(13,23,41,0.6); backdrop-filter: blur(4px); z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .modal { background: white; border-radius: 14px; max-width: 420px; width: 100%; padding: 24px; }
@@ -260,7 +292,7 @@ function CandidaturesPage() {
         .modal-btn-confirm { background: #B42318; color: white; }
       `}</style>
 
-      <header className="cd-header">
+      <header className="cd-header" ref={tete}>
         <div className="cd-header-left">
           <EquipeNav actif="candidatures"/>
         </div>
@@ -268,7 +300,7 @@ function CandidaturesPage() {
           <h1>Candidatures commerciales</h1>
           <div className="cd-sub">Admin · Validation des commerciaux</div>
         </div>
-        <div style={{ fontSize: 12, color: '#6B7280' }}>
+        <div className="cd-compte" style={{ fontSize: 12, color: '#6B7280' }}>
           {counts.pending > 0 && <span style={{ color: '#D9690B', fontWeight: 700 }}>{counts.pending} en attente</span>}
           {counts.pending > 0 && ' · '}
           {counts.all} candidat{counts.all > 1 ? 's' : ''} au total
