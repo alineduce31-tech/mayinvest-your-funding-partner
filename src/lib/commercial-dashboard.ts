@@ -2,6 +2,13 @@
 
 /** Rémunération des partenaires : 10 % de commission sur chaque Pack Formalisation payé par leurs clients. */
 export const TAUX_COMMISSION_PACK = 0.10
+
+/** Simulation : montant généré par n Packs Formalisation et commission du partenaire (10 %). */
+export function commissionPacks(nbPacks: number, prixPack: number): { genere: number; commission: number } {
+  const n = Math.max(0, Math.floor(nbPacks || 0))
+  const genere = n * Math.max(0, prixPack || 0)
+  return { genere, commission: Math.round(genere * TAUX_COMMISSION_PACK) }
+}
 export const OBJECTIF_MENSUEL = 3
 export const DELAI_RELANCE_MS = 48 * 3_600_000
 

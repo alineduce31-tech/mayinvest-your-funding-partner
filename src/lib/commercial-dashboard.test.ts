@@ -6,6 +6,7 @@ import {
   progressionObjectif,
   tachesDuJour,
   TAUX_COMMISSION_PACK,
+  commissionPacks,
   type CommercialLead,
 } from './commercial-dashboard'
 
@@ -51,6 +52,8 @@ describe('objectif et gains', () => {
   })
   test('gains par dossier', () => {
     expect(TAUX_COMMISSION_PACK).toBe(0.10)
+    expect(commissionPacks(3, 50_000)).toEqual({ genere: 150_000, commission: 15_000 })
+    expect(commissionPacks(-1, 50_000)).toEqual({ genere: 0, commission: 0 })
   })
 })
 

@@ -15,13 +15,14 @@ import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
 import StatutPicker from '@/components/StatutPicker'
 import { RappelAlarme } from '@/components/Rappels'
 import { Copy, Download, MessageSquare, MessagesSquare, Share2, Coins, UserPlus, LogOut, RefreshCw, ChevronRight, AlertCircle, PhoneCall, CalendarDays, Landmark, Check, Clock, Phone, MessageCircle, ArrowRight, Mail, MapPin, Wallet, Target, Info, KeyRound } from 'lucide-react'
+import { PRIX_PACK } from '@/lib/pack'
 import { montantCourt, dateRelative, tonScore, tonStatut, initialesNom, couleurAvatar } from '@/lib/affichage'
 import { blocCalendrier } from '@/lib/conversation'
 import { heureTexte } from '@/lib/rappels'
 import { RappelPicker, useRappels } from '@/components/Rappels'
 import { QrSvg, telechargerQr } from '@/components/QrCode'
 import { scripts, lienWhatsappTexte, lienFacebook, lienSms, chiffresParrainage } from '@/lib/outils'
-import { statutPourEtape, type Etape, aJourDepuis, urgence, trierParUrgence, nbEnRetard, totalMontant, piecesRecues, type InfoDossier, ETAPES, grouperParEtape, financesCeMois, progressionObjectif, tachesDuJour } from '@/lib/commercial-dashboard'
+import { statutPourEtape, type Etape, aJourDepuis, urgence, trierParUrgence, nbEnRetard, totalMontant, piecesRecues, type InfoDossier, ETAPES, commissionPacks, grouperParEtape, financesCeMois, progressionObjectif, tachesDuJour } from '@/lib/commercial-dashboard'
 
 export const Route = createFileRoute('/espace-commercial')({
   component: EspaceCommercialPage,
@@ -529,9 +530,8 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
           </div>
 
           <div className="section-card">
-            <div className="section-head"><h3>Ma commission</h3></div>
-            <div className="cd-calc"><b>10 %</b><span>sur chaque Pack Formalisation payé par tes clients</span></div>
-            <p className="cd-com-note">Ta commission s'ajoute à « Gains ce mois » dès que Mayinvest confirme le paiement du Pack.</p>
+            <div className="section-head"><h3>Combien je peux gagner</h3><span className="section-sub">10 % par Pack Formalisation</span></div>
+            <CalculCommission/>
           </div>
         </div>
       </div>
@@ -689,6 +689,24 @@ function LeadDrawer({ lead, commercialId, onClose, onUpdated, onOpenThread }: { 
   )
 }
 
+// ============ CALCUL DE COMMISSION (10 % des Packs Formalisation) ============
+function CalculCommission() {
+  const [nb, setNb] = useState(3)
+  const c = commissionPacks(nb, PRIX_PACK)
+  return (
+    <div className="cc">
+      <div className="cd-chips">
+        {[1, 3, 5, 10].map(n => <button key={n} className={`cd-chip ${nb === n ? 'on' : ''}`} onClick={() => setNb(n)}>{n} Pack{n > 1 ? 's' : ''}</button>)}
+      </div>
+      <div className="cc-box">
+        <div className="cc-l"><span>Montant généré</span><small>{nb} Pack{nb > 1 ? 's' : ''} × {xaf(PRIX_PACK)}</small><b>{xaf(c.genere)}</b></div>
+        <div className="cc-r"><span>Ta commission (10 %)</span><b>{xaf(c.commission)}</b></div>
+      </div>
+      <p className="cd-com-note">Versée dès que Mayinvest confirme le paiement du Pack par ton client. Elle s'ajoute à « Gains ce mois ».</p>
+    </div>
+  )
+}
+
 // ============ NEW LEAD MODAL ============
 const ACTIVITES_PHYSIQUE = ['Fonctionnaire', 'Salarié Privé', 'Commerçant', 'Artisan', 'Profession Libérale', 'Agriculteur', 'Autre']
 const ACTIVITES_PME = ['Commerce', 'Tourisme', 'BTP', 'Industrie/Bois', 'Agriculture', 'Transport', 'Santé', 'Tech', 'Autre']
@@ -838,8 +856,8 @@ function OutilsTab({ refCode, refLink, session, leads }: { refCode?: string | un
       </div>
 
       <div className="section-card">
-        <div className="ot-h"><span className="ot-hi green"><Coins size={18}/></span><div><b>Ma commission</b><small>Payée sur chaque Pack Formalisation</small></div></div>
-        <div className="ot-big ot-com"><b>10 %</b><small>de commission sur chaque Pack Formalisation payé par un client que tu as accompagné. Tu la retrouves dans « Gains ce mois » dès que le paiement est confirmé.</small></div>
+        <div className="ot-h"><span className="ot-hi green"><Coins size={18}/></span><div><b>Combien je peux gagner</b><small>10 % de commission sur chaque Pack Formalisation</small></div></div>
+        <CalculCommission/>
       </div>
     </div>
   )
@@ -1082,6 +1100,13 @@ function GlobalStyles() {
       .cd-chip.on { border-color: ${MI.blue}; background: ${MI.blueSoft}; color: ${MI.blue}; font-weight: 800; }
       .cd-calc { display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, ${MI.blue}, ${MI.blueDark}); color: #fff; border-radius: 14px; padding: 14px 16px; font-size: 13px; font-weight: 700; }
       .cd-calc b { font-size: 26px; font-weight: 800; } .cd-calc { justify-content: flex-start; gap: 12px; } .cd-calc span { font-weight: 600; line-height: 1.4; }
+      .cc-box { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); border-radius: 16px; overflow: hidden; }
+      .cc-l { background: #F5F7FB; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; }
+      .cc-r { background: linear-gradient(135deg, ${MI.blue}, ${MI.blueDark}); color: #fff; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px; justify-content: center; }
+      .cc-l span, .cc-r span { font-size: 12.5px; font-weight: 600; } .cc-l span { color: #334155; } .cc-r span { opacity: .9; }
+      .cc-l small { font-size: 11.5px; color: #64748B; }
+      .cc-l b { font-size: 18px; font-weight: 800; color: ${MI.navy}; margin-top: 4px; } .cc-r b { font-size: 22px; font-weight: 800; margin-top: 4px; }
+      @media (max-width: 420px) { .cc-box { grid-template-columns: minmax(0, 1fr); } }
       .cd-com-note { margin: 10px 2px 0; font-size: 12.5px; color: #64748B; line-height: 1.5; }
       .kpi.primary .kpi-sub { color: rgba(255,255,255,0.65); }
 
