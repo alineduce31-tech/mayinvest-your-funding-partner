@@ -25,12 +25,19 @@ export function piecesDansTexte(t: string | null | undefined): string[] | null {
   return items.length ? items : null
 }
 
-/** Messages automatiques du pack (souscription, paiement) → événement court. */
-export function evenementPack(t: string | null | undefined): { texte: string; etat: 'souscrit' | 'paye' } | null {
+export type Evenement = { texte: string; etat: 'souscrit' | 'paye' | 'ok' | 'att' | 'neutre'; icone: 'pack' | 'rdv' | 'appel' }
+
+/** Messages écrits automatiquement par la plateforme → courte ligne d'événement avec icône. */
+export function evenementPack(t: string | null | undefined): Evenement | null {
   if (!t) return null
   const ref = /\((?:référence\s+)?(PF-[A-Z0-9]+)\)/i.exec(t)?.[1]
-  if (/^J'ai souscrit au Pack formalisation/i.test(t)) return { texte: `Pack formalisation souscrit${ref ? ` · ${ref}` : ''}`, etat: 'souscrit' }
-  if (/^Paiement du Pack formalisation reçu/i.test(t)) return { texte: `Paiement du pack confirmé${ref ? ` · ${ref}` : ''}`, etat: 'paye' }
+  if (/^J'ai souscrit au Pack formalisation/i.test(t)) return { texte: `Pack formalisation souscrit${ref ? ` · ${ref}` : ''}`, etat: 'souscrit', icone: 'pack' }
+  if (/^Paiement du Pack formalisation reçu/i.test(t)) return { texte: `Paiement du pack confirmé${ref ? ` · ${ref}` : ''}`, etat: 'paye', icone: 'pack' }
+  const rdv = /^Je confirme le rendez-vous du (.+?)\.?$/i.exec(t.trim())
+  if (rdv) return { texte: `Rendez-vous confirmé · ${rdv[1]}`, etat: 'ok', icone: 'rdv' }
+  if (/^Cette date ne me convient pas/i.test(t)) return { texte: 'Le client demande une autre date', etat: 'att', icone: 'rdv' }
+  const appel = /^Appel vers (.+?)(?: via WhatsApp| depuis l'ordinateur)? à (\d{1,2}[:h]\d{2})\.?$/i.exec(t.trim())
+  if (appel) return { texte: `Appel · ${appel[1]}${/WhatsApp/i.test(t) ? ' · WhatsApp' : ''} · ${appel[2]!.replace(':', ' h ')}`, etat: 'neutre', icone: 'appel' }
   return null
 }
 

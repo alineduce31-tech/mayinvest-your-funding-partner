@@ -79,7 +79,10 @@ describe('cartes', () => {
     const ancien = "Bonjour Scierie du Niari,\n\nNous avons étudié votre dossier Mayinvest. Votre projet est viable, mais il manque encore quelques éléments pour accéder au financement bancaire.\n\nLe Pack Formalisation s'occupe de tout : création RCCM + NIU + statuts, et ouverture de votre compte bancaire auprès de nos banques partenaires. Tarif : 50 000 XAF."
     expect(carteDe({ kind: 'text', content: ancien }).kind).toBe('pack')
     expect(carteDe({ kind: 'text', content: 'Je suis intéressé par le Pack formalisation.' }).kind).toBe('text')
-    expect(carteDe({ kind: 'text', content: "J'ai souscrit au Pack formalisation (référence PF-2156). Je passe régler 50 000 XAF chez Mayinvest." })).toEqual({ kind: 'evenement', payload: { texte: 'Pack formalisation souscrit · PF-2156', etat: 'souscrit' } })
+    expect(carteDe({ kind: 'text', content: "J'ai souscrit au Pack formalisation (référence PF-2156). Je passe régler 50 000 XAF chez Mayinvest." })).toEqual({ kind: 'evenement', payload: { texte: 'Pack formalisation souscrit · PF-2156', etat: 'souscrit', icone: 'pack' } })
+    expect(carteDe({ kind: 'text', content: 'Je confirme le rendez-vous du samedi 28 novembre à 15 h.' }).payload).toEqual({ texte: 'Rendez-vous confirmé · samedi 28 novembre à 15 h', etat: 'ok', icone: 'rdv' })
+    expect(carteDe({ kind: 'text', content: "Cette date ne me convient pas, pouvez-vous m'en proposer une autre ?" }).payload.etat).toBe('att')
+    expect(carteDe({ kind: 'text', content: 'Appel vers 06 531 31 03 via WhatsApp à 14:05.' }).payload).toEqual({ texte: 'Appel · 06 531 31 03 · WhatsApp · 14 h 05', etat: 'neutre', icone: 'appel' })
     expect(carteDe({ kind: 'text', content: 'Paiement du Pack formalisation reçu (PF-2156). Merci ! Votre conseiller démarre les démarches.' }).payload.texte).toBe('Paiement du pack confirmé · PF-2156')
     expect(texteSecoursPieces(['RIB'])).toContain('- RIB')
   })
