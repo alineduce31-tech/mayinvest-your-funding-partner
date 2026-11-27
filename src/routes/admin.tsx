@@ -2248,7 +2248,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
 
   return (
     <div className="drawer-ovr" onClick={onClose}>
-      <div className="drawer" onClick={e => e.stopPropagation()}>
+      <div className={`drawer${tab === 'chat' ? ' ld-chat' : tab === 'notes' ? ' ld-chat ld-notes-on' : ''}`} onClick={e => e.stopPropagation()}>
         <div className="dr-head ld-head">
           <div className="ld-top">
             <span className="ld-av" style={{ background: couleurAvatar(nom).fond, color: couleurAvatar(nom).texte }}>{initialesNom(nom)}</span>
@@ -2355,24 +2355,28 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
             <div className="ld-foot">Créé le {new Date(lead.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })} · mis à jour {dateRelative(lead.updated_at || lead.created_at, Date.now())}</div>
           </>}
 
-          {tab === 'notes' && <div className="ld-notes">
+          {tab === 'notes' && <div className="chat-wrap ld-notes">
             <div className="ld-lock"><Lock size={14}/>Visible seulement par la direction : ni le client ni le commercial ne voient ces notes.</div>
-            <div className="ld-note-in">
-              <textarea value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Écrire une note pour l'équipe…" rows={2} maxLength={2000}
-                onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) addNote() }}/>
-              <button type="button" onClick={addNote} disabled={!newNote.trim() || noteSending} aria-label="Ajouter la note"><ArrowUp size={16}/></button>
-            </div>
-            {notes.length === 0 ? <div className="ld-vide v"><span className="ld-vide-ic"><StickyNote size={24}/></span><b>Aucune note pour ce dossier</b><small>Les notes servent à garder une trace entre membres de la direction.</small></div> : notes.map(n => (
-              <div key={n.id} className="ld-note">
-                <div className="ld-note-h">
-                  <span className="ld-av s" style={{ background: couleurAvatar(n.auteur).fond, color: couleurAvatar(n.auteur).texte }}>{initialesNom(n.auteur)}</span>
-                  <b>{n.auteur}</b>
-                  <span className="ld-note-t">{dateRelative(n.created_at, Date.now())} · {new Date(n.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
-                  {n.admin_id === adminId && <button type="button" className="ld-note-del" onClick={() => deleteNote(n.id)} aria-label="Supprimer la note"><Trash2 size={13}/></button>}
+            <div className="chat-scroll">
+              {notes.length === 0 ? <div className="ld-vide v"><span className="ld-vide-ic"><StickyNote size={24}/></span><b>Aucune note pour ce dossier</b><small>Les notes servent à garder une trace entre membres de la direction.</small></div> : [...notes].reverse().map(n => (
+                <div key={n.id} className={`ld-note${n.admin_id === adminId ? ' mien' : ''}`}>
+                  <div className="ld-note-h">
+                    <span className="ld-av s" style={{ background: couleurAvatar(n.auteur).fond, color: couleurAvatar(n.auteur).texte }}>{initialesNom(n.auteur)}</span>
+                    <b>{n.admin_id === adminId ? 'Vous' : n.auteur}</b>
+                    <span className="ld-note-t">{dateRelative(n.created_at, Date.now())} · {new Date(n.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</span>
+                    {n.admin_id === adminId && <button type="button" className="ld-note-del" onClick={() => deleteNote(n.id)} aria-label="Supprimer la note"><Trash2 size={13}/></button>}
+                  </div>
+                  <div className="ld-note-b">{n.body}</div>
                 </div>
-                <div className="ld-note-b">{n.body}</div>
+              ))}
+            </div>
+            <div className="ld-compose">
+              <div className="ld-note-in">
+                <textarea value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Écrire une note pour la direction…" rows={1} maxLength={2000}
+                  onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); addNote() } }}/>
+                <button type="button" onClick={addNote} disabled={!newNote.trim() || noteSending} aria-label="Ajouter la note"><ArrowUp size={16}/></button>
               </div>
-            ))}
+            </div>
           </div>}
 
           {tab === 'docs' && (() => {
@@ -2418,7 +2422,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
               <Conversation viewer="equipe" leadId={lead.id} peutSupprimer={b => !!b.mien || (isDirector && b.ton !== 'client')} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMessages() }} docs={documents} bulles={regrouper(messages.map(m => vueAdmin(m, adminId, nom)), Date.now())} vide={<div className="ld-vide"><span className="ld-vide-ic"><MessageCircle size={24}/></span><b>Aucun message pour l'instant</b><small>Présentez-vous au client avec une suggestion ou un message.</small></div>}/>
               <div ref={chatEnd}/>
             </div>
-            <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div className="ld-compose">
               {!newMsg && <Suggestions items={suggestions('equipe', messages.map(m => vueAdmin(m, adminId, nom)), nom.split(' ')[0])} onPick={setNewMsg}/>}
               <ChatInput value={newMsg} onChange={setNewMsg} onSend={sendMsg} sending={sending} placeholder="Votre message au client…"/>
             </div>
