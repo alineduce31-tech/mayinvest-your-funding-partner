@@ -35,7 +35,7 @@ function formatXAF(n: any): string {
 function statutColor(s: string): { bg: string; fg: string } {
   switch (s) {
     case 'Nouveau': return { bg: '#EEF4FF', fg: '#1A6BFF' }
-    case 'Contacté': return { bg: '#FFF4E5', fg: '#B45309' }
+    case 'Contacté': return { bg: '#FFF4E5', fg: '#D9690B' }
     case 'RDV': return { bg: '#F3E8FF', fg: '#6B21A8' }
     case 'Dossier Déposé': return { bg: '#E0F2FE', fg: '#075985' }
     case 'Éligible': return { bg: '#DCFCE7', fg: '#166534' }
@@ -694,9 +694,9 @@ function ClientPortal() {
 
         /* ----- Pack formalisation ----- */
         .c-pack { background: linear-gradient(135deg, #FFF4E5, #FFFBF2); border: 1.5px solid #FFB020; border-radius: 18px; padding: 18px; }
-        .c-pack-h { font-size: 14px; font-weight: 800; color: #B45309; margin-bottom: 6px; }
+        .c-pack-h { font-size: 14px; font-weight: 800; color: #D9690B; margin-bottom: 6px; }
         .c-pack-p { font-size: 13px; color: #78350F; line-height: 1.5; margin-bottom: 12px; }
-        .c-btn-pack { background: #B45309; color: #fff; font-size: 13px; font-weight: 700; padding: 11px 18px; border-radius: 100px; border: none; cursor: pointer; }
+        .c-btn-pack { background: #D9690B; color: #fff; font-size: 13px; font-weight: 700; padding: 11px 18px; border-radius: 100px; border: none; cursor: pointer; }
 
         /* ----- Contact expert ----- */
         .c-contact { background: linear-gradient(135deg, #EEF4FF, #E0EBFF); border: 1.5px solid #BFD4FF; border-radius: 18px; padding: 18px; }
@@ -971,8 +971,8 @@ function ClientPortal() {
                     <div style={{ marginTop: 12, textAlign: 'center' }}>
                       <button style={{ background: 'transparent', border: 'none', color: '#1A6BFF', fontSize: 12, fontWeight: 700, cursor: 'pointer' }} onClick={() => setRecoveryStep('')}>← Retour à la connexion</button>
                     </div>
-                    <div style={{ marginTop: 10, padding: 10, background: '#FFF4E5', borderRadius: 8, fontSize: 11, color: '#92400E', textAlign: 'center' }}>
-                      Email non reçu ? <a href={lienContact('Email de réinitialisation non reçu', "Bonjour, je n'ai pas reçu l'email pour changer mon mot de passe. Mon numéro ou email : ")} style={{ color: '#B45309', fontWeight: 700 }}>Contact urgent WhatsApp</a>
+                    <div style={{ marginTop: 10, padding: 10, background: '#FFF4E5', borderRadius: 8, fontSize: 11, color: '#D9690B', textAlign: 'center' }}>
+                      Email non reçu ? <a href={lienContact('Email de réinitialisation non reçu', "Bonjour, je n'ai pas reçu l'email pour changer mon mot de passe. Mon numéro ou email : ")} style={{ color: '#D9690B', fontWeight: 700 }}>Contact urgent WhatsApp</a>
                     </div>
                   </>
                 )}
@@ -1240,14 +1240,14 @@ const CX_CSS = `
   .cx-doc { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
   .cx-doc + .cx-doc { border-top: 1px solid #F0F0F2; }
   .cx-ic { width: 36px; height: 36px; border-radius: 11px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
-  .cx-ic.b { background: #EAF1FF; color: #1A6BFF; } .cx-ic.o { background: #FFF3E0; color: #C2410C; } .cx-ic.g { background: #E8F8EE; color: #16A34A; } .cx-ic.r { background: #FDECEC; color: #DC2626; }
+  .cx-ic.b { background: #EAF1FF; color: #1A6BFF; } .cx-ic.o { background: #FFF1E0; color: #D9690B; } .cx-ic.g { background: #E8F8EE; color: #16A34A; } .cx-ic.r { background: #FDECEC; color: #DC2626; }
   .cx-doc-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .cx-doc-t b { font-size: 14px; font-weight: 600; }
-  .cx-doc-t small { font-size: 12px; color: #86868B; } .cx-doc-t small.o { color: #C2410C; } .cx-doc-t small.g { color: #16A34A; } .cx-doc-t small.r { color: #DC2626; }
+  .cx-doc-t small { font-size: 12px; color: #86868B; } .cx-doc-t small.o { color: #D9690B; } .cx-doc-t small.g { color: #16A34A; } .cx-doc-t small.r { color: #DC2626; }
   .cx-doc-t a { font-size: 12px; color: #1A6BFF; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
   .cx-send { display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 14px; border-radius: 999px; background: #1A6BFF; color: #fff; font-size: 13px; font-weight: 600; cursor: pointer; flex: none; }
   .cx-send.r { background: #DC2626; }
-  .cx-st { flex: none; } .cx-st.g { color: #16A34A; } .cx-st.o { color: #C2410C; }
+  .cx-st { flex: none; } .cx-st.g { color: #16A34A; } .cx-st.o { color: #D9690B; }
   .cx-vide { padding: 22px; text-align: center; font-size: 13px; color: #86868B; }
   .cx-note { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #86868B; margin: 12px 6px 0; }
   .cx-r { display: flex; justify-content: space-between; gap: 12px; padding: 12px 16px; font-size: 14px; }

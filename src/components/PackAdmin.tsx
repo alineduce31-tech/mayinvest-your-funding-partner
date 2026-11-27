@@ -233,7 +233,7 @@ const PA_CSS = `
   .pa-ref { display: flex; flex-direction: column; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; font-weight: 700; color: #0D1B3E; letter-spacing: .5px; }
   .pa-ref small { font-family: -apple-system, system-ui, sans-serif; font-size: 11.5px; font-weight: 400; color: #94A3B8; letter-spacing: 0; }
   .pa-st { display: inline-block; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
-  .pa-st.en_attente_paiement { background: #FFF3E0; color: #B45309; } .pa-st.paye { background: #EAF1FF; color: #1A6BFF; } .pa-st.termine { background: #E8F8EE; color: #16A34A; } .pa-st.annule { background: #F1F5F9; color: #64748B; }
+  .pa-st.en_attente_paiement { background: #FFF1E0; color: #D9690B; } .pa-st.paye { background: #EAF1FF; color: #1A6BFF; } .pa-st.termine { background: #E8F8EE; color: #16A34A; } .pa-st.annule { background: #F1F5F9; color: #64748B; }
   .pa-act { display: flex; } .pa-act > small { font-size: 12.5px; color: #86868B; }
   .pa-ok { display: inline-flex; align-items: center; justify-content: center; gap: 7px; width: 100%; height: 42px; border: none; border-radius: 999px; background: #0D1B3E; color: #fff; font-family: inherit; font-size: 14px !important; font-weight: 600; cursor: pointer; white-space: nowrap; }
   .pa-ok.sm { width: auto; height: 32px; padding: 0 14px; font-size: 12.5px !important; }

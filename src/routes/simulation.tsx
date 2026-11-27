@@ -13,7 +13,7 @@ const MI = {
   blue: '#2361EF', blueSoft: '#DBEAFE',
   navy: '#0F1729', green: '#22C55E', greenSoft: '#D1FAE5',
   red: '#DC2626', redSoft: '#FEE2E2',
-  gold: '#F59E0B', goldSoft: '#FEF3C7',
+  gold: '#F59E0B', goldSoft: '#FFF1E0',
   violet: '#7C3AED', violetSoft: '#EDE9FE',
   waBg: '#E7FFDB',
   grayBg: '#F7F8FA', grayCard: '#FFFFFF',
@@ -607,7 +607,7 @@ function GlobalStyles() {
       .obj-item .chk { width: 16px; height: 16px; border-radius: 4px; background: ${MI.grayBorder}; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; color: transparent; }
       .obj-item.ok { color: ${MI.green}; font-weight: 600; }
       .obj-item.ok .chk { background: ${MI.green}; color: white; }
-      .hint-box { margin-top: 12px; padding: 12px; background: ${MI.goldSoft}; color: #92400E; border-radius: 10px; font-size: 11px; line-height: 1.5; }
+      .hint-box { margin-top: 12px; padding: 12px; background: ${MI.goldSoft}; color: #D9690B; border-radius: 10px; font-size: 11px; line-height: 1.5; }
       .hint-box b { display: block; margin-bottom: 4px; font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 700; }
       .counter { margin-top: 10px; text-align: center; font-size: 11px; color: ${MI.textMuted}; }
       .counter b { color: ${MI.text}; font-weight: 700; }

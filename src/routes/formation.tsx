@@ -14,7 +14,7 @@ const MI = {
   navy: '#0F1729', navyLight: '#1A2340',
   green: '#22C55E', greenSoft: '#D1FAE5',
   red: '#DC2626', redSoft: '#FEE2E2',
-  gold: '#F59E0B', goldSoft: '#FEF3C7',
+  gold: '#F59E0B', goldSoft: '#FFF1E0',
   grayBg: '#F7F8FA', grayCard: '#FFFFFF',
   grayBorder: '#E5E7EB', grayHair: '#F3F4F6',
   text: '#111827', textMuted: '#6B7280', textFaint: '#9CA3AF',

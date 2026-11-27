@@ -430,8 +430,8 @@ function CmStyles() {
     .cm-item:hover { background: #F8FAFC; }
     .cm-item.dir { background: #F8FAFC; }
     .cm-item.on { background: #EEF4FF; border-left-color: #1A6BFF; }
-    .cm-item.late { background: #FFFBEB; }
-    .cm-item.late.on { background: #FEF3C7; }
+    .cm-item.late { background: #FFF8F0; }
+    .cm-item.late.on { background: #FFF1E0; }
     .cm-av { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; color: #fff; background: #1A6BFF; }
     .cm-av.sq { border-radius: 12px; background: #0D1B3E; font-size: 12px; }
     .cm-av.small { width: 34px; height: 34px; font-size: 10.5px; }
@@ -441,12 +441,12 @@ function CmStyles() {
     .cm-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13.5px; }
     .cm-row b { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .cm-row small { font-size: 11px; color: #64748B; flex-shrink: 0; }
-    .cm-row small.late { color: #B45309; font-weight: 800; }
+    .cm-row small.late { color: #D9690B; font-weight: 800; }
     .cm-kind { font-size: 11px; font-weight: 800; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; }
     .cm-tag { flex-shrink: 0; }
-    .cm-kind.blue { color: #1A6BFF; } .cm-kind.navy { color: #0D1B3E; } .cm-kind.warn { color: #B45309; }
+    .cm-kind.blue { color: #1A6BFF; } .cm-kind.navy { color: #0D1B3E; } .cm-kind.warn { color: #D9690B; }
     .cm-kind.violet { color: #7C3AED; } .cm-kind.green { color: #15803D; } .cm-kind.grey { color: #64748B; }
-    .cm-tag { background: #FEF3C7; color: #B45309; border-radius: 100px; padding: 0 7px; font-size: 10px; }
+    .cm-tag { background: #FFF1E0; color: #D9690B; border-radius: 100px; padding: 0 7px; font-size: 10px; }
     .cm-prev { font-size: 12px; color: #64748B; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; min-width: 0; }
     .cm-count { background: #1A6BFF; color: #fff; border-radius: 100px; padding: 0 7px; font-size: 11px; font-weight: 800; flex-shrink: 0; }
     .cm-empty { padding: 28px 16px; text-align: center; color: #94A3B8; font-size: 13px; line-height: 1.5; }
@@ -471,7 +471,7 @@ function CmStyles() {
     .cm-side-btn { display: none; border: 1.5px solid #E5E7EB; background: #fff; border-radius: 100px; padding: 8px 12px; font-family: inherit; font-size: 12px; font-weight: 800; color: #0D1B3E; cursor: pointer; flex-shrink: 0; }
     .cm-next { margin: 12px 16px 0; border-radius: 14px; padding: 10px 12px 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; font-size: 13px; color: #0D1B3E; line-height: 1.45; }
     .cm-next.info { background: #EEF4FF; border: 1px solid #BFD4FF; }
-    .cm-next.warn { background: #FFFBEB; border: 1px solid #FCD34D; }
+    .cm-next.warn { background: #FFF8F0; border: 1px solid #FCD34D; }
     .cm-next.ok { background: #F0FDF4; border: 1px solid #BBF7D0; }
     .cm-next > div { flex: 1 1 240px; }
     .cm-pill { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: #1A6BFF; border: none; padding: 4px 4px 4px 13px; border-radius: 100px; font-family: inherit; font-size: 12.5px; font-weight: 800; text-decoration: none; cursor: pointer; white-space: nowrap; box-shadow: 0 1px 4px rgba(13,27,62,0.06); }
@@ -507,7 +507,7 @@ function CmStyles() {
     .cm-tool { display: inline-flex; align-items: center; gap: 6px; border: 1.5px solid #E5E7EB; background: #fff; padding: 6px 11px; border-radius: 100px; font-family: inherit; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; white-space: nowrap; flex-shrink: 0; }
     .cm-tool:hover { border-color: #BFD4FF; color: #1A6BFF; }
     .cm-tool.active { border-color: #1A6BFF; color: #1A6BFF; background: #EEF4FF; }
-    .cm-tool.on { border-color: #FCD34D; background: #FFFBEB; color: #B45309; }
+    .cm-tool.on { border-color: #FCD34D; background: #FFF8F0; color: #D9690B; }
         .cm-pop { position: absolute; bottom: calc(100% + 6px); left: 14px; width: 340px; max-width: calc(100% - 28px); background: #fff; border: 1px solid #E5E7EB; border-radius: 14px; box-shadow: 0 16px 40px rgba(13,27,62,0.16); padding: 6px; z-index: 30; display: flex; flex-direction: column; gap: 2px; max-height: 50vh; overflow-y: auto; }
     .cm-pop > button { border: none; background: none; text-align: left; padding: 9px 10px; border-radius: 10px; font-family: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
     .cm-pop > button:hover { background: #F5F8FF; }
@@ -562,7 +562,7 @@ function CmStyles() {
     .cm-doc-pill { flex: none; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
     .cm-doc-ic.validated, .cm-doc-pill.validated { background: #DCFCE7; color: #166534; }
     .cm-doc-ic.uploaded, .cm-doc-pill.uploaded { background: #DBEAFE; color: #1E40AF; }
-    .cm-doc-ic.pending, .cm-doc-pill.pending { background: #FEF3C7; color: #92400E; }
+    .cm-doc-ic.pending, .cm-doc-pill.pending { background: #FFF1E0; color: #D9690B; }
     .cm-doc-ic.rejected, .cm-doc-pill.rejected { background: #FEE2E2; color: #991B1B; }
     .cm-doc-relance { margin: 8px 0 4px; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border-radius: 10px; border: 1.5px dashed #CBD5E1; background: #fff; font-family: inherit; font-size: 12.5px; font-weight: 700; color: #475569; cursor: pointer; }
     .cm-doc-relance:hover:not(:disabled) { border-color: #1A6BFF; color: #1A6BFF; background: #F5F8FF; }

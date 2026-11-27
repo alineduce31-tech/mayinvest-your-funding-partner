@@ -108,11 +108,11 @@ export const BK_CSS = `
   .bk-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
   .bk-k { background: #fff; border-radius: 18px; padding: 16px 18px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
   .bk-ic { width: 32px; height: 32px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 12px; font-style: normal; }
-  .bk-ic.b { background: #EAF1FF; color: #1A6BFF; } .bk-ic.o { background: #FFF3E0; color: #C2410C; } .bk-ic.g { background: #E8F8EE; color: #16A34A; } .bk-ic.n { background: #EDEFF4; color: #0D1B3E; } .bk-ic.r { background: #FDECEC; color: #DC2626; }
+  .bk-ic.b { background: #EAF1FF; color: #1A6BFF; } .bk-ic.o { background: #FFF1E0; color: #D9690B; } .bk-ic.g { background: #E8F8EE; color: #16A34A; } .bk-ic.n { background: #EDEFF4; color: #0D1B3E; } .bk-ic.r { background: #FDECEC; color: #DC2626; }
   .bk-k small { display: block; font-size: 13px; color: #86868B; font-weight: 500; }
   .bk-k b { display: block; font-size: 28px; font-weight: 700; letter-spacing: -0.03em; margin: 2px 0; color: #1D1D1F; }
   .bk-k span { font-size: 12px; color: #86868B; }
-  .bk-k.warn b { color: #C2410C; }
+  .bk-k.warn b { color: #D9690B; }
   .bk-k.ok b { color: #16A34A; }
   .bk-card { background: #fff; border-radius: 18px; padding: 16px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
   .bk-tb { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
@@ -140,7 +140,7 @@ export const BK_CSS = `
   .bk-cell { min-width: 0; display: flex; }
   .bk-cell .ns-compact { max-width: 100%; text-transform: none; font-size: 12.5px !important; font-weight: 700; letter-spacing: 0; }
   .bk-ag { background: #ECFDF5 !important; color: #047857 !important; border: none !important; border-radius: 999px !important; }
-  .bk-ag.vide { background: #fff !important; color: #B45309 !important; border: 1.5px dashed #FCD34D !important; }
+  .bk-ag.vide { background: #fff !important; color: #D9690B !important; border: 1.5px dashed #FCD34D !important; }
   .bk-ag-txt { font-size: 12.5px; color: #475569; }
   .bk-amt { display: flex; flex-direction: column; align-items: flex-end; }
   .bk-amt b { font-size: 13.5px; font-weight: 800; white-space: nowrap; } .bk-amt small { font-size: 11.5px; color: #94A3B8; }

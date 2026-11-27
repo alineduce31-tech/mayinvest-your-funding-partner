@@ -125,7 +125,7 @@ export function segmentsMessage(contenu: string): Segment[] {
 
 const PALETTE_AVATAR = [
   ['#DBEAFE', '#1E40AF'], ['#FCE7F3', '#9D174D'], ['#DCFCE7', '#166534'], ['#FFEDD5', '#9A3412'],
-  ['#E0E7FF', '#3730A3'], ['#EDE9FE', '#5B21B6'], ['#CCFBF1', '#115E59'], ['#FEF3C7', '#92400E'],
+  ['#E0E7FF', '#3730A3'], ['#EDE9FE', '#5B21B6'], ['#CCFBF1', '#115E59'], ['#FFF1E0', '#D9690B'],
 ] as const
 
 /** Couleur d'avatar stable pour un même nom. */

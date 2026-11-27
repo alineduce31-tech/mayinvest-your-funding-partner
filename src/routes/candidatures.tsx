@@ -156,11 +156,11 @@ function CandidaturesPage() {
         .cd-time.fast { color: #1A6BFF; }
         .cd-time.slow { color: #B4871F; }
         .cd-status { padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; text-align: center; white-space: nowrap; }
-        .cd-status.pending { background: #FEF3C7; color: #92400E; }
+        .cd-status.pending { background: #FFF1E0; color: #D9690B; }
         .cd-status.valide { background: #D1FAE5; color: #047857; }
         .cd-status.refuse { background: #FEE2E2; color: #991B1B; }
         .cd-status.encours { background: #DBEAFE; color: #1D4ED8; }
-        .cd-status.encours.formation { background: #FDE68A; color: #92400E; }
+        .cd-status.encours.formation { background: #FDE68A; color: #D9690B; }
         .cd-status.encours.simu-theo { background: #DDD6FE; color: #5B21B6; }
         .cd-status.encours.simu-prat { background: #BAE6FD; color: #075985; }
 
@@ -194,7 +194,7 @@ function CandidaturesPage() {
         .cd-verdict { padding: 14px 24px; background: #EAF1FF; border-bottom: 1px solid #ECECEA; font-size: 13px; color: #0D1B3E; line-height: 1.5; display: flex; align-items: flex-start; gap: 10px; }
         .cd-verdict svg { flex-shrink: 0; margin-top: 2px; }
         .cd-verdict b { font-weight: 700; }
-        .cd-verdict.warn { background: #FEF3C7; color: #92400E; }
+        .cd-verdict.warn { background: #FFF1E0; color: #D9690B; }
         .cd-verdict.danger { background: #FEE2E2; color: #991B1B; }
 
         .cd-panel-body { padding: 0; max-height: calc(100vh - 220px); overflow-y: auto; }
@@ -233,7 +233,7 @@ function CandidaturesPage() {
         .cd-chrono-bar { height: 5px; background: white; border-radius: 3px; overflow: hidden; margin: 6px 0 4px; }
         .cd-chrono-bar-fill { height: 100%; background: #7C3AED; }
 
-        .cd-motivation { background: #FEF3C7; border-left: 3px solid #F59E0B; padding: 10px 14px; border-radius: 0 10px 10px 0; font-size: 12px; color: #92400E; font-style: italic; line-height: 1.5; }
+        .cd-motivation { background: #FFF1E0; border-left: 3px solid #F59E0B; padding: 10px 14px; border-radius: 0 10px 10px 0; font-size: 12px; color: #D9690B; font-style: italic; line-height: 1.5; }
 
         /* === ACTIONS (boutons pill style landing) === */
         .cd-actions { padding: 18px 24px 22px; display: flex; flex-direction: column; gap: 10px; }
@@ -269,7 +269,7 @@ function CandidaturesPage() {
           <div className="cd-sub">Admin · Validation des commerciaux</div>
         </div>
         <div style={{ fontSize: 12, color: '#6B7280' }}>
-          {counts.pending > 0 && <span style={{ color: '#B45309', fontWeight: 700 }}>{counts.pending} en attente</span>}
+          {counts.pending > 0 && <span style={{ color: '#D9690B', fontWeight: 700 }}>{counts.pending} en attente</span>}
           {counts.pending > 0 && ' · '}
           {counts.all} candidat{counts.all > 1 ? 's' : ''} au total
         </div>
@@ -578,7 +578,7 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
 
         <div className="nmodal-actions">
           {!candidate.email ? (
-            <div style={{ fontSize: 12, color: '#B45309', background: '#FEF3C7', padding: '10px 14px', borderRadius: 8, textAlign: 'center' }}>
+            <div style={{ fontSize: 12, color: '#D9690B', background: '#FFF1E0', padding: '10px 14px', borderRadius: 8, textAlign: 'center' }}>
               ⚠ Pas d'email — impossible d'envoyer. Contacte-le par téléphone : {formatPhone(candidate.telephone)}
             </div>
           ) : (

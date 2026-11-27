@@ -1300,7 +1300,7 @@ function Simulation() {
                     )}
                   </button></span>
                   {form['password'] && form['password'].length > 0 && form['password'].length < 8 && (
-                    <div className="field-hint" style={{ color: '#B45309' }}>Encore {8 - form['password'].length} caractère(s)</div>
+                    <div className="field-hint" style={{ color: '#D9690B' }}>Encore {8 - form['password'].length} caractère(s)</div>
                   )}
                 </div>
                 <div className="field" style={{ position: 'relative' }}>

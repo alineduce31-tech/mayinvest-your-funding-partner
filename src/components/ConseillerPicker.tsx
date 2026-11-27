@@ -161,7 +161,7 @@ export default function ConseillerPicker({ value, onChange, villeLead, montant, 
 const CP_CSS = `
   .cp-btn .ns-val { display: inline-flex; align-items: center; gap: 5px; }
   .cp-btn.assigne { background: #E8F8EE !important; color: #16A34A !important; border: none !important; border-radius: 999px !important; }
-  .cp-btn.vide { background: #FFF3E0 !important; color: #C2410C !important; border: none !important; border-radius: 999px !important; }
+  .cp-btn.vide { background: #FFF1E0 !important; color: #D9690B !important; border: none !important; border-radius: 999px !important; }
   .cp-card { padding: 0 !important; display: flex; flex-direction: column; overflow: hidden !important; }
   .cp { display: flex; flex-direction: column; min-height: 0; flex: 1; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; color: #1D1D1F; }
   .cp-top { display: flex; align-items: center; gap: 8px; margin: 12px 12px 0; }

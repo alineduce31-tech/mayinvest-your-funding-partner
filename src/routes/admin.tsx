@@ -555,7 +555,7 @@ function Admin({ session }: { session: any }) {
           --red: #DC2626;
           --red-soft: #FEE2E2;
           --amber: #F59E0B;
-          --amber-soft: #FEF3C7;
+          --amber-soft: #FFF1E0;
           --purple: #7C3AED;
           --purple-soft: #F3E8FF;
         }
@@ -715,7 +715,7 @@ function Admin({ session }: { session: any }) {
         .btn-export.btn-pdf:hover { background: #B91C1C; box-shadow: 0 8px 20px rgba(220,38,38,0.3); }
         .btn-export.btn-xlsx { background: #15803D; }
         .btn-export.btn-xlsx:hover { background: #166534; box-shadow: 0 8px 20px rgba(21,128,61,0.3); }
-        .sd-empty-banner { background: linear-gradient(90deg, #FEF3C7, #FDE68A); color: #92400E; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 20px; border-left: 4px solid #F59E0B; }
+        .sd-empty-banner { background: linear-gradient(90deg, #FFF1E0, #FDE68A); color: #D9690B; padding: 12px 20px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 20px; border-left: 4px solid #F59E0B; }
         .export-group { display: flex; gap: 8px; }
 
         /* Filtres avancés */
@@ -1014,7 +1014,7 @@ function Admin({ session }: { session: any }) {
           </nav>
           <div className="sb-footer">
             <div className="sb-user">{session.email}</div>
-            <div style={{ fontSize: 10, color: isDirector ? '#B45309' : '#0F766E', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 4px 10px', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ fontSize: 10, color: isDirector ? '#D9690B' : '#0F766E', fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', padding: '0 4px 10px', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
               {isDirector ? <><Crown size={13} strokeWidth={1.75}/> Directeur</> : <><User size={13} strokeWidth={1.75}/> Commercial</>}
             </div>
             <button className="sb-logout" onClick={logout}>
@@ -2368,7 +2368,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
                 const isPending = d.status === 'pending'
                 const isImage = d.mime_type?.startsWith('image/')
                 const isPdf = d.mime_type === 'application/pdf'
-                const statusColor = isValidated ? '#166534' : isUploaded ? '#B45309' : isRejected ? '#991B1B' : '#6B7280'
+                const statusColor = isValidated ? '#166534' : isUploaded ? '#D9690B' : isRejected ? '#991B1B' : '#6B7280'
                 const statusBg = isValidated ? '#DCFCE7' : isUploaded ? '#FFF4E5' : isRejected ? '#FEE2E2' : '#F3F4F6'
                 return (
                   <div key={d.id} style={{ background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, padding: 14, marginBottom: 10 }}>

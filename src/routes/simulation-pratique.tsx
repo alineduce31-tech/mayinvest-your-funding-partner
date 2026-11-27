@@ -14,7 +14,7 @@ const MI = {
   navy: '#0F1729', navyLight: '#1A2340',
   green: '#22C55E', greenSoft: '#D1FAE5',
   red: '#DC2626', redSoft: '#FEE2E2',
-  gold: '#F59E0B', goldSoft: '#FEF3C7',
+  gold: '#F59E0B', goldSoft: '#FFF1E0',
   violet: '#7C3AED', violetSoft: '#EDE9FE',
   grayBg: '#F7F8FA', grayCard: '#FFFFFF',
   grayBorder: '#E5E7EB', grayHair: '#F3F4F6',
@@ -127,7 +127,7 @@ function SimulationPage() {
         .sm-card { background: white; border: 1px solid ${MI.grayBorder}; border-radius: 16px; padding: 32px; }
         .sm-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
         .sm-head h1 { font-size: 20px; font-weight: 800; margin: 0; color: ${MI.navy}; letter-spacing: -0.02em; flex: 1; }
-        .sm-tag { padding: 4px 12px; background: ${MI.goldSoft}; color: #92400E; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; }
+        .sm-tag { padding: 4px 12px; background: ${MI.goldSoft}; color: #D9690B; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; white-space: nowrap; }
 
         .sm-context { font-size: 14px; color: ${MI.text}; line-height: 1.6; margin-bottom: 16px; }
         .sm-msg { background: ${MI.grayHair}; border-left: 3px solid ${MI.violet}; padding: 14px 16px; border-radius: 0 10px 10px 0; font-size: 14px; color: ${MI.text}; font-style: italic; margin-bottom: 20px; line-height: 1.5; }

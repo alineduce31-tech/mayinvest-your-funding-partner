@@ -164,7 +164,7 @@ function CartePieces({ b, viewer, docs, onUploadDoc, uploadingDocId }: { b: Bull
                   onChange={ev => { const f = ev.target.files?.[0]; if (f) onUploadDoc(d, f); ev.currentTarget.value = '' }}/>
               </label>
             )}
-            {!ok && (viewer === 'equipe' || String(d.id).startsWith('texte-')) && <span className="cv-attente">{e === 'rejected' ? 'à renvoyer' : 'à envoyer'}</span>}
+            {!ok && (viewer === 'equipe' || String(d.id).startsWith('texte-')) && <span className="cv-attente">{e === 'rejected' ? 'À renvoyer' : 'À envoyer'}</span>}
           </div>
         )
       })}
@@ -431,7 +431,7 @@ const CV_CSS = `
   .cv-barre span { display: block; height: 100%; background: linear-gradient(90deg, #22C55E, #4ADE80); border-radius: 5px; transition: width .4s; }
   .cv-piece { display: flex; align-items: center; gap: 10px; padding: 8px 14px; font-size: 13.5px; }
   .cv-piece-t { flex: 1; min-width: 0; font-weight: 600; display: flex; flex-direction: column; }
-  .cv-piece-t small { font-weight: 500; font-size: 11.5px; color: #B45309; }
+  .cv-piece-t small { font-weight: 500; font-size: 11.5px; color: #D9690B; }
   .cv-piece.ok .cv-piece-t { color: #8A94A6; font-weight: 500; }
   .cv-piece.ok .cv-piece-nom { text-decoration: line-through; }
   .cv-piece.ok .cv-piece-t small { color: #1E40AF; }
@@ -441,11 +441,11 @@ const CV_CSS = `
   .cv-coche.rejected { background: #FEE2E2; border-color: #FEE2E2; color: #B91C1C; }
   .cv-envoyer { display: inline-flex; align-items: center; gap: 5px; background: #1A6BFF; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 11px; border-radius: 999px; cursor: pointer; flex: none; }
   .cv-envoyer.busy { background: #93C5FD; cursor: default; }
-  .cv-attente { font-size: 11px; color: #B45309; font-weight: 600; flex: none; }
+  .cv-attente { font-size: 11.5px; color: #D9690B; background: #FFF1E0; font-weight: 600; padding: 3px 9px; border-radius: 999px; flex: none; white-space: nowrap; }
   .cv-carte-pied { font-size: 11.5px; color: #8A94A6; padding: 6px 14px 13px; }
-  .cv-ev { align-self: center; display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; padding: 6px 13px; border-radius: 999px; background: #FFF3E0; color: #B45309; margin: 4px 0; }
+  .cv-ev { align-self: center; display: inline-flex; align-items: center; gap: 7px; font-size: 12.5px; font-weight: 600; padding: 6px 13px; border-radius: 999px; background: #FFF1E0; color: #D9690B; margin: 4px 0; }
   .cv-ev.paye { background: #E8F8EE; color: #16A34A; }
-  .cv-ev.ok { background: #E8F8EE; color: #16A34A; } .cv-ev.att { background: #FFF3E0; color: #B45309; } .cv-ev.neutre { background: #EDF0F5; color: #475569; }
+  .cv-ev.ok { background: #E8F8EE; color: #16A34A; } .cv-ev.att { background: #FFF1E0; color: #D9690B; } .cv-ev.neutre { background: #EDF0F5; color: #475569; }
   .cv-ligne:has(> .cv-row > .cv-ev) { align-items: center; }
   .cv-pk-prix { margin-left: auto; font-size: 14px; font-weight: 700; color: #0D1B3E; white-space: nowrap; }
   .cv-pk-in { margin: 0 14px 6px; font-size: 13px; color: #64748B; line-height: 1.5; }
@@ -455,7 +455,7 @@ const CV_CSS = `
   .cv-pk-btn { width: 100%; height: 40px; border: none; border-radius: 999px; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
   .cv-pk-btn:disabled { opacity: .6; cursor: default; }
   .cv-pk-st { display: inline-flex; align-items: center; gap: 6px; align-self: flex-start; font-size: 12px; font-weight: 600; padding: 5px 11px; border-radius: 999px; }
-  .cv-pk-st.att { background: #FFF3E0; color: #B45309; } .cv-pk-st.ok { background: #EAF1FF; color: #1A6BFF; } .cv-pk-st.fin { background: #E8F8EE; color: #16A34A; }
+  .cv-pk-st.att { background: #FFF1E0; color: #D9690B; } .cv-pk-st.ok { background: #EAF1FF; color: #1A6BFF; } .cv-pk-st.fin { background: #E8F8EE; color: #16A34A; }
   .cv-pk-eq { display: flex; align-items: center; justify-content: space-between; gap: 8px; } .cv-pk-eq b { font-size: 12.5px; color: #1A6BFF; font-weight: 600; }
   .cv-err { background: #FDECEC; color: #B42318; border-radius: 10px; padding: 7px 10px; font-size: 12.5px; }
   .cv-rdv { display: flex; gap: 12px; align-items: center; padding: 14px; }
@@ -470,7 +470,7 @@ const CV_CSS = `
   .cv-actions button.oui { background: #1A6BFF; color: #fff; box-shadow: 0 4px 12px rgba(26,107,255,.25); }
   .cv-actions button:disabled { opacity: .6; cursor: default; }
   .cv-etat { display: flex; align-items: center; gap: 6px; margin: 0 14px 14px; padding: 9px 12px; border-radius: 12px; font-size: 12.5px; font-weight: 700; }
-  .cv-etat.ok { background: #DCFCE7; color: #15803D; } .cv-etat.gris { background: #F1F5F9; color: #64748B; } .cv-etat.attente { background: #FFF7ED; color: #C2410C; }
+  .cv-etat.ok { background: #DCFCE7; color: #15803D; } .cv-etat.gris { background: #F1F5F9; color: #64748B; } .cv-etat.attente { background: #FFF7ED; color: #D9690B; }
   .cv-sugg { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
   .cv-sugg::-webkit-scrollbar { display: none; }
   .cv-sugg button { flex: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; border: none; background: #F5F5F7; border-radius: 999px; padding: 6px 12px; font-family: inherit; font-size: 12.5px; color: #334155; cursor: pointer; }

@@ -97,7 +97,7 @@ const PK_CSS = `
   .pk-note { margin: 9px 0 0; font-size: 12.5px; color: #86868B; text-align: center; line-height: 1.45; text-wrap: balance; }
   .pk-err { margin-top: 10px; background: #FDECEC; color: #B42318; border-radius: 10px; padding: 8px 11px; font-size: 13px; }
   .pk-st { font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
-  .pk-st.en_attente_paiement { background: #FFF3E0; color: #B45309; }
+  .pk-st.en_attente_paiement { background: #FFF1E0; color: #D9690B; }
   .pk-st.paye { background: #EAF1FF; color: #1A6BFF; }
   .pk-st.termine { background: #E8F8EE; color: #16A34A; }
   .pk-pay { background: #F5F5F7; border-radius: 14px; padding: 12px 14px; margin-top: 12px; display: flex; flex-direction: column; gap: 3px; }

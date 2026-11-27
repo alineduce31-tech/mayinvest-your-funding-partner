@@ -15,16 +15,16 @@ export function leadTier(score: number | null | undefined): LeadTier {
 
 export const TIER_STYLES: Record<LeadTier, { bg: string; fg: string; icon: string }> = {
   'Hot':          { bg: '#D1FAE5', fg: '#047857', icon: '🟢' },
-  'Warm':         { bg: '#FEF3C7', fg: '#B45309', icon: '🟡' },
-  'Cold':         { bg: '#FED7AA', fg: '#C2410C', icon: '🟠' },
+  'Warm':         { bg: '#FFF1E0', fg: '#D9690B', icon: '🟡' },
+  'Cold':         { bg: '#FED7AA', fg: '#D9690B', icon: '🟠' },
   'Non éligible': { bg: '#FEE2E2', fg: '#B91C1C', icon: '🔴' },
 }
 
 export function scoreColor(score: number | null | undefined): string {
   const s = Number(score ?? 0)
   if (s >= 80) return '#047857'
-  if (s >= 60) return '#B45309'
-  if (s >= 40) return '#C2410C'
+  if (s >= 60) return '#D9690B'
+  if (s >= 40) return '#D9690B'
   return '#B91C1C'
 }
 

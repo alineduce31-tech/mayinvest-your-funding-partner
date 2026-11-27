@@ -69,7 +69,7 @@ const MT_CSS = `
   .mt-r:hover { background: #F5F5F7; }
   .mt-r.mis { background: #EAF1FF; } .mt-r.mis:hover { background: #DFEAFF; }
   .mt-ic { width: 34px; height: 34px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
-  .mt-ic.b { background: #EAF1FF; color: #1A6BFF; } .mt-ic.n { background: #EDEFF4; color: #0D1B3E; } .mt-ic.o { background: #FFF3E0; color: #C2410C; } .mt-ic.g { background: #E8F8EE; color: #16A34A; }
+  .mt-ic.b { background: #EAF1FF; color: #1A6BFF; } .mt-ic.n { background: #EDEFF4; color: #0D1B3E; } .mt-ic.o { background: #FFF1E0; color: #D9690B; } .mt-ic.g { background: #E8F8EE; color: #16A34A; }
   .mt-ic.plein { background: #1A6BFF; color: #fff; }
   .mt-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .mt-t b { font-size: 13.5px; font-weight: 600; }

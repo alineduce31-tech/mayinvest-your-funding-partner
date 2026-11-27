@@ -277,12 +277,12 @@ function Index() {
         .ix-step { font-size: 10px; font-weight: 800; letter-spacing: 0.12em; color: #1A6BFF; margin-bottom: 6px; }
 
         /* ===== BADGE EXPERTISE PREMIUM ===== */
-        .ix-expertise { background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%); border: 1px solid rgba(245,158,11,0.35); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; position: relative; box-shadow: 0 2px 8px rgba(245,158,11,0.08); }
+        .ix-expertise { background: linear-gradient(135deg, #FFF8F0 0%, #FFF1E0 100%); border: 1px solid rgba(245,158,11,0.35); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; gap: 12px; position: relative; box-shadow: 0 2px 8px rgba(245,158,11,0.08); }
         .ix-exp-icon { width: 36px; height: 36px; border-radius: 10px; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: #fff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(245,158,11,0.4); }
         .ix-exp-text { flex: 1; min-width: 0; }
         .ix-exp-title { font-size: 12.5px; font-weight: 800; color: #78350F; line-height: 1.2; }
-        .ix-exp-sub { font-size: 10.5px; color: #92400E; font-weight: 600; margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; opacity: 0.85; }
-        .ix-exp-dot { width: 3px; height: 3px; border-radius: 50%; background: #92400E; opacity: 0.5; }
+        .ix-exp-sub { font-size: 10.5px; color: #D9690B; font-weight: 600; margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; opacity: 0.85; }
+        .ix-exp-dot { width: 3px; height: 3px; border-radius: 50%; background: #D9690B; opacity: 0.5; }
         .ix-exp-badge { background: #0D1B3E; color: #FACC15; font-size: 9px; font-weight: 900; letter-spacing: 0.1em; padding: 4px 7px; border-radius: 6px; flex-shrink: 0; }
 
         .ix-options { display: flex; flex-direction: column; gap: 8px; }

@@ -35,7 +35,7 @@ export function AuthStyles() {
       .ac-field input, .ac-field select, .ac-field textarea { width: 100%; border: none; background: transparent; outline: none; font-weight: 600; padding: 0; color: #111; }
       .ac-field textarea { resize: vertical; min-height: 64px; font-weight: 500; }
       .ac-field select { appearance: none; -webkit-appearance: none; cursor: pointer; }
-      .ac-hint { font-size: 11px; color: #B45309; font-weight: 600; margin: -4px 0 10px 4px; }
+      .ac-hint { font-size: 11px; color: #D9690B; font-weight: 600; margin: -4px 0 10px 4px; }
       .ac-eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; padding: 8px; color: #888; border-radius: 8px; display: flex; }
       .ac-eye:hover { background: #EEF4FF; color: #1A6BFF; }
       .ac-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }

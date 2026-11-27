@@ -136,7 +136,7 @@ const SP_CSS = `
   .sp-r.fait .sp-n { background: #E8F8EE; border-color: #E8F8EE; color: #16A34A; }
   .sp-r.actuel .sp-n { background: #1A6BFF; border-color: #1A6BFF; color: #fff; }
   .sp-i { width: 20px; height: 20px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; flex: none; }
-  .sp-i.o { background: #FFF3E0; color: #C2410C; } .sp-i.b { background: #EAF1FF; color: #1A6BFF; } .sp-i.n { background: #EDEFF4; color: #0D1B3E; } .sp-i.r { background: #FDECEC; color: #B42318; }
+  .sp-i.o { background: #FFF1E0; color: #D9690B; } .sp-i.b { background: #EAF1FF; color: #1A6BFF; } .sp-i.n { background: #EDEFF4; color: #0D1B3E; } .sp-i.r { background: #FDECEC; color: #B42318; }
   .sp-r.hors:last-child .sp-l { }
   .sp-g:last-child .sp-r .sp-i.r ~ .sp-l { color: #B42318; }
   .sp-sheet .sp { padding: 0 6px 12px; } .sp-sheet .sp-r { padding: 10px 10px; font-size: 15px !important; }

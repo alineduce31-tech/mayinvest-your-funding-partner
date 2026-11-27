@@ -145,12 +145,12 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
 
 const NE_CSS = `
   .ne-pk { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 999px; white-space: nowrap; }
-  .ne-pk.en_attente_paiement { background: #FFF3E0; color: #B45309; } .ne-pk.paye { background: #EAF1FF; color: #1A6BFF; } .ne-pk.termine, .ne-pk.prop { background: #E8F8EE; color: #16A34A; }
+  .ne-pk.en_attente_paiement { background: #FFF1E0; color: #D9690B; } .ne-pk.paye { background: #EAF1FF; color: #1A6BFF; } .ne-pk.termine, .ne-pk.prop { background: #E8F8EE; color: #16A34A; }
   .ne-err { background: #FDECEC; color: #B42318; border-radius: 10px; padding: 8px 11px; font-size: 13px; margin-bottom: 10px; }
 
   .bk.ne .bk-hd, .bk.ne .bk-row { grid-template-columns: minmax(0, 1fr) 150px 160px 130px 180px 104px; }
   .ne-why { display: inline-flex; align-items: center; gap: 5px; justify-self: start; font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: 8px; white-space: nowrap; }
-  .ne-why.rccm { background: #FEF3C7; color: #92400E; } .ne-why.score { background: #FEE2E2; color: #991B1B; }
+  .ne-why.rccm { background: #FFF1E0; color: #D9690B; } .ne-why.score { background: #FEE2E2; color: #991B1B; }
   .ne-why.pack { background: #DCFCE7; color: #166534; } .ne-why.marque { background: #F1F5F9; color: #475569; }
   .ne-st { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
   .ne-st .ns-compact { max-width: 100%; font-size: 12px !important; font-weight: 700; }
