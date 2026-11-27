@@ -539,6 +539,7 @@ const CSS = `
     .ea-table td:first-child, .ea-table td.mono, .ea-table td.empty { grid-column: 1 / -1; }
     .ea-table td.mono { overflow-wrap: anywhere; }
     .ea-table td.actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 6px; }
+    .ea-table td.actions button + button { margin-left: 0; }
   }
 
   .cell-user { display: flex; align-items: center; gap: 10px; }
@@ -556,7 +557,9 @@ const CSS = `
   .status-toggle.off { background: #F3F3F1; color: #6B7280; }
   .status-toggle.off .dot { background: #9CA3AF; }
 
-  .actions { display: flex; gap: 6px; }
+  /* La cellule reste une vraie cellule de tableau : même hauteur et même bordure que le reste de la ligne */
+  td.actions { white-space: nowrap; text-align: right; vertical-align: middle; }
+  td.actions button + button { margin-left: 6px; }
   .actions button { background: #F3F3F1; border: none; border-radius: 8px; width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; color: #6B7280; cursor: pointer; transition: all 0.15s; }
   .actions button:hover:not(:disabled) { background: #1A6BFF; color: white; }
   .actions button:disabled { opacity: 0.35; cursor: not-allowed; }
