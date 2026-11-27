@@ -435,7 +435,7 @@ function CmStyles() {
     .cm-av { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 13px; flex-shrink: 0; color: #fff; background: #1A6BFF; }
     .cm-av.sq { border-radius: 12px; background: #0D1B3E; font-size: 12px; }
     .cm-av.small { width: 34px; height: 34px; font-size: 10.5px; }
-    .cm-av.warn { background: #F59E0B; color: #0D1B3E; }
+    .cm-av.warn { background: #FFF1E0; color: #D9690B; }
     .cm-av.grey { background: #E2E8F0; color: #0D1B3E; }
     .cm-item-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
     .cm-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13.5px; }
