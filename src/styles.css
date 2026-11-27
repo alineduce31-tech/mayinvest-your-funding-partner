@@ -2369,7 +2369,7 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
 .ra-b svg.up { transform: rotate(180deg); } .ra-b svg { transition: transform .15s; flex: none; }
 .ra-det { margin-top: 14px; background: #fff; border-radius: 18px; box-shadow: 0 1px 2px rgba(0,0,0,.04); padding: 18px; }
 .ra-tuiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-top: 16px; }
-.ra-t { background: #F8FAFC; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ra-t { background: #fff; border: 1px solid #EEF1F6; box-shadow: 0 1px 2px rgba(13,27,62,.04); border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .ra-t .ra-ic { width: 30px; height: 30px; border-radius: 9px; margin-bottom: 4px; }
 .ra-t small { font-size: 12px; color: #64748B; }
 .ra-t b { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -2468,7 +2468,7 @@ button.pf-tr:hover { background: #F8FAFC; }
 .pf-bg { height: 16px; background: #EEF1F6; border-radius: 6px; overflow: hidden; }
 .pf-bg i { display: block; height: 100%; background: #1A6BFF; border-radius: 6px; min-width: 2px; } .pf-bg i.fin { background: #0D1B3E; }
 .pf-mini { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.pf-mini span { background: #F8FAFC; border-radius: 12px; padding: 10px; font-size: 12px; color: #64748B; display: flex; flex-direction: column; gap: 3px; }
+.pf-mini span { background: #fff; border: 1px solid #EEF1F6; border-radius: 12px; padding: 10px; font-size: 12px; color: #64748B; display: flex; flex-direction: column; gap: 3px; }
 .pf-mini span svg { color: #1A6BFF; }
 .pf-mini b { font-size: 15px; color: #0D1B3E; font-weight: 600; }
 .pf-ret { display: flex; flex-direction: column; gap: 4px; }
