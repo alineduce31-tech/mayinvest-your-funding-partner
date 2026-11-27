@@ -34,7 +34,7 @@ export default function ConseillerPicker({ value, onChange, villeLead, montant, 
   montant?: number | null | undefined
   placeholder?: string
   className?: string
-  /** Affiche « Retirer le conseiller » quand un conseiller est déjà choisi. */
+  /** Affiche « Retirer le conseiller » quand un conseiller est déjà choisi. */
   retirer?: boolean
   /** Nom affiché si le conseiller assigné n'est plus dans la liste. */
   nomSecours?: string | undefined

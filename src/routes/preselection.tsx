@@ -117,9 +117,9 @@ function validateField(key: string, value: string, isP: boolean): FieldCheck {
     case 'employeur': return v.length >= 2 ? { ok: true, label: 'Employeur' } : { ok: false, label: 'Employeur', msg: 'Indiquez votre employeur ou administration', example: "Ex : Ministère de l'Économie, SOCOFRAN…" }
     case 'contrat': return v ? { ok: true, label: 'Contrat' } : { ok: false, label: 'Contrat', msg: 'Choisissez votre type de contrat', example: 'CDI, CDD, Intérim, Stage ou Autre' }
     case 'duree_restante': return parseInt(v || '0') > 0 ? { ok: true, label: 'Durée restante' } : { ok: false, label: 'Durée restante', msg: 'Indiquez combien de mois il reste à votre contrat', example: 'Ex : 18 (pour 18 mois restants)' }
-    case 'anciennete_tr': return v ? { ok: true, label: 'Ancienneté' } : { ok: false, label: 'Ancienneté', msg: 'Choisissez votre ancienneté dans la liste', example: 'Ex : « 1 à 3 ans »' }
-    case 'anciennete_soc_tr': return v ? { ok: true, label: 'Ancienneté société' } : { ok: false, label: 'Ancienneté société', msg: "Choisissez l'ancienneté de votre société", example: 'Ex : « 3 à 5 ans »' }
-    case 'anciennete_cpt_tr': return v ? { ok: true, label: 'Compte ouvert depuis' } : { ok: false, label: 'Compte', msg: 'Depuis quand le compte est-il ouvert ?', example: 'Ex : « 1 à 3 ans »' }
+    case 'anciennete_tr': return v ? { ok: true, label: 'Ancienneté' } : { ok: false, label: 'Ancienneté', msg: 'Choisissez votre ancienneté dans la liste', example: 'Ex : « 1 à 3 ans »' }
+    case 'anciennete_soc_tr': return v ? { ok: true, label: 'Ancienneté société' } : { ok: false, label: 'Ancienneté société', msg: "Choisissez l'ancienneté de votre société", example: 'Ex : « 3 à 5 ans »' }
+    case 'anciennete_cpt_tr': return v ? { ok: true, label: 'Compte ouvert depuis' } : { ok: false, label: 'Compte', msg: 'Depuis quand le compte est-il ouvert ?', example: 'Ex : « 1 à 3 ans »' }
     case 'revenu': return parseInt(v || '0') >= 50000 ? { ok: true, label: 'Revenu' } : { ok: false, label: 'Revenu', msg: 'Indiquez votre revenu net mensuel (minimum 50 000 XAF)', example: 'Ex : 350 000' }
     case 'ca_annuel': return parseInt(v || '0') >= 100000 ? { ok: true, label: 'CA annuel' } : { ok: false, label: 'CA annuel', msg: "Indiquez le chiffre d'affaires annuel", example: 'Ex : 50 000 000' }
     case 'rccm': return v ? { ok: true, label: 'RCCM' } : { ok: false, label: 'RCCM', msg: 'La société est-elle enregistrée au RCCM ?', example: 'Oui = enregistrée · Non = pas encore' }
@@ -127,7 +127,7 @@ function validateField(key: string, value: string, isP: boolean): FieldCheck {
     case 'montant': return parseInt(v || '0') >= 100000 ? { ok: true, label: 'Montant' } : { ok: false, label: 'Montant', msg: 'Montant minimum 100 000 XAF', example: 'Ex : 5 000 000' }
     case 'objet': return v ? { ok: true, label: 'Objet' } : { ok: false, label: 'Objet', msg: 'Choisissez pourquoi vous voulez le prêt', example: isP ? 'Consommation, Immobilier, Véhicule…' : 'Investissement, Fonds de roulement, Marché public…' }
     case 'flux_mois': return parseInt(v || '0') > 0 ? { ok: true, label: 'Flux mensuel' } : { ok: false, label: 'Flux mensuel', msg: 'Indiquez le flux mensuel moyen', example: 'Ex : 2 000 000' }
-    case 'banque': return v ? { ok: true, label: 'Banque' } : { ok: false, label: 'Banque', msg: 'Choisissez votre banque actuelle', example: "Ex : BGFI. Choisissez « Aucune » si vous n'en avez pas." }
+    case 'banque': return v ? { ok: true, label: 'Banque' } : { ok: false, label: 'Banque', msg: 'Choisissez votre banque actuelle', example: "Ex : BGFI. Choisissez « Aucune » si vous n'en avez pas." }
     case 'salaire_domic': return v ? { ok: true, label: 'Domiciliation' } : { ok: false, label: 'Domiciliation', msg: 'Votre salaire est-il versé sur ce compte bancaire ?', example: 'Oui ou Non' }
     case 'compte_mouvemente': return v ? { ok: true, label: 'Compte mouvementé' } : { ok: false, label: 'Compte mouvementé', msg: 'Avez-vous des transactions régulières sur ce compte ?', example: 'Oui ou Non' }
     case 'refus_bancaire': return v ? { ok: true, label: 'Refus bancaire' } : { ok: false, label: 'Refus bancaire', msg: "Une banque a-t-elle déjà refusé un financement ?", example: 'Oui ou Non' }
@@ -787,7 +787,7 @@ function Simulation() {
         if (canSubmit) {
           return {
             title: '✓ Tout est prêt !',
-            body: "Toutes les sections sont remplies. Cliquez sur « Voir mon score » en bas pour envoyer votre dossier.",
+            body: "Toutes les sections sont remplies. Cliquez sur « Voir mon score » en bas pour envoyer votre dossier.",
             success: true,
             actions: [{ label: 'Voir mon score', onClick: () => { soumettre() }, primary: true }],
           }

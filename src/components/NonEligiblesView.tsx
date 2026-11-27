@@ -61,7 +61,7 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
     // Le pack se souscrit sur la plateforme : on l'envoie dans la discussion de l'espace client
     if (proposes[l.id]) return
     setErrProp(''); setProposes(p => ({ ...p, [l.id]: 'envoi' }))
-    // Carte « Pack formalisation » dans la discussion (le texte ne sert qu'en secours)
+    // Carte « Pack formalisation » dans la discussion (le texte ne sert qu'en secours)
     const msg = fillTemplate(TEMPLATE_PACK_FORMALISATION, variablesModele(l))
     supabase.rpc('send_lead_card', { p_lead_id: l.id, p_sender: 'admin', p_author_id: adminId, p_kind: 'pack', p_payload: {}, p_content: msg }).then(({ error }) => {
       if (error) {

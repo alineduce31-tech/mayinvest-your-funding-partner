@@ -223,7 +223,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
   async function passerEtape() {
     const next = etapeSuivante(row.statut)
     if (!next || busyStep) return
-    if (next === 'Financé' && !(await confirmer({ titre: 'La banque a-t-elle financé ce dossier ?', texte: 'Le dossier passera au statut « Financé ».', bouton: 'Oui, financé' }))) return
+    if (next === 'Financé' && !(await confirmer({ titre: 'La banque a-t-elle financé ce dossier ?', texte: 'Le dossier passera au statut « Financé ».', bouton: 'Oui, financé' }))) return
     setBusyStep(true); setErr('')
     const { error } = await supabase.rpc('commercial_update_lead_status', { p_commercial_id: commercialId, p_lead_id: row.lead_id, p_statut: next })
     setBusyStep(false)
@@ -310,7 +310,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
             })}
           </ol>
         )}
-        {next && <button className="cm-dark" onClick={passerEtape} disabled={busyStep}>{busyStep ? 'Mise à jour…' : `Passer à « ${next === 'Dossier Déposé' ? 'Déposé en banque' : next === 'RDV' ? 'Rendez-vous' : next} »`}</button>}
+        {next && <button className="cm-dark" onClick={passerEtape} disabled={busyStep}>{busyStep ? 'Mise à jour…' : `Passer à « ${next === 'Dossier Déposé' ? 'Déposé en banque' : next === 'RDV' ? 'Rendez-vous' : next} »`}</button>}
 
         <div className="cm-side-h"><span>Pièces</span><small>{docs.filter(d => etatPiece(d.status) === 'validated').length} sur {docs.length} validée{docs.filter(d => etatPiece(d.status) === 'validated').length > 1 ? 's' : ''}</small></div>
         <div className="cm-docs">

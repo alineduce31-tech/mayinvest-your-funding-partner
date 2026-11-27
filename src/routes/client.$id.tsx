@@ -455,7 +455,7 @@ function ClientPortal() {
       }
       return {
         title: `Bonjour ${nom} 👋`,
-        body: `Votre dossier est au statut : « ${lead.statut} » (étape ${statutIdx + 1} sur 6).\n\n${explanations[lead.statut] || "Suivez l'avancement dans la timeline."}`,
+        body: `Votre dossier est au statut : « ${lead.statut} » (étape ${statutIdx + 1} sur 6).\n\n${explanations[lead.statut] || "Suivez l'avancement dans la timeline."}`,
         success: ['Éligible','Financé'].includes(lead.statut),
         actions: [
           { label: 'Écrire à mon conseiller', onClick: () => openAdvisorChat(), primary: true },

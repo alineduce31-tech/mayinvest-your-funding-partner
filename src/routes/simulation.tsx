@@ -396,7 +396,7 @@ function Epreuve3Pilotage({ onComplete }: { onComplete: (time: number, data: any
           <StepItem ok={statut === 'Contacté' || steps.rdv || steps.depose} num={3} label="Statut : Contacté"/>
           <StepItem ok={steps.rdv} num={4} label="Fixer un RDV & changer statut"/>
           <StepItem ok={steps.docs} num={5} label="Demander les documents (3 min)"/>
-          <StepItem ok={steps.depose} num={6} label="Marquer « Dossier Déposé »"/>
+          <StepItem ok={steps.depose} num={6} label="Marquer « Dossier Déposé »"/>
         </div>
 
         <div className="e3-main">

@@ -8,7 +8,7 @@ import { appelDirect, lienTel, lienWhatsapp, noteAppel, numeroAffiche } from '@/
 type Moyen = 'telephone' | 'ordinateur' | 'whatsapp' | 'manuel'
 
 /**
- * Bouton « Appeler ».
+ * Bouton « Appeler ».
  * Téléphone : lance l'appel directement.
  * Ordinateur / tablette : fenêtre avec numéro, QR code à scanner, appel depuis l'ordinateur et WhatsApp.
  * Si leadId est fourni, l'appel est noté dans le dossier (note interne, invisible pour le client).
@@ -111,7 +111,7 @@ function CallSheet({ tel, nom, canLog, onClose, onLog }: { tel: string; nom?: st
             </a>
           )}
         </div>
-        <div className="cs-hint">« Depuis cet appareil » fonctionne sur une tablette avec carte SIM, ou sur un ordinateur relié à votre téléphone (Lien avec Windows, iPhone sur Mac).</div>
+        <div className="cs-hint">« Depuis cet appareil » fonctionne sur une tablette avec carte SIM, ou sur un ordinateur relié à votre téléphone (Lien avec Windows, iPhone sur Mac).</div>
 
         {canLog && (
           <button className={`cs-log ${logged ? 'done' : ''}`} onClick={() => log('manuel')} disabled={logged}>

@@ -5,7 +5,7 @@ import { CONTENU_PACK, PRIX_PACK, proposerPack, suiviPack, etapeEnCours, libelle
 
 const xaf = (n: number) => new Intl.NumberFormat('fr-FR').format(n).replace(/[  ]/g, ' ') + ' XAF'
 
-/** Carte « Pack formalisation » de l'espace client : offre, souscription, paiement puis suivi. */
+/** Carte « Pack formalisation » de l'espace client : offre, souscription, paiement puis suivi. */
 export default function PackClient({ lead, onChat }: { lead: any; onChat: (prefill?: string) => void }) {
   const [pack, setPack] = useState<Pack | null | undefined>(undefined)
   const [busy, setBusy] = useState(false)

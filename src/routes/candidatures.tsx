@@ -413,7 +413,7 @@ function CandidaturesPage() {
               {selected.motivation && (
                 <div className="cd-sec-wrap">
                   <div className="cd-sec-title" style={{ margin: '0 0 8px', border: 'none', padding: 0 }}>Motivation</div>
-                  <div className="cd-motivation">« {selected.motivation} »</div>
+                  <div className="cd-motivation">« {selected.motivation} »</div>
                 </div>
               )}
 
@@ -516,7 +516,7 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
       k: 'urgent',
       title: '⏰ Dernier rappel',
       subject: `Dernier rappel · Finalisez votre inscription Mayinvest`,
-      body: `Bonjour ${candidate.prenom},\n\nNous clôturons bientôt la campagne de recrutement en cours. Pour que votre candidature soit retenue, il faut ${stage.cta} dans les prochains jours.\n\nLien direct vers votre espace :\nhttps://mayinvestcapitalstrategy.com/espace-commercial\n\nSi vous ne souhaitez plus participer, répondez simplement « STOP » à cet email.\n\nL'équipe Mayinvest`,
+      body: `Bonjour ${candidate.prenom},\n\nNous clôturons bientôt la campagne de recrutement en cours. Pour que votre candidature soit retenue, il faut ${stage.cta} dans les prochains jours.\n\nLien direct vers votre espace :\nhttps://mayinvestcapitalstrategy.com/espace-commercial\n\nSi vous ne souhaitez plus participer, répondez simplement « STOP » à cet email.\n\nL'équipe Mayinvest`,
     },
   ]
 

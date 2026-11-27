@@ -11,7 +11,7 @@ const ICONES: Record<MessageType['cle'], { ic: ReactNode; ton: string }> = {
   merci: { ic: <HeartHandshake size={17}/>, ton: 'g' },
 }
 
-/** Menu « Message type » commun aux messageries : recherche, message conseillé pour le dossier, liste avec icônes. */
+/** Menu « Message type » commun aux messageries : recherche, message conseillé pour le dossier, liste avec icônes. */
 export default function MessagesTypesMenu({ messages, statut, onPick, onClose, className }: {
   messages: MessageType[]
   statut?: string | null | undefined

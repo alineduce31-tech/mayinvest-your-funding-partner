@@ -196,7 +196,7 @@ function SimulationPage() {
                 <span className="sm-tag">{current.tag}</span>
               </div>
               <p className="sm-context">{current.context}</p>
-              {current.prospect_message && <div className="sm-msg">« {current.prospect_message} »</div>}
+              {current.prospect_message && <div className="sm-msg">« {current.prospect_message} »</div>}
 
               <div className="sm-question">{current.question}</div>
               <div className="sm-choices">

@@ -14,7 +14,7 @@ const TEINTES: Record<string, string> = { 'Non Éligible': 'o', 'Pack Formalisat
 
 /**
  * Sélecteur de statut commun à toute la plateforme : parcours du dossier (étapes faites, actuelle, suivante),
- * accompagnement, puis « Perdu ». Pastille colorée comme déclencheur.
+ * accompagnement, puis « Perdu ». Pastille colorée comme déclencheur.
  */
 export default function StatutPicker({ value, onChange, statuts, disabled, placeholder, style, className, title = 'Changer le statut' }: {
   value: string | null | undefined

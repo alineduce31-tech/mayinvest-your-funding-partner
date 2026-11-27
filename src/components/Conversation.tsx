@@ -17,7 +17,7 @@ export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploading
   /** Qui peut supprimer quel message (par défaut : personne). */
   peutSupprimer?: ((b: BulleAffichee) => boolean) | undefined
   onSupprimer?: ((b: BulleAffichee) => Promise<void> | void) | undefined
-  /** Dossier affiché (cartes « Pack » côté équipe). */
+  /** Dossier affiché (cartes « Pack » côté équipe). */
   leadId?: string | undefined
   viewer: 'client' | 'equipe'
   docs?: any[]
@@ -75,7 +75,7 @@ function MenuMessage({ b, onSupprimer }: { b: BulleAffichee; onSupprimer: (b: Bu
   }
   async function supprimer() {
     setOpen(false)
-    if (await confirmer({ titre: 'Supprimer ce message ?', texte: 'Il disparaît pour tout le monde dans la discussion. Une mention « Message supprimé » reste à sa place.', bouton: 'Supprimer', danger: true })) await onSupprimer(b)
+    if (await confirmer({ titre: 'Supprimer ce message ?', texte: 'Il disparaît pour tout le monde dans la discussion. Une mention « Message supprimé » reste à sa place.', bouton: 'Supprimer', danger: true })) await onSupprimer(b)
   }
   return (
     <div ref={zone} className={`cv-mm ${open ? 'open' : ''}`}>

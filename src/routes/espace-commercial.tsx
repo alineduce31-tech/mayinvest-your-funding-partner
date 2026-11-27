@@ -368,7 +368,7 @@ function DashboardTab({ session, stats, leads, refLink, unreadClients, onOpenLea
     if (!nouveau) return
     const { error } = await supabase.rpc('commercial_update_lead_status', { p_commercial_id: session.id, p_lead_id: leadId, p_statut: nouveau })
     if (error) { setToast({ id: leadId, avant: l.statut, texte: error.message || 'Déplacement impossible', err: true }); return }
-    setToast({ id: leadId, avant: l.statut, texte: `${leadNom(l)} passé à « ${ETAPES.find(x => x.key === cible)?.label} »` })
+    setToast({ id: leadId, avant: l.statut, texte: `${leadNom(l)} passé à « ${ETAPES.find(x => x.key === cible)?.label} »` })
     onUpdated()
   }
   async function annuler() {

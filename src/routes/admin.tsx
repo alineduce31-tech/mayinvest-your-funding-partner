@@ -1313,7 +1313,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
         <article className="sd-impact-card sd-impact-wide">
           <div className="sd-impact-head">
             <span className="sd-impact-ico n"><Target size={16} strokeWidth={1.75}/></span>
-            <div className="sd-impact-head-body"><h3>Conversion « Sans compte »</h3><span>Pipeline de bancarisation</span></div>
+            <div className="sd-impact-head-body"><h3>Conversion « Sans compte »</h3><span>Pipeline de bancarisation</span></div>
           </div>
           {bloc3 && bloc3.funnel.detectes > 0 ? (
             <div className="sd-impact-fn-rows">
@@ -1984,7 +1984,7 @@ function Panel({ title, children, icon }: { title: string; children: React.React
 
 function Donut({ items, capLabel }: { items: { label: string; value: number }[]; capLabel: string }) {
   // Regroupe à partir du 6e en "Autres"
-  // « Autre » saisi par le client et le surplus sont réunis dans une seule ligne « Autres ».
+  // « Autre » saisi par le client et le surplus sont réunis dans une seule ligne « Autres ».
   const estAutre = (l: string) => /^autres?$/i.test(String(l).trim())
   const propres = items.filter(i => !estAutre(i.label))
   const topN = 5
@@ -2462,7 +2462,7 @@ function LeadActionsPanel({ lead, onSendInternal, adminId, onCardSent }: { lead:
 
   async function sendInternal(template: string, key?: string) {
     const filled = fillTemplate(template, vars)
-    // Le pack part en carte dans la discussion (bouton « Je souscris » côté client)
+    // Le pack part en carte dans la discussion (bouton « Je souscris » côté client)
     if (key === 'pack_formalisation') {
       const { error } = await supabase.rpc('send_lead_card', { p_lead_id: lead.id, p_sender: 'admin', p_author_id: adminId, p_kind: 'pack', p_payload: {}, p_content: filled })
       if (error) { informer('Carte non envoyée : ' + error.message); return }

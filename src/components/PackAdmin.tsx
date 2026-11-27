@@ -11,7 +11,7 @@ const xaf = (n: number) => new Intl.NumberFormat('fr-FR').format(n).replace(/[�
 const dateCourte = (d?: string | null) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—'
 
 /* ============================================================
- * Fenêtre « Confirmer le paiement » (directeur ou opérateur)
+ * Fenêtre « Confirmer le paiement » (directeur ou opérateur)
  * ============================================================ */
 export function ConfirmerPaiement({ pack, nom, onClose, onDone }: { pack: Pack; nom: string; onClose: () => void; onDone: (p: Pack) => void }) {
   const [mode, setMode] = useState<ModePaiement | ''>('')
@@ -53,7 +53,7 @@ export function ConfirmerPaiement({ pack, nom, onClose, onDone }: { pack: Pack; 
           <input id="pa-rc" className="pa-in" value={recu} maxLength={60} placeholder="REC-2026-0142" onChange={e => { setRecu(e.target.value); setErr('') }}/>
           {err && <div className="pa-err">{err}</div>}
           <button className="pa-ok" onClick={valider} disabled={busy}>{busy ? 'Confirmation…' : 'Confirmer le paiement'}</button>
-          <p className="pa-note">Le client est prévenu dans sa discussion et le dossier passe à « Pack Formalisation Vendu ». Cette confirmation est enregistrée à votre nom.</p>
+          <p className="pa-note">Le client est prévenu dans sa discussion et le dossier passe à « Pack Formalisation Vendu ». Cette confirmation est enregistrée à votre nom.</p>
         </div>
       </div>
     </div>,
@@ -128,7 +128,7 @@ export function PackSuivi({ leadId, nom, peutConfirmer = false, peutCocher = tru
 }
 
 /* ============================================================
- * Page admin « Packs »
+ * Page admin « Packs »
  * ============================================================ */
 type FiltrePack = 'attente' | 'cours' | 'termine' | 'tous'
 const FILTRES: { k: FiltrePack; label: string }[] = [
@@ -191,7 +191,7 @@ export default function PacksView({ leads, onOpen, peutConfirmer, onChange }: { 
         {err && <div className="pa-err" style={{ marginBottom: 10 }}>{err}</div>}
 
         {packs === null ? <div className="bk-vide"><small>Chargement…</small></div> : visibles.length === 0 ? (
-          <div className="bk-vide"><span><FileBadge size={22}/></span><b>{liste.length ? 'Aucune souscription pour ce filtre' : 'Aucune souscription pour l\'instant'}</b><small>Quand un client clique sur « Je souscris » dans son espace, il apparaît ici avec sa référence.</small></div>
+          <div className="bk-vide"><span><FileBadge size={22}/></span><b>{liste.length ? 'Aucune souscription pour ce filtre' : 'Aucune souscription pour l\'instant'}</b><small>Quand un client clique sur « Je souscris » dans son espace, il apparaît ici avec sa référence.</small></div>
         ) : <>
           <div className="bk-hd"><span>Client</span><span>Référence</span><span>Statut</span><span className="r">Paiement</span><span>Action</span><span/></div>
           {visibles.map(p => {

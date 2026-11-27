@@ -7,7 +7,7 @@ import { decouperLibelle, titreCourt } from '@/lib/affichage'
 
 const COURANTES = ["Carte Nationale d'Identité (ou passeport)", 'Bulletins de salaire (3 derniers mois)', 'Relevé bancaire (3 derniers mois)', "Attestation d'employeur", 'RCCM', 'NIU', 'Statuts de la société', 'Facture proforma']
 
-/** Fenêtre « Demander des pièces » : pièces du dossier encore attendues, pièces courantes en un clic, autre pièce libre. */
+/** Fenêtre « Demander des pièces » : pièces du dossier encore attendues, pièces courantes en un clic, autre pièce libre. */
 export default function DemandePieces({ docs, onClose, onSend }: {
   docs: any[]
   onClose: () => void
