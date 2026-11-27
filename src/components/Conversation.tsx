@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import PieceIcone from '@/components/PieceIcone'
+import ScrollRow from '@/components/ScrollRow'
 import { CroixFermer, confirmer } from '@/components/Dialogue'
 import { createPortal } from 'react-dom'
 import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download, FileBadge, Image as ImageIcon, Phone, Trash2, MoreHorizontal, Copy } from 'lucide-react'
@@ -280,9 +281,9 @@ function CarteRdv({ b, viewer, onRepondre }: { b: BulleAffichee; viewer: 'client
 export function Suggestions({ items, onPick }: { items: string[]; onPick: (t: string) => void }) {
   if (!items.length) return null
   return (
-    <div className="cv-sugg">
+    <ScrollRow className="cv-sugg" wrapOnDesktop={false}>
       {items.map((s, i) => <button key={s} type="button" onClick={() => onPick(s)}>{i === 0 && <Sparkles size={12} className="cv-spark"/>}{s}</button>)}
-    </div>
+    </ScrollRow>
   )
 }
 
@@ -472,8 +473,7 @@ const CV_CSS = `
   .cv-actions button:disabled { opacity: .6; cursor: default; }
   .cv-etat { display: flex; align-items: center; gap: 6px; margin: 0 14px 14px; padding: 9px 12px; border-radius: 12px; font-size: 12.5px; font-weight: 700; }
   .cv-etat.ok { background: #DCFCE7; color: #15803D; } .cv-etat.gris { background: #F1F5F9; color: #64748B; } .cv-etat.attente { background: #FFF7ED; color: #D9690B; }
-  .cv-sugg { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
-  .cv-sugg::-webkit-scrollbar { display: none; }
+  .cv-sugg { gap: 6px; }
   .cv-sugg button { flex: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; border: none; background: #F5F5F7; border-radius: 999px; padding: 6px 12px; font-family: inherit; font-size: 12.5px; color: #334155; cursor: pointer; }
   .cv-sugg button:hover { border-color: #BFD4FF; color: #1A6BFF; }
   .cv-spark { color: #7C3AED; }
