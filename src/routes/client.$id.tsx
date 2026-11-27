@@ -2,6 +2,7 @@ import { lienContact } from '@/lib/lead-templates'
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { informer } from '@/components/Dialogue'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
+import { Inbox, CalendarDays, MailCheck, Coins } from 'lucide-react'
 import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Landmark, FileBadge, FileText, BarChart3, CircleCheck, Clock, Camera, Lock, Search, ChevronLeft, Plus, Image as ImageIcon } from 'lucide-react'
 import PackClient from '@/components/PackClient'
 import { proposerPack } from '@/lib/pack'
@@ -1051,6 +1052,7 @@ function ClientPortal() {
             {ETAPES_CLIENT.map((e, i) => (
               <div key={e.statut} className={`cx-step ${i < etape ? 'ok' : i === etape ? 'on' : ''}`}>
                 <span className="cx-dot">{i < etape ? <Check size={13} strokeWidth={3}/> : i + 1}</span>
+                <span className="cx-step-ic" aria-hidden="true">{[<Inbox size={15}/>, <Phone size={15}/>, <CalendarDays size={15}/>, <Landmark size={15}/>, <MailCheck size={15}/>, <Coins size={15}/>][i]}</span>
                 <span className="cx-step-l">{e.label}</span>
                 {i === 0 && lead?.created_at && <small>{new Date(lead.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}</small>}
                 {i === etape && i > 0 && <small className="b">en cours</small>}
@@ -1241,7 +1243,9 @@ const CX_CSS = `
   .cx-step.ok, .cx-step.on { color: #1D1D1F; }
   .cx-step.on .cx-step-l { font-weight: 600; }
   .cx-dot { width: 26px; height: 26px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; background: #F0F0F2; color: #A1A1A6; flex: none; }
-  .cx-step.ok .cx-dot { background: #16A34A; color: #fff; } .cx-step.on .cx-dot { background: #1A6BFF; color: #fff; }
+  .cx-step.ok .cx-dot { background: #1A6BFF; color: #fff; } .cx-step.on .cx-dot { background: #fff; color: #1A6BFF; border: 2px solid #1A6BFF; box-sizing: border-box; }
+  .cx-step-ic { width: 30px; height: 30px; border-radius: 9px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: #F5F5F7; color: #A1A1A6; }
+  .cx-step.ok .cx-step-ic, .cx-step.on .cx-step-ic { background: #EAF1FF; color: #1A6BFF; }
   .cx-step small { margin-left: auto; font-size: 12px; color: #86868B; } .cx-step small.b { color: #1A6BFF; font-weight: 500; }
   .cx-pack { padding: 14px 16px; margin-top: 14px; } .cx-pack b { font-size: 15px; } .cx-pack p { margin: 4px 0 0; font-size: 13.5px; color: #3A3A3C; line-height: 1.5; }
   .cx-cons { display: flex; align-items: center; gap: 12px; padding: 12px 14px; }
