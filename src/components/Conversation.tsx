@@ -418,15 +418,15 @@ const CV_CSS = `
   .cv-puce-ic { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; font-style: normal; background: #E3ECFF; color: #3D6FD6; }
   .cv-ligne.droite .cv-bulle.equipe .cv-puces span { background: #fff; color: #0D1B3E; }
   .cv-bulle.moi .cv-puces span { background: #fff; color: #0D1B3E; }
-  .cv-piece-ic { width: 28px; height: 28px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: #EEF3FF; color: #4A73C9; }
+  .cv-piece-ic { width: 28px; height: 28px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: #FFFFFF; color: #4A73C9; }
   .cv-piece.ok .cv-piece-ic { background: #F1F5F9; color: #94A3B8; }
   .cv-meta { display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: #8A94A6; margin: 4px 8px 0; }
   .cv-vu { display: inline-flex; align-items: center; gap: 3px; color: #1A6BFF; font-weight: 600; margin-left: 2px; }
   .cv-envoye { margin-left: 2px; }
-  .cv-carte { width: min(88%, 400px); background: #fff; border-radius: 20px; box-shadow: 0 6px 20px rgba(13,27,62,.08); overflow: hidden; }
+  .cv-carte { width: min(88%, 400px); background: linear-gradient(180deg, #EEF4FF 0%, #F8FAFF 55%, #FFFFFF 100%); border: 1px solid #E8EFFD; border-radius: 20px; box-shadow: 0 6px 18px rgba(13,27,62,.07); overflow: hidden; }
   .cv-carte-h { display: flex; align-items: center; gap: 10px; padding: 13px 14px 8px; }
   .cv-carte-h b { display: block; font-size: 14px; } .cv-carte-h small { font-size: 12px; color: #8A94A6; }
-  .cv-carte-ic { width: 34px; height: 34px; border-radius: 10px; background: #EEF4FF; color: #1A6BFF; display: flex; align-items: center; justify-content: center; flex: none; }
+  .cv-carte-ic { width: 34px; height: 34px; border-radius: 10px; background: #FFFFFF; color: #1A6BFF; display: flex; align-items: center; justify-content: center; flex: none; }
   .cv-barre { height: 5px; border-radius: 5px; background: #EEF1F6; margin: 2px 14px 6px; overflow: hidden; }
   .cv-barre span { display: block; height: 100%; background: linear-gradient(90deg, #22C55E, #4ADE80); border-radius: 5px; transition: width .4s; }
   .cv-piece { display: flex; align-items: center; gap: 10px; padding: 8px 14px; font-size: 13.5px; }
@@ -450,7 +450,7 @@ const CV_CSS = `
   .cv-pk-prix { margin-left: auto; font-size: 14px; font-weight: 700; color: #0D1B3E; white-space: nowrap; }
   .cv-pk-in { margin: 0 14px 6px; font-size: 13px; color: #64748B; line-height: 1.5; }
   .cv-pk-l { padding: 0 14px 4px; } .cv-pk-l div { display: flex; align-items: center; gap: 9px; font-size: 13.5px; padding: 4px 0; color: #0F1729; } .cv-pk-l svg { color: #1A6BFF; flex: none; }
-  .cv-pk-pied { border-top: 1px solid #F1F5F9; margin-top: 8px; padding: 12px 14px 13px; display: flex; flex-direction: column; gap: 7px; }
+  .cv-pk-pied { border-top: 1px solid #EEF2F8; margin-top: 8px; padding: 12px 14px 13px; display: flex; flex-direction: column; gap: 7px; }
   .cv-pk-pied small { font-size: 11.5px; color: #8A94A6; text-align: center; line-height: 1.45; }
   .cv-pk-btn { width: 100%; height: 40px; border: none; border-radius: 999px; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
   .cv-pk-btn:disabled { opacity: .6; cursor: default; }

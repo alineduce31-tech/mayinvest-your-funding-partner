@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { Check } from 'lucide-react'
 import { useEffect, useState, useMemo } from 'react'
 import { informer } from '@/components/Dialogue'
 import { supabase } from '@/integrations/supabase/client'
@@ -206,7 +207,7 @@ function FormationPage() {
             const cls = isDone ? 'done' : isActive ? 'active' : 'todo'
             return (
               <div key={m.id} className={`fm-mod-item ${cls}${isLocked ? ' locked' : ''}`} onClick={() => !isLocked && goToModule(idx)}>
-                <span className="fm-mod-icon">{isDone ? '✓' : m.position}</span>
+                <span className="fm-mod-icon">{isDone ? <Check size={14} strokeWidth={3}/> : m.position}</span>
                 <div>
                   <div className="fm-mod-title">{m.title}</div>
                   <div className="fm-mod-sub">{m.duration_minutes} min · {isDone ? 'Terminé' : isLocked ? 'Verrouillé' : 'À faire'}</div>

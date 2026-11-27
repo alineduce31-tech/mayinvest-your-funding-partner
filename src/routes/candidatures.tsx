@@ -502,15 +502,15 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
   const TEMPLATES = [
     {
       k: 'relance',
-      title: '📣 Relance douce',
+      title: 'Relance douce',
       subject: `Mayinvest · ${candidate.prenom}, on vous attend pour ${stage.cta}`,
-      body: `Bonjour ${candidate.prenom},\n\nL'équipe Mayinvest remarque que votre parcours de recrutement commercial est actuellement en pause (étape : ${stage.label}).\n\nPrenez 10 minutes pour ${stage.cta} depuis votre espace :\n👉 https://mayinvestcapitalstrategy.com/espace-commercial\n\nBesoin d'aide ? Répondez à cet email ou écrivez-nous à contact@mayinvestcapitalstrategy.com.\n\nÀ très vite,\nL'équipe Mayinvest`,
+      body: `Bonjour ${candidate.prenom},\n\nL'équipe Mayinvest remarque que votre parcours de recrutement commercial est actuellement en pause (étape : ${stage.label}).\n\nPrenez 10 minutes pour ${stage.cta} depuis votre espace :\nhttps://mayinvestcapitalstrategy.com/espace-commercial\n\nBesoin d'aide ? Répondez à cet email ou écrivez-nous à contact@mayinvestcapitalstrategy.com.\n\nÀ très vite,\nL'équipe Mayinvest`,
     },
     {
       k: 'encourage',
-      title: '🎉 Encouragement',
+      title: 'Encouragement',
       subject: `${candidate.prenom}, vous êtes presque arrivé(e) !`,
-      body: `Bonjour ${candidate.prenom},\n\nFélicitations pour votre engagement jusqu'ici ! Il ne vous reste qu'une étape (${stage.label}) avant de rejoindre officiellement l'équipe commerciale Mayinvest.\n\n💚 Chaque dossier financé = 50 000 XAF de commission.\n\nContinuez ici : https://mayinvestcapitalstrategy.com/espace-commercial\n\nL'équipe Mayinvest`,
+      body: `Bonjour ${candidate.prenom},\n\nFélicitations pour votre engagement jusqu'ici ! Il ne vous reste qu'une étape (${stage.label}) avant de rejoindre officiellement l'équipe commerciale Mayinvest.\n\nChaque dossier financé = 50 000 XAF de commission.\n\nContinuez ici : https://mayinvestcapitalstrategy.com/espace-commercial\n\nL'équipe Mayinvest`,
     },
     {
       k: 'urgent',
@@ -579,7 +579,7 @@ function NotifyModal({ candidate, onClose }: { candidate: Candidate; onClose: ()
         <div className="nmodal-actions">
           {!candidate.email ? (
             <div style={{ fontSize: 12, color: '#B45309', background: '#FEF3C7', padding: '10px 14px', borderRadius: 8, textAlign: 'center' }}>
-              ⚠ Pas d'email — impossible d'envoyer. Contacte-le par téléphone : {formatPhone(candidate.telephone)}
+              Pas d'email — impossible d'envoyer. Contacte-le par téléphone : {formatPhone(candidate.telephone)}
             </div>
           ) : (
             <>

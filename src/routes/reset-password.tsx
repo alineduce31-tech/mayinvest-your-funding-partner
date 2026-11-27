@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Check, CircleAlert } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 
@@ -102,7 +103,7 @@ function ResetPassword() {
         {stage === 'invalid' && (
           <>
             <div className="r-haki-msg">
-              ⚠ <strong>Ce lien n'est plus valide.</strong><br/><br/>
+              <strong>Ce lien n'est plus valide.</strong><br/><br/>
               Il a peut-être expiré (durée de vie 1 heure) ou déjà été utilisé. Demandez un nouveau lien depuis la page de connexion.
               <div style={{ marginTop: 10 }}><a className="r-link" style={{ marginTop: 0 }} href={`/mot-de-passe-oublie?type=${kind || 'client'}`}>Demander un nouveau lien</a></div>
             </div>
@@ -117,7 +118,7 @@ function ResetPassword() {
         {stage === 'valid' && (
           <>
             <div className="r-haki-msg">
-              👋 Bonjour ! Je vous aide à réinitialiser votre mot de passe pour le compte associé à <strong>{email}</strong>.<br/><br/>
+              Bonjour ! Je vous aide à réinitialiser votre mot de passe pour le compte associé à <strong>{email}</strong>.<br/><br/>
               Choisissez un nouveau mot de passe de <strong>8 caractères minimum</strong> (lettres et chiffres recommandés).
             </div>
             <h1 className="r-h">Nouveau mot de passe</h1>
@@ -128,8 +129,8 @@ function ResetPassword() {
             <div className="r-field">
               <label>Confirmer le mot de passe</label>
               <input type="password" placeholder="Retapez le même mot de passe" value={newPwdConfirm} onChange={e => setNewPwdConfirm(e.target.value)} onKeyDown={e => e.key === 'Enter' && submitNew()} autoComplete="new-password"/>
-              {newPwd && newPwdConfirm && newPwd !== newPwdConfirm && <div style={{ fontSize: 11, color: '#B91C1C', marginTop: 4, fontWeight: 600 }}>⚠ Les mots de passe ne correspondent pas</div>}
-              {newPwd && newPwd.length >= 8 && newPwd === newPwdConfirm && <div style={{ fontSize: 11, color: '#166534', marginTop: 4, fontWeight: 600 }}>✓ Mots de passe identiques</div>}
+              {newPwd && newPwdConfirm && newPwd !== newPwdConfirm && <div style={{ fontSize: 11, color: '#B91C1C', marginTop: 4, fontWeight: 600 }}><CircleAlert size={12} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Les mots de passe ne correspondent pas</div>}
+              {newPwd && newPwd.length >= 8 && newPwd === newPwdConfirm && <div style={{ fontSize: 11, color: '#166534', marginTop: 4, fontWeight: 600 }}><Check size={12} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Mots de passe identiques</div>}
             </div>
             <button className="r-btn" disabled={busy || newPwd.length < 8 || newPwd !== newPwdConfirm} onClick={submitNew}>
               {busy ? 'Enregistrement…' : 'Réinitialiser mon mot de passe'}
@@ -144,9 +145,9 @@ function ResetPassword() {
               <div className="r-ok-icon">
                 <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M5 12l5 5L20 7" stroke="#166534" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg>
               </div>
-              <h1 className="r-h">Mot de passe réinitialisé ✓</h1>
+              <h1 className="r-h">Mot de passe réinitialisé</h1>
               <div className="r-haki-msg">
-                🎉 <strong>Parfait !</strong> Votre nouveau mot de passe est enregistré. Vous pouvez maintenant vous connecter.
+                <strong>Parfait !</strong> Votre nouveau mot de passe est enregistré. Vous pouvez maintenant vous connecter.
               </div>
               <button className="r-btn" onClick={() => navigate({ to: loginPath as any })}>
                 Me connecter maintenant

@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { Check, CircleAlert } from 'lucide-react'
 import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { supabase } from '@/integrations/supabase/client'
 import { proposerPack, PRIX_PACK } from '@/lib/pack'
@@ -209,7 +210,7 @@ function calc(type: string, d: Record<string, string>) {
 
 /* ---------- Mascotte "Haki" ---------- */
 const TIPS: Record<string, { title: string; body: string }> = {
-  'step1': { title: 'Bienvenue 👋', body: "Je m'appelle Haki, votre assistant Mayinvest. Choisissez votre profil pour démarrer." },
+  'step1': { title: 'Bienvenue', body: "Je m'appelle Haki, votre assistant Mayinvest. Choisissez votre profil pour démarrer." },
   'step2-p': { title: 'Votre métier', body: 'Choisissez votre profession. Cela adapte les questions à votre situation.' },
   'step2-m': { title: 'Votre secteur', body: "Sélectionnez le secteur d'activité principal de votre entreprise." },
   'identite-p': { title: 'Identité', body: 'Nom, prénom, téléphone sont obligatoires. Email facultatif mais recommandé.' },
@@ -219,7 +220,7 @@ const TIPS: Record<string, { title: string; body: string }> = {
   'besoin': { title: 'Votre besoin', body: 'Montant et objet du prêt. Soyez réaliste, on étudiera la faisabilité ensemble.' },
   'eligibilite-p': { title: 'Éligibilité', body: 'La domiciliation du salaire est un critère majeur. Précisez depuis quand le compte est ouvert.' },
   'eligibilite-m': { title: 'Éligibilité PME', body: 'Compte mouvementé, antécédents bancaires, garanties. Soyez honnête.' },
-  'step4': { title: 'Félicitations 🎉', body: "Notez votre code d'accès ! Il vous permet de retrouver votre dossier à tout moment." },
+  'step4': { title: 'Félicitations', body: "Notez votre code d'accès ! Il vous permet de retrouver votre dossier à tout moment." },
 }
 
 type HakiAction = { label: string; onClick: () => void; primary?: boolean; icon?: ReactNode }
@@ -698,14 +699,14 @@ function Simulation() {
     if (fieldFeedback && step === 3) {
       if (fieldFeedback.ok) {
         return {
-          title: `✓ ${fieldFeedback.label} bien noté`,
+          title: `${fieldFeedback.label} bien noté`,
           body: `Bravo, votre ${(fieldFeedback.label||'champ').toLowerCase()} est enregistré${fieldFeedback.label?.endsWith('e') ? 'e' : ''}. Continuez avec le champ suivant.`,
           success: true,
           actions: [{ label: 'Continuer', onClick: () => { setFieldFeedback(null); setMascotOpen(false) }, primary: true }],
         }
       }
       return {
-        title: `⚠ Attention : ${fieldFeedback.label}`,
+        title: `Attention : ${fieldFeedback.label}`,
         body: `${fieldFeedback.msg}\n\n${fieldFeedback.example || ''}\n\nPas de panique, essayez à nouveau !`,
         actions: [{ label: "J'ai compris, je recommence", onClick: () => { setFieldFeedback(null); setMascotOpen(false) }, primary: true }],
       }
@@ -714,10 +715,10 @@ function Simulation() {
     // Phase 0 : accueil, demande d'accompagnement
     if (!hakiAccepted && !hakiDeclined) {
       return {
-        title: 'Bonjour 👋 Je suis Haki',
+        title: 'Bonjour Je suis Haki',
         body: "Je peux vous accompagner étape par étape pour remplir votre dossier de financement. Souhaitez-vous que je vous guide ?",
         actions: [
-          { label: '✓ Oui, accompagne-moi', onClick: () => { acceptHaki() }, primary: true },
+          { label: 'Oui, accompagne-moi', onClick: () => { acceptHaki() }, primary: true },
         ],
       }
     }
@@ -739,7 +740,7 @@ function Simulation() {
       const list = isP ? ACTIVITES_PHYSIQUE : ACTIVITES_MORALE
       const iconMap = isP ? ICON_P : ICON_M
       return {
-        title: `✓ Profil enregistré · Étape 2 sur 4`,
+        title: `Profil enregistré · Étape 2 sur 4`,
         body: isP
           ? "Choisissez votre profession ci-dessous. Haki adaptera les questions suivantes."
           : "Choisissez le secteur d'activité de votre entreprise.",
@@ -761,7 +762,7 @@ function Simulation() {
       // Section complétée → message de succès et passage à la suivante
       if (activeSection === 'identite' && identiteOk) {
         return {
-          title: '✓ Identité complétée',
+          title: 'Identité complétée',
           body: "Bravo, votre identité est enregistrée. Passons maintenant à votre situation professionnelle.",
           success: true,
           actions: [{ label: 'Section suivante : Situation', onClick: () => { scrollToSection('situation') }, primary: true }],
@@ -769,7 +770,7 @@ function Simulation() {
       }
       if (activeSection === 'situation' && situationOk) {
         return {
-          title: '✓ Situation enregistrée',
+          title: 'Situation enregistrée',
           body: "Excellent ! Nous passons à votre besoin de financement.",
           success: true,
           actions: [{ label: 'Section suivante : Besoin', onClick: () => { scrollToSection('besoin') }, primary: true }],
@@ -777,7 +778,7 @@ function Simulation() {
       }
       if (activeSection === 'besoin' && besoinOk) {
         return {
-          title: '✓ Besoin bien noté',
+          title: 'Besoin bien noté',
           body: "Très bien. Dernière étape : l'éligibilité, pour calculer votre score.",
           success: true,
           actions: [{ label: 'Dernière section : Éligibilité', onClick: () => { scrollToSection('eligibilite') }, primary: true }],
@@ -786,7 +787,7 @@ function Simulation() {
       if (activeSection === 'eligibilite' && eligibiliteOk) {
         if (canSubmit) {
           return {
-            title: '✓ Tout est prêt !',
+            title: 'Tout est prêt !',
             body: "Toutes les sections sont remplies. Cliquez sur « Voir mon score » en bas pour envoyer votre dossier.",
             success: true,
             actions: [{ label: 'Voir mon score', onClick: () => { soumettre() }, primary: true }],
@@ -821,7 +822,7 @@ function Simulation() {
         const firstMissingSection = missing[0]?.section || 'identite'
         const sectionLabel = { identite: 'Identité', situation: 'Situation', besoin: 'Besoin' }[firstMissingSection]
         return {
-          title: '⚠ Encore un petit effort !',
+          title: 'Encore un petit effort !',
           body: `Il manque ${missing.length} information${missing.length > 1 ? 's' : ''} :\n\n• ${missing.map(m => m.label).join('\n• ')}\n\nRetournez à la section ${sectionLabel} pour compléter.`,
           actions: [{ label: `Aller à ${sectionLabel}`, onClick: () => { scrollToSection(firstMissingSection as any); setMascotOpen(false) }, primary: true }],
         }
@@ -855,7 +856,7 @@ function Simulation() {
         ? '• CNI ou passeport\n• Bulletins de salaire (3 derniers)\n• Relevé bancaire (3 derniers mois)\n• Attestation d\'employeur'
         : '• RCCM + NIU de la société\n• Statuts de la société\n• Relevés bancaires (6 derniers mois)\n• Bilan et compte de résultat'
       return {
-        title: `🎉 ${verdict} · Score ${score}/100`,
+        title: `${verdict} · Score ${score}/100`,
         body: `Votre dossier a bien été envoyé. Voici les 3 prochaines étapes :\n\n1️⃣ **Notez votre code** : ${accessCode}\n2️⃣ **Préparez vos documents** :\n${docs}\n3️⃣ **Un conseiller vous appelle sous 24h** pour la suite.`,
         success: true,
         actions: [
@@ -1320,10 +1321,10 @@ function Simulation() {
                     )}
                   </button></span>
                   {form['password'] && form['password_confirm'] && form['password'] !== form['password_confirm'] && (
-                    <div className="field-hint" style={{ color: '#B91C1C' }}>⚠ Les mots de passe ne correspondent pas</div>
+                    <div className="field-hint" style={{ color: '#B91C1C' }}><CircleAlert size={13} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Les mots de passe ne correspondent pas</div>
                   )}
                   {form['password'] && form['password'].length >= 8 && form['password'] === form['password_confirm'] && (
-                    <div className="field-hint" style={{ color: '#166534' }}>✓ Mots de passe identiques</div>
+                    <div className="field-hint" style={{ color: '#166534' }}><Check size={13} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Mots de passe identiques</div>
                   )}
                 </div>
               </div>
@@ -1349,8 +1350,8 @@ function Simulation() {
                           >{c}</button>
                         ))}
                       </div>
-                      {form['contrat'] === 'CDI' && <div className="field-hint">✓ CDI = meilleure éligibilité</div>}
-                      {form['contrat'] === 'Stage' && <div className="field-hint" style={{ color: '#B91C1C' }}>⚠ Les stagiaires ne sont généralement pas éligibles</div>}
+                      {form['contrat'] === 'CDI' && <div className="field-hint"><Check size={13} style={{ verticalAlign: '-3px', marginRight: 6 }}/>CDI = meilleure éligibilité</div>}
+                      {form['contrat'] === 'Stage' && <div className="field-hint" style={{ color: '#B91C1C' }}><CircleAlert size={13} style={{ verticalAlign: '-3px', marginRight: 6 }}/>Les stagiaires ne sont généralement pas éligibles</div>}
                     </div>
                   )}
 
