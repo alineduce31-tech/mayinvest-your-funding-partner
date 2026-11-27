@@ -216,6 +216,8 @@ function Admin({ session }: { session: any }) {
   const isCommercial = session?.role === 'commercial'
   const peutConfirmerPaiement = session?.role === 'director' || session?.role === 'operator'
   const [selectedLead, setSelectedLead] = useState<any>(null)
+  const [dashPeriod, setDashPeriod] = useState<DashboardPeriod>('30j')
+  const [dashColle, setDashColle] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [toast, setToast] = useState<{ msg: string; score: number } | null>(null)
 
@@ -1027,14 +1029,18 @@ function Admin({ session }: { session: any }) {
 
         {/* MAIN */}
         <main className="main">
-          <div className="top-bar">
+          <div className={`top-bar${page === 'general' ? ' tb-dash' : ''}`}>
             <button className="burger" onClick={() => setSidebarOpen(true)} aria-label="Menu">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="#111" strokeWidth="2" strokeLinecap="round"/></svg>
             </button>
             {page !== 'general' && <h1 className="page-title">{NAV.find(n => n.k === page)?.label}</h1>}
+            {page === 'general' && <div className={`sd-mini${dashColle ? ' on' : ''}`} aria-hidden={!dashColle}>
+              <span className="sd-mini-t">Dashboard stratégique</span>
+              <PeriodeSeg period={dashPeriod} setPeriod={setDashPeriod} tabIndex={dashColle ? 0 : -1}/>
+            </div>}
           </div>
 
-          {page === 'general' && <DashboardView onOpen={setSelectedLead}/>}
+          {page === 'general' && <DashboardView onOpen={setSelectedLead} period={dashPeriod} setPeriod={setDashPeriod} onColle={setDashColle}/>}
           {page !== 'general' && (loading ? <SkeletonPage rows={3} label="Chargement des leads…" /> : <>
             {page === 'crm' && dashboardSearch.priority && <div className="sd-filter-notice">Filtre prioritaire actif <Button variant="link" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}>Effacer</Button></div>}
             {page === 'crm' && <CRMView leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
@@ -1083,23 +1089,36 @@ function Admin({ session }: { session: any }) {
  * SUB-VIEWS
  * ============================================================ */
 
-function DashboardView({ onOpen }: { onOpen: (lead: DashboardLead) => void }) {
-  const [period, setPeriod] = useState<DashboardPeriod>('30j')
+function PeriodeSeg({ period, setPeriod, tabIndex }: { period: DashboardPeriod; setPeriod: (p: DashboardPeriod) => void; tabIndex?: number }) {
+  return <div className="sd-seg" role="group" aria-label="Période">
+    {(['7j', '30j', '90j', 'YTD'] as const).map(p => (
+      <button
+        key={p}
+        type="button"
+        tabIndex={tabIndex}
+        className={p === period ? 'active' : ''}
+        aria-pressed={p === period}
+        onClick={() => setPeriod(p)}
+      >{p}</button>
+    ))}
+  </div>
+}
+
+function DashboardView({ onOpen, period, setPeriod, onColle }: { onOpen: (lead: DashboardLead) => void; period: DashboardPeriod; setPeriod: (p: DashboardPeriod) => void; onColle: (v: boolean) => void }) {
   const [now] = useState(() => Date.now())
+  const tete = useRef<HTMLElement>(null)
+  // Quand l'en-tête du dashboard sort de l'écran, le titre et la période remontent dans la barre du haut
+  useEffect(() => {
+    const el = tete.current
+    if (!el || typeof IntersectionObserver === 'undefined') return
+    const obs = new IntersectionObserver(([e]) => onColle(!!e && !e.isIntersecting && e.boundingClientRect.top < 80), { rootMargin: '-60px 0px 0px 0px', threshold: 0 })
+    obs.observe(el)
+    return () => { obs.disconnect(); onColle(false) }
+  }, [onColle])
   return <section className="strategic-dashboard">
-    <header className="sd-header">
+    <header className="sd-header" ref={tete}>
       <div><h1>Dashboard stratégique</h1><p>Pilotage commercial et impact</p></div>
-      <div className="sd-seg" role="group" aria-label="Période">
-        {(['7j', '30j', '90j', 'YTD'] as const).map(p => (
-          <button
-            key={p}
-            type="button"
-            className={p === period ? 'active' : ''}
-            aria-pressed={p === period}
-            onClick={() => setPeriod(p)}
-          >{p}</button>
-        ))}
-      </div>
+      <PeriodeSeg period={period} setPeriod={setPeriod}/>
     </header>
     <Suspense fallback={<DashboardSkeleton />}><DashboardContent period={period} now={now} onOpen={onOpen}/></Suspense>
   </section>
@@ -2056,6 +2075,7 @@ function Donut({ items, capLabel }: { items: { label: string; value: number }[];
 
 function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
   const [expOpen, setExpOpen] = useState(false)
+  const fige = useBarreFigee()
   const totalMontant = leads.reduce((s: number, l: any) => s + (l.montant_demande || 0), 0)
   const avgMontant = leads.length ? Math.round(totalMontant / leads.length) : 0
   const scoreAvg = leads.length ? Math.round(leads.reduce((s: number, l: any) => s + (l.score || 0), 0) / leads.length) : 0
@@ -2096,7 +2116,8 @@ function RapportsView({ leads, exportCSV, exportExcel, exportPDF }: any) {
     </div>
 
     <div className="rap-pan">
-      <div className="rap-pan-head">
+      <div ref={fige.repere} className="barre-repere" aria-hidden="true"/>
+      <div ref={fige.barre} style={fige.style} className={`rap-pan-head ${fige.classe}`}>
         <div className="rap-pan-t"><i className="eq-ic b"><BarChart3 size={16}/></i>Résumé par statut <span>· {leads.length} dossier{leads.length > 1 ? 's' : ''}</span></div>
         <div className="crm-exp">
           <button type="button" className="crm-exp-btn" onClick={() => setExpOpen(o => !o)} aria-expanded={expOpen}><Download size={14}/>Exporter<ChevronDown size={13}/></button>
