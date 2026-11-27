@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
-import { Plus, ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
+import { LogOut, Plus, ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
 import MenuExporter from '@/components/MenuExporter'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
@@ -1024,7 +1024,7 @@ function Admin({ session }: { session: any }) {
               {isDirector ? <><Crown size={13} strokeWidth={1.75}/> Directeur</> : <><User size={13} strokeWidth={1.75}/> Commercial</>}
             </div>
             <button className="sb-logout" onClick={logout}>
-              <User size={16} strokeWidth={2}/>
+              <LogOut size={16} strokeWidth={2}/>
               Déconnexion
             </button>
           </div>

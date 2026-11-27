@@ -12,7 +12,6 @@ import CallButton from '@/components/CallButton'
 import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
 import StatutPicker from '@/components/StatutPicker'
 import { RappelAlarme } from '@/components/Rappels'
-import { User } from 'lucide-react'
 import { Copy, Download, MessageSquare, MessagesSquare, Share2, Coins, UserPlus, LogOut, RefreshCw, ChevronRight, AlertCircle, PhoneCall, CalendarDays, Landmark, Check, Clock, Phone, MessageCircle, ArrowRight } from 'lucide-react'
 import { montantCourt, dateRelative, tonScore, tonStatut, initialesNom, couleurAvatar } from '@/lib/affichage'
 import { blocCalendrier } from '@/lib/conversation'
@@ -203,7 +202,7 @@ function EspaceCommercialPage() {
         <>
           <header className="ec-header">
             <Link to="/"><Logo height={56} tone="light"/></Link>
-            <button className="btn-logout" onClick={logout}>Déconnexion</button>
+            <button className="btn-logout" onClick={logout} style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><LogOut size={15} strokeWidth={2}/>Déconnexion</button>
           </header>
           <div className="pre-wrap">
             <div className="welcome-card">
@@ -247,7 +246,7 @@ function EspaceCommercialPage() {
                   <div className="ws-user-city">{session.ville}</div>
                 </div>
               </div>
-              <button className="btn-logout-sm" onClick={logout}><User size={16} strokeWidth={2}/>Déconnexion</button>
+              <button className="btn-logout-sm" onClick={logout}><LogOut size={16} strokeWidth={2}/>Déconnexion</button>
             </div>
           </aside>
 

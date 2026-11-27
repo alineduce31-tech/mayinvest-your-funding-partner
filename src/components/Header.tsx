@@ -1,3 +1,4 @@
+import { LogOut } from "lucide-react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { Logo } from "./Logo";
 import { signOut, useStore } from "@/lib/mayinvest";
@@ -25,12 +26,13 @@ export function Header() {
                 Back-office
               </Link>
               <button
-                className="btn-ghost px-4 py-2"
+                className="btn-ghost px-4 py-2 inline-flex items-center gap-2"
                 onClick={() => {
                   signOut();
                   navigate({ to: "/" });
                 }}
               >
+                <LogOut size={15} strokeWidth={2} aria-hidden="true"/>
                 Déconnexion
               </button>
             </>
