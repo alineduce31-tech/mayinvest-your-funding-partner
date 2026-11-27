@@ -13,10 +13,10 @@ describe('non éligibles', () => {
     expect(raison(L({ statut: 'Pack Formalisation Vendu' }))).toEqual({ code: 'pack', libelle: 'Pack en cours' })
     expect(offre(L({ type: 'morale', situation: { rccm: 'Non' } })).key).toBe('pack_formalisation')
     expect(raison(L({ score: 20, statut: 'Non Éligible' })).libelle).toBe('Score 20/100')
-    expect(offre(L({ score: 20, banque_actuelle: 'Aucune' })).key).toBe('ouverture_compte')
-    expect(offre(L({ score: 60, statut: 'Non Éligible' })).key).toBe('ouverture_compte')
+    expect(offre(L({ score: 20, banque_actuelle: 'Aucune' })).key).toBe('pack_formalisation')
+    expect(offre(L({ score: 60, statut: 'Non Éligible' })).key).toBe('pack_formalisation')
     expect(offre(L({ type: 'morale', score: 60, statut: 'Non Éligible' })).key).toBe('pack_formalisation')
-    expect(['pack_formalisation', 'ouverture_compte', 'repasser']).toContain(offre(L({ score: 90, statut: 'Non Éligible' })).key)
+    expect(['pack_formalisation', 'repasser']).toContain(offre(L({ score: 90, statut: 'Non Éligible' })).key)
   })
   test('chiffres et filtres', () => {
     const ls = [L({ situation: { rccm: 'Non' } }), L({ situation: { rccm: 'Non' }, agent_commercial_id: 'x' }), L({ statut: 'Pack Formalisation Vendu' }), L({ score: 20, statut: 'Non Éligible' })]

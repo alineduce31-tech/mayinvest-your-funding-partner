@@ -6,7 +6,6 @@ import {
   opportunity,
   periodBounds,
   matchesPriority,
-  PRIX_OUVERTURE_COMPTE,
   PRIX_PACK_FORMALISATION,
   TAUX_COMMISSION_CREDIT,
   type DashboardLead,
@@ -39,7 +38,7 @@ describe('dashboard strategic rules', () => {
   test('impact revenue uses official prices per category', () => {
     const m = dashboardMetrics(
       [
-        lead({ banque_actuelle: null }), // pas de compte -> ouverture compte
+        lead({ banque_actuelle: null }), // pas de compte -> pack formalisation (inclut l'ouverture du compte)
         lead({ type: 'morale', rccm: 'Non' }), // pas de RCCM -> pack formalisation
         lead({ statut: 'Non Éligible', motif_refus: 'Refus banque' }), // refus -> aucun service payant
       ],
@@ -47,7 +46,7 @@ describe('dashboard strategic rules', () => {
       now,
     )
     expect(m.bloc1.caImpactPotentiel).toBe(
-      PRIX_OUVERTURE_COMPTE + PRIX_PACK_FORMALISATION,
+      2 * PRIX_PACK_FORMALISATION,
     )
   })
 

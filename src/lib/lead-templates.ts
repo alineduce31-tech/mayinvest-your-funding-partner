@@ -1,5 +1,5 @@
 // ============================================================
-// Mayinvest PréSelect - Templates WhatsApp (4 scripts)
+// Mayinvest PréSelect - Templates WhatsApp
 // Fichier: src/lib/lead-templates.ts
 // ============================================================
 
@@ -10,30 +10,17 @@ export function lienContact(sujet: string, corps = ''): string {
   return `mailto:${MAYINVEST_EMAIL}?subject=${encodeURIComponent(sujet)}${corps ? `&body=${encodeURIComponent(corps)}` : ''}`
 }
 
-export const PRIX_OUVERTURE_COMPTE = 30_000
 export const PRIX_PACK_FORMALISATION = 50_000
 
 export function fillTemplate(template: string, vars: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (_, key) => String(vars[key] ?? `[${key}]`))
 }
 
-export const TEMPLATE_OUVERTURE_COMPTE = `Bonjour {prenom},
-
-Suite à votre pré-sélection Mayinvest, nous avons identifié que vous n'avez pas encore de compte bancaire professionnel.
-
-C'est la 1ère étape avant tout financement. Mayinvest vous accompagne pour l'ouverture rapide (sous 15 jours) auprès de nos banques partenaires.
-
-Coût de l'accompagnement : 30 000 XAF (dossier complet, prise de RDV, suivi).
-
-Souhaitez-vous qu'on démarre ?
-
-Mayinvest · ${MAYINVEST_CONTACT}`
-
 export const TEMPLATE_PACK_FORMALISATION = `Bonjour {prenom},
 
-Nous avons étudié votre dossier Mayinvest. Votre activité est viable, mais il vous manque le RCCM pour accéder au financement bancaire.
+Nous avons étudié votre dossier Mayinvest. Votre projet est viable, mais il manque encore quelques éléments pour accéder au financement bancaire.
 
-Mayinvest propose le Pack Formalisation : création RCCM + NIU + statuts, en 21 jours, tout inclus.
+Mayinvest propose le Pack Formalisation, tout inclus : création RCCM + NIU + statuts, et ouverture de votre compte bancaire auprès de nos banques partenaires.
 
 Tarif : 50 000 XAF (facture détaillée fournie).
 
@@ -55,18 +42,9 @@ On en discute ?
 
 Mayinvest · ${MAYINVEST_CONTACT}`
 
-export type LeadActionKey = 'ouverture_compte' | 'pack_formalisation' | 'couveuse'
+export type LeadActionKey = 'pack_formalisation' | 'couveuse'
 
 export const LEAD_ACTIONS = [
-  {
-    key: 'ouverture_compte' as const,
-    label: 'Envoyer script WhatsApp · Ouverture Compte',
-    short: 'Ouverture Compte',
-    prix: PRIX_OUVERTURE_COMPTE,
-    template: TEMPLATE_OUVERTURE_COMPTE,
-    color: '#1E40AF',
-    icon: '🏦',
-  },
   {
     key: 'pack_formalisation' as const,
     label: 'Envoyer Devis · Pack Formalisation 50 000 XAF',

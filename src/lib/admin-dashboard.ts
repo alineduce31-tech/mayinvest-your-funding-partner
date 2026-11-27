@@ -4,7 +4,6 @@
 // ============================================================
 
 // Prix officiels Impact (cahier des charges Mayinvest)
-export const PRIX_OUVERTURE_COMPTE = 30_000       // XAF
 export const PRIX_PACK_FORMALISATION = 50_000     // XAF
 export const PRIX_COUVEUSE_3MOIS = 0              // XAF (service gratuit)
 
@@ -117,7 +116,7 @@ export function bloc1KPIs(leads: DashboardLead[]) {
 
   // CA Impact potentiel = somme des potentiels des 4 categories x prix
   const pasCompte = leads.filter(l => isUnbanked(l) && isNonEligible(l)).length
-  const pasRccm = leads.filter(l => needsPack(l) && isNonEligible(l)).length
+  const pasRccm = leads.filter(l => needsPack(l) && isNonEligible(l) && !isUnbanked(l)).length
   const fluxFaible = leads.filter(l =>
     hasFluxFaible(l) && isNonEligible(l) && !isUnbanked(l) && !needsPack(l)
   ).length
@@ -126,7 +125,7 @@ export function bloc1KPIs(leads: DashboardLead[]) {
   ).length
 
   const caImpactPotentiel =
-    pasCompte * PRIX_OUVERTURE_COMPTE +
+    pasCompte * PRIX_PACK_FORMALISATION +
     pasRccm * PRIX_PACK_FORMALISATION +
     fluxFaible * PRIX_COUVEUSE_3MOIS +
     refus * 0 // refus bancaire : pas de service payant dédié (Mayinvest ne vend que ses packs)
@@ -168,7 +167,7 @@ export function bloc2NonEligibles(leads: DashboardLead[]) {
   const refus = nonElig.filter(l => !isUnbanked(l) && !needsPack(l) && !hasFluxFaible(l) && hasRefus(l))
 
   return [
-    { key: 'pas_compte' as const, raison: 'Pas de compte bancaire', nb: pasCompte.length, pct: total ? pasCompte.length / total * 100 : 0, potentiel: pasCompte.length * PRIX_OUVERTURE_COMPTE, action: 'Proposer Ouverture Compte', prix: PRIX_OUVERTURE_COMPTE },
+    { key: 'pas_compte' as const, raison: 'Pas de compte bancaire', nb: pasCompte.length, pct: total ? pasCompte.length / total * 100 : 0, potentiel: pasCompte.length * PRIX_PACK_FORMALISATION, action: 'Proposer Pack Formalisation', prix: PRIX_PACK_FORMALISATION },
     { key: 'pas_rccm' as const, raison: 'Pas de RCCM', nb: pasRccm.length, pct: total ? pasRccm.length / total * 100 : 0, potentiel: pasRccm.length * PRIX_PACK_FORMALISATION, action: 'Proposer Pack Formalisation', prix: PRIX_PACK_FORMALISATION },
     { key: 'flux_faible' as const, raison: 'Flux < 1M/mois', nb: fluxFaible.length, pct: total ? fluxFaible.length / total * 100 : 0, potentiel: fluxFaible.length * PRIX_COUVEUSE_3MOIS, action: 'Mettre en couveuse 3 mois', prix: PRIX_COUVEUSE_3MOIS },
     { key: 'refus' as const, raison: 'Refus bancaire', nb: refus.length, pct: total ? refus.length / total * 100 : 0, potentiel: 0, action: 'Revoir le dossier', prix: 0 },

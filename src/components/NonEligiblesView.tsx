@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Search, Phone, MessageCircle, FileText, UserPlus, Ban, FileX, BarChart3, CircleCheck, CircleAlert, RefreshCw, Landmark, Wallet } from 'lucide-react'
+import { Search, Phone, MessageCircle, FileText, UserPlus, Ban, FileX, BarChart3, CircleCheck, CircleAlert, RefreshCw, Wallet } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import NiceSelect from '@/components/NiceSelect'
 import ConseillerPicker from '@/components/ConseillerPicker'
@@ -55,7 +55,7 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
   return (
     <div className="bk ne">
       <style>{BK_CSS + NE_CSS}</style>
-      <p className="bk-sub">Dossiers refusés pour l'instant : on les aide à devenir éligibles avec nos packs : Pack formalisation et Ouverture de compte.</p>
+      <p className="bk-sub">Dossiers refusés pour l'instant : on les aide à devenir éligibles avec le Pack formalisation (RCCM, NIU, statuts et ouverture de compte).</p>
       <div className="bk-kpis">
         <div className="bk-k"><i className="bk-ic b"><RefreshCw size={16} strokeWidth={1.8}/></i><small>Dossiers à reconvertir</small><b>{ch.aReconvertir}</b><span>dont {ch.sansConseiller} sans conseiller</span></div>
         <div className="bk-k warn"><i className="bk-ic o"><FileX size={16} strokeWidth={1.8}/></i><small>Sans RCCM</small><b>{ch.sansRccm}</b><span>cible du Pack formalisation</span></div>
@@ -100,7 +100,7 @@ export default function NonEligiblesView({ leads, onOpen, updateStatut, assignLe
                   <span className="bk-amt"><b>{montantComplet(l.montant_demande)}</b><small>{dateRelative(l.created_at, now)}</small></span>
                   <span className="ne-offre-c">
                     <button className={`ne-offre ${o.key}`} onClick={() => proposer(l)} title={o.key === 'repasser' ? 'Passer le statut à Éligible' : 'Ouvre WhatsApp avec le message déjà rédigé'}>
-                      {o.key === 'repasser' ? <RefreshCw size={14}/> : o.key === 'ouverture_compte' ? <Landmark size={14}/> : <WaIcon/>}{o.label}
+                      {o.key === 'repasser' ? <RefreshCw size={14}/> : <WaIcon/>}{o.label}
                     </button>
                   </span>
                   <span className="bk-qa">
@@ -130,7 +130,6 @@ const NE_CSS = `
   .ne-offre-c { display: flex; min-width: 0; }
   .ne-offre { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: 999px; padding: 8px 13px; font-family: inherit; font-size: 12.5px !important; line-height: 1.2; font-weight: 700; cursor: pointer; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
   .ne-offre.pack_formalisation { background: #25D366; color: #fff; }
-  .ne-offre.ouverture_compte { background: #EEF4FF; color: #1A6BFF; }
   .ne-offre.repasser { background: #F1F5F9; color: #334155; }
   @media (max-width: 1100px) {
     .bk.ne .bk-row { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "who who" "why amt" "st st" "offre qa"; }

@@ -1222,7 +1222,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
           </div>
         ))}
       </div>
-      <p className="sd-hint">Potentiel = nombre de dossiers × prix du service (Ouverture compte 30 000 XAF, Pack formalisation 50 000 XAF).</p>
+      <p className="sd-hint">Potentiel = nombre de dossiers × prix du service (Pack formalisation 50 000 XAF, ouverture de compte incluse).</p>
     </section>
 
     <section className="sd-section"><h2><Zap size={14} strokeWidth={2}/>Actions prioritaires</h2><div className="sd-alerts">
@@ -1238,7 +1238,7 @@ function DashboardContent({ period, now, onOpen }: { period: DashboardPeriod; no
         <div className="sd-alert-icon sd-alert-n">{prio.impact}</div>
         <div className="sd-alert-body">
           <div className="sd-alert-title">Non bancarisés cette semaine</div>
-          <div className="sd-alert-sub">Proposer l'ouverture de compte</div>
+          <div className="sd-alert-sub">Proposer le Pack formalisation</div>
         </div>
         <button type="button" className="sd-alert-link" onClick={() => showCRM('impact')}>Voir<ArrowUpRight size={12} strokeWidth={2.3}/></button>
       </article>
@@ -2529,7 +2529,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
 }
 
 /* ============================================================
- * LEAD ACTIONS PANEL — boutons WhatsApp (Ouverture Compte, Pack, Couveuse)
+ * LEAD ACTIONS PANEL — boutons WhatsApp (Pack formalisation, Couveuse)
  * ============================================================ */
 function LeadActionsPanel({ lead, onSendInternal }: { lead: any; onSendInternal: (msg: string) => void }) {
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
