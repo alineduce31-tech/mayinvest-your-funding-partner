@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import CarteAide, { BoutonAide } from '@/components/CarteAide'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
 import { Filter, LogOut, Plus, ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
 import MenuExporter from '@/components/MenuExporter'
@@ -1036,7 +1037,7 @@ function Admin({ session }: { session: any }) {
             <button className="burger" onClick={() => setSidebarOpen(true)} aria-label="Menu">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="#111" strokeWidth="2" strokeLinecap="round"/></svg>
             </button>
-            {page !== 'general' && <h1 className="page-title">{NAV.find(n => n.k === page)?.label}</h1>}
+            {page !== 'general' && <h1 className="page-title">{NAV.find(n => n.k === page)?.label}<BoutonAide cle={`admin-${page}`}/></h1>}
             {page === 'general' && <div className={`sd-mini${dashColle ? ' on' : ''}`} aria-hidden={!dashColle}>
               <span className="sd-mini-t">Dashboard stratégique</span>
               <PeriodeSeg period={dashPeriod} setPeriod={setDashPeriod} tabIndex={dashColle ? 0 : -1}/>
@@ -1045,6 +1046,7 @@ function Admin({ session }: { session: any }) {
 
           {page === 'general' && <DashboardView onOpen={setSelectedLead} period={dashPeriod} setPeriod={setDashPeriod} onColle={setDashColle}/>}
           {page !== 'general' && (loading ? <SkeletonPage rows={3} label="Chargement des leads…" /> : <>
+            <CarteAide cle={`admin-${page}`}/>
             {page === 'crm' && dashboardSearch.priority && (
               <div className="crm-prio" role="status">
                 <span className="crm-prio-ic" aria-hidden="true"><Filter size={15}/></span>
@@ -1127,9 +1129,10 @@ function DashboardView({ onOpen, period, setPeriod, onColle }: { onOpen: (lead: 
   }, [onColle])
   return <section className="strategic-dashboard">
     <header className="sd-header" ref={tete}>
-      <div><h1>Dashboard stratégique</h1><p>Pilotage commercial et impact</p></div>
+      <div><h1>Dashboard stratégique<BoutonAide cle="admin-general"/></h1><p>Pilotage commercial et impact</p></div>
       <PeriodeSeg period={period} setPeriod={setPeriod}/>
     </header>
+    <CarteAide cle="admin-general"/>
     <Suspense fallback={<DashboardSkeleton />}><DashboardContent period={period} now={now} onOpen={onOpen}/></Suspense>
   </section>
 }

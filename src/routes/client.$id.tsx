@@ -1,4 +1,5 @@
 import { lienContact } from '@/lib/lead-templates'
+import CarteAide, { BoutonAide } from '@/components/CarteAide'
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { informer } from '@/components/Dialogue'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
@@ -1035,6 +1036,8 @@ function ClientPortal() {
         </div>
 
         {activeTab === 'suivi' && <>
+          <CarteAide cle="cli-suivi"/>
+          <div className="cx-aide"><BoutonAide cle="cli-suivi"/></div>
           <div className={`cx-next ${prochaine.action === 'documents' ? 'warn' : ''}`}>
             <div className="cx-next-h">
               <span className="cx-next-ic" aria-hidden="true">{prochaine.action === 'documents' ? <FileText size={17}/> : lead?.statut === 'Financé' ? <CircleCheck size={17}/> : <Clock size={17}/>}</span>
@@ -1130,6 +1133,8 @@ function ClientPortal() {
         )}
 
         {activeTab === 'docs' && <>
+          <CarteAide cle="cli-docs"/>
+          <div className="cx-aide"><BoutonAide cle="cli-docs"/></div>
           <div className="cx-g cx-docs-h">
             <div className="cx-docs-n"><b>{docsC.envoyes} sur {docsC.total}</b> envoyé{docsC.envoyes > 1 ? 's' : ''}{docsC.valides > 0 ? ` · ${docsC.valides} validé${docsC.valides > 1 ? 's' : ''}` : ''}</div>
             <div className="cx-bar"><i style={{ width: `${docsC.total ? (docsC.envoyes / docsC.total) * 100 : 0}%` }}/></div>
@@ -1170,6 +1175,8 @@ function ClientPortal() {
         </>}
 
         {activeTab === 'infos' && <>
+          <CarteAide cle="cli-infos"/>
+          <div className="cx-aide"><BoutonAide cle="cli-infos"/></div>
           <div className="cx-gt">Votre demande</div>
           <div className="cx-g">
             <div className="cx-r"><i className="cx-r-ic" aria-hidden="true"><User size={15}/></i><span>Type</span><b>{isP ? 'Particulier' : 'PME'}</b></div>
@@ -1281,6 +1288,7 @@ const CX_CSS = `
   .cx-send.r { background: #DC2626; }
   .cx-st { flex: none; } .cx-st.g { color: #16A34A; } .cx-st.o { color: #D9690B; }
   .cx-vide { padding: 22px; text-align: center; font-size: 13px; color: #86868B; }
+  .cx-aide { display: flex; justify-content: flex-end; margin: -6px 2px 6px; } .cx-aide:empty { display: none; }
   .cx-note { display: flex; align-items: center; gap: 10px; font-size: 12.5px; line-height: 1.45; color: #6E6E73; margin: 12px 0 0; padding: 12px 16px; background: #fff; border-radius: 16px; }
   @media (max-width: 1024px) { .cx-note { padding-right: 70px; } }
   .cx-note svg { flex: none; width: 30px; height: 30px; padding: 7.5px; box-sizing: border-box; border-radius: 9px; background: #EAF1FF; color: #1A6BFF; margin: -4px 2px -4px 0; }

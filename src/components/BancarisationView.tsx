@@ -46,7 +46,6 @@ export default function BancarisationView({ leads, onOpen, updateStatut, assignL
   return (
     <div className="bk">
       <style>{BK_CSS}</style>
-      <p className="bk-sub">Prospects sans compte bancaire ou sans salaire domicilié, à accompagner vers l'ouverture d'un compte.</p>
       <div className="bk-kpis">
         <div className="bk-k"><i className="bk-ic b"><Landmark size={16} strokeWidth={1.8}/></i><small>À bancariser</small><b>{ch.aBancariser}</b><span>dont {ch.cetteSemaine} cette semaine</span></div>
         <div className="bk-k"><i className="bk-ic n"><Wallet size={16} strokeWidth={1.8}/></i><small>Montant en jeu</small><b>{montantComplet(ch.montant).replace('—', '0 XAF')}</b><span>demandés au total</span></div>

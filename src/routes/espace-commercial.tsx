@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import CarteAide, { BoutonAide } from '@/components/CarteAide'
 import { useEffect, useState } from 'react'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
@@ -260,10 +261,12 @@ function EspaceCommercialPage() {
                 {tab === 'leads' && 'Mes dossiers'}
                 {tab === 'messagerie' && 'Messagerie'}
                 {tab === 'outils' && 'Mes Outils'}
+                <BoutonAide cle={`com-${tab}`}/>
               </h1>
             </header>
 
             <div className={`ws-content ${tab === 'messagerie' ? 'flush' : ''}`}>
+              {tab !== 'messagerie' && <CarteAide cle={`com-${tab}`}/>}
               {tab === 'dashboard' && <DashboardTab session={session} stats={stats} leads={leads} refLink={refLink} unreadClients={unreadClients} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)} onGo={setTab} onOpenThread={(id) => { setOpenLeadId(id); setTab('messagerie'); window.scrollTo(0, 0) }} onUpdated={() => { loadLeads(); loadStats() }}/>}
               {tab === 'leads' && <LeadsTab leads={leads} majA={leadsMajA} onReload={loadLeads} onOpenLead={setSelectedLead} onNewLead={() => setNewLeadOpen(true)}/>}
               {tab === 'messagerie' && <CommercialMessagerie key={openLeadId || 'inbox'} commercialId={session.id} initialLeadId={openLeadId} onThreadOpen={setThreadOpen} onCountsChange={() => { loadUnreadClients(); loadUnreadChat() }}/>}

@@ -1,4 +1,5 @@
 import EquipeNav from '@/components/EquipeNav'
+import CarteAide, { BoutonAide } from '@/components/CarteAide'
 import { Users, CircleCheck, Crown, UserCog, CircleAlert } from 'lucide-react'
 import { CroixFermer } from '@/components/Dialogue'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
@@ -146,12 +147,13 @@ function EquipeAdminPage() {
           <EquipeNav actif="admins"/>
         </div>
         <div className="ea-header-right">
-          <h1>Équipe administration</h1>
+          <h1>Équipe administration<BoutonAide cle="admin-equipe-admin"/></h1>
           <div className="ea-sub">Directeurs · Opérateurs · Lecteurs</div>
         </div>
       </header>
 
       <div className="wrap">
+        <CarteAide cle="admin-equipe-admin"/>
         {notice && (
           <div className={`notice ${notice.type}`}>
             {notice.type === 'ok' ? <CircleCheck size={16}/> : <CircleAlert size={16}/>}<span style={{ flex: 1 }}>{notice.msg}</span>

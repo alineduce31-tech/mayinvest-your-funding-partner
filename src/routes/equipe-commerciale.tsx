@@ -1,4 +1,5 @@
 import EquipeNav from '@/components/EquipeNav'
+import CarteAide, { BoutonAide } from '@/components/CarteAide'
 import { Users, Inbox, Landmark, Wallet, Trash2 } from 'lucide-react'
 import { confirmer, informer } from '@/components/Dialogue'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
@@ -197,12 +198,13 @@ function EquipeCommercialePage() {
           <EquipeNav actif="commerciaux"/>
         </div>
         <div className="ec-header-right">
-          <h1>Équipe commerciale</h1>
+          <h1>Équipe commerciale<BoutonAide cle="admin-equipe-commerciale"/></h1>
           <div className="ec-sub">Admin · Gestion des commerciaux actifs</div>
         </div>
       </header>
 
       <div className="wrap">
+        <CarteAide cle="admin-equipe-commerciale"/>
         <div className="kpi-row">
           <div className="kpi"><i className="eq-ic b"><Users size={16}/></i><div className="kpi-lbl">Commerciaux actifs</div><div className="kpi-val">{totals.nb}</div></div>
           <div className="kpi"><i className="eq-ic n"><Inbox size={16}/></i><div className="kpi-lbl">Leads attribués</div><div className="kpi-val">{totals.totalLeads}</div></div>

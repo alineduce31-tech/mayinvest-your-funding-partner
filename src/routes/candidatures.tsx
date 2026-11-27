@@ -1,4 +1,5 @@
 import EquipeNav from '@/components/EquipeNav'
+import CarteAide, { BoutonAide } from '@/components/CarteAide'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { CroixFermer } from '@/components/Dialogue'
 import { informer } from '@/components/Dialogue'
@@ -306,7 +307,7 @@ function CandidaturesPage() {
           <EquipeNav actif="candidatures"/>
         </div>
         <div className="cd-header-right">
-          <h1>Candidatures commerciales</h1>
+          <h1>Candidatures commerciales<BoutonAide cle="admin-candidatures"/></h1>
           <div className="cd-sub">Admin · Validation des commerciaux</div>
         </div>
         <div className="cd-compte" style={{ fontSize: 12, color: '#6B7280' }}>
@@ -318,6 +319,7 @@ function CandidaturesPage() {
 
       <div className="cd-wrap">
         <div>
+          <CarteAide cle="admin-candidatures"/>
           <div className="cd-tabs">
             <button className={`cd-tab${filter === 'pending' ? ' active' : ''}`} onClick={() => setFilter('pending')}>À valider <span className="cd-tab-count">{counts.pending}</span></button>
             <button className={`cd-tab${filter === 'en_cours' ? ' active' : ''}`} onClick={() => setFilter('en_cours')}>En parcours <span className="cd-tab-count">{counts.en_cours}</span></button>

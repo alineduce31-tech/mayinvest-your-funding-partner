@@ -1,4 +1,5 @@
 import CloseIcon from '@/components/CloseIcon'
+import CarteAide, { BoutonAide } from '@/components/CarteAide'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import DemandePieces from '@/components/DemandePieces'
 import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
@@ -92,7 +93,7 @@ export default function AdminMessagerie({ session, onOpenLead, onLeadChanged, on
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4L3 7l3 3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           )}
-          <span className="am-title">Messagerie</span>
+          <span className="am-title">Messagerie</span><BoutonAide cle="admin-messagerie"/>
           {c.nonLus > 0 && <span className="am-badge">{c.nonLus} non lu{c.nonLus > 1 ? 's' : ''}</span>}
           {c.enAttente > 0 && <button className="am-alert" onClick={() => setFiltre('attente')}>{c.enAttente} client{c.enAttente > 1 ? 's' : ''} attend{c.enAttente > 1 ? 'ent' : ''} depuis plus de 24 h</button>}
         </div>
@@ -104,6 +105,7 @@ export default function AdminMessagerie({ session, onOpenLead, onLeadChanged, on
 
       <div className={`am-body ${fil ? 'has-fil' : ''}`}>
         <aside className="am-list">
+          <CarteAide cle="admin-messagerie" className="ca-liste"/>
           <div className="am-list-tools">
             <input className="am-search" placeholder="Rechercher un client, un commercial…" value={recherche} onChange={e => setRecherche(e.target.value)} aria-label="Rechercher"/>
             <div className="am-filters">

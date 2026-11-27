@@ -1,4 +1,5 @@
 import CloseIcon from '@/components/CloseIcon'
+import CarteAide from '@/components/CarteAide'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import DemandePieces from '@/components/DemandePieces'
 import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
@@ -89,6 +90,7 @@ export default function CommercialMessagerie({ commercialId, onCountsChange, onT
     <div className={`cm-root ${sel ? 'has-sel' : ''}`}>
       <CmStyles/>
       <aside className="cm-list">
+        <CarteAide cle="com-messagerie" className="ca-liste"/>
         <div className="cm-list-tools">
           <input className="cm-search" placeholder="Rechercher un client…" value={q} onChange={e => setQ(e.target.value)} aria-label="Rechercher un client"/>
           <div className="cm-filters">
