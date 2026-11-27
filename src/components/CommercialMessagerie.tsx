@@ -14,7 +14,7 @@ import { regrouper, vueCommercial, vueEquipe, suggestions, texteSecoursRdv, text
 import { EyeOff, Send, Check } from 'lucide-react'
 import PieceIcone from '@/components/PieceIcone'
 import MessagesTypesMenu from '@/components/MessagesTypesMenu'
-import { MessageSquareText, CalendarPlus, FolderPlus } from 'lucide-react'
+import { MessageSquareText, CalendarPlus, FolderPlus, FileWarning, MessageCircle, Phone, CalendarDays, ArrowRight, CircleCheck, Flag } from 'lucide-react'
 import type { MessageType } from '@/lib/messagerie'
 import { decouperLibelle, titreCourt, etatPiece, LIBELLE_ETAT, piecesARelancer, progressionPieces } from '@/lib/affichage'
 
@@ -36,11 +36,16 @@ const MESSAGES_TYPES: MessageType[] = [
   { cle: 'merci', label: 'Merci', text: "Merci pour votre confiance. N'hésitez pas à m'écrire ici à tout moment." },
 ]
 
-const ArrowDot = () => (
-  <span className="cm-adot" aria-hidden="true">
-    <svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-  </span>
-)
+function iconeEtape(action: string | null | undefined, ton: string) {
+  const p = { size: 16, strokeWidth: 2.1 }
+  if (action === 'pieces') return <FileWarning {...p}/>
+  if (action === 'repondre') return <MessageCircle {...p}/>
+  if (action === 'appeler') return <Phone {...p}/>
+  if (action === 'rdv') return <CalendarDays {...p}/>
+  if (action === 'etape') return <Flag {...p}/>
+  return ton === 'ok' ? <CircleCheck {...p}/> : <Flag {...p}/>
+}
+
 const BackIcon = () => <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M11 7H3M6 4L3 7l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
 const PhoneIcon = () => <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" stroke="#fff" strokeWidth="2.2" strokeLinejoin="round"/></svg>
 
@@ -256,10 +261,18 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
         </div>
 
         <div className={`cm-next ${step.ton}`}>
-          <div><b>Prochaine étape :</b> {step.texte}</div>
+          <span className="cm-next-ic" aria-hidden="true">{iconeEtape(step.action, step.ton)}</span>
+          <div className="cm-next-t"><span>Prochaine étape · </span>{step.texte}</div>
+          {step.action === 'pieces' && Number(row.docs_total) > 0 && (() => {
+            const recu = Math.min(Number(row.docs_total), Number(row.docs_ok) + Number(row.docs_uploaded))
+            return <span className="cm-next-prog">
+              <span className="cm-next-bar"><i style={{ width: `${Math.round(recu / Number(row.docs_total) * 100)}%` }}/></span>
+              <span className="cm-next-nb">{recu} sur {row.docs_total}</span>
+            </span>
+          })()}
           {step.bouton && (step.action === 'appeler'
-            ? <CallButton tel={row.tel} nom={row.nom} leadId={row.lead_id} className="cm-pill" onLogged={loadMsgs}>{step.bouton}<ArrowDot/></CallButton>
-            : <button className="cm-pill" onClick={doAction} disabled={busyStep}>{step.bouton}<ArrowDot/></button>)}
+            ? <CallButton tel={row.tel} nom={row.nom} leadId={row.lead_id} className="cm-next-btn" onLogged={loadMsgs}><span className="cm-next-btn-t">{step.bouton}</span><ArrowRight size={14} strokeWidth={2.4}/></CallButton>
+            : <button className="cm-next-btn" onClick={doAction} disabled={busyStep} aria-label={step.bouton}><span className="cm-next-btn-t">{step.bouton}</span><ArrowRight size={14} strokeWidth={2.4}/></button>)}
         </div>
 
         <div className="cm-msgs">
@@ -469,11 +482,24 @@ function CmStyles() {
     .cm-call { border: none; display: inline-flex; align-items: center; gap: 8px; background: #DCFCE7; color: #15803D; padding: 4px 4px 4px 14px; border-radius: 100px; font-size: 13px; font-weight: 800; text-decoration: none; flex-shrink: 0; }
     .cm-call:hover { color: #15803D; background: #BBF7D0; }
     .cm-side-btn { display: none; border: 1.5px solid #E5E7EB; background: #fff; border-radius: 100px; padding: 8px 12px; font-family: inherit; font-size: 12px; font-weight: 800; color: #0D1B3E; cursor: pointer; flex-shrink: 0; }
-    .cm-next { margin: 12px 16px 0; border-radius: 14px; padding: 10px 12px 10px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; font-size: 13px; color: #0D1B3E; line-height: 1.45; }
-    .cm-next.info { background: #EEF4FF; border: 1px solid #BFD4FF; }
-    .cm-next.warn { background: #FFF8F0; border: 1px solid #FCD34D; }
-    .cm-next.ok { background: #F0FDF4; border: 1px solid #BBF7D0; }
-    .cm-next > div { flex: 1 1 240px; }
+    .cm-next { margin: 12px 16px 0; background: #fff; border: 1px solid #E2E8F2; border-radius: 22px; padding: 6px; display: flex; gap: 10px; align-items: center; font-size: 13px; color: #0D1B3E; line-height: 1.4; box-shadow: 0 1px 2px rgba(13,27,62,.04); }
+    .cm-next-ic { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: #EAF1FF; color: #1A6BFF; }
+    .cm-next.warn .cm-next-ic { background: #FFF1E0; color: #D9690B; }
+    .cm-next-t { flex: 1; min-width: 0; padding-right: 4px; }
+    .cm-next-t > span { color: #64748B; }
+    .cm-next-prog { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .cm-next-bar { width: 70px; height: 5px; background: #E2E8F2; border-radius: 999px; overflow: hidden; }
+    .cm-next-bar i { display: block; height: 100%; background: #1A6BFF; border-radius: 999px; }
+    .cm-next-nb { font-size: 11px; font-weight: 700; color: #D9690B; background: #FFF1E0; border-radius: 999px; padding: 2px 8px; white-space: nowrap; }
+    .cm-next-btn { display: inline-flex; align-items: center; gap: 6px; flex-shrink: 0; background: #1A6BFF; color: #fff; border: none; border-radius: 999px; padding: 0 14px; height: 30px; font-family: inherit; font-size: 12.5px; font-weight: 700; cursor: pointer; white-space: nowrap; text-decoration: none; }
+    .cm-next-btn:hover { background: #0F5AE6; }
+    .cm-next-btn:disabled { opacity: .6; cursor: default; }
+    @media (max-width: 760px) {
+      .cm-next { margin: 10px 12px 0; }
+      .cm-next-t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .cm-next-t > span, .cm-next-bar, .cm-next-btn-t { display: none; }
+      .cm-next-btn { width: 30px; padding: 0; justify-content: center; }
+    }
     .cm-pill { display: inline-flex; align-items: center; gap: 8px; background: #fff; color: #1A6BFF; border: none; padding: 4px 4px 4px 13px; border-radius: 100px; font-family: inherit; font-size: 12.5px; font-weight: 800; text-decoration: none; cursor: pointer; white-space: nowrap; box-shadow: 0 1px 4px rgba(13,27,62,0.06); }
     .cm-pill:hover .cm-adot { transform: translateX(2px); }
     .cm-pill.solid { background: #1A6BFF; color: #fff; }

@@ -70,7 +70,7 @@ describe('prochaine étape', () => {
   test('pièces manquantes avant le RDV', () => {
     const p = prochaineEtape(row(), now)
     expect(p.action).toBe('pieces')
-    expect(p.texte).toContain('1 pièce sur 4')
+    expect(p.texte).toContain('3 pièces manquantes')
   })
   test('nouveau client : appeler', () => {
     expect(prochaineEtape(row({ statut: 'Nouveau' }), now).action).toBe('appeler')

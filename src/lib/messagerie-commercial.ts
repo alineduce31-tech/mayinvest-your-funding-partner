@@ -114,12 +114,11 @@ export function prochaineEtape(r: ComRow, now: number): { texte: string; action:
   if (r.statut === 'Nouveau') return { texte: 'Nouveau client : présente-toi et appelle-le aujourd\'hui.', action: 'appeler', bouton: 'Appeler', ton: 'info' }
   if (r.statut === 'Dossier Déposé') return { texte: 'Dossier en banque : suis la réponse et tiens le client informé.', action: null, ton: 'info' }
   if (r.statut === 'RDV' || r.statut === 'Éligible') {
-    if (manque > 0) return { texte: `Il manque ${manque} pièce${manque > 1 ? 's' : ''}. Récupère-les avant le dépôt en banque.`, action: 'pieces', bouton: 'Demander les pièces', ton: 'warn' }
+    if (manque > 0) return { texte: `Il manque ${manque} pièce${manque > 1 ? 's' : ''} avant le dépôt en banque.`, action: 'pieces', bouton: 'Demander les pièces', ton: 'warn' }
     return { texte: 'Rendez-vous fait ? Passe le dossier en « Déposé en banque ».', action: 'etape', bouton: 'Étape suivante', ton: 'info' }
   }
   if (manque > 0) {
-    const recu = Number(r.docs_ok) + Number(r.docs_uploaded)
-    return { texte: `Le client a envoyé ${recu} pièce${recu > 1 ? 's' : ''} sur ${r.docs_total}. Relance-le pour les ${manque} autre${manque > 1 ? 's' : ''} avant de fixer le RDV.`, action: 'pieces', bouton: 'Demander les pièces', ton: 'warn' }
+    return { texte: `Relance le client pour ${manque > 1 ? `les ${manque} pièces manquantes` : 'la pièce manquante'} avant le RDV.`, action: 'pieces', bouton: 'Relancer', ton: 'warn' }
   }
   if (Number(r.docs_uploaded) > 0) return { texte: `${r.docs_uploaded} pièce${Number(r.docs_uploaded) > 1 ? 's' : ''} en vérification par la direction. Propose déjà un rendez-vous.`, action: 'rdv', bouton: 'Proposer un RDV', ton: 'info' }
   return { texte: 'Toutes les pièces sont là : propose un rendez-vous au client.', action: 'rdv', bouton: 'Proposer un RDV', ton: 'ok' }
