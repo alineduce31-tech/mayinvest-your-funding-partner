@@ -2156,7 +2156,10 @@ button:active, .lap-btn:active {
 .ld-g { background: #fff; border-radius: 14px; overflow: hidden; }
 .ld-r { display: flex; justify-content: space-between; gap: 12px; padding: 11px 14px; font-size: 13.5px; }
 .ld-r + .ld-r { border-top: 1px solid #F0F0F2; }
+.ld-r { align-items: center; }
+.ld-r-ic { width: 30px; height: 30px; border-radius: 9px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: #EAF1FF; color: #1A6BFF; margin: -4px -2px -4px 0; font-style: normal; }
 .ld-r span { color: #86868B; flex: none; }
+.ld-r-ic + span { flex: 1; }
 .ld-r b { font-weight: 500; text-align: right; color: #1D1D1F; min-width: 0; overflow-wrap: anywhere; }
 .ld-foot { text-align: center; font-size: 11.5px; color: #A1A1A6; margin-top: 16px; }
 .ld-lastnote { display: flex; align-items: flex-start; gap: 8px; width: 100%; margin-top: 12px; padding: 10px 12px; border: none; border-radius: 12px; background: #EDEFF4; color: #0D1B3E; font-family: inherit; font-size: 12.5px; text-align: left; cursor: pointer; }

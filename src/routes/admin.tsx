@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
-import { StickyNote } from 'lucide-react'
+import { StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
 import MenuExporter from '@/components/MenuExporter'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
@@ -2301,47 +2301,47 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
             )}
             <div className="ld-gt"><Phone size={13}/>Contact</div>
             <div className="ld-g">
-              <div className="ld-r"><span>Téléphone</span><b>{tel ? formatPhone(tel) : '—'}</b></div>
-              <div className="ld-r"><span>Email</span><b>{lead.identite?.email || '—'}</b></div>
-              <div className="ld-r"><span>Ville</span><b>{lead.ville || '—'}</b></div>
-              <div className="ld-r"><span>Activité</span><b>{lead.activite || '—'}</b></div>
+              <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Phone size={15}/></i><span>Téléphone</span><b>{tel ? formatPhone(tel) : '—'}</b></div>
+              <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Mail size={15}/></i><span>Email</span><b>{lead.identite?.email || '—'}</b></div>
+              <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><MapPin size={15}/></i><span>Ville</span><b>{lead.ville || '—'}</b></div>
+              <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Briefcase size={15}/></i><span>Activité</span><b>{lead.activite || '—'}</b></div>
             </div>
 
             <div className="ld-gt"><Briefcase size={13}/>Situation {isP ? 'professionnelle' : 'juridique'}</div>
             <div className="ld-g">
               {isP ? <>
-                <div className="ld-r"><span>Employeur</span><b>{lead.situation?.employeur || '—'}</b></div>
-                <div className="ld-r"><span>Type de contrat</span><b>{lead.situation?.contrat || '—'}</b></div>
-                {lead.situation?.duree_restante && <div className="ld-r"><span>Durée restante</span><b>{lead.situation.duree_restante} mois</b></div>}
-                <div className="ld-r"><span>Ancienneté</span><b>{TRANCHE_LABELS[lead.situation?.anciennete_tranche] || lead.situation?.anciennete || '—'}</b></div>
-                <div className="ld-r"><span>Revenu mensuel</span><b>{formatXAF(lead.situation?.revenu)}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Building2 size={15}/></i><span>Employeur</span><b>{lead.situation?.employeur || '—'}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><FileSignature size={15}/></i><span>Type de contrat</span><b>{lead.situation?.contrat || '—'}</b></div>
+                {lead.situation?.duree_restante && <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Hourglass size={15}/></i><span>Durée restante</span><b>{lead.situation.duree_restante} mois</b></div>}
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Clock size={15}/></i><span>Ancienneté</span><b>{TRANCHE_LABELS[lead.situation?.anciennete_tranche] || lead.situation?.anciennete || '—'}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Coins size={15}/></i><span>Revenu mensuel</span><b>{formatXAF(lead.situation?.revenu)}</b></div>
               </> : <>
-                <div className="ld-r"><span>Dirigeant</span><b>{lead.situation?.dirigeant || '—'}</b></div>
-                <div className="ld-r"><span>RCCM</span><b>{lead.situation?.rccm || '—'}</b></div>
-                <div className="ld-r"><span>NIU</span><b>{lead.situation?.niu || '—'}</b></div>
-                <div className="ld-r"><span>Ancienneté</span><b>{TRANCHE_LABELS[lead.situation?.anciennete_tranche] || '—'}</b></div>
-                <div className="ld-r"><span>CA annuel</span><b>{formatXAF(lead.situation?.ca_annuel)}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><UserCheck size={15}/></i><span>Dirigeant</span><b>{lead.situation?.dirigeant || '—'}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><FileBadge size={15}/></i><span>RCCM</span><b>{lead.situation?.rccm || '—'}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><IdCard size={15}/></i><span>NIU</span><b>{lead.situation?.niu || '—'}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Clock size={15}/></i><span>Ancienneté</span><b>{TRANCHE_LABELS[lead.situation?.anciennete_tranche] || '—'}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><BarChart3 size={15}/></i><span>CA annuel</span><b>{formatXAF(lead.situation?.ca_annuel)}</b></div>
               </>}
             </div>
 
             <div className="ld-gt"><Coins size={13}/>Besoin</div>
             <div className="ld-g">
-              <div className="ld-r"><span>Montant demandé</span><b>{formatXAF(lead.montant_demande)}</b></div>
-              <div className="ld-r"><span>Objet</span><b>{lead.besoin?.objet || '—'}</b></div>
-              <div className="ld-r"><span>Banque actuelle</span><b>{lead.banque_actuelle || '—'}</b></div>
-              {!isP && <div className="ld-r"><span>Flux mensuel</span><b>{formatXAF(lead.besoin?.flux_mois)}</b></div>}
+              <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Wallet size={15}/></i><span>Montant demandé</span><b>{formatXAF(lead.montant_demande)}</b></div>
+              <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Target size={15}/></i><span>Objet</span><b>{lead.besoin?.objet || '—'}</b></div>
+              <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Landmark size={15}/></i><span>Banque actuelle</span><b>{lead.banque_actuelle || '—'}</b></div>
+              {!isP && <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><ArrowLeftRight size={15}/></i><span>Flux mensuel</span><b>{formatXAF(lead.besoin?.flux_mois)}</b></div>}
             </div>
 
             <div className="ld-gt"><CheckCircle2 size={13}/>Éligibilité</div>
             <div className="ld-g">
               {isP ? <>
-                <div className="ld-r"><span>Salaire domicilié</span><b>{lead.eligibilite?.salaire_domic || '—'}</b></div>
-                {lead.eligibilite?.anciennete_compte_tranche && <div className="ld-r"><span>Compte ouvert depuis</span><b>{TRANCHE_LABELS[lead.eligibilite.anciennete_compte_tranche]}</b></div>}
-                <div className="ld-r"><span>Non éligible</span><b style={{ color: lead.eligibilite?.non_eligible ? '#DC2626' : '#16A34A' }}>{lead.eligibilite?.non_eligible ? 'Oui' : 'Non'}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Landmark size={15}/></i><span>Salaire domicilié</span><b>{lead.eligibilite?.salaire_domic || '—'}</b></div>
+                {lead.eligibilite?.anciennete_compte_tranche && <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><CalendarDays size={15}/></i><span>Compte ouvert depuis</span><b>{TRANCHE_LABELS[lead.eligibilite.anciennete_compte_tranche]}</b></div>}
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><AlertTriangle size={15}/></i><span>Non éligible</span><b style={{ color: lead.eligibilite?.non_eligible ? '#DC2626' : '#16A34A' }}>{lead.eligibilite?.non_eligible ? 'Oui' : 'Non'}</b></div>
               </> : <>
-                <div className="ld-r"><span>Compte mouvementé</span><b>{lead.eligibilite?.compte_mouvemente || '—'}</b></div>
-                <div className="ld-r"><span>Refus bancaire antérieur</span><b>{lead.eligibilite?.refus_bancaire || '—'}</b></div>
-                <div className="ld-r"><span>Garanties</span><b>{lead.eligibilite?.garanties || '—'}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Activity size={15}/></i><span>Compte mouvementé</span><b>{lead.eligibilite?.compte_mouvemente || '—'}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><Ban size={15}/></i><span>Refus bancaire antérieur</span><b>{lead.eligibilite?.refus_bancaire || '—'}</b></div>
+                <div className="ld-r"><i className="ld-r-ic" aria-hidden="true"><ShieldCheck size={15}/></i><span>Garanties</span><b>{lead.eligibilite?.garanties || '—'}</b></div>
               </>}
             </div>
 
