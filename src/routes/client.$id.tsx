@@ -2,6 +2,7 @@ import { lienContact } from '@/lib/lead-templates'
 import { createFileRoute, useNavigate, useParams } from '@tanstack/react-router'
 import { informer } from '@/components/Dialogue'
 import { useEffect, useState, useRef, type ReactNode } from 'react'
+import { Route as RouteIcon } from 'lucide-react'
 import { Inbox, CalendarDays, MailCheck, Coins, Briefcase, Wallet, Target, MapPin, Building2, UserCheck, ArrowLeftRight } from 'lucide-react'
 import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Landmark, FileBadge, FileText, BarChart3, CircleCheck, Clock, Camera, Lock, Search, ChevronLeft, Plus, Image as ImageIcon } from 'lucide-react'
 import PackClient from '@/components/PackClient'
@@ -1027,10 +1028,10 @@ function ClientPortal() {
         </div>
 
         <div className="cx-seg" role="tablist">
-          <button className={activeTab === 'suivi' ? 'on' : ''} onClick={() => setActiveTab('suivi')}>Suivi</button>
-          <button className={activeTab === 'chat' ? 'on' : ''} onClick={() => setActiveTab('chat')}>Discussion{unreadMsgs > 0 && <i>{unreadMsgs}</i>}</button>
-          <button className={activeTab === 'docs' ? 'on' : ''} onClick={() => setActiveTab('docs')}>Documents{docsC.aRefaire > 0 && <i className="o">{docsC.aRefaire}</i>}</button>
-          <button className={activeTab === 'infos' ? 'on' : ''} onClick={() => setActiveTab('infos')}>Infos</button>
+          <button className={activeTab === 'suivi' ? 'on' : ''} onClick={() => setActiveTab('suivi')}><span className="cx-seg-ic"><RouteIcon size={19}/></span><span className="cx-seg-l">Suivi</span></button>
+          <button className={activeTab === 'chat' ? 'on' : ''} onClick={() => setActiveTab('chat')} aria-label={unreadMsgs > 0 ? `Discussion, ${unreadMsgs} non lu${unreadMsgs > 1 ? 's' : ''}` : 'Discussion'}><span className="cx-seg-ic"><MessageCircle size={19}/>{unreadMsgs > 0 && <i>{unreadMsgs > 99 ? '99+' : unreadMsgs}</i>}</span><span className="cx-seg-l">Discussion</span></button>
+          <button className={activeTab === 'docs' ? 'on' : ''} onClick={() => setActiveTab('docs')} aria-label={docsC.aRefaire > 0 ? `Documents, ${docsC.aRefaire} à remplacer` : 'Documents'}><span className="cx-seg-ic"><FileText size={19}/>{docsC.aRefaire > 0 && <i className="o">{docsC.aRefaire > 99 ? '99+' : docsC.aRefaire}</i>}</span><span className="cx-seg-l">Documents</span></button>
+          <button className={activeTab === 'infos' ? 'on' : ''} onClick={() => setActiveTab('infos')}><span className="cx-seg-ic"><User size={19}/></span><span className="cx-seg-l">Infos</span></button>
         </div>
 
         {activeTab === 'suivi' && <>
@@ -1219,10 +1220,23 @@ const CX_CSS = `
   .cx-sum-t small { font-size: 12px; opacity: .72; }
   .cx-sum-t b { font-size: 18px; font-weight: 700; letter-spacing: -0.02em; }
   .cx-seg { display: flex; background: #E8E8ED; border-radius: 12px; padding: 3px; margin-bottom: 14px; position: sticky; top: 8px; z-index: 5; box-shadow: 0 0 0 8px #F5F5F7; }
-  .cx-seg button { flex: 1; border: none; background: none; border-radius: 10px; padding: 8px 2px; font-family: inherit; font-size: 13px; font-weight: 500; color: #6E6E73; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px; }
-  .cx-seg button.on { background: #fff; color: #1D1D1F; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
-  .cx-seg i { font-style: normal; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #1A6BFF; color: #fff; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
-  .cx-seg i.o { background: #DC2626; }
+  .cx-seg button { flex: 1; min-width: 0; border: none; background: none; border-radius: 10px; padding: 8px 2px; font-family: inherit; font-size: 13px; font-weight: 500; color: #6E6E73; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 7px; }
+  .cx-seg button.on { background: #fff; color: #1A6BFF; box-shadow: 0 1px 2px rgba(0,0,0,.08); }
+  .cx-seg-ic { display: contents; }
+  .cx-seg-l { order: 1; }
+  .cx-seg-ic svg { width: 17px; height: 17px; }
+  .cx-seg .cx-seg-l { white-space: nowrap; font-size: 13px; }
+  .cx-seg i { font-style: normal; min-width: 18px; height: 18px; padding: 0 5px; box-sizing: border-box; border-radius: 9px; background: #1A6BFF; color: #fff; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; margin-left: 6px; order: 2; }
+  .cx-seg i.o { background: #D9690B; }
+  @media (max-width: 640px) {
+    .cx-seg { border-radius: 16px; padding: 4px; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
+    .cx-seg button { flex-direction: column; gap: 3px; padding: 7px 0 6px; font-size: 10.5px; letter-spacing: -0.01em; border-radius: 12px; }
+    .cx-seg-ic { display: inline-flex; position: relative; }
+    .cx-seg .cx-seg-l { font-size: 11px; font-weight: 600; letter-spacing: 0; }
+    .cx-seg-ic svg { width: 20px; height: 20px; }
+    .cx-seg i { position: absolute; top: -6px; left: 12px; margin: 0; min-width: 17px; height: 17px; padding: 0 4px; font-size: 10px; border: 2px solid #E8E8ED; }
+    .cx-seg button.on i { border-color: #fff; }
+  }
   .cx-next { background: #fff; border: 1px solid #E2E8F2; border-radius: 18px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(13,27,62,.04); }
   .cx-next-h { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
   .cx-next-ic { width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: #EAF1FF; color: #1A6BFF; }
@@ -1267,7 +1281,9 @@ const CX_CSS = `
   .cx-send.r { background: #DC2626; }
   .cx-st { flex: none; } .cx-st.g { color: #16A34A; } .cx-st.o { color: #D9690B; }
   .cx-vide { padding: 22px; text-align: center; font-size: 13px; color: #86868B; }
-  .cx-note { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #86868B; margin: 12px 6px 0; }
+  .cx-note { display: flex; align-items: center; gap: 10px; font-size: 12.5px; line-height: 1.45; color: #6E6E73; margin: 12px 0 0; padding: 12px 16px; background: #fff; border-radius: 16px; }
+  @media (max-width: 1024px) { .cx-note { padding-right: 70px; } }
+  .cx-note svg { flex: none; width: 30px; height: 30px; padding: 7.5px; box-sizing: border-box; border-radius: 9px; background: #EAF1FF; color: #1A6BFF; margin: -4px 2px -4px 0; }
   .cx-r { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; font-size: 14px; }
   .cx-r-ic { width: 30px; height: 30px; border-radius: 9px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: #EAF1FF; color: #1A6BFF; margin: -4px 0; }
   .cx-r-ic + span { flex: 1; }
