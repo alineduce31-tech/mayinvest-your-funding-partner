@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import PieceIcone from '@/components/PieceIcone'
 import { createPortal } from 'react-dom'
 import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download } from 'lucide-react'
 import {
@@ -64,7 +65,7 @@ function Texte({ texte }: { texte: string }) {
     <div className="cv-txt">
       {segmentsMessage(texte).map((s, i) => s.type === 'texte'
         ? <div key={i} className="cv-par">{liens(s.texte)}</div>
-        : <div key={i} className="cv-puces">{s.items.map((it, j) => <span key={j}>{it}</span>)}</div>)}
+        : <div key={i} className="cv-puces">{s.items.map((it, j) => <span key={j}><i className="cv-puce-ic" aria-hidden="true"><PieceIcone titre={it} size={13}/></i>{it}</span>)}</div>)}
     </div>
   )
 }
@@ -95,6 +96,7 @@ function CartePieces({ b, viewer, docs, onUploadDoc, uploadingDocId }: { b: Bull
         return (
           <div key={d.id} className={`cv-piece ${ok ? 'ok' : ''}`}>
             <span className={`cv-coche ${e}`}>{ok && <Check size={12} strokeWidth={3}/>}{e === 'rejected' && <X size={12} strokeWidth={3}/>}</span>
+            <span className="cv-piece-ic" aria-hidden="true"><PieceIcone docType={d.doc_type} titre={titre} size={15}/></span>
             <span className="cv-piece-t"><span className="cv-piece-nom">{titreCourt(titre)}</span>{e === 'rejected' && <small>Refusée{d.admin_note ? ` : ${d.admin_note}` : ''}, à renvoyer</small>}{e === 'uploaded' && <small>Reçue, en vérification</small>}</span>
             {!ok && viewer === 'client' && onUploadDoc && (
               <label className={`cv-envoyer ${uploadingDocId === d.id ? 'busy' : ''}`}>
@@ -270,8 +272,12 @@ const CV_CSS = `
   .cv-par { white-space: pre-wrap; }
   .cv-par a { color: inherit; font-weight: 700; text-decoration: underline; }
   .cv-puces { display: flex; flex-wrap: wrap; gap: 5px; }
-  .cv-puces span { background: rgba(13,27,62,.06); border-radius: 999px; padding: 4px 10px; font-size: 12.5px; font-weight: 600; }
-  .cv-bulle.moi .cv-puces span, .cv-ligne.droite .cv-bulle.equipe .cv-puces span { background: rgba(255,255,255,.2); color: #fff; }
+  .cv-puces span { display: inline-flex; align-items: center; gap: 6px; background: rgba(13,27,62,.06); border-radius: 999px; padding: 4px 11px 4px 5px; font-size: 12.5px; font-weight: 600; }
+  .cv-puce-ic { width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex: none; font-style: normal; background: #E3ECFF; color: #3D6FD6; }
+  .cv-bulle.moi .cv-puces span, .cv-ligne.droite .cv-bulle.equipe .cv-puces span { background: rgba(255,255,255,.12); color: #fff; }
+  .cv-bulle.moi .cv-puce-ic, .cv-ligne.droite .cv-bulle.equipe .cv-puce-ic { background: rgba(160,190,255,.18); color: #B9CFFF; }
+  .cv-piece-ic { width: 28px; height: 28px; border-radius: 9px; display: inline-flex; align-items: center; justify-content: center; flex: none; background: #EEF3FF; color: #4A73C9; }
+  .cv-piece.ok .cv-piece-ic { background: #F1F5F9; color: #94A3B8; }
   .cv-meta { display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: #8A94A6; margin: 4px 8px 0; }
   .cv-vu { display: inline-flex; align-items: center; gap: 3px; color: #1A6BFF; font-weight: 600; margin-left: 2px; }
   .cv-envoye { margin-left: 2px; }
