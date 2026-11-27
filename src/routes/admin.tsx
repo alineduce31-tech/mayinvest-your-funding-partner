@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
-import { ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
+import { Plus, ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity } from 'lucide-react'
 import MenuExporter from '@/components/MenuExporter'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
 import { confirmer, demanderTexte, informer } from '@/components/Dialogue'
@@ -17,7 +17,8 @@ import { formatPhone } from '@/lib/phone'
 import BancarisationView from '@/components/BancarisationView'
 import CrmListe from '@/components/CrmListe'
 import ConseillerPicker from '@/components/ConseillerPicker'
-import { couleurAvatar, initialesNom, dateRelative } from '@/lib/affichage'
+import { couleurAvatar, initialesNom, dateRelative, decouperLibelle, titreCourt } from '@/lib/affichage'
+import PieceIcone from '@/components/PieceIcone'
 import NonEligiblesView from '@/components/NonEligiblesView'
 import PacksView, { PackSuivi } from '@/components/PackAdmin'
 import StatutPicker from '@/components/StatutPicker'
@@ -2355,13 +2356,13 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
           </>}
 
           {tab === 'notes' && <div className="ld-notes">
-            <div className="ld-lock"><Lock size={14}/>Visible uniquement par la direction. Ni le client ni le commercial ne voient ces notes.</div>
+            <div className="ld-lock"><Lock size={14}/>Visible seulement par la direction : ni le client ni le commercial ne voient ces notes.</div>
             <div className="ld-note-in">
               <textarea value={newNote} onChange={e => setNewNote(e.target.value)} placeholder="Écrire une note pour l'équipe…" rows={2} maxLength={2000}
                 onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) addNote() }}/>
               <button type="button" onClick={addNote} disabled={!newNote.trim() || noteSending} aria-label="Ajouter la note"><ArrowUp size={16}/></button>
             </div>
-            {notes.length === 0 ? <div className="ld-note-vide">Aucune note pour ce dossier.</div> : notes.map(n => (
+            {notes.length === 0 ? <div className="ld-vide v"><span className="ld-vide-ic"><StickyNote size={24}/></span><b>Aucune note pour ce dossier</b><small>Les notes servent à garder une trace entre membres de la direction.</small></div> : notes.map(n => (
               <div key={n.id} className="ld-note">
                 <div className="ld-note-h">
                   <span className="ld-av s" style={{ background: couleurAvatar(n.auteur).fond, color: couleurAvatar(n.auteur).texte }}>{initialesNom(n.auteur)}</span>
@@ -2374,76 +2375,47 @@ function LeadDrawer({ lead, onClose, onStatutChange, msgCount, onMsgRead, teamMe
             ))}
           </div>}
 
-          {tab === 'docs' && (
-            <div>
-              <div style={{ fontSize: 11, color: '#666', marginBottom: 10 }}>
-                {documents.filter(d => d.status === 'validated').length} validés · {documents.filter(d => d.status === 'uploaded').length} à valider · {documents.filter(d => d.status === 'pending').length} en attente
-              </div>
-              {docsLoading && <div style={{ color: '#999', textAlign: 'center', padding: 20 }}>
-                                  <div style={{ height: 14, width: '60%', margin: '0 auto', background: 'linear-gradient(90deg, #F3F4F6 0%, #E5E7EB 50%, #F3F4F6 100%)', backgroundSize: '200% 100%', animation: 'skp-shimmer 1.5s infinite', borderRadius: 6 }}/>
-                                  <style>{`@keyframes skp-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }`}</style>
-                                </div>}
-              {!docsLoading && documents.length === 0 && <div style={{ color: '#999', textAlign: 'center', padding: 20 }}>Aucun document.</div>}
-              {documents.map(d => {
-                const isUploaded = d.status === 'uploaded'
-                const isValidated = d.status === 'validated'
-                const isRejected = d.status === 'rejected'
-                const isPending = d.status === 'pending'
-                const isImage = d.mime_type?.startsWith('image/')
-                const isPdf = d.mime_type === 'application/pdf'
-                const statusColor = isValidated ? '#166534' : isUploaded ? '#D9690B' : isRejected ? '#991B1B' : '#6B7280'
-                const statusBg = isValidated ? '#DCFCE7' : isUploaded ? '#FFF4E5' : isRejected ? '#FEE2E2' : '#F3F4F6'
-                return (
-                  <div key={d.id} style={{ background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, padding: 14, marginBottom: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#0D1B3E', marginBottom: 4 }}>{d.doc_label}</div>
-                        <span style={{ display: 'inline-block', background: statusBg, color: statusColor, fontSize: 11, fontWeight: 800, padding: '3px 10px', borderRadius: 100 }}>
-                          {isValidated ? 'Validé' : isUploaded ? 'À valider' : isRejected ? 'Rejeté' : 'En attente'}
-                        </span>
-                        {d.admin_note && <div style={{ fontSize: 11, color: '#991B1B', marginTop: 6, fontStyle: 'italic' }}>Note : {d.admin_note}</div>}
-                      </div>
+          {tab === 'docs' && (() => {
+            const nbVal = documents.filter(d => d.status === 'validated').length
+            const nbVer = documents.filter(d => d.status === 'uploaded').length
+            const nbAtt = documents.filter(d => d.status === 'pending' || !d.status).length
+            return <div className="ld-docs">
+              {documents.length > 0 && <div className="ld-dsum">
+                <div className="ld-dsum-h"><b>{nbVal} sur {documents.length} validée{nbVal > 1 ? 's' : ''}</b><small>{nbVer} à vérifier · {nbAtt} en attente</small></div>
+                <div className="ld-dsum-bar"><i style={{ width: `${Math.round(nbVal / documents.length * 100)}%` }}/></div>
+              </div>}
+              {docsLoading && <div className="ld-vide"><small>Chargement des pièces…</small></div>}
+              {!docsLoading && documents.length === 0 && <div className="ld-vide"><span className="ld-vide-ic"><FileText size={24}/></span><b>Aucune pièce demandée</b><small>Demandez au client les documents nécessaires au dossier.</small></div>}
+              {documents.length > 0 && <div className="ld-dlist">
+                {documents.map(d => {
+                  const st = d.status === 'validated' ? 'ok' : d.status === 'uploaded' ? 'ver' : d.status === 'rejected' ? 'ref' : 'att'
+                  const { titre, precision } = decouperLibelle(d.doc_label || 'Document')
+                  const sous = st === 'ok' ? 'Validée' : st === 'ver' ? 'Reçue, à vérifier' : st === 'ref' ? `Refusée${d.admin_note ? ' · ' + d.admin_note : ''}` : (precision || 'En attente du client')
+                  return (
+                    <div key={d.id} className={`ld-doc ${st}`}>
+                      <span className="ld-doc-ic" aria-hidden="true"><PieceIcone docType={d.doc_type} titre={d.doc_label || 'Document'} size={16}/></span>
+                      <span className="ld-doc-t">
+                        <b>{titreCourt(titre)}</b>
+                        <small>{sous}</small>
+                        {d.file_url && <a href={d.file_url} target="_blank" rel="noopener" className="ld-doc-f"><Eye size={12}/>Voir le fichier{d.file_size ? ` · ${(d.file_size / 1024).toFixed(0)} Ko` : ''}</a>}
+                      </span>
+                      <span className="ld-doc-a">
+                        {st === 'ver' && <><button type="button" className="ok" onClick={() => validateDocument(d.id)}>Valider</button><button type="button" className="ko" onClick={() => rejectDocument(d.id)}>Refuser</button></>}
+                        {st === 'ok' && <><span className="ld-doc-p ok"><Check size={12}/>Validée</span><button type="button" className="lien" onClick={() => rejectDocument(d.id)}>Refuser</button></>}
+                        {st === 'ref' && <button type="button" className="ok" onClick={() => validateDocument(d.id)}>Valider</button>}
+                        {st === 'att' && <span className="ld-doc-p att">À envoyer</span>}
+                      </span>
                     </div>
-                    {d.file_url && (
-                      <div style={{ marginBottom: 10 }}>
-                        {isImage ? (
-                          <a href={d.file_url} target="_blank" rel="noopener">
-                            <img src={d.file_url} alt={d.file_name} style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, cursor: 'zoom-in', display: 'block' }}/>
-                          </a>
-                        ) : (
-                          <a href={d.file_url} target="_blank" rel="noopener" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 10, background: '#F8FAFC', border: '1.5px solid #E5E7EB', borderRadius: 10, textDecoration: 'none', color: '#0D1B3E' }}>
-                            <div style={{ width: 36, height: 36, borderRadius: 8, background: isPdf ? '#DC2626' : '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6zm0 7V3.5L18.5 9H14z"/></svg>
-                            </div>
-                            <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ fontSize: 13, fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.file_name}</div>
-                              <div style={{ fontSize: 11, color: '#666', marginTop: 2 }}>{d.file_size ? (d.file_size/1024).toFixed(0) + ' Ko' : ''} · Cliquez pour ouvrir</div>
-                            </div>
-                          </a>
-                        )}
-                      </div>
-                    )}
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                      {isUploaded && <>
-                        <button onClick={() => validateDocument(d.id)} style={{ background: '#166534', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>✓ Valider</button>
-                        <button onClick={() => rejectDocument(d.id)} style={{ background: '#DC2626', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>✗ Rejeter</button>
-                      </>}
-                      {isValidated && <button onClick={() => rejectDocument(d.id)} style={{ background: 'transparent', color: '#DC2626', border: '1.5px solid #DC2626', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>Rejeter</button>}
-                      {isRejected && <button onClick={() => validateDocument(d.id)} style={{ background: '#166534', color: '#fff', border: 'none', fontSize: 12, fontWeight: 700, padding: '8px 14px', borderRadius: 100, cursor: 'pointer' }}>Finalement valider</button>}
-                      {isPending && <span style={{ color: '#999', fontSize: 12, fontStyle: 'italic' }}>En attente de l'upload du client</span>}
-                    </div>
-                  </div>
-                )
-              })}
-              <button onClick={requestDocument} style={{ background: '#1A6BFF', color: '#fff', border: 'none', fontSize: 13, fontWeight: 700, padding: '10px 16px', borderRadius: 100, cursor: 'pointer', width: '100%', marginTop: 6 }}>
-                + Demander un document supplémentaire
-              </button>
+                  )
+                })}
+              </div>}
+              <button type="button" className="ld-dadd" onClick={requestDocument}><Plus size={15}/>Demander une pièce</button>
             </div>
-          )}
+          })()}
 
           {tab === 'chat' && <div className="chat-wrap">
             <div className="chat-scroll">
-              <Conversation viewer="equipe" leadId={lead.id} peutSupprimer={b => !!b.mien || (isDirector && b.ton !== 'client')} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMessages() }} docs={documents} bulles={regrouper(messages.map(m => vueAdmin(m, adminId, nom)), Date.now())} vide="Aucun message. Démarrez la conversation."/>
+              <Conversation viewer="equipe" leadId={lead.id} peutSupprimer={b => !!b.mien || (isDirector && b.ton !== 'client')} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMessages() }} docs={documents} bulles={regrouper(messages.map(m => vueAdmin(m, adminId, nom)), Date.now())} vide={<div className="ld-vide"><span className="ld-vide-ic"><MessageCircle size={24}/></span><b>Aucun message pour l'instant</b><small>Présentez-vous au client avec une suggestion ou un message.</small></div>}/>
               <div ref={chatEnd}/>
             </div>
             <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>

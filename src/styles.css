@@ -2120,7 +2120,7 @@ button:active, .lap-btn:active {
 /* ============================================================
    FICHE LEAD (drawer admin) · style Apple + notes internes
    ============================================================ */
-.drawer { background: #F5F5F7 !important; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; color: #1D1D1F; }
+.drawer { background: #fff !important; font-family: -apple-system, "SF Pro Text", Inter, system-ui, sans-serif; color: #1D1D1F; }
 .drawer .ld-head { background: #fff !important; padding: 18px 20px 14px !important; border-bottom: none !important; }
 .ld-top { display: flex; align-items: center; gap: 12px; }
 .ld-av { width: 44px; height: 44px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; flex: none; }
@@ -2158,9 +2158,9 @@ button:active, .lap-btn:active {
 .ld-seg button.on .ld-badge { border-color: #fff; }
 .ld-badge { font-style: normal; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: #1A6BFF; color: #fff; font-size: 10.5px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center; }
 .ld-badge.o { background: #D9690B; } .ld-badge.n { background: #7C3AED; }
-.drawer .dr-body { padding: 4px 16px 40px !important; }
+.drawer .dr-body { padding: 4px 16px 40px !important; background: linear-gradient(180deg, #F2F6FF 0%, #FFFFFF 46%); }
 .ld-gt { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500; color: #86868B; margin: 16px 6px 6px; }
-.ld-g { background: #fff; border-radius: 14px; overflow: hidden; }
+.ld-g { background: #fff; border-radius: 16px; overflow: hidden; border: 1px solid #E2E8F2; box-shadow: 0 1px 3px rgba(13,27,62,.04); }
 .ld-r { display: flex; justify-content: space-between; gap: 12px; padding: 11px 14px; font-size: 13.5px; }
 .ld-r + .ld-r { border-top: 1px solid #F0F0F2; }
 .ld-r { align-items: center; }
@@ -2189,13 +2189,14 @@ button:active, .lap-btn:active {
 .ld-send:hover { background: #0D1B3E; }
 .ld-prev { margin: 10px 0 0; padding: 10px 12px; background: #F5F5F7; border-radius: 10px; font-family: inherit; font-size: 12.5px; white-space: pre-wrap; color: #3A3A3C; }
 .ld-notes { padding-top: 12px; }
-.ld-lock { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 12px; background: #EDEFF4; color: #0D1B3E; font-size: 12.5px; margin-bottom: 10px; }
+.ld-lock { display: flex; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 12px; background: #F3EFFE; color: #5B21B6; font-size: 12.5px; margin-bottom: 10px; }
 .ld-lock svg { flex: none; }
-.ld-note-in { display: flex; align-items: flex-end; gap: 8px; background: #fff; border-radius: 14px; padding: 8px 8px 8px 14px; margin-bottom: 12px; }
+.ld-note-in { display: flex; align-items: flex-end; gap: 8px; background: #fff; border: 1px solid #E9E3FB; border-radius: 16px; padding: 8px 8px 8px 14px; margin-bottom: 12px; min-height: 64px; box-sizing: border-box; }
+.ld-note-in:focus-within { border-color: #C4B5FD; }
 .ld-note-in textarea { flex: 1; border: none; outline: none; resize: none; font-family: inherit; font-size: 13.5px; background: transparent; color: #1D1D1F; padding: 4px 0; }
-.ld-note-in button { width: 32px; height: 32px; border-radius: 50%; border: none; background: #1A6BFF; color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
+.ld-note-in button { width: 32px; height: 32px; border-radius: 50%; border: none; background: #7C3AED; color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex: none; }
 .ld-note-in button:disabled { background: #C7C7CC; cursor: default; }
-.ld-note { background: #fff; border-radius: 14px; padding: 11px 14px; margin-bottom: 8px; }
+.ld-note { background: #fff; border: 1px solid #E2E8F2; border-radius: 16px; padding: 11px 14px; margin-bottom: 8px; box-shadow: 0 1px 3px rgba(13,27,62,.04); }
 .ld-note-h { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 13px; }
 .ld-note-h b { font-weight: 600; }
 .ld-note-t { margin-left: auto; font-size: 11.5px; color: #86868B; }
@@ -2208,7 +2209,9 @@ button:active, .lap-btn:active {
 .eq-page, .ea-root { display: flow-root; }
 /* Fiche : seul le sélecteur d'onglets reste collé en haut au défilement */
 .drawer .ld-head { position: relative !important; top: auto !important; }
-.drawer .ld-seg { top: 10px; box-shadow: 0 -10px 0 0 #F5F5F7, 0 0 0 10px #F5F5F7; }
+.drawer .ld-seg { top: 10px; background: #F3F5F9 !important; border: none; box-shadow: 0 0 0 6px #F2F6FF; }
+.drawer .ld-seg button.on { box-shadow: 0 1px 3px rgba(13,27,62,.1); }
+.drawer .ld-seg .ld-badge { border-color: #F3F5F9; }
 
 /* Œil des champs mot de passe : centré sur la ligne de saisie, immobile au clic, partout */
 .mi-pw { position: relative; display: block; width: 100%; }
@@ -2254,3 +2257,33 @@ input:-webkit-autofill, input:-webkit-autofill:hover, input:-webkit-autofill:foc
 @media (min-width: 901px) { .top-bar.tb-dash { min-height: 54px; padding-top: 0; padding-bottom: 0; } }
 @media (max-width: 900px) { .sd-mini { padding: 0 16px 0 68px; } .sd-mini-t { font-size: 15px; } }
 @media (max-width: 420px) { .sd-mini-t { display: none; } .sd-mini { justify-content: flex-end; } }
+
+/* Fiche dossier : états vides, documents */
+.ld-vide { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 6px; padding: 36px 16px; }
+.ld-vide-ic { width: 52px; height: 52px; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; background: #EAF1FF; color: #1A6BFF; margin-bottom: 4px; }
+.ld-vide.v .ld-vide-ic { background: #F3EFFE; color: #7C3AED; }
+.ld-vide b { font-size: 14px !important; font-weight: 600; color: #0D1B3E; }
+.ld-vide small { font-size: 12.5px !important; color: #64748B; max-width: 240px; line-height: 1.5; }
+.ld-docs { padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.ld-dsum { background: #fff; border: 1px solid #E2E8F2; border-radius: 16px; padding: 12px 14px; box-shadow: 0 1px 3px rgba(13,27,62,.04); }
+.ld-dsum-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 8px; }
+.ld-dsum-h b { font-size: 13.5px !important; font-weight: 600; color: #0D1B3E; } .ld-dsum-h small { font-size: 11.5px !important; color: #94A3B8; }
+.ld-dsum-bar { height: 6px; background: #EEF2F8; border-radius: 999px; overflow: hidden; } .ld-dsum-bar i { display: block; height: 100%; background: #1A6BFF; border-radius: 999px; min-width: 4px; }
+.ld-dlist { background: #fff; border: 1px solid #E2E8F2; border-radius: 16px; padding: 0 12px; box-shadow: 0 1px 3px rgba(13,27,62,.04); }
+.ld-doc { display: flex; align-items: center; gap: 10px; padding: 11px 0; }
+.ld-doc + .ld-doc { border-top: 1px solid #F0F2F6; }
+.ld-doc-ic { width: 32px; height: 32px; border-radius: 9px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: #EAF1FF; color: #1A6BFF; }
+.ld-doc.att .ld-doc-ic { background: #FFF1E0; color: #D9690B; } .ld-doc.ref .ld-doc-ic { background: #FDECEC; color: #C0392B; }
+.ld-doc-t { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.ld-doc-t b { font-size: 13px !important; font-weight: 600; color: #0D1B3E; }
+.ld-doc-t small { font-size: 11.5px !important; color: #94A3B8; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ld-doc.ver .ld-doc-t small { color: #1A6BFF; } .ld-doc.ref .ld-doc-t small { color: #C0392B; }
+.ld-doc-f { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px !important; color: #1A6BFF; text-decoration: none; margin-top: 2px; width: fit-content; }
+.ld-doc-a { display: flex; align-items: center; gap: 5px; flex: none; }
+.ld-doc-a button { border: none; border-radius: 999px; padding: 5px 10px; font-family: inherit; font-size: 11.5px !important; font-weight: 600; cursor: pointer; }
+.ld-doc-a button.ok { background: #1A6BFF; color: #fff; } .ld-doc-a button.ko { background: #FDECEC; color: #C0392B; }
+.ld-doc-a button.lien { background: none; color: #94A3B8; padding: 5px 4px; }
+.ld-doc-p { display: inline-flex; align-items: center; gap: 4px; font-size: 11px !important; font-weight: 600; border-radius: 999px; padding: 3px 9px; }
+.ld-doc-p.att { color: #D9690B; background: #FFF1E0; } .ld-doc-p.ok { color: #1A6BFF; background: #EAF1FF; }
+.ld-dadd { display: flex; align-items: center; justify-content: center; gap: 7px; width: 100%; padding: 11px; border: 1.5px dashed #C9D6EE; border-radius: 14px; background: #fff; color: #1A6BFF; font-family: inherit; font-size: 13px !important; font-weight: 600; cursor: pointer; }
+.ld-dadd:hover { background: #F5F8FF; border-color: #1A6BFF; }
