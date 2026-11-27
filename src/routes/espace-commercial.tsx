@@ -12,6 +12,7 @@ import CallButton from '@/components/CallButton'
 import NiceSelect, { optionsActivite } from '@/components/NiceSelect'
 import StatutPicker from '@/components/StatutPicker'
 import { RappelAlarme } from '@/components/Rappels'
+import { User } from 'lucide-react'
 import { Copy, Download, MessageSquare, MessagesSquare, Share2, Coins, UserPlus, LogOut, RefreshCw, ChevronRight, AlertCircle, PhoneCall, CalendarDays, Landmark, Check, Clock, Phone, MessageCircle, ArrowRight } from 'lucide-react'
 import { montantCourt, dateRelative, tonScore, tonStatut, initialesNom, couleurAvatar } from '@/lib/affichage'
 import { blocCalendrier } from '@/lib/conversation'
@@ -246,7 +247,7 @@ function EspaceCommercialPage() {
                   <div className="ws-user-city">{session.ville}</div>
                 </div>
               </div>
-              <button className="btn-logout-sm" onClick={logout}><LogOut size={15} strokeWidth={2.2}/>Se déconnecter</button>
+              <button className="btn-logout-sm" onClick={logout}><User size={16} strokeWidth={2}/>Déconnexion</button>
             </div>
           </aside>
 
@@ -925,9 +926,11 @@ function GlobalStyles() {
       .ws-mark { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(135deg, #1A6BFF 0%, #0051D4 100%); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 20px; color: #fff; letter-spacing: -0.02em; box-shadow: 0 10px 24px rgba(26,107,255,0.5), inset 0 1px 0 rgba(255,255,255,0.3); flex: none; }
       .ws-brand { font-weight: 800; font-size: 16px; letter-spacing: -0.02em; color: #fff; }
       .ws-nav { flex: 1; padding: 20px 12px; display: flex; flex-direction: column; gap: 2px; }
-      .ws-nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 14px; background: transparent; border: none; cursor: pointer; border-radius: 10px; color: rgba(255,255,255,0.65); font-family: inherit; font-size: 13px; font-weight: 600; text-align: left; }
-      .ws-nav-item:hover { background: rgba(255,255,255,0.05); color: #fff; }
-      .ws-nav-item.active { background: rgba(26,107,255,0.2); color: #fff; }
+      .ws-nav-item { display: flex; align-items: center; gap: 12px; padding: 11px 14px; background: transparent; border: none; cursor: pointer; border-radius: 10px; color: rgba(255,255,255,0.7); font-family: inherit; font-size: 14px; font-weight: 600; text-align: left; position: relative; transition: all .15s; }
+      .ws-nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+      .ws-nav-item.active { background: linear-gradient(90deg, rgba(26,107,255,0.25), rgba(26,107,255,0.05)); color: #fff; }
+      .ws-nav-item.active::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 3px; height: 20px; background: #1A6BFF; border-radius: 0 3px 3px 0; box-shadow: 0 0 12px rgba(26,107,255,0.8); }
+      .ws-nav-item .ws-nav-icon { opacity: .75; } .ws-nav-item.active .ws-nav-icon { opacity: 1; color: #4D8CFF; }
       .ws-nav-icon { display: inline-flex; }
       .ws-nav-lbl { flex: 1; }
       .ws-nav-badge { background: ${MI.blue}; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 100px; }
@@ -936,8 +939,8 @@ function GlobalStyles() {
       .ws-avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, ${MI.blue}, ${MI.violet}); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; }
       .ws-user-name { font-size: 12px; font-weight: 700; color: #fff; }
       .ws-user-city { font-size: 10px; color: rgba(255,255,255,0.5); }
-      .btn-logout-sm { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 10px; background: transparent; color: #FCA5A5; border: 1px solid rgba(248,113,113,0.35); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s, border-color .15s, color .15s; }
-      .btn-logout-sm:hover { background: rgba(220,38,38,0.14); border-color: rgba(248,113,113,0.6); color: #FECACA; }
+      .btn-logout-sm { width: 100%; min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 18px; background: transparent; color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; white-space: nowrap; transition: background .15s, border-color .15s, color .15s; }
+      .btn-logout-sm:hover { background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: #FCA5A5; }
 
       .ws-main { min-width: 0; }
       .ws-topbar { height: 56px; box-sizing: border-box; padding: 0 32px; background: #fff; border-bottom: 1px solid ${MI.grayBorder}; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 10; }
