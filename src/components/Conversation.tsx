@@ -423,7 +423,7 @@ const CV_CSS = `
   .cv-meta { display: flex; align-items: center; gap: 4px; font-size: 10.5px; color: #8A94A6; margin: 4px 8px 0; }
   .cv-vu { display: inline-flex; align-items: center; gap: 3px; color: #1A6BFF; font-weight: 600; margin-left: 2px; }
   .cv-envoye { margin-left: 2px; }
-  .cv-carte { width: min(88%, 400px); background: linear-gradient(180deg, #F6F9FF 0%, #FCFDFF 45%, #FFFFFF 100%); border: 1px solid #EEF2FA; border-radius: 20px; box-shadow: 0 6px 18px rgba(13,27,62,.07); overflow: hidden; }
+  .cv-carte { width: min(88%, 400px); background: linear-gradient(180deg, #F2F6FF 0%, #FFFFFF 42%); border: 1px solid #E2E8F2; border-radius: 20px; box-shadow: 0 1px 2px rgba(13,27,62,.05), 0 6px 18px rgba(13,27,62,.08); overflow: hidden; }
   .cv-carte-h { display: flex; align-items: center; gap: 10px; padding: 13px 14px 8px; }
   .cv-carte-h b { display: block; font-size: 14px; } .cv-carte-h small { font-size: 12px; color: #8A94A6; }
   .cv-carte-ic { width: 34px; height: 34px; border-radius: 10px; background: #EEF4FF; color: #1A6BFF; display: flex; align-items: center; justify-content: center; flex: none; }
