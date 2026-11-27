@@ -173,7 +173,7 @@ function RejoindreEquipePage() {
       `}</style>
 
       <header className="mi-header">
-        <Link to="/"><Logo height={56} tone="light"/></Link>
+        <Logo height={56} tone="light"/>
         <div className="mi-nav-actions">
 
           <Link to={'/espace-commercial' as any} className="mi-nav-link muted">

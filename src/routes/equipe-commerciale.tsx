@@ -155,12 +155,15 @@ function EquipeCommercialePage() {
         .row-head { background: #F9FAFB; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #6B7280; }
         .row-head .r, .row .r { text-align: right; }
         @media (max-width: 820px) {
-          .row { grid-template-columns: 1fr auto; gap: 6px; }
+          .row { grid-template-columns: minmax(0, 1fr) auto; gap: 6px; }
+          .row-name small { overflow-wrap: anywhere; }
+          .row .row-action { align-self: start; }
           .row-head { display: none; }
           .row > *:not(.row-name):not(.row-action) { grid-column: 1; }
           .row .row-action { grid-column: 2; grid-row: 1; }
         }
-        .row-name { display: flex; align-items: center; gap: 10px; }
+        .row-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .row-name > div { min-width: 0; }
         .ava { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #2361EF, #7C3AED); color: #fff; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0; }
         .row-name strong { font-size: 13px; font-weight: 700; color: #111827; display: block; }
         .row-name small { font-size: 11px; color: #6B7280; display: block; margin-top: 1px; }

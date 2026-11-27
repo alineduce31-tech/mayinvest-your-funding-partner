@@ -716,7 +716,7 @@ function MessagerieStyles() {
     .am-doc.uploaded .am-doc-top small { color: #D9690B; }
     .am-doc-act { display: flex; gap: 6px; margin-top: 6px; }
     .am-doc-act button { border: 1.5px solid #E5E7EB; background: #fff; border-radius: 100px; padding: 4px 10px; font-family: inherit; font-size: 11.5px; font-weight: 800; cursor: pointer; }
-    .am-doc-act button.ok { background: #16A34A; border-color: #16A34A; color: #fff; }
+    .am-doc-act button.ok { background: #1A6BFF; border-color: #1A6BFF; color: #fff; }
     .am-hint { background: #EEF4FF; border-radius: 12px; padding: 10px 12px; font-size: 12px; line-height: 1.5; color: #0D1B3E; margin-top: auto; }
     .am-bc { padding: 18px; display: flex; flex-direction: column; gap: 10px; max-width: 640px; }
     .am-bc label { font-size: 11px; font-weight: 800; color: #64748B; letter-spacing: 0.08em; text-transform: uppercase; }

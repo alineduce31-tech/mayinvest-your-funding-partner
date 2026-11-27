@@ -201,7 +201,7 @@ function EspaceCommercialPage() {
         // ========== DASHBOARD PRÉ-VALIDATION ==========
         <>
           <header className="ec-header">
-            <Link to="/"><Logo height={56} tone="light"/></Link>
+            <Logo height={56} tone="light"/>
             <button className="btn-logout" onClick={logout} style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><LogOut size={15} strokeWidth={2}/>Déconnexion</button>
           </header>
           <div className="pre-wrap">
