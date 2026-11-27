@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { X, CircleAlert, CircleCheck, Info, Landmark } from 'lucide-react'
 import { formatMontant, lireMontant } from '@/lib/depot'
 
 // Fenêtres Mayinvest à la place des boîtes du navigateur (alert, confirm, prompt) : même style partout, croix de fermeture.
 
+export type Choix = { k: string; label: string; sous?: string | undefined; icone?: ReactNode; accent?: boolean | undefined; pointille?: boolean | undefined }
 type Question = {
-  type: 'confirmer' | 'texte' | 'depot'
+  type: 'confirmer' | 'texte' | 'depot' | 'choix'
+  choix?: Choix[] | undefined
   banques?: string[] | undefined
   banque?: string | undefined
   montant?: number | null | undefined
@@ -36,6 +38,12 @@ export function confirmer(o: { titre: string; texte?: string; bouton?: string; d
 export function demanderTexte(o: { titre: string; texte?: string; label?: string; placeholder?: string; valeur?: string; bouton?: string; multiligne?: boolean }): Promise<string | null> {
   if (!poser) return Promise.resolve(typeof window !== 'undefined' ? window.prompt(o.titre) : null)
   return new Promise(res => poser!({ type: 'texte', ...o, resoudre: res }))
+}
+
+/** Liste de choix (un clic choisit et ferme). Renvoie la clé choisie, ou null si on ferme. */
+export function choisir(o: { titre: string; texte?: string; choix: Choix[] }): Promise<string | null> {
+  if (!poser) return Promise.resolve(null)
+  return new Promise(res => poser!({ type: 'choix', ...o, resoudre: res }))
 }
 
 export type ReponseDepot = { banque: string; montant: number | null }
@@ -92,6 +100,8 @@ export function DialogueHote() {
     if (q.type === 'texte') {
       if (ok && !val.trim()) { setErr('Ce champ est vide.'); return }
       q.resoudre(ok ? val.trim() : null)
+    } else if (q.type === 'choix') {
+      q.resoudre(null)
     } else if (q.type === 'depot') {
       if (!ok) { q.resoudre(null); setQ(null); return }
       if (!banque.trim()) { setErr('Choisissez la banque.'); return }
@@ -122,6 +132,16 @@ export function DialogueHote() {
                 : <input ref={champ} className="dlg-in" value={val} placeholder={q.placeholder} onChange={e => { setVal(e.target.value); setErr('') }} onKeyDown={e => { if (e.key === 'Enter') fermer(true) }}/>}
               {err && <div className="dlg-err">{err}</div>}
             </>}
+            {q.type === 'choix' && (
+              <div className="dlg-choix">
+                {(q.choix || []).map(c => (
+                  <button key={c.k} type="button" className={`dlg-ch ${c.accent ? 'acc' : ''} ${c.pointille ? 'pt' : ''}`} onClick={() => { q.resoudre(c.k); setQ(null) }}>
+                    {c.icone && <span className="dlg-ch-ic">{c.icone}</span>}
+                    <span className="dlg-ch-t"><b>{c.label}</b>{c.sous && <small>{c.sous}</small>}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {q.type === 'depot' && <>
               <label className="dlg-l">Banque de dépôt</label>
               <div className="dlg-chips" role="radiogroup" aria-label="Banque de dépôt">
@@ -139,10 +159,10 @@ export function DialogueHote() {
               </>}
               {err && <div className="dlg-err">{err}</div>}
             </>}
-            <div className="dlg-act">
+            {q.type !== 'choix' && <div className="dlg-act">
               <button type="button" className="dlg-b sec" onClick={() => fermer(false)}>{q.type === 'depot' ? 'Plus tard' : 'Annuler'}</button>
               <button type="button" className={`dlg-b ${q.danger ? 'danger' : 'pri'}`} onClick={() => fermer(true)}>{q.bouton || (q.type === 'texte' ? 'Valider' : 'Confirmer')}</button>
-            </div>
+            </div>}
           </div>
         </div>
       )}
@@ -181,6 +201,16 @@ export const DLG_CSS = `
   .dlg-h + .dlg-in, .dlg-h + .dlg-in.ta { margin-top: 14px; }
   .dlg-in:focus { border-color: #1A6BFF; box-shadow: 0 0 0 3px rgba(26,107,255,.15); }
   .dlg-err { margin-top: 8px; font-size: 12.5px; color: #B42318; }
+  .dlg-choix { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; max-height: 60vh; overflow-y: auto; }
+  .dlg-ch { display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; border: 1px solid #E5E5EA; background: #fff; border-radius: 14px; padding: 10px 12px; font-family: inherit; cursor: pointer; color: #1D1D1F; }
+  .dlg-ch:hover { border-color: #1A6BFF; background: #F5F9FF; }
+  .dlg-ch.acc { border-color: #BFD3FF; background: #F5F9FF; }
+  .dlg-ch.pt { border-style: dashed; border-color: #CBD5E1; color: #64748B; }
+  .dlg-ch-ic { width: 30px; height: 30px; border-radius: 9px; flex: none; display: inline-flex; align-items: center; justify-content: center; background: #EAF1FF; color: #1A6BFF; }
+  .dlg-ch.pt .dlg-ch-ic { background: #F3F5F9; color: #64748B; }
+  .dlg-ch-t { display: flex; flex-direction: column; min-width: 0; }
+  .dlg-ch-t b { font-size: 14px !important; font-weight: 600; }
+  .dlg-ch-t small { font-size: 12px; color: #86868B; margin-top: 1px; }
   .dlg-chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .dlg-chip { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 13px; border-radius: 999px; border: 1px solid #E5E5EA; background: #fff; color: #1D1D1F; font-family: inherit; font-size: 13.5px !important; font-weight: 500; cursor: pointer; }
   .dlg-chip svg { color: #86868B; }

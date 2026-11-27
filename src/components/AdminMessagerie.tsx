@@ -337,7 +337,7 @@ function LeadThread({ leadId, row, session, team, tick, isDirector, onBack, onOp
           libelle={etape.action === 'attribuer' && !isDirector ? undefined : etape.bouton} onClick={actionEtape}/>}
 
         <div className="am-msgs">
-          <Conversation viewer="equipe" leadId={leadId} peutSupprimer={b => !!b.mien || (isDirector && b.ton !== 'client')} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMsgs() }} docs={docs} bulles={regrouper(msgs.map(m => vueAdmin(m, session.id, nom)), Date.now())} vide="Pas encore de message. Écris le premier au groupe."/>
+          <Conversation viewer="equipe" leadId={leadId} onPiecesChange={() => { loadDocs(); onChanged() }} peutSupprimer={b => !!b.mien || (isDirector && b.ton !== 'client')} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMsgs() }} docs={docs} bulles={regrouper(msgs.map(m => vueAdmin(m, session.id, nom)), Date.now())} vide="Pas encore de message. Écris le premier au groupe."/>
           <div ref={endRef}/>
         </div>
 

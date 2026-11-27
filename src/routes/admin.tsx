@@ -2474,7 +2474,7 @@ function LeadDrawer({ lead, onClose, onStatutChange, onDepotChange, msgCount, on
 
           {tab === 'chat' && <div className="chat-wrap">
             <div className="chat-scroll">
-              <Conversation viewer="equipe" leadId={lead.id} peutSupprimer={b => !!b.mien || (isDirector && b.ton !== 'client')} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMessages() }} docs={documents} bulles={regrouper(messages.map(m => vueAdmin(m, adminId, nom)), Date.now())} vide={<div className="ld-vide"><span className="ld-vide-ic"><MessageCircle size={24}/></span><b>Aucun message pour l'instant</b><small>Présentez-vous au client avec une suggestion ou un message.</small></div>}/>
+              <Conversation viewer="equipe" leadId={lead.id} onPiecesChange={loadDocuments} peutSupprimer={b => !!b.mien || (isDirector && b.ton !== 'client')} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMessages() }} docs={documents} bulles={regrouper(messages.map(m => vueAdmin(m, adminId, nom)), Date.now())} vide={<div className="ld-vide"><span className="ld-vide-ic"><MessageCircle size={24}/></span><b>Aucun message pour l'instant</b><small>Présentez-vous au client avec une suggestion ou un message.</small></div>}/>
               <div ref={chatEnd}/>
             </div>
             <div className="ld-compose">

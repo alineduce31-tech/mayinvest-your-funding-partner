@@ -249,3 +249,27 @@ export function pieceJointe(contenu: string): { nom: string; url: string; type: 
   const reste = lignes.filter(l => l !== f && l !== u).join('\n').trim()
   return { nom, url: u.trim(), type, reste }
 }
+
+type DocPiece = { id: string; status?: string | null; doc_label?: string | null; file_url?: string | null }
+
+/** Pièces encore attendues du client (demandées ou refusées), pour le menu + de sa messagerie. */
+export function piecesAttendues<T extends DocPiece>(docs: T[]): T[] {
+  return (docs || []).filter(d => !String(d.id).startsWith('texte-') && !estRecue(d.status))
+}
+
+/** Pièce dans laquelle ce fichier est déjà rangé (même adresse), s'il y en a une. */
+export function pieceDuFichier<T extends DocPiece>(docs: T[], url: string): T | null {
+  return (docs || []).find(d => !!d.file_url && d.file_url === url) || null
+}
+
+/** Pièces proposées pour ranger un fichier : d'abord celles qui manquent, puis celles à vérifier, puis les validées (remplacement). */
+export function piecesPourRanger<T extends DocPiece>(docs: T[]): { doc: T; sous: string; manque: boolean }[] {
+  const rang = (s?: string | null) => s === 'rejected' ? 0 : !estRecue(s) ? 1 : s === 'uploaded' ? 2 : 3
+  return [...(docs || [])].filter(d => !String(d.id).startsWith('texte-'))
+    .sort((a, b) => rang(a.status) - rang(b.status))
+    .map(d => ({
+      doc: d,
+      manque: !estRecue(d.status),
+      sous: d.status === 'rejected' ? 'Refusée, à remplacer' : !estRecue(d.status) ? 'Demandée' : d.status === 'uploaded' ? 'Reçue, à vérifier : sera remplacée' : 'Déjà validée : sera remplacée',
+    }))
+}

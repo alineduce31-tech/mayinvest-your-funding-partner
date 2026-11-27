@@ -107,3 +107,25 @@ describe('fichier partagé', () => {
     expect(pieceJointe('Bonjour')).toBeNull()
   })
 })
+
+import { piecesAttendues, pieceDuFichier, piecesPourRanger } from './conversation'
+describe('ranger les fichiers dans les pièces', () => {
+  const docs = [
+    { id: 'a', doc_label: 'CNI', status: 'validated', file_url: 'u1' },
+    { id: 'b', doc_label: 'Bulletins', status: 'pending' },
+    { id: 'c', doc_label: 'Relevé', status: 'rejected' },
+    { id: 'd', doc_label: 'Attestation', status: 'uploaded', file_url: 'u2' },
+    { id: 'texte-0', doc_label: 'Ancienne', status: 'pending' },
+  ]
+  test('pièces attendues = demandées ou refusées', () => {
+    expect(piecesAttendues(docs).map(d => d.id)).toEqual(['b', 'c'])
+  })
+  test('retrouve la pièce d’un fichier déjà rangé', () => {
+    expect(pieceDuFichier(docs, 'u2')?.id).toBe('d')
+    expect(pieceDuFichier(docs, 'zz')).toBeNull()
+  })
+  test('propose d’abord les pièces qui manquent', () => {
+    expect(piecesPourRanger(docs).map(x => x.doc.id)).toEqual(['c', 'b', 'd', 'a'])
+    expect(piecesPourRanger(docs)[0]?.manque).toBe(true)
+  })
+})

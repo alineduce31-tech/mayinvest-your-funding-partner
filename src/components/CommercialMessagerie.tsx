@@ -265,7 +265,7 @@ function LeadThread({ row, commercialId, tick, now, rappel, onRappel, onBack, on
           libelle={step.action === 'appeler' ? undefined : step.bouton} onClick={doAction} occupe={busyStep}/>
 
         <div className="cm-msgs">
-          <Conversation viewer="equipe" leadId={row.lead_id} peutSupprimer={b => !!b.mien} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMsgs() }} docs={docs} bulles={regrouper(msgs.map(m => vueCommercial(m, commercialId, row.nom || 'Client')), now)}
+          <Conversation viewer="equipe" leadId={row.lead_id} onPiecesChange={loadDocs} peutSupprimer={b => !!b.mien} onSupprimer={async (b) => { const { error } = await supabase.rpc('delete_lead_message', { p_id: b.id }); if (error) informer(error.message); else loadMsgs() }} docs={docs} bulles={regrouper(msgs.map(m => vueCommercial(m, commercialId, row.nom || 'Client')), now)}
             vide="Pas encore de message. Présente-toi avec un message type ou une suggestion ci-dessous."/>
           <div ref={endRef}/>
         </div>

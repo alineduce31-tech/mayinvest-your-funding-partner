@@ -1,19 +1,19 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import PieceIcone from '@/components/PieceIcone'
 import ScrollRow from '@/components/ScrollRow'
-import { CroixFermer, confirmer } from '@/components/Dialogue'
+import { CroixFermer, confirmer, choisir, demanderTexte, informer } from '@/components/Dialogue'
 import { createPortal } from 'react-dom'
-import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download, FileBadge, Image as ImageIcon, Phone, Trash2, MoreHorizontal, Copy } from 'lucide-react'
+import { CheckCheck, Check, EyeOff, FolderCheck, Upload, MapPin, CalendarClock, ArrowUp, Sparkles, Clock, X, FileText, Download, FileBadge, Image as ImageIcon, Phone, Trash2, MoreHorizontal, Copy, Eye, Plus, FolderInput } from 'lucide-react'
 import { supabase } from '@/integrations/supabase/client'
 import {
-  type BulleAffichee, heure, lireRdv, pieceJointe, blocCalendrier, phraseRdv, piecesDeCarte, estRecue,
+  type BulleAffichee, heure, lireRdv, pieceJointe, blocCalendrier, phraseRdv, piecesDeCarte, estRecue, pieceDuFichier, piecesPourRanger,
 } from '@/lib/conversation'
 import { segmentsMessage, decouperLibelle, titreCourt, etatPiece } from '@/lib/affichage'
 import { joursProposes, HEURES_PROPOSEES, combiner, heureTexte, estDansLeFutur } from '@/lib/rappels'
 import { positionCarte, estMobile, type Position } from '@/lib/nice-select'
 
 // ============ LISTE DES BULLES ============
-export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploadingDocId, onRepondreRdv, vide, leadId, peutSupprimer, onSupprimer }: {
+export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploadingDocId, onRepondreRdv, vide, leadId, peutSupprimer, onSupprimer, onPiecesChange }: {
   bulles: BulleAffichee[]
   /** Qui peut supprimer quel message (par défaut : personne). */
   peutSupprimer?: ((b: BulleAffichee) => boolean) | undefined
@@ -26,7 +26,43 @@ export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploading
   uploadingDocId?: string | null
   onRepondreRdv?: (b: BulleAffichee, rep: 'confirme' | 'autre') => Promise<void> | void
   vide?: ReactNode
+  /** Côté équipe : active « Valider / Refuser » dans la carte des pièces et « Ranger dans le dossier » sur les fichiers reçus ; appelé après chaque changement. */
+  onPiecesChange?: (() => void) | undefined
 }) {
+  const gerer = viewer === 'equipe' && !!leadId && !!onPiecesChange
+  async function statutPiece(d: any, statut: 'validated' | 'rejected') {
+    let note: string | null = null
+    if (statut === 'rejected') {
+      note = await demanderTexte({ titre: 'Refuser cette pièce', texte: 'Le client verra ce motif et pourra renvoyer la pièce.', label: 'Motif du refus', placeholder: 'Ex. : photo floue, document expiré', bouton: 'Refuser la pièce', multiligne: true })
+      if (!note) return
+    }
+    const { error } = await supabase.rpc('mi_piece_statut', { p_doc_id: d.id, p_statut: statut, p_note: note })
+    if (error) { informer(error.message); return }
+    informer(statut === 'validated' ? 'Pièce validée' : 'Pièce refusée : le client peut la renvoyer', statut === 'validated' ? 'ok' : 'info')
+    onPiecesChange?.()
+  }
+  async function ranger(pj: { nom: string; url: string }) {
+    if (!leadId) return
+    const k = await choisir({
+      titre: 'Ranger dans le dossier',
+      texte: `${pj.nom} sera rangé dans cette pièce et validé.`,
+      choix: [
+        ...piecesPourRanger(docs).map(x => ({ k: x.doc.id, label: titreCourt(decouperLibelle(x.doc.doc_label || 'Document').titre), sous: x.sous, accent: x.manque,
+          icone: <PieceIcone docType={x.doc.doc_type} titre={x.doc.doc_label || ''} size={16}/> })),
+        { k: '__autre', label: 'Autre pièce…', sous: 'Lui donner un nom', icone: <Plus size={16}/>, pointille: true },
+      ],
+    })
+    if (!k) return
+    let label: string | null = null
+    if (k === '__autre') {
+      label = await demanderTexte({ titre: 'Nom de la pièce', placeholder: 'Ex. : Facture proforma', bouton: 'Ranger et valider' })
+      if (!label) return
+    }
+    const { error } = await supabase.rpc('mi_ranger_fichier', { p_lead_id: leadId, p_doc_id: k === '__autre' ? null : k, p_label: label, p_url: pj.url, p_nom: pj.nom })
+    if (error) { informer(error.message); return }
+    informer('Fichier rangé et validé', 'ok')
+    onPiecesChange?.()
+  }
   return (
     <div className="cv">
       <ConversationStyles/>
@@ -36,7 +72,7 @@ export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploading
           {b.jour && <div className="cv-jour">{b.jour}</div>}
           <div className="cv-row">
           {b.kind === 'supprime' ? <div className="cv-suppr"><Trash2 size={13}/>Message supprimé</div>
-            : b.kind === 'pieces' ? <CartePieces b={b} viewer={viewer} docs={docs} onUploadDoc={onUploadDoc} uploadingDocId={uploadingDocId}/>
+            : b.kind === 'pieces' ? <CartePieces b={b} viewer={viewer} docs={docs} onUploadDoc={onUploadDoc} uploadingDocId={uploadingDocId} onStatut={gerer ? statutPiece : undefined}/>
             : b.kind === 'rdv' ? <CarteRdv b={b} viewer={viewer} onRepondre={onRepondreRdv}/>
             : b.kind === 'pack' ? <CartePack viewer={viewer} leadId={leadId}/>
             : b.kind === 'evenement' ? <div className={`cv-ev ${b.payload?.etat || ''}`}>{b.payload?.icone === 'rdv' ? <CalendarClock size={14}/> : b.payload?.icone === 'appel' ? <Phone size={14}/> : <FileBadge size={14}/>}{b.payload?.texte}</div>
@@ -44,6 +80,14 @@ export function Conversation({ bulles, viewer, docs = [], onUploadDoc, uploading
               <div className={`cv-bulle ${b.ton}`}>
                 {b.debut && b.etiquette && <span className={`cv-tag ${b.ton}`}>{b.ton === 'note' && <EyeOff size={11}/>}{viewer === 'client' && b.ton === 'equipe' && <i className="cv-av">{initialesAuteur(b.auteur)}</i>}{b.etiquette}</span>}
                 <Texte texte={b.contenu}/>
+                {gerer && b.ton === 'client' && (() => {
+                  const pj = pieceJointe(b.contenu)
+                  if (!pj) return null
+                  const deja = pieceDuFichier(docs, pj.url)
+                  return deja
+                    ? <span className="cv-range"><Check size={13} strokeWidth={2.6}/>Rangé : {titreCourt(decouperLibelle(deja.doc_label || 'Document').titre)}</span>
+                    : <button type="button" className="cv-ranger" onClick={() => ranger(pj)}><FolderInput size={14}/>Ranger dans le dossier</button>
+                })()}
               </div>
             )}
           {b.kind !== 'supprime' && b.kind !== 'evenement' && onSupprimer && peutSupprimer?.(b) && <MenuMessage b={b} onSupprimer={onSupprimer}/>}
@@ -136,7 +180,7 @@ function liens(t: string): ReactNode[] {
 }
 
 // ============ CARTE PIÈCES ============
-function CartePieces({ b, viewer, docs, onUploadDoc, uploadingDocId }: { b: BulleAffichee; viewer: 'client' | 'equipe'; docs: any[]; onUploadDoc?: ((doc: any, file: File) => void) | undefined; uploadingDocId?: string | null | undefined }) {
+function CartePieces({ b, viewer, docs, onUploadDoc, uploadingDocId, onStatut }: { b: BulleAffichee; viewer: 'client' | 'equipe'; docs: any[]; onUploadDoc?: ((doc: any, file: File) => void) | undefined; uploadingDocId?: string | null | undefined; onStatut?: ((d: any, s: 'validated' | 'rejected') => void) | undefined }) {
   const liste = piecesDeCarte(b.payload, docs)
   if (!liste.length) return <div className={`cv-bulle ${b.ton}`}><Texte texte={b.contenu}/></div>
   const recues = liste.filter(d => estRecue(d.status)).length
@@ -154,10 +198,20 @@ function CartePieces({ b, viewer, docs, onUploadDoc, uploadingDocId }: { b: Bull
         const ok = estRecue(d.status)
         const { titre } = decouperLibelle(d.doc_label || 'Document')
         return (
-          <div key={d.id} className={`cv-piece ${ok ? 'ok' : ''}`}>
+          <div key={d.id} className={`cv-piece ${ok && !(viewer === 'equipe' && e === 'uploaded') ? 'ok' : ''} ${viewer === 'equipe' && onStatut && e === 'uploaded' ? 'averif' : ''}`}>
             <span className={`cv-coche ${e}`}>{ok && <Check size={12} strokeWidth={3}/>}{e === 'rejected' && <X size={12} strokeWidth={3}/>}</span>
             <span className="cv-piece-ic" aria-hidden="true"><PieceIcone docType={d.doc_type} titre={titre} size={15}/></span>
-            <span className="cv-piece-t"><span className="cv-piece-nom">{titreCourt(titre)}</span>{e === 'rejected' && <small>Refusée, à renvoyer</small>}{e === 'rejected' && d.admin_note && <small className="cv-motif">Motif : {d.admin_note}</small>}{e === 'uploaded' && <small>Reçue, en vérification</small>}</span>
+            <span className="cv-piece-t"><span className="cv-piece-nom">{titreCourt(titre)}</span>{e === 'rejected' && <small>Refusée, à renvoyer</small>}{e === 'rejected' && d.admin_note && <small className="cv-motif">Motif : {d.admin_note}</small>}{e === 'uploaded' && <small>{viewer === 'equipe' ? 'Reçue · à vérifier' : 'Reçue, en vérification'}</small>}{e === 'validated' && viewer === 'equipe' && <small className="ok">Validée</small>}</span>
+            {viewer === 'equipe' && onStatut && d.file_url && e === 'validated' && (
+              <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="cv-pa voir" title="Voir le fichier"><Eye size={13}/>Voir</a>
+            )}
+            {viewer === 'equipe' && onStatut && e === 'uploaded' && (
+              <span className="cv-pacts">
+                {d.file_url && <a href={d.file_url} target="_blank" rel="noopener noreferrer" className="cv-pa voir"><Eye size={13}/>Voir</a>}
+                <button type="button" className="cv-pa refus" onClick={() => onStatut(d, 'rejected')}><X size={13} strokeWidth={2.6}/>Refuser</button>
+                <button type="button" className="cv-pa ok" onClick={() => onStatut(d, 'validated')}><Check size={13} strokeWidth={2.6}/>Valider</button>
+              </span>
+            )}
             {!ok && viewer === 'client' && onUploadDoc && !String(d.id).startsWith('texte-') && (
               <label className={`cv-envoyer ${uploadingDocId === d.id ? 'busy' : ''}`}>
                 {uploadingDocId === d.id ? 'Envoi…' : <><Upload size={13}/>Envoyer</>}
@@ -165,7 +219,7 @@ function CartePieces({ b, viewer, docs, onUploadDoc, uploadingDocId }: { b: Bull
                   onChange={ev => { const f = ev.target.files?.[0]; if (f) onUploadDoc(d, f); ev.currentTarget.value = '' }}/>
               </label>
             )}
-            {!ok && (viewer === 'equipe' || String(d.id).startsWith('texte-')) && <span className="cv-attente">{e === 'rejected' ? 'À renvoyer' : 'À envoyer'}</span>}
+            {!ok && e !== 'uploaded' && (viewer === 'equipe' || String(d.id).startsWith('texte-')) && <span className="cv-attente">{e === 'rejected' ? 'À renvoyer' : 'À envoyer'}</span>}
           </div>
         )
       })}
@@ -441,6 +495,17 @@ const CV_CSS = `
   .cv-coche.validated { background: #DCFCE7; border-color: #DCFCE7; color: #16A34A; }
   .cv-coche.uploaded { background: #DBEAFE; border-color: #DBEAFE; color: #1D4ED8; }
   .cv-coche.rejected { background: #FEE2E2; border-color: #FEE2E2; color: #B91C1C; }
+  .cv-pa { display: inline-flex; align-items: center; gap: 4px; flex: none; height: 28px; padding: 0 10px; border-radius: 999px; border: none; font-family: inherit; font-size: 12px !important; font-weight: 600; cursor: pointer; text-decoration: none; }
+  .cv-pa.voir { background: #F3F5F9; color: #0D1B3E; }
+  .cv-pa.ok { background: #1A6BFF; color: #fff; }
+  .cv-pa.refus { background: #FDECEC; color: #DC2626; }
+  .cv-piece.averif { flex-wrap: wrap; }
+  .cv-pacts { flex: 1 0 100%; display: flex; gap: 6px; padding-left: 66px; }
+  .cv-pacts .cv-pa { flex: 1; justify-content: center; }
+  .cv-piece-t small.ok { color: #1A6BFF; }
+  .cv-ranger { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; border: none; background: #1A6BFF; color: #fff; font-family: inherit; font-size: 12.5px !important; font-weight: 600; padding: 7px 12px; border-radius: 999px; cursor: pointer; }
+  .cv-ranger:hover { background: #0F5AE6; }
+  .cv-range { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; background: #E8F0FF; color: #1A6BFF; font-size: 12px; font-weight: 500; padding: 5px 10px; border-radius: 999px; }
   .cv-envoyer { display: inline-flex; align-items: center; gap: 5px; background: #1A6BFF; color: #fff; font-size: 12px; font-weight: 700; padding: 6px 11px; border-radius: 999px; cursor: pointer; flex: none; }
   .cv-envoyer.busy { background: #93C5FD; cursor: default; }
   .cv-attente { font-size: 11.5px; color: #D9690B; background: #FFF1E0; font-weight: 600; padding: 3px 9px; border-radius: 999px; flex: none; white-space: nowrap; }

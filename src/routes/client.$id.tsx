@@ -9,7 +9,7 @@ import { LogOut, Upload, MessageCircle, Check, User, Phone, IdCard, Receipt, Lan
 import PackClient from '@/components/PackClient'
 import { proposerPack } from '@/lib/pack'
 import { ETAPES_CLIENT, etapeCourante, compteDocs, prochaineEtape, decoupePiece } from '@/lib/espace-client'
-import { initialesNom, couleurAvatar } from '@/lib/affichage'
+import { initialesNom, couleurAvatar, decouperLibelle, titreCourt } from '@/lib/affichage'
 import { supabase, onLiveEvent } from '@/integrations/supabase/client'
 import { setClientToken } from '@/lib/session-tokens'
 import { requestPasswordReset } from '@/lib/password-reset'
@@ -17,7 +17,8 @@ import SkeletonPage from '@/components/SkeletonPage'
 import { formatPhoneInput } from '@/lib/phone'
 import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles } from '@/components/HakiTeaser'
 import { Conversation, ChatInput, Suggestions } from '@/components/Conversation'
-import { regrouper, vueClient, suggestions, lireRdv, reponseClientRdv } from '@/lib/conversation'
+import { regrouper, vueClient, suggestions, lireRdv, reponseClientRdv, piecesAttendues } from '@/lib/conversation'
+import PieceIcone from '@/components/PieceIcone'
 
 export const Route = createFileRoute('/client/$id')({
   component: ClientPortal,
@@ -198,6 +199,8 @@ function ClientPortal() {
   const [attachOpen, setAttachOpen] = useState(false)
   const photoInput = useRef<HTMLInputElement>(null)
   const galerieInput = useRef<HTMLInputElement>(null)
+  const pieceInput = useRef<HTMLInputElement>(null)
+  const pieceCible = useRef<any>(null)
   function closeAttach() { setAttachOpen(false) }
   const [uploading, setUploading] = useState(false)
   const [documents, setDocuments] = useState<any[]>([])
@@ -1110,6 +1113,19 @@ function ClientPortal() {
                 <button className={`cx-plus ${attachOpen ? 'on' : ''}`} onClick={() => setAttachOpen(a => !a)} aria-label="Joindre un fichier" disabled={uploading}><Plus size={20}/></button>
                 {attachOpen && (
                   <div className="cx-attach">
+                    {piecesAttendues(documents).length > 0 && <>
+                      <div className="cx-at-t">Pièces demandées · {piecesAttendues(documents).length} à envoyer</div>
+                      <div className="cx-g cx-at-p">
+                        {piecesAttendues(documents).map(d => (
+                          <button key={d.id} className="cx-op" onClick={() => { closeAttach(); pieceCible.current = d; pieceInput.current?.click() }}>
+                            <span className="cx-ic b"><PieceIcone docType={d.doc_type} titre={d.doc_label || ''} size={18}/></span>
+                            <span><b>{titreCourt(decouperLibelle(d.doc_label || 'Document').titre)}</b><small>{d.status === 'rejected' ? 'Refusée, à renvoyer' : 'Photo ou PDF'}</small></span>
+                            <Camera size={17} className="cx-at-cam"/>
+                          </button>
+                        ))}
+                      </div>
+                      <div className="cx-at-t">Autre fichier</div>
+                    </>}
                     <div className="cx-g">
                       <button className="cx-op" onClick={() => { closeAttach(); photoInput.current?.click() }}><span className="cx-ic b"><Camera size={18}/></span><span><b>Prendre une photo</b><small>Pièce d'identité, bulletin…</small></span></button>
                       <button className="cx-op" onClick={() => { closeAttach(); galerieInput.current?.click() }}><span className="cx-ic g"><ImageIcon size={18}/></span><span><b>Choisir une photo</b><small>Depuis la galerie</small></span></button>
@@ -1119,6 +1135,8 @@ function ClientPortal() {
                   </div>
                 )}
               </div>
+              <input ref={pieceInput} type="file" style={{ display: 'none' }} accept="image/*,application/pdf,.doc,.docx"
+                onChange={e => { const f = e.target.files?.[0]; const d = pieceCible.current; if (f && d) uploadDocument(d, f); pieceCible.current = null; e.currentTarget.value = '' }}/>
               <input ref={photoInput} type="file" style={{ display: 'none' }} accept="image/*" capture="environment"
                 onChange={e => { const f = e.target.files?.[0]; if (f) uploadFileToChat(f); e.currentTarget.value = '' }}/>
               <input ref={galerieInput} type="file" style={{ display: 'none' }} accept="image/*"
@@ -1314,8 +1332,12 @@ const CX_CSS = `
   .cx-attach { position: absolute; left: 0; bottom: calc(100% + 10px); width: 290px; max-width: calc(100vw - 32px); z-index: 30; background: #F5F5F7; border-radius: 20px; padding: 8px; box-shadow: 0 12px 34px rgba(13,27,62,.18); }
   .cx-op { display: flex; align-items: center; gap: 12px; width: 100%; padding: 11px 12px; border: none; background: #fff; text-align: left; font-family: inherit; cursor: pointer; color: #1D1D1F; }
   .cx-op + .cx-op { border-top: 1px solid #F0F0F2; }
+  .cx-at-t { font-size: 12px; font-weight: 500; color: #86868B; padding: 4px 8px 6px; }
+  .cx-at-p { margin-bottom: 8px; max-height: 40vh; overflow-y: auto; }
+  .cx-at-p .cx-op span:nth-child(2) { flex: 1; min-width: 0; }
+  .cx-at-cam { color: #94A3B8; flex: none; }
   .cx-op:hover { background: #FAFAFC; }
-  .cx-op span:last-child { display: flex; flex-direction: column; } .cx-op b { font-size: 14px; font-weight: 600; } .cx-op small { font-size: 12px; color: #86868B; }
+  .cx-op span:last-child, .cx-at-p .cx-op span:nth-child(2) { display: flex; flex-direction: column; } .cx-op b { font-size: 14px; font-weight: 600; } .cx-op small { font-size: 12px; color: #86868B; }
   .cx-annuler { width: 100%; margin-top: 8px; padding: 11px; border: none; border-radius: 14px; background: #fff; color: #1A6BFF; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
   .cx .c-msg-input-bar { background: #fff; align-items: center; gap: 8px; }
 
