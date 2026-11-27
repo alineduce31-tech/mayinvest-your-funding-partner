@@ -1,5 +1,6 @@
 import EquipeNav from '@/components/EquipeNav'
-import { Users, Inbox, Landmark, Wallet } from 'lucide-react'
+import { Users, Inbox, Landmark, Wallet, Trash2 } from 'lucide-react'
+import { confirmer, informer } from '@/components/Dialogue'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { supabase } from '@/integrations/supabase/client'
@@ -56,6 +57,20 @@ function EquipeCommercialePage() {
     if (!deactivateModal || !deactivateReason.trim()) return
     await supabase.rpc('deactivate_commercial', { p_commercial_id: deactivateModal.id, p_reason: deactivateReason })
     setDeactivateModal(null); setDeactivateReason('')
+    await loadAll()
+  }
+
+  async function supprimer(c: Commercial) {
+    const nom = `${c.prenom || ''} ${c.nom || ''}`.trim() || 'ce commercial'
+    const n = Number(c.total_leads) || 0
+    const ok = await confirmer({
+      titre: `Supprimer ${nom} ?`,
+      texte: `Son compte, ses épreuves et ses échanges avec la direction seront effacés définitivement. ${n > 0 ? `Ses ${n} dossier${n > 1 ? 's' : ''} ne sont pas supprimés : ils passent « Sans conseiller ».` : 'Il n\'a aucun dossier.'} Cette action est irréversible.`,
+      bouton: 'Supprimer définitivement', danger: true,
+    })
+    if (!ok) return
+    const { error } = await supabase.rpc('admin_delete_commercial', { p_commercial_id: c.id })
+    if (error) { informer(error.message); return }
     await loadAll()
   }
 
@@ -136,7 +151,7 @@ function EquipeCommercialePage() {
         .fs-btn .sort-arrow { opacity: 0.85; }
 
         .list { background: #fff; border: 1px solid #ECECEA; border-radius: 12px; overflow: hidden; }
-        .row { display: grid; grid-template-columns: 2fr 1fr 110px 110px 130px 90px; gap: 12px; align-items: center; padding: 14px 18px; border-bottom: 1px solid #F3F3F1; font-size: 12px; }
+        .row { display: grid; grid-template-columns: 2fr 1fr 110px 110px 130px 130px; gap: 12px; align-items: center; padding: 14px 18px; border-bottom: 1px solid #F3F3F1; font-size: 12px; }
         .row-head { background: #F9FAFB; font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #6B7280; }
         .row-head .r, .row .r { text-align: right; }
         @media (max-width: 820px) {
@@ -153,7 +168,9 @@ function EquipeCommercialePage() {
         .row-count { font-weight: 700; font-variant-numeric: tabular-nums; color: #0F1729; }
         .row-finance { font-weight: 700; font-variant-numeric: tabular-nums; color: #1A6BFF; }
         .row-gains { font-weight: 700; font-variant-numeric: tabular-nums; color: #111827; text-align: right; }
-        .row-action { text-align: right; }
+        .row-action { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+        .btn-suppr { width: 30px; height: 30px; border-radius: 50%; border: none; background: #FDECEC; color: #C0392B; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+        .btn-suppr:hover { background: #C0392B; color: #fff; }
         .btn-deact { background: #FEE2E2; color: #B42318; border: 1px solid #FCA5A5; border-radius: 100px; padding: 6px 12px; font-size: 11px; font-weight: 600; cursor: pointer; font-family: inherit; }
         .btn-deact:hover { background: #FCA5A5; color: #fff; }
 
@@ -243,6 +260,7 @@ function EquipeCommercialePage() {
                 </div>
                 <div className="row-action">
                   <button className="btn-deact" onClick={() => setDeactivateModal(c)}>Désactiver</button>
+                  <button className="btn-suppr" onClick={() => supprimer(c)} title="Supprimer ce commercial" aria-label={`Supprimer ${c.prenom || ''} ${c.nom || ''}`}><Trash2 size={14}/></button>
                 </div>
               </div>
             )
