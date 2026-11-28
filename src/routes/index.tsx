@@ -426,7 +426,7 @@ function Index() {
         </div>
         <div className="recrut-pts">
           <div className="recrut-pt"><span className="recrut-big">10 %</span><span>de commission sur chaque Pack Formalisation</span></div>
-          <div className="recrut-pt"><span className="recrut-pic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg></span><span>Formation payée avant de commencer</span></div>
+          <div className="recrut-pt"><span className="recrut-pic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10 12 5 2 10l10 5 10-5z"/><path d="M6 12v5c3 2 9 2 12 0v-5"/></svg></span><span>Formation offerte avant de commencer</span></div>
           <div className="recrut-pt"><span className="recrut-pic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span>Vous gérez votre temps, gains suivis en direct</span></div>
         </div>
       </div>
