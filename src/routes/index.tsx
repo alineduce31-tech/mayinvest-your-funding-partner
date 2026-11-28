@@ -53,6 +53,7 @@ function Index() {
   useEffect(() => { supabase.rpc('comparateur_donnees').then(({ data }) => setCmpBanques(Array.isArray(data) ? (data as Banque[]) : [])) }, [])
   const cmpPret = comparateurPret(cmpBanques)
   const cmpTop = cmpPret ? calculTop3(cmpBanques, 'particulier', ['compte', 'carte']) : null
+  const cmpNb = cmpPret ? banquesRelevees(cmpBanques) : cmpBanques.length
   const cmpEco = cmpTop ? economie(cmpTop) : 0
   const goto = () => navigate({ to: '/preselection' })
   const gotoP = () => navigate({ to: '/preselection', search: { type: 'physique' } as never })
@@ -179,6 +180,8 @@ function Index() {
         .cmpx-b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .cmpx-n { width: 26px; height: 26px; border-radius: 50%; background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; }
         .cmpx-n.f { background: #1A6BFF; color: #fff; }
+        .cmpx-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+        .cmpx-chips span { font-size: 13px; color: #0D1B3E; background: #F5F8FC; border: 1px solid #E8EDF3; padding: 6px 11px; border-radius: 999px; }
         .cmpx-eco { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 600; color: #1A4ECC; background: #EEF4FF; padding: 4px 10px; border-radius: 999px; }
         @media (max-width: 900px) { .cmpx { margin: 0 32px 40px; grid-template-columns: minmax(0, 1fr); gap: 20px; } }
         @media (max-width: 640px) { .cmpx { margin: 0 16px 32px; padding: 22px 18px; border-radius: 20px; } .cmpx-h { font-size: 22px; } .cmpx-btn { width: 100%; justify-content: center; } }
@@ -404,7 +407,7 @@ function Index() {
               </span>
             </button>
           </div>
-          {cmpPret && <a href="/comparateur" className="hero-cmp" onClick={(e) => { e.preventDefault(); navigate({ to: '/comparateur' as any }) }}>
+          {cmpBanques.length > 0 && <a href="/comparateur" className="hero-cmp" onClick={(e) => { e.preventDefault(); navigate({ to: '/comparateur' as any }) }}>
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M5 17h10M4 6h12M4 6l-2 6a3 3 0 004 0L4 6zm12 0l-2 6a3 3 0 004 0l-2-6z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
             Comparer les frais des banques
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -467,13 +470,13 @@ function Index() {
         </div>
       </div>
 
-      {/* ========== COMPARATEUR (affiché à partir de 3 banques relevées) ========== */}
-      {cmpPret && (
+      {/* ========== COMPARATEUR ========== */}
+      {cmpBanques.length > 0 && (
         <section className="cmpx">
           <div className="cmpx-txt">
             <span className="cmpx-tag"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M6 17h8M4 6h12" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M4 6l-2 5.5a2.6 2.6 0 004 0L4 6zM16 6l-2 5.5a2.6 2.6 0 004 0L16 6z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/></svg>Nouveau · gratuit</span>
             <h2 className="cmpx-h">Quelle banque vous coûte le moins cher ?</h2>
-            <p className="cmpx-p">Comparez les frais de {banquesRelevees(cmpBanques)} banques à Brazzaville et Pointe-Noire, relevés en agence.</p>
+            <p className="cmpx-p">Comparez les frais de {cmpNb} banques à Brazzaville et Pointe-Noire, relevés en agence.</p>
             <ul className="cmpx-pts">
               <li>3 questions, 1 minute</li>
               <li>Classement selon le prix uniquement</li>
@@ -484,6 +487,12 @@ function Index() {
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
             </button>
           </div>
+          {!(cmpTop && cmpTop.top.length > 0) && (
+            <div className="cmpx-card" onClick={() => navigate({ to: '/comparateur' as any })} role="button" tabIndex={0} aria-label="Ouvrir le comparateur">
+              <p className="cmpx-cap">{cmpNb} banques comparées</p>
+              <div className="cmpx-chips">{cmpBanques.map(b => <span key={b.id}>{b.nom}</span>)}</div>
+            </div>
+          )}
           {cmpTop && cmpTop.top.length > 0 && (
             <div className="cmpx-card" onClick={() => navigate({ to: '/comparateur' as any })} role="button" tabIndex={0} aria-label="Ouvrir le comparateur">
               <p className="cmpx-cap">Compte + carte · coût sur 12 mois</p>
@@ -587,7 +596,7 @@ function Index() {
             <a className="footer-link" onClick={() => navigate({ to: '/preselection', search: { type: 'physique' } as never })}>Je suis un particulier</a>
             <a className="footer-link" onClick={() => navigate({ to: '/preselection', search: { type: 'morale' } as never })}>Mon entreprise / PME</a>
             <a className="footer-link" onClick={() => navigate({ to: '/mon-dossier' })}>Mon dossier</a>
-            {cmpPret && <a className="footer-link" onClick={() => navigate({ to: '/comparateur' as any })}>Comparer les banques</a>}
+            {cmpBanques.length > 0 && <a className="footer-link" onClick={() => navigate({ to: '/comparateur' as any })}>Comparer les banques</a>}
           </div>
           <div>
             <div className="footer-col-title">Équipe</div>
