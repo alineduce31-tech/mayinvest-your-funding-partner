@@ -64,7 +64,7 @@ alter table public.cmp_recherches enable row level security;
 
 insert into public.cmp_banques (nom, ordre) values
   ('BGFIBank Congo', 1), ('BCI', 2), ('UBA Congo', 3), ('Ecobank Congo', 4), ('BSCA Bank', 5),
-  ('Société Générale Congo', 6), ('BCH', 7), ('BOA Congo', 8), ('MUCODEC', 9), ('Banque Postale du Congo', 10), ('Crédit du Congo', 12), ('Afriland First Bank', 13)
+  ('BCH', 7), ('BOA Congo', 8), ('MUCODEC', 9), ('Banque Postale du Congo', 10), ('Crédit du Congo', 12), ('Afriland First Bank', 13)
 on conflict (nom) do nothing;
 
 -- Clés de frais autorisées (miroir de src/lib/comparateur.ts).
