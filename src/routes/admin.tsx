@@ -4,6 +4,7 @@ import { useBarreFigee } from '@/hooks/useBarreFigee'
 import { Filter, LogOut, Plus, ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity, Pencil } from 'lucide-react'
 import { completerDepot } from '@/components/depotBanque'
 import RapportsAuto from '@/components/RapportsAuto'
+import { optionsBanques, passeFiltreBanque, libelleChoixBanque } from '@/lib/banques'
 import MenuExporter from '@/components/MenuExporter'
 import DemandePieces from '@/components/DemandePieces'
 import { useEffect, useState, useRef, useMemo, Suspense } from 'react'
@@ -213,6 +214,7 @@ function Admin({ session }: { session: any }) {
   const [filterType, setFilterType] = useState<string[]>([])
   const [filterActivite, setFilterActivite] = useState<string[]>([])
   const [filterAgent, setFilterAgent] = useState<string[]>([])
+  const [filterBanque, setFilterBanque] = useState<string[]>([])
   const [dateFrom, setDateFrom] = useState<string>('')
   const [dateTo, setDateTo] = useState<string>('')
   const [teamMembers, setTeamMembers] = useState<any[]>([])
@@ -324,6 +326,7 @@ function Admin({ session }: { session: any }) {
       if (filterStatut.length > 0 && !filterStatut.includes(l.statut)) return false
       if (filterType.length > 0 && !filterType.includes(l.type)) return false
       if (filterActivite.length > 0 && !filterActivite.includes(l.activite)) return false
+      if (!passeFiltreBanque(l, filterBanque)) return false
       if (filterAgent.length > 0) {
         const matchAgent = filterAgent.some(a => a === 'none' ? !l.agent_commercial_id : l.agent_commercial_id === a)
         if (!matchAgent) return false
@@ -341,10 +344,10 @@ function Admin({ session }: { session: any }) {
       }
       return true
     })
-  }, [leads, search, filterStatut, filterType, filterActivite, filterAgent, dateFrom, dateTo, page, dashboardSearch.priority])
+  }, [leads, search, filterStatut, filterType, filterActivite, filterAgent, filterBanque, dateFrom, dateTo, page, dashboardSearch.priority])
 
   function resetFilters() {
-    setSearch(''); setFilterStatut([]); setFilterType([]); setFilterActivite([]); setFilterAgent([]); setDateFrom(''); setDateTo('')
+    setSearch(''); setFilterStatut([]); setFilterType([]); setFilterActivite([]); setFilterAgent([]); setFilterBanque([]); setDateFrom(''); setDateTo('')
   }
 
   function exportCSV() {
@@ -460,6 +463,7 @@ function Admin({ session }: { session: any }) {
     const activeFilters: string[] = []
     if (filterStatut.length) activeFilters.push(`Statut: ${filterStatut.join(', ')}`)
     if (filterType.length) activeFilters.push(`Type: ${filterType.join(', ')}`)
+    if (filterBanque.length) activeFilters.push(`Banque: ${filterBanque.map(libelleChoixBanque).join(', ')}`)
     if (filterActivite.length) activeFilters.push(`Activité: ${filterActivite.join(', ')}`)
     if (dateFrom) activeFilters.push(`Du: ${dateFrom}`)
     if (dateTo) activeFilters.push(`Au: ${dateTo}`)
@@ -1065,7 +1069,7 @@ function Admin({ session }: { session: any }) {
                 <button type="button" className="crm-prio-x" onClick={() => navigate({ to: '/admin', search: { view: 'crm' } })}><X size={14}/>Retirer le filtre</button>
               </div>
             )}
-            {page === 'crm' && <CRMView prio={dashboardSearch.priority} retirerPrio={() => navigate({ to: '/admin', search: { view: 'crm' } })} leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
+            {page === 'crm' && <CRMView prio={dashboardSearch.priority} retirerPrio={() => navigate({ to: '/admin', search: { view: 'crm' } })} leads={filtered} allLeads={leads} msgCounts={msgCounts} search={search} setSearch={setSearch} filterStatut={filterStatut} setFilterStatut={setFilterStatut} filterType={filterType} setFilterType={setFilterType} filterActivite={filterActivite} setFilterActivite={setFilterActivite} filterAgent={filterAgent} setFilterAgent={setFilterAgent} filterBanque={filterBanque} setFilterBanque={setFilterBanque} dateFrom={dateFrom} setDateFrom={setDateFrom} dateTo={dateTo} setDateTo={setDateTo} activitesList={activitesList} teamMembers={teamMembers} resetFilters={resetFilters} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} exportCSV={exportCSV} exportPDF={exportPDF} exportExcel={exportExcel} isDirector={isDirector}/>}
             {page === 'segments' && <SegmentsView leads={leads}/>}
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector} adminId={session?.id}/>}
@@ -1532,8 +1536,8 @@ function StrategicFunnel({ title, tone, rows }: { title: string; tone: string; r
 
 const PRIO_LIBELLES: Record<string, string> = { ready: 'Dossiers prêts sans contact 48 h', impact: 'Non bancarisés cette semaine', followup: 'Pipeline à relancer' }
 
-function CRMView({ prio, retirerPrio, leads, allLeads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, assignLead, exportCSV, exportPDF, exportExcel, isDirector }: any) {
-  const activeFiltersCount = (filterStatut?.length || 0) + (filterType?.length || 0) + (filterActivite?.length || 0) + (filterAgent?.length || 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (search ? 1 : 0)
+function CRMView({ prio, retirerPrio, leads, allLeads, msgCounts, search, setSearch, filterStatut, setFilterStatut, filterType, setFilterType, filterActivite, setFilterActivite, filterAgent, setFilterAgent, filterBanque, setFilterBanque, dateFrom, setDateFrom, dateTo, setDateTo, activitesList, teamMembers, resetFilters, onOpen, updateStatut, assignLead, exportCSV, exportPDF, exportExcel, isDirector }: any) {
+  const activeFiltersCount = (filterStatut?.length || 0) + (filterType?.length || 0) + (filterActivite?.length || 0) + (filterAgent?.length || 0) + (filterBanque?.length || 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0) + (search ? 1 : 0)
   const total = (allLeads || leads).length
   const now30 = Date.now() - 30 * 24 * 3600 * 1000
   const sur30j = (allLeads || leads).filter((l: any) => new Date(l.created_at).getTime() >= now30).length
@@ -1569,6 +1573,7 @@ function CRMView({ prio, retirerPrio, leads, allLeads, msgCounts, search, setSea
         <MultiSelectFilter placeholder="Tous statuts" title="Statuts" options={STATUSES.map((s: string) => ({ value: s, label: s }))} value={filterStatut} onChange={setFilterStatut}/>
         <MultiSelectFilter placeholder="Tous types" title="Type de client" options={[{ value: 'physique', label: 'Particulier' }, { value: 'morale', label: 'PME' }]} value={filterType} onChange={setFilterType}/>
         <MultiSelectFilter placeholder="Toutes activités" title="Activité" options={(activitesList || []).map((a: string) => ({ value: a, label: a }))} value={filterActivite} onChange={setFilterActivite} searchable/>
+        <MultiSelectFilter placeholder="Toutes banques" title="Banque du client" options={optionsBanques(allLeads || [])} value={filterBanque} onChange={setFilterBanque} searchable/>
         {isDirector && (
           <MultiSelectFilter placeholder="Tous agents" title="Agent commercial" options={agentOptions} value={filterAgent} onChange={setFilterAgent}/>
         )}
