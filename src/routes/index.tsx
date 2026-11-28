@@ -231,6 +231,8 @@ function Index() {
         @media (max-width: 640px) { .footer-bottom { flex-direction: column; gap: 6px; } }
 
         .btn-main { background: #1A6BFF; color: #fff; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
+        .hero-cmp { display: inline-flex; align-items: center; gap: 8px; margin-top: 18px; color: #1A6BFF; font-weight: 700; font-size: 15px; text-decoration: none; padding: 6px 2px; }
+        .hero-cmp:hover { text-decoration: underline; }
         .btn-second { background: #F5F5F5; color: #111; font-family: inherit; font-size: 16px; font-weight: 700; padding: 18px 24px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%; }
         .nav-btn { background: #111111; color: #fff; font-family: inherit; font-size: 14px; font-weight: 600; padding: 11px 22px; border-radius: 100px; border: none; cursor: pointer; display: flex; align-items: center; gap: 8px; white-space: nowrap; }
         @media (max-width: 640px) { .nav-btn { padding: 8px 14px; font-size: 12px; gap: 5px; } .nav-btn svg { width: 12px; height: 12px; } }
@@ -373,6 +375,11 @@ function Index() {
               </span>
             </button>
           </div>
+          <a href="/comparateur" className="hero-cmp" onClick={(e) => { e.preventDefault(); navigate({ to: '/comparateur' as any }) }}>
+            <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M5 17h10M4 6h12M4 6l-2 6a3 3 0 004 0L4 6zm12 0l-2 6a3 3 0 004 0l-2-6z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Comparer les frais des banques
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          </a>
         </div>
 
         <div className="score-card">
@@ -522,10 +529,11 @@ function Index() {
             <a className="footer-link" onClick={() => navigate({ to: '/preselection', search: { type: 'physique' } as never })}>Je suis un particulier</a>
             <a className="footer-link" onClick={() => navigate({ to: '/preselection', search: { type: 'morale' } as never })}>Mon entreprise / PME</a>
             <a className="footer-link" onClick={() => navigate({ to: '/mon-dossier' })}>Mon dossier</a>
+            <a className="footer-link" onClick={() => navigate({ to: '/comparateur' as any })}>Comparer les banques</a>
           </div>
           <div>
             <div className="footer-col-title">Équipe</div>
-            <a className="footer-link" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>Devenir commercial</a>
+            <a className="footer-link" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>Devenir partenaire</a>
             <a className="footer-link" onClick={() => navigate({ to: '/rejoindre-equipe' as any })}>Formation & simulation</a>
             <a className="footer-link" onClick={() => navigate({ to: '/mon-espace' as any })}>Espace équipe · connexion</a>
           </div>

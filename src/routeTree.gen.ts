@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as CandidaturesRouteImport } from './routes/candidatures'
+import { Route as ComparateurRouteImport } from './routes/comparateur'
 import { Route as EquipeAdminRouteImport } from './routes/equipe-admin'
 import { Route as EquipeCommercialeRouteImport } from './routes/equipe-commerciale'
 import { Route as EspaceCommercialRouteImport } from './routes/espace-commercial'
@@ -40,6 +41,11 @@ const AdminRoute = AdminRouteImport.update({
 const CandidaturesRoute = CandidaturesRouteImport.update({
   id: '/candidatures',
   path: '/candidatures',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ComparateurRoute = ComparateurRouteImport.update({
+  id: '/comparateur',
+  path: '/comparateur',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EquipeAdminRoute = EquipeAdminRouteImport.update({
@@ -117,6 +123,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/candidatures': typeof CandidaturesRoute
+  '/comparateur': typeof ComparateurRoute
   '/equipe-admin': typeof EquipeAdminRoute
   '/equipe-commerciale': typeof EquipeCommercialeRoute
   '/espace-commercial': typeof EspaceCommercialRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/candidatures': typeof CandidaturesRoute
+  '/comparateur': typeof ComparateurRoute
   '/equipe-admin': typeof EquipeAdminRoute
   '/equipe-commerciale': typeof EquipeCommercialeRoute
   '/espace-commercial': typeof EspaceCommercialRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/admin': typeof AdminRoute
   '/candidatures': typeof CandidaturesRoute
+  '/comparateur': typeof ComparateurRoute
   '/equipe-admin': typeof EquipeAdminRoute
   '/equipe-commerciale': typeof EquipeCommercialeRoute
   '/espace-commercial': typeof EspaceCommercialRoute
@@ -177,6 +186,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/candidatures'
+    | '/comparateur'
     | '/equipe-admin'
     | '/equipe-commerciale'
     | '/espace-commercial'
@@ -196,6 +206,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/candidatures'
+    | '/comparateur'
     | '/equipe-admin'
     | '/equipe-commerciale'
     | '/espace-commercial'
@@ -215,6 +226,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin'
     | '/candidatures'
+    | '/comparateur'
     | '/equipe-admin'
     | '/equipe-commerciale'
     | '/espace-commercial'
@@ -235,6 +247,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRoute: typeof AdminRoute
   CandidaturesRoute: typeof CandidaturesRoute
+  ComparateurRoute: typeof ComparateurRoute
   EquipeAdminRoute: typeof EquipeAdminRoute
   EquipeCommercialeRoute: typeof EquipeCommercialeRoute
   EspaceCommercialRoute: typeof EspaceCommercialRoute
@@ -272,6 +285,13 @@ declare module '@tanstack/react-router' {
       path: '/candidatures'
       fullPath: '/candidatures'
       preLoaderRoute: typeof CandidaturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comparateur': {
+      id: '/comparateur'
+      path: '/comparateur'
+      fullPath: '/comparateur'
+      preLoaderRoute: typeof ComparateurRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/equipe-admin': {
@@ -379,6 +399,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRoute: AdminRoute,
   CandidaturesRoute: CandidaturesRoute,
+  ComparateurRoute: ComparateurRoute,
   EquipeAdminRoute: EquipeAdminRoute,
   EquipeCommercialeRoute: EquipeCommercialeRoute,
   EspaceCommercialRoute: EspaceCommercialRoute,

@@ -3,6 +3,7 @@ import CarteAide, { BoutonAide } from '@/components/CarteAide'
 import { useBarreFigee } from '@/hooks/useBarreFigee'
 import { Filter, LogOut, Plus, ChevronRight, StickyNote, Building2, FileSignature, Hourglass, UserCheck, FileBadge, IdCard, ArrowLeftRight, ShieldCheck, CalendarDays, Activity, Pencil } from 'lucide-react'
 import { completerDepot } from '@/components/depotBanque'
+import TarifsBanques from '@/components/TarifsBanques'
 import RapportsAuto from '@/components/RapportsAuto'
 import { optionsBanques, passeFiltreBanque, libelleChoixBanque } from '@/lib/banques'
 import MenuExporter from '@/components/MenuExporter'
@@ -191,7 +192,7 @@ function _UnusedLoginScreen() {
 /* ============================================================
  * ADMIN APP
  * ============================================================ */
-type Page = 'general' | 'crm' | 'segments' | 'bancarisation' | 'non-eligibles' | 'packs' | 'rapports'
+type Page = 'general' | 'crm' | 'segments' | 'bancarisation' | 'non-eligibles' | 'packs' | 'rapports' | 'tarifs'
 
 function Admin({ session }: { session: any }) {
   const navigate = useNavigate()
@@ -540,6 +541,7 @@ function Admin({ session }: { session: any }) {
     bank: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M2.5 8L10 3l7.5 5v1h-15V8z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M4.5 9v7M8 9v7M12 9v7M15.5 9v7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><path d="M2 17h16" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
     noelig: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7.5" stroke="currentColor" strokeWidth="1.6"/><path d="M4.5 4.5l11 11" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/></svg>,
     pack: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 2.5l6.5 3.2v8.6L10 17.5l-6.5-3.2V5.7L10 2.5z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/><path d="M3.7 5.8L10 9l6.3-3.2M10 9v8.3" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>,
+    tarifs: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M6 17h8M4 6h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"/><path d="M4 6l-2 5.5a2.6 2.6 0 004 0L4 6zM16 6l-2 5.5a2.6 2.6 0 004 0L16 6z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"/></svg>,
     report: <svg width="18" height="18" viewBox="0 0 20 20" fill="none"><rect x="2.5" y="2.5" width="15" height="15" rx="2" stroke="currentColor" strokeWidth="1.6"/><path d="M6 14V9M10 14V6M14 14v-3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg>,
   }
   const unreadTotal = Object.values(msgCounts).reduce((a, b) => a + (b || 0), 0)
@@ -551,6 +553,7 @@ function Admin({ session }: { session: any }) {
     { k: 'non-eligibles', label: 'Non éligibles', icon: ICON.noelig },
     { k: 'packs', label: 'Packs', icon: ICON.pack },
     { k: 'rapports', label: 'Rapports', icon: ICON.report },
+    { k: 'tarifs', label: 'Tarifs banques', icon: ICON.tarifs },
   ]
 
   return (
@@ -1074,6 +1077,7 @@ function Admin({ session }: { session: any }) {
             {page === 'bancarisation' && <BancarisationView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector}/>}
             {page === 'non-eligibles' && <NonEligiblesView leads={leads} onOpen={setSelectedLead} updateStatut={updateStatut} assignLead={assignLead} teamMembers={teamMembers} isDirector={isDirector} adminId={session?.id}/>}
             {page === 'packs' && <PacksView leads={leads} onOpen={setSelectedLead} peutConfirmer={peutConfirmerPaiement} onChange={loadLeads}/>}
+            {page === 'tarifs' && <TarifsBanques/>}
             {page === 'rapports' && <RapportsView leads={leads} exportCSV={exportCSV} exportExcel={exportExcel} exportPDF={exportPDF}/>}
           </>)}
         </main>
