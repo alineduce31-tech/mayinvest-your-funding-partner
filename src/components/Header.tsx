@@ -37,8 +37,8 @@ export function Header() {
               </button>
             </>
           ) : (
-            <Link to="/mon-espace" className="btn-primary px-5 py-2">
-              Espace agents
+            <Link to="/espace-commercial" className="btn-primary px-5 py-2">
+              Espace partenaires
             </Link>
           )}
         </nav>

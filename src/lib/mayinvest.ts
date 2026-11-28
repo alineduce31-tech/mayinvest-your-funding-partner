@@ -130,7 +130,7 @@ export function addLead(form: LeadForm, score: number) {
     score,
     statut: "Nouveau",
     createdAt: new Date().toISOString(),
-    agent: store.session?.nom ?? form.nom ?? "Agent",
+    agent: store.session?.nom ?? form.nom ?? "Partenaire",
   };
   store.leads = [lead, ...store.leads];
   emit();

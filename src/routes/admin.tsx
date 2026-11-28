@@ -317,7 +317,7 @@ function Admin({ session }: { session: any }) {
     return Array.from(set).sort()
   }, [leads])
 
-  // Filtering avec date range + activité + statut + type + agent commercial
+  // Filtering avec date range + activité + statut + type + banque + partenaire commercial
   const filtered = useMemo(() => {
     const dFrom = dateFrom ? new Date(dateFrom).getTime() : 0
     const dTo = dateTo ? new Date(dateTo).getTime() + 86400000 : Infinity
@@ -748,7 +748,7 @@ function Admin({ session }: { session: any }) {
         .btn-reset:hover { background: var(--red); color: #fff; }
         .crm-stats { padding: 10px 14px; background: var(--blue-soft); color: var(--blue); border-radius: 10px; font-size: 12px; font-weight: 600; margin-bottom: 14px; }
 
-        /* Badge agent commercial sur lead-row */
+        /* Badge partenaire commercial sur lead-row */
         .lead-agent { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 700; background: var(--green-soft); color: var(--green); margin-left: 4px; }
         .lead-agent.lead-agent-none { background: var(--amber-soft); color: var(--amber); }
 
@@ -1575,7 +1575,7 @@ function CRMView({ prio, retirerPrio, leads, allLeads, msgCounts, search, setSea
         <MultiSelectFilter placeholder="Toutes activités" title="Activité" options={(activitesList || []).map((a: string) => ({ value: a, label: a }))} value={filterActivite} onChange={setFilterActivite} searchable/>
         <MultiSelectFilter placeholder="Toutes banques" title="Banque du client" options={optionsBanques(allLeads || [])} value={filterBanque} onChange={setFilterBanque} searchable/>
         {isDirector && (
-          <MultiSelectFilter placeholder="Tous agents" title="Agent commercial" options={agentOptions} value={filterAgent} onChange={setFilterAgent}/>
+          <MultiSelectFilter placeholder="Tous partenaires" title="Partenaire commercial" options={agentOptions} value={filterAgent} onChange={setFilterAgent}/>
         )}
         <DateRangePicker dateFrom={dateFrom} dateTo={dateTo} setDateFrom={setDateFrom} setDateTo={setDateTo}/>
         {activeFiltersCount > 0 && (
@@ -1619,7 +1619,7 @@ function CRMView({ prio, retirerPrio, leads, allLeads, msgCounts, search, setSea
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/><path d="M8 11h6"/></svg>
           </div>
           <div className="crm-empty-title">Aucun lead trouvé avec ces filtres</div>
-          <div className="crm-empty-sub">Essaie d'élargir la période ou de retirer un filtre (statut, type, activité, agent).</div>
+          <div className="crm-empty-sub">Essaie d'élargir la période ou de retirer un filtre (statut, type, activité, banque, partenaire).</div>
           {activeFiltersCount > 0 && (
             <button type="button" className="crm-empty-cta" onClick={resetFilters}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M3 21v-5h5"/></svg>
@@ -1687,7 +1687,7 @@ function LeadsTable({ leads, msgCounts, onOpen, agentEmailById, isDirector, upda
             <Th k="ville" label="Ville"/>
             <Th k="montant" label="Montant" right/>
             <Th k="score" label="Score" right/>
-            {isDirector && <Th k="agent" label="Agent"/>}
+            {isDirector && <Th k="agent" label="Partenaire"/>}
             <Th k="statut" label="Statut"/>
             <Th k="created_at" label="Créé" right/>
           </tr>
