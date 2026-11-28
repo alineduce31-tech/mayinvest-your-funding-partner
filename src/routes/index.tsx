@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Logo } from '@/components/Logo'
 import { supabase } from '@/integrations/supabase/client'
-import { comparateurPret } from '@/lib/comparateur'
+import { comparateurPret, banquesRelevees, calculTop3, economie, formatF, type Banque } from '@/lib/comparateur'
 import { trackHaki } from '@/lib/haki-tracking'
 import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles } from '@/components/HakiTeaser'
 const PAGE = '/index'
@@ -49,8 +49,11 @@ function LogoSVG({ height = 64, tone = 'light' }: { height?: number; tone?: 'lig
 function Index() {
   const navigate = useNavigate()
   // Le comparateur n'est mis en avant qu'une fois au moins 3 banques relevées.
-  const [cmpPret, setCmpPret] = useState(false)
-  useEffect(() => { supabase.rpc('comparateur_donnees').then(({ data }) => setCmpPret(Array.isArray(data) && comparateurPret(data as any))) }, [])
+  const [cmpBanques, setCmpBanques] = useState<Banque[]>([])
+  useEffect(() => { supabase.rpc('comparateur_donnees').then(({ data }) => setCmpBanques(Array.isArray(data) ? (data as Banque[]) : [])) }, [])
+  const cmpPret = comparateurPret(cmpBanques)
+  const cmpTop = cmpPret ? calculTop3(cmpBanques, 'particulier', ['compte', 'carte']) : null
+  const cmpEco = cmpTop ? economie(cmpTop) : 0
   const goto = () => navigate({ to: '/preselection' })
   const gotoP = () => navigate({ to: '/preselection', search: { type: 'physique' } as never })
   const gotoM = () => navigate({ to: '/preselection', search: { type: 'morale' } as never })
@@ -158,6 +161,27 @@ function Index() {
           .nav-link.nav-join { display: none; }
         }
 
+        /* ========== COMPARATEUR (section accueil) ========== */
+        .cmpx { background: #fff; color: #0D1B3E; margin: 0 60px 48px; padding: 28px 30px; border-radius: 24px; border: 1px solid #E5ECF8; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 28px; align-items: center; }
+        .cmpx-tag { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: #1A6BFF; background: #EEF4FF; padding: 5px 11px; border-radius: 999px; }
+        .cmpx-h { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.15; margin: 12px 0 8px; }
+        .cmpx-p { color: #64748B; font-size: 15px; line-height: 1.55; margin: 0 0 12px; }
+        .cmpx-pts { list-style: none; padding: 0; margin: 0 0 18px; display: flex; flex-direction: column; gap: 6px; }
+        .cmpx-pts li { position: relative; padding-left: 24px; font-size: 14px; color: #334155; }
+        .cmpx-pts li::before { content: ''; position: absolute; left: 2px; top: 4px; width: 10px; height: 6px; border-left: 2px solid #1A6BFF; border-bottom: 2px solid #1A6BFF; transform: rotate(-45deg); }
+        .cmpx-btn { display: inline-flex; align-items: center; gap: 8px; background: #1A6BFF; color: #fff; border: none; border-radius: 14px; padding: 13px 20px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+        .cmpx-btn:hover { background: #155AE0; }
+        .cmpx-card { border: 1px solid #E8EDF3; border-radius: 18px; padding: 16px 18px; cursor: pointer; transition: border-color .15s; }
+        .cmpx-card:hover { border-color: #BFD3FF; }
+        .cmpx-cap { margin: 0 0 6px; font-size: 13px; color: #64748B; }
+        .cmpx-row { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 10px 0; border-top: 1px solid #F1F5F9; font-size: 15px; }
+        .cmpx-row:first-of-type { border-top: none; }
+        .cmpx-b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .cmpx-n { width: 26px; height: 26px; border-radius: 50%; background: #F1F5F9; display: flex; align-items: center; justify-content: center; font-size: 12.5px; font-weight: 700; }
+        .cmpx-n.f { background: #1A6BFF; color: #fff; }
+        .cmpx-eco { display: inline-block; margin-top: 8px; font-size: 12.5px; font-weight: 600; color: #1A4ECC; background: #EEF4FF; padding: 4px 10px; border-radius: 999px; }
+        @media (max-width: 900px) { .cmpx { margin: 0 32px 40px; grid-template-columns: minmax(0, 1fr); gap: 20px; } }
+        @media (max-width: 640px) { .cmpx { margin: 0 16px 32px; padding: 22px 18px; border-radius: 20px; } .cmpx-h { font-size: 22px; } .cmpx-btn { width: 100%; justify-content: center; } }
         /* ========== BANDE RECRUTEMENT (avant footer) ========== */
         .recrut-strip { background: #fff; color: #0D1B3E; margin: 0 60px 48px; padding: 28px 30px; border-radius: 24px; border: 1px solid #E5ECF8;
           box-shadow: 0 10px 34px rgba(13,27,62,.07); display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 28px; align-items: center; }
@@ -442,6 +466,35 @@ function Index() {
           <div className="recrut-pt"><span className="recrut-pic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><span>Vous gérez votre temps, gains suivis en direct</span></div>
         </div>
       </div>
+
+      {/* ========== COMPARATEUR (affiché à partir de 3 banques relevées) ========== */}
+      {cmpPret && (
+        <section className="cmpx">
+          <div className="cmpx-txt">
+            <span className="cmpx-tag"><svg width="14" height="14" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M6 17h8M4 6h12" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/><path d="M4 6l-2 5.5a2.6 2.6 0 004 0L4 6zM16 6l-2 5.5a2.6 2.6 0 004 0L16 6z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round"/></svg>Nouveau · gratuit</span>
+            <h2 className="cmpx-h">Quelle banque vous coûte le moins cher ?</h2>
+            <p className="cmpx-p">Comparez les frais de {banquesRelevees(cmpBanques)} banques à Brazzaville et Pointe-Noire, relevés en agence.</p>
+            <ul className="cmpx-pts">
+              <li>3 questions, 1 minute</li>
+              <li>Classement selon le prix uniquement</li>
+              <li>Tarifs vérifiés tous les 3 mois</li>
+            </ul>
+            <button className="cmpx-btn" onClick={() => navigate({ to: '/comparateur' as any })}>
+              Comparer les banques
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            </button>
+          </div>
+          {cmpTop && cmpTop.top.length > 0 && (
+            <div className="cmpx-card" onClick={() => navigate({ to: '/comparateur' as any })} role="button" tabIndex={0} aria-label="Ouvrir le comparateur">
+              <p className="cmpx-cap">Compte + carte · coût sur 12 mois</p>
+              {cmpTop.top.map((r, i) => (
+                <div key={r.banque.id} className="cmpx-row"><span className={`cmpx-n ${i === 0 ? 'f' : ''}`}>{i + 1}</span><span className="cmpx-b">{r.banque.nom}</span><b>{formatF(r.total)}</b></div>
+              ))}
+              {cmpEco > 0 && <span className="cmpx-eco">Jusqu'à {formatF(cmpEco)} d'économie par an</span>}
+            </div>
+          )}
+        </section>
+      )}
 
       <div className="proof">
         {[
