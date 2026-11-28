@@ -1,6 +1,8 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useState, useEffect } from 'react'
 import { Logo } from '@/components/Logo'
+import { supabase } from '@/integrations/supabase/client'
+import { comparateurPret } from '@/lib/comparateur'
 import { trackHaki } from '@/lib/haki-tracking'
 import { useHakiTeaser, useSheetSwipe, HakiBulle, HakiSheetStyles } from '@/components/HakiTeaser'
 const PAGE = '/index'
@@ -46,6 +48,9 @@ function LogoSVG({ height = 64, tone = 'light' }: { height?: number; tone?: 'lig
 
 function Index() {
   const navigate = useNavigate()
+  // Le comparateur n'est mis en avant qu'une fois au moins 3 banques relevées.
+  const [cmpPret, setCmpPret] = useState(false)
+  useEffect(() => { supabase.rpc('comparateur_donnees').then(({ data }) => setCmpPret(Array.isArray(data) && comparateurPret(data as any))) }, [])
   const goto = () => navigate({ to: '/preselection' })
   const gotoP = () => navigate({ to: '/preselection', search: { type: 'physique' } as never })
   const gotoM = () => navigate({ to: '/preselection', search: { type: 'morale' } as never })
@@ -375,11 +380,11 @@ function Index() {
               </span>
             </button>
           </div>
-          <a href="/comparateur" className="hero-cmp" onClick={(e) => { e.preventDefault(); navigate({ to: '/comparateur' as any }) }}>
+          {cmpPret && <a href="/comparateur" className="hero-cmp" onClick={(e) => { e.preventDefault(); navigate({ to: '/comparateur' as any }) }}>
             <svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M10 3v14M5 17h10M4 6h12M4 6l-2 6a3 3 0 004 0L4 6zm12 0l-2 6a3 3 0 004 0l-2-6z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
             Comparer les frais des banques
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7h8M8 4l3 3-3 3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </a>
+          </a>}
         </div>
 
         <div className="score-card">
@@ -529,7 +534,7 @@ function Index() {
             <a className="footer-link" onClick={() => navigate({ to: '/preselection', search: { type: 'physique' } as never })}>Je suis un particulier</a>
             <a className="footer-link" onClick={() => navigate({ to: '/preselection', search: { type: 'morale' } as never })}>Mon entreprise / PME</a>
             <a className="footer-link" onClick={() => navigate({ to: '/mon-dossier' })}>Mon dossier</a>
-            <a className="footer-link" onClick={() => navigate({ to: '/comparateur' as any })}>Comparer les banques</a>
+            {cmpPret && <a className="footer-link" onClick={() => navigate({ to: '/comparateur' as any })}>Comparer les banques</a>}
           </div>
           <div>
             <div className="footer-col-title">Équipe</div>

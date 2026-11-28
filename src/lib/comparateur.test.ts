@@ -63,3 +63,13 @@ describe('outils', () => {
     expect(new Set(FRAIS.map(f => f.cle)).size).toBe(FRAIS.length)
   })
 })
+
+import { comparateurPret } from './comparateur'
+describe('comparateurPret', () => {
+  test('liens publics seulement à partir de 3 banques relevées', () => {
+    expect(comparateurPret([])).toBe(false)
+    expect(comparateurPret(BANQUES.slice(0, 2))).toBe(false)
+    expect(comparateurPret(BANQUES.slice(0, 3))).toBe(true)
+    expect(comparateurPret([b('X', {}), b('Y', { pro_tenue_mois: 1 }), b('Z', {}), b('W', { tenue_mois: 1 })])).toBe(false)
+  })
+})

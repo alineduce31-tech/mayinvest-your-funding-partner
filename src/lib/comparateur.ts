@@ -187,3 +187,15 @@ export function dateTarif(iso: string | null | undefined): string {
   if (Number.isNaN(d.getTime())) return '—'
   return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Africa/Brazzaville' })
 }
+
+/** Seuil d'affichage public : le comparateur n'est mis en avant qu'avec au moins 3 banques relevées. */
+export const MIN_BANQUES_PUBLIC = 3
+
+/** Nombre de banques dont le tarif de base (tenue de compte particulier ou pro) est saisi. */
+export function banquesRelevees(banques: Pick<Banque, 'tarifs'>[]): number {
+  return banques.filter(b => b.tarifs?.['tenue_mois'] || b.tarifs?.['pro_tenue_mois']).length
+}
+
+export function comparateurPret(banques: Pick<Banque, 'tarifs'>[]): boolean {
+  return banquesRelevees(banques) >= MIN_BANQUES_PUBLIC
+}
