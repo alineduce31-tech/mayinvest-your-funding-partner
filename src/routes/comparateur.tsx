@@ -73,7 +73,7 @@ function Comparateur() {
       <section className="cp-card" aria-label="Vos besoins">
         <div className="cp-seg" role="tablist">
           <button role="tab" aria-selected={profil === 'particulier'} className={profil === 'particulier' ? 'on' : ''} onClick={() => choisirProfil('particulier')}><User size={16}/>Particulier</button>
-          <button role="tab" aria-selected={profil === 'entreprise'} className={profil === 'entreprise' ? 'on' : ''} onClick={() => choisirProfil('entreprise')}><Building2 size={16}/>Entreprise<span className="cp-hide-m">&nbsp;/ PME</span></button>
+          <button role="tab" aria-selected={profil === 'entreprise'} className={profil === 'entreprise' ? 'on' : ''} onClick={() => choisirProfil('entreprise')}><Building2 size={16}/><span>Entreprise<span className="cp-hide-m"> / PME</span></span></button>
         </div>
 
         <p className="cp-q"><b>1</b>Que voulez-vous ? <span>plusieurs choix possibles</span></p>
